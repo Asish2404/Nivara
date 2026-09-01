@@ -1,11 +1,11 @@
 import { Canvas } from '@react-three/fiber'
-import { Stars } from '@react-three/drei'
 import { Suspense } from 'react'
 import { useRef, useState } from 'react'
 import * as THREE from 'three'
 import { Earth } from './components/Earth'
 import { EarthCamera } from './components/EarthCamera'
 import { GeographicTransition } from './components/GeographicTransition'
+import { RealisticStarfield } from './components/RealisticStarfield'
 import './App.css'
 
 function EarthScene({ transitionStarted, earthRef, controlsRef, onComplete }) {
@@ -25,9 +25,7 @@ function EarthScene({ transitionStarted, earthRef, controlsRef, onComplete }) {
       <directionalLight position={[-4, 1.5, 3]} intensity={3.9} color="#fff3df" />
       <Suspense fallback={null}>
         <Earth earthRef={earthRef} />
-        <Stars radius={100} depth={60} count={500} factor={0.55} saturation={0} fade speed={0.04} />
-        <Stars radius={70} depth={35} count={140} factor={0.9} saturation={0} fade speed={0.04} />
-        <Stars radius={42} depth={18} count={24} factor={1.35} saturation={0} fade speed={0.04} />
+        <RealisticStarfield />
       </Suspense>
       <GeographicTransition
         active={transitionStarted}
