@@ -1,3 +1,13 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #f8f9fa;
+  --bg-surface: #fcfbf9;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-subtle: #e2e8f0;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -6,15 +16,11 @@ html,
 body,
 #root {
   width: 100%;
-  min-width: 320px;
   min-height: 100%;
-}
-
-body {
   margin: 0;
-  overflow: hidden;
-  background: #02050a;
-  font-family: Consolas, monospace;
+  padding: 0;
+  background-color: #f8f9fa;
+  color: #0f172a;
+  font-family: 'Archivo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
-

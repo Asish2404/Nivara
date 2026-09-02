@@ -1,14 +1,14 @@
 import { Canvas } from '@react-three/fiber'
-import { Suspense } from 'react'
-import { useRef, useState } from 'react'
+import { Suspense, useRef, useState, useEffect, useCallback } from 'react'
 import * as THREE from 'three'
 import { Earth } from './components/Earth'
 import { EarthCamera } from './components/EarthCamera'
 import { GeographicTransition } from './components/GeographicTransition'
 import { RealisticStarfield } from './components/RealisticStarfield'
+import { LandingPage } from './components/landing/LandingPage'
 import './App.css'
 
-function EarthScene({ transitionStarted, earthRef, controlsRef, onComplete }) {
+function EarthScene({ zoomStarted, earthRef, controlsRef, onZoomComplete }) {
   return (
     <Canvas
       camera={{ position: [0, 0.05, 6.6], fov: 35 }}
@@ -20,46 +20,83 @@ function EarthScene({ transitionStarted, earthRef, controlsRef, onComplete }) {
         gl.outputColorSpace = THREE.SRGBColorSpace
       }}
     >
-      <color attach="background" args={['#02050a']} />
-      <ambientLight intensity={0.135} color="#668ca4" />
-      <directionalLight position={[-4, 1.5, 3]} intensity={3.9} color="#fff3df" />
+      <color attach="background" args={['#000000']} />
+      <ambientLight intensity={0.16} color="#668ca4" />
+      <directionalLight position={[-4, 1.5, 3]} intensity={4.0} color="#fff3df" />
+      <directionalLight position={[4, -1, -2]} intensity={0.5} color="#00f0ff" />
+
       <Suspense fallback={null}>
         <Earth earthRef={earthRef} />
         <RealisticStarfield />
       </Suspense>
+
       <GeographicTransition
-        active={transitionStarted}
+        active={zoomStarted}
         controls={controlsRef}
         earth={earthRef}
-        onComplete={onComplete}
+        onComplete={onZoomComplete}
       />
-      <EarthCamera controlsRef={controlsRef} explored={transitionStarted} />
+      <EarthCamera controlsRef={controlsRef} explored={zoomStarted} />
     </Canvas>
   )
 }
 
 function App() {
-  const [transitionStarted, setTransitionStarted] = useState(false)
-  const [transitionComplete, setTransitionComplete] = useState(false)
+  // Stages: 'orbit' (0-5s) -> 'zooming' (point & zoom to India) -> 'black_screen' -> 'landing_page'
+  const [stage, setStage] = useState('orbit')
+  const [blackOverlay, setBlackOverlay] = useState(false)
+
   const earthRef = useRef()
   const controlsRef = useRef()
 
+  // 1. 0s to 5s of clean Earth rotation, then zoom to India
+  useEffect(() => {
+    if (stage !== 'orbit') return
+
+    const timer = setTimeout(() => {
+      setStage('zooming')
+    }, 5000)
+
+    return () => clearTimeout(timer)
+  }, [stage])
+
+  // 2. When zoom into India completes, trigger black screen
+  const handleZoomComplete = useCallback(() => {
+    setStage('black_screen')
+    setBlackOverlay(true)
+
+    // 3. After 1.2s of black screen, reveal the landing page with 3D animation + floating navbar
+    setTimeout(() => {
+      setStage('landing_page')
+      setTimeout(() => {
+        setBlackOverlay(false)
+      }, 100)
+    }, 1200)
+  }, [])
+
   return (
-    <main className="earth-experiment" aria-label="Interactive Earth">
-      <EarthScene
-        transitionStarted={transitionStarted}
-        earthRef={earthRef}
-        controlsRef={controlsRef}
-        onComplete={() => setTransitionComplete(true)}
+    <div className="min-h-screen bg-black text-white relative w-full overflow-x-hidden font-sans">
+      {/* Black Screen Overlay for cinematic transitions */}
+      <div
+        className={`cinematic-black-screen ${blackOverlay ? 'active' : ''}`}
+        aria-hidden="true"
       />
-      <div className="scene-mark" aria-hidden="true">EARTH / 01</div>
-      {!transitionStarted && (
-        <button className="explore-india" type="button" onClick={() => setTransitionStarted(true)}>
-          EXPLORE INDIA
-        </button>
+
+      {/* Intro Phase (0-10s): 3D Earth in Space with zero text */}
+      {stage !== 'landing_page' && (
+        <main className="earth-experiment" aria-label="3D Earth Intro">
+          <EarthScene
+            zoomStarted={stage === 'zooming' || stage === 'black_screen'}
+            earthRef={earthRef}
+            controlsRef={controlsRef}
+            onZoomComplete={handleZoomComplete}
+          />
+        </main>
       )}
-      {transitionComplete && <div className="india-mark">INDIA</div>}
-    </main>
+
+      {/* Landing Page Phase: Fullscreen 3D Colorful Tubes Animation + Floating KWI Command Navbar */}
+      {stage === 'landing_page' && <LandingPage />}
+    </div>
   )
 }
 
