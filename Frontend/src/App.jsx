@@ -60,7 +60,7 @@ function App() {
     return () => clearTimeout(timer)
   }, [stage])
 
-  // 2. When zoom into India completes, trigger black screen
+  // 2. When zoom into India completes, trigger -> kolkata
   const handleZoomComplete = useCallback(() => {
     setStage('black_screen')
     setBlackOverlay(true)
@@ -70,8 +70,8 @@ function App() {
       setStage('landing_page')
       setTimeout(() => {
         setBlackOverlay(false)
-      }, 100)
-    }, 1200)
+      }, 50)
+    }, 300)
   }, [])
 
   return (
@@ -94,10 +94,11 @@ function App() {
         </main>
       )}
 
-      {/* Landing Page Phase: Fullscreen 3D Colorful Tubes Animation + Floating KWI Command Navbar */}
+      {/* Landing Page Phase: Fullscreen 3D Colorful Tubes Animation + Floating KWI Command Navbar + Footer */}
       {stage === 'landing_page' && <LandingPage />}
     </div>
   )
 }
 
 export default App
+
