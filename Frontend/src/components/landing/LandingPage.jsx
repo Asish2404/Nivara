@@ -1,3 +1,5 @@
+import { KolkataMap } from '../3d/KolkataMap'
+import { KolkataHero } from './KolkataHero'
 import { TubesBackground } from '../3d/TubesBackground'
 import { KWINavbar } from '../navigation/KWINavbar'
 import Footer from '../Footer'
