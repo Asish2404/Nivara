@@ -45,7 +45,6 @@ export const KOLKATA_BRIDGES = [
 
 // 3. Prominent Water Bodies & Lakes
 export const WATER_BODIES = [
-  // Rabindra Sarobar (Dhakuria Lake in South Kolkata)
   {
     name: 'Rabindra Sarobar',
     center: [1.3, 3.6],
@@ -53,7 +52,6 @@ export const WATER_BODIES = [
     radiusZ: 0.24,
     rotation: -0.15,
   },
-  // Subhas Sarobar (Beliaghata / EM Bypass)
   {
     name: 'Subhas Sarobar',
     center: [3.3, -0.6],
@@ -61,7 +59,6 @@ export const WATER_BODIES = [
     radiusZ: 0.35,
     rotation: 0.2,
   },
-  // Nalban Lake & Captain Bhery (Salt Lake / Sector V edge)
   {
     name: 'Nalban Bhery',
     center: [5.8, -1.0],
@@ -69,7 +66,6 @@ export const WATER_BODIES = [
     radiusZ: 0.6,
     rotation: 0.35,
   },
-  // Central Park Lake (Salt Lake Bidhannagar)
   {
     name: 'Central Park Lake',
     center: [4.8, -2.4],
@@ -77,7 +73,6 @@ export const WATER_BODIES = [
     radiusZ: 0.3,
     rotation: 0.1,
   },
-  // Eco Park Lake (New Town)
   {
     name: 'Eco Park Lake',
     center: [8.5, -4.5],
@@ -99,7 +94,7 @@ export const WETLANDS_POLYGON = [
   { x: 4.2, z: 2.5 },
 ]
 
-// 5. Drainage Canals (Khals)
+// 5. Municipal Drainage Canals (Khals)
 export const DRAINAGE_CANALS = [
   // Circular Canal: Bagbazar to Palmer Bridge
   [
@@ -134,96 +129,148 @@ export const DRAINAGE_CANALS = [
   ],
 ]
 
-// 6. Hierarchical Road Network
-// Primary Arterial Highways (High prominence, wider footprint)
-export const PRIMARY_ROADS = [
-  // Eastern Metropolitan Bypass (EM Bypass) - Curving highway along the eastern flank
+// Deterministic Underground Drainage Trunk Conduits & Municipal Grid
+export const DRAINAGE_TRUNK_CONDUITS = [
+  // Sector V Main Trunk -> PS-07 -> Bagjola Canal
   [
-    [3.0, -5.0], // Ultadanga / VIP Rd junction
-    [3.2, -3.2], // Salt Lake gate
-    [3.4, -1.5], // Chingrighata
-    [3.5, 0.4],  // Science City / Park Circus connector
-    [3.6, 2.2],  // Ruby Hospital / Kasba
-    [3.7, 4.2],  // Mukundapur / Peerless
-    [3.7, 6.5],  // Garia / Dhalai Bridge
+    [6.4, -1.8],
+    [6.0, -1.5],
+    [5.6, -1.2], // PS-07
+    [5.2, -2.8],
+    [5.0, -4.5],
+    [4.2, -5.8], // Connects to Bagjola
   ],
-  // Maa Flyover & AJC Bose Road - Southern central expressway connecting to EM Bypass
+  // Central Kolkata / College Street Trunk -> Circular Canal
   [
-    [-1.5, 0.5], // Racecourse / Exide
-    [-0.2, 0.6], // Rabindra Sadan
-    [1.4, 0.8],  // Park Circus 7-Point
-    [2.5, 0.6],  // Maa Flyover span
-    [3.5, 0.4],  // Confluence with EM Bypass at Science City
+    [-0.4, -2.2],
+    [0.4, -2.4],
+    [1.2, -2.6],
+    [1.8, -3.0],
+    [2.8, -2.0], // Circular Canal confluence
   ],
-  // Chowringhee / JL Nehru Rd / Central Avenue (CR Avenue) - Central N-S Spine
+  // Camac Street & Park Street Box Drain -> Palmer Bridge (PS-02)
   [
-    [-0.6, -6.0], // Shyambazar 5-point
-    [-0.6, -4.0], // Girish Park / MG Road
-    [-0.6, -1.8], // Central / Bowbazar
-    [-0.6, 0.0],  // Esplanade / Curzon Park
-    [-0.6, 1.2],  // Park Street / Chowringhee
-    [-0.6, 2.4],  // Exide / Rabindra Sadan
-    [-0.6, 4.0],  // Hazra / Kalighat
+    [0.2, 0.8],
+    [0.8, 0.8],
+    [1.4, 0.8],
+    [1.8, 0.2], // PS-02 Palmer Bridge
+    [2.8, 0.6], // Eastern Drainage Canal
   ],
-  // Strand Road - Riverbank highway
+  // Behala DH Road Trunk -> Mominpore Booster (PS-09) -> Keorapukur Khal
   [
-    [-2.8, -3.5], // Burrabazar ghats
-    [-2.8, -1.8], // Howrah Bridge approach / Fairlie
-    [-3.0, 0.0],  // Babughat
-    [-3.2, 1.2],  // Prinsep Ghat / Hastings
+    [-2.6, 5.2],
+    [-2.6, 4.6],
+    [-2.6, 4.2], // PS-09
+    [-2.0, 3.2],
+    [-1.2, 3.4], // Adi Ganga confluence
   ],
-  // Diamond Harbour Road - South-Southwestern artery to Behala
+  // Ballygunge Circular Box Drain -> PS-04
   [
-    [-2.2, 2.0], // Taratala
-    [-2.4, 3.5], // Behala Tram Depot
-    [-2.6, 5.0], // Behala Chowrasta
-    [-2.8, 6.8], // Sakherbazar / Thakurpukur
-  ],
-  // VIP Road / Biswa Bangla Sarani - Artery through Salt Lake, New Town & Airport
-  [
-    [3.0, -5.0], // Ultadanga
-    [4.8, -4.8], // Lake Town / Dum Dum approach
-    [6.8, -4.2], // New Town entry gate
-    [8.4, -4.2], // Biswa Bangla Gate / Eco Park
-    [9.5, -4.0], // Action Area II
-  ],
-  // Major Sector V Connector
-  [
-    [3.4, -1.5], // Chingrighata
-    [5.0, -1.5], // Nicco Park / Sector V gateway
-    [6.4, -1.5], // College More / Webel
-    [7.5, -2.5], // New Town connector
+    [0.8, 2.6],
+    [1.4, 2.7],
+    [1.8, 2.8], // PS-04 Ballygunge
+    [3.2, 2.4],
+    [4.5, 2.0], // Wetlands outfall
   ],
 ]
 
-// Secondary Roads & Key Urban Connectors
+// Drainage Junctions
+export const DRAINAGE_JUNCTIONS = [
+  { id: 'J-01', name: 'Bagbazar Sluice Gate', pos: [-3.0, 0.08, -3.8] },
+  { id: 'J-02', name: 'Chingrighata Hydraulic Gate', pos: [3.4, 0.08, -1.5] },
+  { id: 'J-03', name: 'Taratala Syphon Inflow', pos: [-2.2, 0.08, 2.0] },
+  { id: 'J-04', name: 'Science City Siphon Junction', pos: [3.5, 0.08, 0.4] },
+  { id: 'J-05', name: 'Palmer Bridge Outfall Gate', pos: [2.8, 0.08, 0.6] },
+]
+
+// 6. Hierarchical Road Network
+export const PRIMARY_ROADS = [
+  // Eastern Metropolitan Bypass (EM Bypass)
+  [
+    [3.0, -5.0],
+    [3.2, -3.2],
+    [3.4, -1.5],
+    [3.5, 0.4],
+    [3.6, 2.2],
+    [3.7, 4.2],
+    [3.7, 6.5],
+  ],
+  // Maa Flyover & AJC Bose Road
+  [
+    [-1.5, 0.5],
+    [-0.2, 0.6],
+    [1.4, 0.8],
+    [2.5, 0.6],
+    [3.5, 0.4],
+  ],
+  // Central Avenue (CR Avenue) & Chowringhee
+  [
+    [-0.6, -6.0],
+    [-0.6, -4.0],
+    [-0.6, -1.8],
+    [-0.6, 0.0],
+    [-0.6, 1.2],
+    [-0.6, 2.4],
+    [-0.6, 4.0],
+  ],
+  // Strand Road
+  [
+    [-2.8, -3.5],
+    [-2.8, -1.8],
+    [-3.0, 0.0],
+    [-3.2, 1.2],
+  ],
+  // Diamond Harbour Road
+  [
+    [-2.2, 2.0],
+    [-2.4, 3.5],
+    [-2.6, 5.0],
+    [-2.8, 6.8],
+  ],
+  // VIP Road / Biswa Bangla Sarani
+  [
+    [3.0, -5.0],
+    [4.8, -4.8],
+    [6.8, -4.2],
+    [8.4, -4.2],
+    [9.5, -4.0],
+  ],
+  // Sector V Connector
+  [
+    [3.4, -1.5],
+    [5.0, -1.5],
+    [6.4, -1.5],
+    [7.5, -2.5],
+  ],
+]
+
 export const SECONDARY_ROADS = [
-  // Park Street (Mother Teresa Sarani)
+  // Park Street
   [
     [-0.6, 0.8],
     [0.4, 0.8],
     [1.4, 0.8],
   ],
-  // Rashbehari Avenue (Kalighat to Gariahat & Ruby connector)
+  // Rashbehari Avenue
   [
     [-1.0, 3.6],
     [0.4, 3.6],
     [1.8, 3.6],
     [3.6, 3.6],
   ],
-  // Gariahat Road (Ballygunge to Gariahat to Jadavpur)
+  // Gariahat Road
   [
     [1.8, 1.8],
     [1.8, 3.6],
     [1.8, 5.2],
   ],
-  // MG Road (Burrabazar to Sealdah)
+  // MG Road
   [
     [-2.8, -2.2],
     [-0.6, -2.2],
     [1.2, -2.2],
   ],
-  // Belgharia Expressway (Northern connection)
+  // Belgharia Expressway
   [
     [-4.2, -8.0],
     [-1.0, -7.8],
@@ -242,9 +289,8 @@ export const SECONDARY_ROADS = [
   ],
 ]
 
-// 7. Green Reserves (Preserved Open Spaces)
+// 7. Green Reserves
 export const GREEN_RESERVES = [
-  // The Maidan (Huge historic central open parkland between Strand Rd and Chowringhee)
   {
     name: 'The Maidan',
     center: [-1.4, 0.6],
@@ -256,7 +302,6 @@ export const GREEN_RESERVES = [
       { name: 'Racecourse Ground', pos: [-1.5, 0.04, 0.6], size: [0.8, 0.02, 1.2], round: true },
     ],
   },
-  // Central Park (Salt Lake)
   {
     name: 'Salt Lake Central Park',
     center: [4.7, -2.4],
@@ -264,7 +309,6 @@ export const GREEN_RESERVES = [
     rotation: 0.0,
     features: [],
   },
-  // Rabindra Sarobar Park Perimeter
   {
     name: 'Rabindra Sarobar Green Belt',
     center: [1.3, 3.6],
@@ -272,7 +316,6 @@ export const GREEN_RESERVES = [
     rotation: -0.15,
     features: [],
   },
-  // New Town Eco Park Grounds
   {
     name: 'Eco Park Grounds',
     center: [8.5, -4.5],
@@ -282,7 +325,7 @@ export const GREEN_RESERVES = [
   },
 ]
 
-// 8. Key Districts & Geographic Landmarks with accurate positions
+// 8. Key Districts
 export const DISTRICT_TARGETS = [
   {
     id: 'central',
@@ -331,57 +374,265 @@ export const DISTRICT_TARGETS = [
   },
 ]
 
-// 9. Restrained Inundation Risk Areas (Subtle translucent geographic overlay)
+// 9. Restrained Geographic Risk Zones (7 Zones with Semantic GIS Styling)
 export const RISK_OVERLAY_ZONES = [
   {
     id: 'risk_sector_v',
-    name: 'Sector V Inundation Pocket',
+    name: 'SECTOR V // SALT LAKE',
+    level: 'HIGH',
+    color: '#f97316', // Restrained Orange
     center: [6.2, -1.6],
-    radiusX: 0.9,
-    radiusZ: 0.7,
-    waterDepthCm: 24.2,
-    severity: 'WARNING',
-    color: '#f97316',
+    radiusX: 0.95,
+    radiusZ: 0.75,
+    affectedArea: '12,400 m²',
+    rainfall: '74 mm / 3 hr',
+    drainageLoad: '94%',
+    waterDepth: '28 cm',
+    riskScore: '82 / 100',
+    connectedIncidentId: '#SV-024',
+    cameraPos: [5.0, 2.6, 0.8],
+    lookAt: [6.2, 0.1, -1.6],
   },
   {
     id: 'risk_college_st',
-    name: 'Thanthania / College Street',
+    name: 'THANTHANIA // COLLEGE STREET',
+    level: 'CRITICAL',
+    color: '#ef4444', // Restrained Crimson
     center: [-0.3, -2.4],
-    radiusX: 0.6,
-    radiusZ: 0.5,
-    waterDepthCm: 28.4,
-    severity: 'CRITICAL',
-    color: '#f43f5e',
+    radiusX: 0.65,
+    radiusZ: 0.55,
+    affectedArea: '9,800 m²',
+    rainfall: '81 mm / 3 hr',
+    drainageLoad: '98%',
+    waterDepth: '28.4 cm',
+    riskScore: '89 / 100',
+    connectedIncidentId: 'INC-2026-089',
+    cameraPos: [-0.8, 2.8, -0.6],
+    lookAt: [-0.3, 0.1, -2.4],
   },
   {
     id: 'risk_behala',
-    name: 'Behala Chowrasta / DH Road',
+    name: 'BEHALA CHOWRASTA',
+    level: 'HIGH',
+    color: '#f97316',
     center: [-2.5, 5.0],
-    radiusX: 0.7,
-    radiusZ: 0.6,
-    waterDepthCm: 19.8,
-    severity: 'WARNING',
+    radiusX: 0.8,
+    radiusZ: 0.65,
+    affectedArea: '15,200 m²',
+    rainfall: '68 mm / 3 hr',
+    drainageLoad: '92%',
+    waterDepth: '19.8 cm',
+    riskScore: '78 / 100',
+    connectedIncidentId: '#BH-019',
+    cameraPos: [-2.0, 3.2, 7.2],
+    lookAt: [-2.5, 0.1, 5.0],
+  },
+  {
+    id: 'risk_park_circus',
+    name: 'PARK CIRCUS 7-POINT',
+    level: 'MODERATE',
+    color: '#f59e0b', // Restrained Amber
+    center: [1.4, 0.8],
+    radiusX: 0.6,
+    radiusZ: 0.5,
+    affectedArea: '8,600 m²',
+    rainfall: '62 mm / 3 hr',
+    drainageLoad: '76%',
+    waterDepth: '14.5 cm',
+    riskScore: '64 / 100',
+    connectedIncidentId: '#PS-032',
+    cameraPos: [1.0, 2.8, 2.6],
+    lookAt: [1.4, 0.1, 0.8],
+  },
+  {
+    id: 'risk_maidan',
+    name: 'THE MAIDAN / ESPLANADE',
+    level: 'LOW',
+    color: '#10b981', // Restrained Emerald
+    center: [-1.3, 0.6],
+    radiusX: 0.75,
+    radiusZ: 0.9,
+    affectedArea: '4,200 m²',
+    rainfall: '35 mm / 3 hr',
+    drainageLoad: '42%',
+    waterDepth: '5 cm',
+    riskScore: '28 / 100',
+    connectedIncidentId: null,
+    cameraPos: [-1.8, 3.4, 2.6],
+    lookAt: [-1.3, 0.1, 0.6],
+  },
+  {
+    id: 'risk_new_town',
+    name: 'NEW TOWN ACTION AREA I',
+    level: 'MODERATE',
     color: '#f59e0b',
+    center: [8.2, -4.0],
+    radiusX: 0.8,
+    radiusZ: 0.6,
+    affectedArea: '6,100 m²',
+    rainfall: '45 mm / 3 hr',
+    drainageLoad: '68%',
+    waterDepth: '8 cm',
+    riskScore: '45 / 100',
+    connectedIncidentId: null,
+    cameraPos: [7.2, 3.2, -2.2],
+    lookAt: [8.2, 0.1, -4.0],
+  },
+  {
+    id: 'risk_ultadanga',
+    name: 'ULTADANGA UNDERPASS',
+    level: 'LOW',
+    color: '#10b981',
+    center: [3.0, -5.0],
+    radiusX: 0.5,
+    radiusZ: 0.4,
+    affectedArea: '3,400 m²',
+    rainfall: '30 mm / 3 hr',
+    drainageLoad: '48%',
+    waterDepth: '4 cm',
+    riskScore: '32 / 100',
+    connectedIncidentId: null,
+    cameraPos: [2.5, 3.0, -3.2],
+    lookAt: [3.0, 0.1, -5.0],
   },
 ]
 
-// 10. Meaningful Incident Telemetry Signal (#SV-024)
-export const HERO_INCIDENT = {
-  id: '#SV-024',
-  name: 'Sector V Inundation & Surcharge Alert',
-  location: 'College More & Ring Road, Salt Lake Sector V',
-  borough: 'Bidhannagar Municipal Corp // Ward 31',
-  position: [6.2, 0.25, -1.6],
-  waterLevel: '24.2 cm',
-  sensorId: 'PT-09 (Ultrasonic Sluice Monitor)',
-  pumpsStatus: '2/3 Active (Discharging 85 cusecs into Bagjola Canal)',
-  alertLevel: 'HIGH LOGISTIC RISK',
-  timestamp: 'Live Telemetry Active',
-}
+// 10. Active Municipal Incidents
+export const ACTIVE_INCIDENTS_GEO = [
+  {
+    id: '#SV-024',
+    name: 'Sector V Incident #SV-024',
+    location: 'Salt Lake Sector V (College More & Ring Rd)',
+    subdivision: 'SECTOR V / SALT LAKE',
+    level: 'HIGH RISK',
+    position: [6.2, 0.25, -1.6],
+    waterDepth: '28 cm',
+    rainfall: '74 mm / 3 hr',
+    verifiedReports: 18,
+    affectedArea: '12,400 m²',
+    riskScore: '82 / 100',
+    connectedDrainage: 'Sector V Main Trunk',
+    nearestPump: 'PS-07',
+    probableCause: 'Rainfall exceeding local drainage capacity.',
+    severity: 'CRITICAL',
+    isPrimary: true,
+    cameraPos: [4.6, 2.4, 0.6],
+    lookAt: [6.2, 0.2, -1.6],
+  },
+  {
+    id: '#BH-019',
+    name: 'Behala Incident #BH-019',
+    location: 'Behala Chowrasta / Diamond Harbour Rd',
+    subdivision: 'BEHALA / SOUTH BASIN',
+    level: 'HIGH RISK',
+    position: [-2.5, 0.25, 5.0],
+    waterDepth: '19.8 cm',
+    rainfall: '68 mm / 3 hr',
+    verifiedReports: 14,
+    affectedArea: '15,200 m²',
+    riskScore: '78 / 100',
+    connectedDrainage: 'Keorapukur Khal Outfall',
+    nearestPump: 'PS-09',
+    probableCause: 'Culvert blockage near Metro construction pier P-142.',
+    severity: 'CRITICAL',
+    isPrimary: false,
+    cameraPos: [-2.0, 2.6, 6.8],
+    lookAt: [-2.5, 0.2, 5.0],
+  },
+  {
+    id: '#PS-032',
+    name: 'Park Street Incident #PS-032',
+    location: 'Park Street & Chowringhee Intersection',
+    subdivision: 'PARK STREET / CENTRAL',
+    level: 'MODERATE RISK',
+    position: [0.1, 0.25, 0.8],
+    waterDepth: '14.5 cm',
+    rainfall: '55 mm / 3 hr',
+    verifiedReports: 9,
+    affectedArea: '7,800 m²',
+    riskScore: '64 / 100',
+    connectedDrainage: 'Camac St Box Drain to Palmer Bridge',
+    nearestPump: 'PS-02',
+    probableCause: 'Grate clogging from street stormwater debris.',
+    severity: 'MODERATE',
+    isPrimary: false,
+    cameraPos: [-0.6, 2.6, 2.4],
+    lookAt: [0.1, 0.2, 0.8],
+  },
+]
 
-// 11. Iconic Detailed 3D Landmarks of Kolkata
+// Backward compatibility alias for hero
+export const HERO_INCIDENT = ACTIVE_INCIDENTS_GEO[0]
+
+// 11. Municipal Pumping Stations
+export const PUMPING_STATIONS_GEO = [
+  {
+    id: 'PS-07',
+    name: 'PS-07 Sector V Booster Station',
+    position: [5.6, 0.15, -1.2],
+    status: 'AT CAPACITY',
+    capacity: '100%',
+    pumpsRunning: '3/3',
+    dischargeRate: '85 cusecs',
+    connectedCanal: 'Bagjola Canal Outfall',
+    ward: 'Sector V IT Corridor',
+    isPrimary: true,
+    cameraPos: [4.4, 2.2, 0.4],
+    lookAt: [5.6, 0.15, -1.2],
+  },
+  {
+    id: 'PS-02',
+    name: 'PS-02 Palmer Bridge Drainage Station',
+    position: [1.8, 0.15, 0.2],
+    status: 'ACTIVE',
+    capacity: '80%',
+    pumpsRunning: '4/5',
+    dischargeRate: '140 cusecs',
+    connectedCanal: 'Palmer Bridge Outfall',
+    ward: 'Borough VII',
+    isPrimary: false,
+    cameraPos: [1.2, 2.2, 1.8],
+    lookAt: [1.8, 0.15, 0.2],
+  },
+  {
+    id: 'PS-04',
+    name: 'PS-04 Ballygunge Drainage Station',
+    position: [1.8, 0.15, 2.8],
+    status: 'AT CAPACITY',
+    capacity: '100%',
+    pumpsRunning: '3/3',
+    dischargeRate: '120 cusecs',
+    connectedCanal: 'Ballygunge Trunk Outfall',
+    ward: 'Borough VIII',
+    isPrimary: false,
+    cameraPos: [1.2, 2.4, 4.2],
+    lookAt: [1.8, 0.15, 2.8],
+  },
+  {
+    id: 'PS-09',
+    name: 'PS-09 Mominpore / Behala Booster',
+    position: [-2.6, 0.15, 4.2],
+    status: 'ACTIVE',
+    capacity: '75%',
+    pumpsRunning: '3/4',
+    dischargeRate: '95 cusecs',
+    connectedCanal: 'Keorapukur Khal',
+    ward: 'Borough XIII',
+    isPrimary: false,
+    cameraPos: [-2.0, 2.4, 5.6],
+    lookAt: [-2.6, 0.15, 4.2],
+  },
+]
+
+// 12. Spatial Forecast Isobar Contours
+export const FORECAST_RADAR_CELLS = [
+  { center: [3.5, 0.1, -1.0], radius: 3.6, intensity: '85 mm/hr', color: 'rgba(56, 189, 248, 0.18)' },
+  { center: [5.2, 0.1, -1.8], radius: 2.2, intensity: '74 mm/hr', color: 'rgba(244, 63, 94, 0.22)' },
+  { center: [-1.2, 0.1, 1.4], radius: 2.8, intensity: '60 mm/hr', color: 'rgba(245, 158, 11, 0.18)' },
+]
+
+// 13. Iconic Detailed 3D Landmarks of Kolkata
 export const ICONIC_LANDMARKS_3D = [
-  // The 42 on Chowringhee (Tallest Skyscraper in Kolkata, ~260m)
   {
     type: 'the_42',
     name: 'The 42, Chowringhee',
@@ -390,25 +641,21 @@ export const ICONIC_LANDMARKS_3D = [
     width: 0.38,
     depth: 0.38,
   },
-  // Victoria Memorial (White Makrana Marble Monument in The Maidan)
   {
     type: 'victoria_memorial',
     name: 'Victoria Memorial',
     position: [-1.0, 0, 1.0],
   },
-  // Eden Gardens Cricket Stadium
   {
     type: 'eden_gardens',
     name: 'Eden Gardens Stadium',
     position: [-1.8, 0, -0.2],
   },
-  // Biswa Bangla Gate (Kolkata Gate in New Town)
   {
     type: 'biswa_bangla_gate',
     name: 'Biswa Bangla Gate',
     position: [8.4, 0, -4.2],
   },
-  // Salt Lake Stadium (Yuva Bharati Krirangan)
   {
     type: 'salt_lake_stadium',
     name: 'Salt Lake Stadium',
@@ -416,7 +663,7 @@ export const ICONIC_LANDMARKS_3D = [
   },
 ]
 
-// 12. Deterministic Building Generator for Authentic, Tall, Colorful Kolkata 3D Skyline
+// 14. Deterministic Building Generator for Authentic Kolkata 3D Skyline
 export function generateKolkataUrbanFabric() {
   const buildings = []
 
@@ -426,30 +673,24 @@ export function generateKolkataUrbanFabric() {
     return seed / 233280
   }
 
-  // Zone 1: Central Kolkata (BBD Bagh, Esplanade, Park Street, Burrabazar, Bowbazar)
-  // Dense historical and modern commercial skyline (Heights 1.0 to 3.8)
+  // Zone 1: Central Kolkata
   for (let i = 0; i < 1100; i++) {
-    const x = -2.6 + pseudoRandom() * 3.6 // [-2.6 to 1.0]
-    const z = -3.5 + pseudoRandom() * 4.8 // [-3.5 to 1.3]
+    const x = -2.6 + pseudoRandom() * 3.6
+    const z = -3.5 + pseudoRandom() * 4.8
 
-    // Skip Hooghly River area
     if (x < -2.4) continue
-
-    // Skip The Maidan open parkland
     if (x > -2.2 && x < -0.7 && z > -0.4 && z < 1.7) continue
 
     const isDalhousie = x > -2.0 && x < -1.0 && z > -1.8 && z < -0.6
     const isParkStreet = x > -0.8 && x < 0.6 && z > 0.4 && z < 1.0
 
-    // Tall 3D city buildings!
     let height = 0.8 + pseudoRandom() * 1.8
-    if (isDalhousie) height += 0.8 + pseudoRandom() * 1.4 // Dalhousie high-rises up to 4.0
+    if (isDalhousie) height += 0.8 + pseudoRandom() * 1.4
     if (isParkStreet) height += 0.6 + pseudoRandom() * 1.2
 
     const sx = 0.16 + pseudoRandom() * 0.22
     const sz = 0.16 + pseudoRandom() * 0.22
 
-    // Vibrant color distribution: warm golds, cyans, magentas, platinums
     const rand = pseudoRandom()
     const colorType = rand > 0.75 ? 0 : rand > 0.5 ? 1 : rand > 0.25 ? 2 : 4
 
@@ -466,15 +707,12 @@ export function generateKolkataUrbanFabric() {
     })
   }
 
-  // Zone 2: Salt Lake (Bidhannagar)
-  // Planned residential and institutional sector blocks (Heights 0.7 to 1.8)
+  // Zone 2: Salt Lake
   for (let i = 0; i < 850; i++) {
-    const x = 3.6 + pseudoRandom() * 2.6 // [3.6 to 6.2]
-    const z = -3.8 + pseudoRandom() * 2.8 // [-3.8 to -1.0]
+    const x = 3.6 + pseudoRandom() * 2.6
+    const z = -3.8 + pseudoRandom() * 2.8
 
-    // Skip Central Park lake & park
     if (x > 4.2 && x < 5.2 && z > -2.8 && z < -1.9) continue
-    // Salt Lake Stadium circular landmark area
     if (x > 3.6 && x < 4.5 && z > -2.0 && z < -1.2) continue
 
     const height = 0.6 + pseudoRandom() * 1.3
@@ -498,17 +736,14 @@ export function generateKolkataUrbanFabric() {
   }
 
   // Zone 3: Sector V (IT Hub)
-  // Towering modern glass & steel IT campuses (Heights 2.0 to 4.8)
   for (let i = 0; i < 480; i++) {
-    const x = 5.8 + pseudoRandom() * 1.8 // [5.8 to 7.6]
-    const z = -2.6 + pseudoRandom() * 2.0 // [-2.6 to -0.6]
+    const x = 5.8 + pseudoRandom() * 1.8
+    const z = -2.6 + pseudoRandom() * 2.0
 
-    // Prominent modern commercial glass towers
-    const height = 1.6 + pseudoRandom() * 3.2 // Towers reaching up to 4.8!
+    const height = 1.6 + pseudoRandom() * 3.2
     const sx = 0.24 + pseudoRandom() * 0.32
     const sz = 0.24 + pseudoRandom() * 0.32
 
-    // Tech colors: electric cyan, glowing magenta, cool platinum
     const rand = pseudoRandom()
     const colorType = rand > 0.6 ? 1 : rand > 0.3 ? 2 : 4
 
@@ -525,15 +760,12 @@ export function generateKolkataUrbanFabric() {
     })
   }
 
-  // Zone 4: New Town (Rajarhat)
-  // Contemporary high-rise complexes and corporate towers along Biswa Bangla Sarani (Heights 1.4 to 4.0)
+  // Zone 4: New Town
   for (let i = 0; i < 550; i++) {
-    const x = 7.2 + pseudoRandom() * 2.8 // [7.2 to 10.0]
-    const z = -5.8 + pseudoRandom() * 3.2 // [-5.8 to -2.6]
+    const x = 7.2 + pseudoRandom() * 2.8
+    const z = -5.8 + pseudoRandom() * 3.2
 
-    // Skip Eco park lake
     if (x > 7.6 && x < 9.4 && z > -5.2 && z < -3.8) continue
-    // Skip Biswa Bangla Gate position
     if (x > 8.0 && x < 8.8 && z > -4.5 && z < -3.9) continue
 
     const height = 1.2 + pseudoRandom() * 2.8
@@ -556,17 +788,13 @@ export function generateKolkataUrbanFabric() {
     })
   }
 
-  // Zone 5: South Kolkata (Ballygunge, Gariahat, Tollygunge, Behala)
-  // Dense residential urban fabric (Heights 0.8 to 2.2)
+  // Zone 5: South Kolkata
   for (let i = 0; i < 1100; i++) {
-    const x = -2.8 + pseudoRandom() * 5.8 // [-2.8 to 3.0]
-    const z = 1.6 + pseudoRandom() * 5.6 // [1.6 to 7.2]
+    const x = -2.8 + pseudoRandom() * 5.8
+    const z = 1.6 + pseudoRandom() * 5.6
 
-    // Skip Hooghly River on southwest
     if (x < -4.2 && z > 3.0) continue
     if (x < -5.2) continue
-
-    // Skip Rabindra Sarobar Lake
     if (x > 0.4 && x < 2.2 && z > 3.2 && z < 4.0) continue
 
     const height = 0.7 + pseudoRandom() * 1.6
@@ -589,13 +817,11 @@ export function generateKolkataUrbanFabric() {
     })
   }
 
-  // Zone 6: North Kolkata (Shyambazar, Cossipore, Dum Dum)
-  // Historical dense northern fabric (Heights 0.7 to 2.0)
+  // Zone 6: North Kolkata
   for (let i = 0; i < 650; i++) {
-    const x = -2.6 + pseudoRandom() * 4.8 // [-2.6 to 2.2]
-    const z = -7.5 + pseudoRandom() * 3.8 // [-7.5 to -3.7]
+    const x = -2.6 + pseudoRandom() * 4.8
+    const z = -7.5 + pseudoRandom() * 3.8
 
-    // Skip Hooghly River
     if (x < -3.2 && z > -6.0) continue
     if (x < -4.0) continue
 

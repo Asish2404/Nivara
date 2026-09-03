@@ -1,129 +1,212 @@
-import { useKWIStore } from '../../store/useKWIStore'
-import { AlertCircle, CheckCircle2, Clock, MapPin, Gauge, Activity, ShieldAlert, ArrowUpRight } from 'lucide-react'
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { useKWIStore } from "../../store/useKWIStore";
+import { ArrowRight, CheckCircle2, ShieldAlert } from "lucide-react";
+import { ACTIVE_INCIDENTS } from "../gis/kolkataCartographicData";
 
 export function IncidentsView() {
-  const { incidents, resolveIncident } = useKWIStore()
+  const { setSelectedIncident, navigate } = useKWIStore();
+  const [selectedId, setSelectedId] = useState(ACTIVE_INCIDENTS[0].id);
+
+  const activeIncident =
+    ACTIVE_INCIDENTS.find((i) => i.id === selectedId) || ACTIVE_INCIDENTS[0];
+
+  const handleViewOnMap = (inc) => {
+    setSelectedIncident(inc);
+    navigate("/live-city");
+  };
+
+  const handleCreateWorkOrder = () => {
+    navigate("/action-center");
+  };
 
   return (
-    <div className="w-full font-sans text-white">
+    <div className="w-full font-sans text-slate-900 pb-16">
       {/* View Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between pb-6 border-b border-white/10 gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono tracking-widest uppercase px-2 py-0.5 rounded bg-cyan-950 border border-cyan-400/40 text-cyan-300 font-bold">
-              TELEMETRY LOG
-            </span>
-            <span className="text-xs font-mono text-slate-400">// KMC DRAINAGE DISPATCH</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-white mt-1 font-mono">
-            MUNICIPAL WATER INCIDENTS
-          </h1>
-        </div>
-
-        <div className="flex items-center gap-3 font-mono text-xs">
-          <div className="px-3 py-1.5 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 font-bold shadow-[0_0_12px_rgba(244,63,94,0.2)]">
-            {incidents.filter((i) => i.severity === 'CRITICAL').length} CRITICAL ACTIVE
-          </div>
-          <div className="px-3 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 font-semibold shadow-[0_0_12px_rgba(16,185,129,0.2)]">
-            {incidents.filter((i) => i.severity === 'RESOLVED').length} RESOLVED TODAY
-          </div>
-        </div>
+      <div className="max-w-2xl mb-10">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-blue-600 block mb-1">
+          OPERATIONAL INTELLIGENCE · 11:24 AM IST
+        </span>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-950">
+          Active Water Incidents
+        </h1>
+        <p className="text-sm sm:text-base text-slate-600 mt-2 leading-relaxed">
+          Monitor and investigate active water-related incidents across Kolkata.
+        </p>
       </div>
 
-      {/* Incidents Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-        {incidents.map((incident) => {
-          const isCritical = incident.severity === 'CRITICAL'
-          const isResolved = incident.severity === 'RESOLVED'
+      {/* Two-Column Layout: Left List / Right Selected Detail */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Incidents List */}
+        <div className="lg:col-span-6 space-y-3">
+          {ACTIVE_INCIDENTS.map((inc) => {
+            const isSelected = inc.id === selectedId;
+            const isCrit =
+              inc.severity === "HIGH" || inc.severity === "CRITICAL";
 
-          return (
-            <div
-              key={incident.id}
-              className={`p-5 rounded-2xl border transition-all ${
-                isCritical
-                  ? 'bg-rose-950/20 border-rose-500/40 shadow-[0_0_20px_rgba(244,63,94,0.15)] hover:border-rose-400'
-                  : isResolved
-                  ? 'bg-white/5 border-white/10 opacity-70'
-                  : 'bg-amber-950/20 border-amber-500/40'
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
+            return (
+              <div
+                key={inc.id}
+                onClick={() => setSelectedId(inc.id)}
+                className={`p-5 rounded-xl border transition-all cursor-pointer ${
+                  isSelected
+                    ? "border-blue-600 bg-blue-50/20 shadow-xs"
+                    : "border-slate-200 bg-white hover:border-slate-300"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        isCrit ? "bg-rose-600" : "bg-amber-500"
+                      }`}
+                    />
+                    <span className="text-xs font-bold text-slate-900">
+                      {inc.location}
+                    </span>
+                  </div>
                   <span
-                    className={`text-[10px] font-mono px-2 py-0.5 rounded-md font-bold uppercase ${
-                      isCritical
-                        ? 'bg-rose-950 border border-rose-500/60 text-rose-300'
-                        : isResolved
-                        ? 'bg-emerald-950 border border-emerald-500/60 text-emerald-300'
-                        : 'bg-amber-950 border border-amber-500/60 text-amber-300'
+                    className={`text-[10px] font-medium px-2 py-0.5 rounded ${
+                      isCrit
+                        ? "bg-rose-50 text-rose-700 border border-rose-200"
+                        : "bg-amber-50 text-amber-700 border border-amber-200"
                     }`}
                   >
-                    {incident.severity}
-                  </span>
-                  <span className="text-xs font-mono text-slate-300 font-semibold">
-                    {incident.id}
-                  </span>
-                  <span className="text-[11px] font-mono text-slate-400">
-                    • {incident.reportedAt}
+                    {inc.severity}
                   </span>
                 </div>
 
-                {!isResolved && (
-                  <button
-                    type="button"
-                    onClick={() => resolveIncident(incident.id)}
-                    className="text-xs font-mono font-bold text-cyan-300 hover:text-white px-3 py-1 rounded-lg bg-cyan-950/80 border border-cyan-400/40 hover:bg-cyan-900 transition-colors cursor-pointer"
-                  >
-                    Mark Resolved
-                  </button>
-                )}
-              </div>
-
-              <h3 className="text-base font-bold text-white mt-3 flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-cyan-400 shrink-0" />
-                <span>{incident.location}</span>
-              </h3>
-
-              <div className="flex items-center gap-3 text-xs text-slate-300 mt-1">
-                <span className="font-semibold text-cyan-200">{incident.ward}</span>
-                <span>({incident.borough})</span>
-                <span className="text-slate-400">• Outfall: {incident.drainageCanal}</span>
-              </div>
-
-              {/* Water Level & Pump Status Box */}
-              <div className="mt-4 p-3 rounded-xl bg-black/50 border border-white/10 grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <span className="text-[10px] font-mono text-slate-400 uppercase block">
-                    Water Inundation Depth
+                <div className="flex items-center gap-4 text-xs text-slate-600">
+                  <span className="font-mono text-slate-500">{inc.id}</span>
+                  <span>•</span>
+                  <span>
+                    Depth:{" "}
+                    <strong className="text-slate-900">{inc.waterDepth}</strong>
                   </span>
-                  <span
-                    className={`font-mono text-base font-bold ${
-                      isCritical ? 'text-rose-400' : 'text-cyan-300'
-                    }`}
-                  >
-                    {incident.waterLevelCm} cm
-                  </span>
-                </div>
-
-                <div>
-                  <span className="text-[10px] font-mono text-slate-400 uppercase block">
-                    Station Status
-                  </span>
-                  <span className="font-mono text-xs font-semibold text-slate-200">
-                    {incident.pumpsRunning}/{incident.pumpsCapacity} Pumps Active
-                  </span>
+                  <span>•</span>
+                  <span>{inc.verifiedReports} verified reports</span>
                 </div>
               </div>
+            );
+          })}
+        </div>
 
-              <p className="text-xs text-slate-400 mt-3 leading-relaxed">
-                <strong className="text-slate-300">Dispatch Log:</strong> {incident.notes}
-              </p>
+        {/* Right Column: Selected Incident Detailed Card */}
+        {activeIncident && (
+          <div className="lg:col-span-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-6">
+            <div className="flex items-start justify-between pb-4 border-b border-slate-100">
+              <div>
+                <span className="text-[10px] font-mono font-bold text-slate-400 block uppercase">
+                  INCIDENT {activeIncident.id} · {activeIncident.subdivision}
+                </span>
+                <h2 className="text-xl font-bold text-slate-950 mt-1">
+                  {activeIncident.location}
+                </h2>
+                <span className="text-xs text-slate-500 mt-0.5 block">
+                  Reported: {activeIncident.timestamp} · Status:{" "}
+                  {activeIncident.status}
+                </span>
+              </div>
+
+              <span
+                className={`text-xs font-bold px-2.5 py-1 rounded-md ${
+                  activeIncident.severity === "HIGH" ||
+                  activeIncident.severity === "CRITICAL"
+                    ? "bg-rose-50 text-rose-700 border border-rose-200"
+                    : "bg-amber-50 text-amber-700 border border-amber-200"
+                }`}
+              >
+                {activeIncident.severity}
+              </span>
             </div>
-          )
-        })}
+
+            {/* Metrics Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                  Risk Score
+                </span>
+                <span className="text-base font-bold text-slate-900">
+                  {activeIncident.riskScore}
+                </span>
+              </div>
+              <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                  Water Depth
+                </span>
+                <span className="text-base font-bold text-rose-600">
+                  {activeIncident.waterDepth}
+                </span>
+              </div>
+              <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                  Rainfall
+                </span>
+                <span className="text-base font-bold text-slate-900">
+                  {activeIncident.rainfall}
+                </span>
+              </div>
+              <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                  Citizen Reports
+                </span>
+                <span className="text-base font-bold text-slate-900">
+                  {activeIncident.verifiedReports}
+                </span>
+              </div>
+              <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                  Affected Area
+                </span>
+                <span className="text-base font-bold text-slate-900">
+                  {activeIncident.affectedArea}
+                </span>
+              </div>
+              <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                  Nearest Pump
+                </span>
+                <span className="text-base font-bold text-slate-900">
+                  {activeIncident.nearestPump}
+                </span>
+              </div>
+            </div>
+
+            {/* Drainage Context */}
+            <div className="text-xs text-slate-600 space-y-2 pt-2 border-t border-slate-100">
+              <div>
+                <strong className="text-slate-900">Connected Drainage:</strong>{" "}
+                {activeIncident.connectedDrainage}
+              </div>
+              <div>
+                <strong className="text-slate-900">Probable Cause:</strong>{" "}
+                {activeIncident.probableCause}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => handleViewOnMap(activeIncident)}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                <span>View on Map</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateWorkOrder}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-medium text-xs transition-all active:scale-[0.98] cursor-pointer"
+              >
+                Track Work Order
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
-  )
+  );
 }
 
-export default IncidentsView
+export default IncidentsView;

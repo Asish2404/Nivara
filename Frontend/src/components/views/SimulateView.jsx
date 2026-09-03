@@ -1,165 +1,336 @@
-import { useState } from 'react'
-import { Play, Sliders, Cpu } from 'lucide-react'
+import { useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Play,
+  ArrowRight,
+  CheckCircle2,
+  RotateCcw,
+  Loader2,
+} from "lucide-react";
+import { useKWIStore } from "../../store/useKWIStore";
 
 export function SimulateView() {
-  const [rainfallInput, setRainfallInput] = useState(65)
-  const [tideInput, setTideInput] = useState(3.6)
-  const [pumpCapacity, setPumpCapacity] = useState(90)
-  const [simRunning, setSimRunning] = useState(false)
-  const [simResult, setSimResult] = useState(null)
+  const { navigate } = useKWIStore();
+  const [pumpCapacity, setPumpCapacity] = useState(100);
+  const [crewDispatched, setCrewDispatched] = useState(true);
+  const [extraPumpUnit, setExtraPumpUnit] = useState(true);
 
-  const handleRunSim = () => {
-    setSimRunning(true)
+  // Simulation Timeline State: 'CURRENT' | 'SIMULATING' | 'RESULT'
+  const [simState, setSimState] = useState("CURRENT");
+
+  const handleRunSimulation = () => {
+    setSimState("SIMULATING");
     setTimeout(() => {
-      setSimRunning(false)
-      const waterloggedWards = Math.round(rainfallInput * 0.4 + tideInput * 3.5 - pumpCapacity * 0.2)
-      const timeToDrainHours = ((rainfallInput * 0.08) / (pumpCapacity * 0.01)).toFixed(1)
-      setSimResult({
-        impactedWards: Math.max(2, waterloggedWards),
-        timeToDrainHours: Math.max(0.5, timeToDrainHours),
-        peakDepthCm: (rainfallInput * 0.45 * (tideInput / 3.0)).toFixed(1),
-        criticalZone:
-          rainfallInput > 60
-            ? 'Borough VII (Park Circus) & Borough V (Thanthania)'
-            : 'Borough XIII (Behala)',
-      })
-    }, 800)
-  }
+      setSimState("RESULT");
+    }, 850);
+  };
+
+  const handleReset = () => {
+    setSimState("CURRENT");
+  };
 
   return (
-    <div className="w-full font-sans text-white">
-      <div className="pb-6 border-b border-white/10">
-        <span className="text-[10px] font-mono tracking-widest uppercase px-2 py-0.5 rounded bg-cyan-950 border border-cyan-400/40 text-cyan-300 font-bold">
-          SCENARIO SIMULATION ENGINE // HYDRO-MODEL v2.8
+    <div className="w-full font-sans text-slate-900 pb-16">
+      {/* Header */}
+      <div className="max-w-2xl mb-8">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-blue-600 block mb-1">
+          SCENARIO MODELING
         </span>
-        <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-white mt-1 font-mono">
-          URBAN DRAINAGE STRESS SIMULATION
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-950">
+          Simulate an Intervention
         </h1>
+        <p className="text-sm sm:text-base text-slate-600 mt-2 leading-relaxed">
+          Test how activating station PS-07, staging mobile dewatering pumps,
+          and inlet desilting relieve street inundation before deploying
+          physical crews.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-        {/* Controls Card */}
-        <div className="lg:col-span-5 p-6 rounded-2xl bg-black/50 border border-white/10 space-y-5">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-cyan-300 flex items-center gap-2 font-mono">
-            <Sliders className="w-4 h-4" />
-            <span>Simulation Parameters</span>
-          </h3>
+      {/* Simulation Progression Timeline */}
+      <div className="mb-8 max-w-xl">
+        <div className="flex items-center justify-between text-xs font-semibold">
+          <span
+            className={
+              simState === "CURRENT"
+                ? "text-blue-600 font-bold"
+                : "text-slate-400"
+            }
+          >
+            1. CURRENT STATE
+          </span>
+          <span className="text-slate-300">────────</span>
+          <span
+            className={
+              simState === "SIMULATING"
+                ? "text-blue-600 font-bold"
+                : "text-slate-400"
+            }
+          >
+            2. SIMULATING
+          </span>
+          <span className="text-slate-300">────────</span>
+          <span
+            className={
+              simState === "RESULT"
+                ? "text-emerald-600 font-bold"
+                : "text-slate-400"
+            }
+          >
+            3. RELIEF RESULT
+          </span>
+        </div>
+      </div>
 
-          <div className="space-y-4 text-xs font-sans">
+      {/* Two Column Layout: Left Controls / Right Before & After */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Intervention Controls */}
+        <div className="lg:col-span-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-6">
+          <div className="border-b border-slate-100 pb-3">
+            <h2 className="text-sm font-bold text-slate-950 uppercase tracking-wider">
+              Intervention Parameters
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Target: Sector V College More Basin
+            </p>
+          </div>
+
+          <div className="space-y-5 text-xs">
+            {/* Pump Station Capacity */}
             <div>
-              <div className="flex justify-between font-semibold mb-1">
-                <span className="text-slate-300">Rainfall Intensity:</span>
-                <span className="font-mono text-cyan-300">{rainfallInput} mm/hr</span>
+              <div className="flex justify-between mb-1.5">
+                <span className="font-semibold text-slate-700">
+                  Station PS-07 Load
+                </span>
+                <span className="font-bold text-blue-600">
+                  {pumpCapacity}% Capacity
+                </span>
               </div>
               <input
                 type="range"
-                min="10"
-                max="120"
-                value={rainfallInput}
-                onChange={(e) => setRainfallInput(Number(e.target.value))}
-                className="w-full accent-cyan-400 cursor-pointer"
-              />
-            </div>
-
-            <div>
-              <div className="flex justify-between font-semibold mb-1">
-                <span className="text-slate-300">Hooghly High Tide Level:</span>
-                <span className="font-mono text-cyan-300">{tideInput} meters</span>
-              </div>
-              <input
-                type="range"
-                min="1.5"
-                max="4.8"
-                step="0.1"
-                value={tideInput}
-                onChange={(e) => setTideInput(Number(e.target.value))}
-                className="w-full accent-cyan-400 cursor-pointer"
-              />
-            </div>
-
-            <div>
-              <div className="flex justify-between font-semibold mb-1">
-                <span className="text-slate-300">Pumping Grid Deployment:</span>
-                <span className="font-mono text-cyan-300">{pumpCapacity}% Capacity</span>
-              </div>
-              <input
-                type="range"
-                min="30"
+                min="50"
                 max="100"
                 value={pumpCapacity}
                 onChange={(e) => setPumpCapacity(Number(e.target.value))}
-                className="w-full accent-cyan-400 cursor-pointer"
+                className="w-full accent-blue-600 cursor-pointer"
+              />
+              <span className="text-[10px] text-slate-400">
+                85 cusecs axial discharge into Bagjola Canal
+              </span>
+            </div>
+
+            {/* Drainage Crew Switch */}
+            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+              <div>
+                <span className="font-semibold text-slate-900 block">
+                  Inlet Desilting Crew
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  Deploy Unit 04 to clear surface grates
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={crewDispatched}
+                onChange={(e) => setCrewDispatched(e.target.checked)}
+                className="w-4 h-4 accent-blue-600 cursor-pointer"
+              />
+            </div>
+
+            {/* Additional Pump Unit Switch */}
+            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+              <div>
+                <span className="font-semibold text-slate-900 block">
+                  Mobile Submersible Pump
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  Stage 20 HP Godwin dewatering pump
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={extraPumpUnit}
+                onChange={(e) => setExtraPumpUnit(e.target.checked)}
+                className="w-4 h-4 accent-blue-600 cursor-pointer"
               />
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleRunSim}
-            disabled={simRunning}
-            className="w-full py-3 bg-gradient-to-r from-cyan-950 to-blue-950 border border-cyan-400/50 hover:border-cyan-300 text-cyan-200 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,240,255,0.25)] hover:shadow-[0_0_25px_rgba(0,240,255,0.4)] transition-all cursor-pointer"
-          >
-            {simRunning ? (
-              <span>Computing Hydraulic Grid...</span>
-            ) : (
-              <>
-                <Play className="w-3.5 h-3.5 fill-current text-cyan-400" />
-                <span>Execute Scenario Simulation</span>
-              </>
-            )}
-          </button>
-        </div>
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={handleRunSimulation}
+              disabled={simState === "SIMULATING"}
+              className="flex-1 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
+            >
+              {simState === "SIMULATING" ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Computing Hydraulics…</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Run Simulation →</span>
+                </>
+              )}
+            </button>
 
-        {/* Results Card */}
-        <div className="lg:col-span-7 p-6 rounded-2xl bg-black/50 border border-white/10 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2 font-mono">
-                <Cpu className="w-4 h-4 text-cyan-400" />
-                <span>Computed Impact Assessment</span>
-              </h3>
-              <span className="text-[10px] font-mono text-emerald-400">STATUS: READY</span>
-            </div>
-
-            {simResult ? (
-              <div className="grid grid-cols-2 gap-4 mt-6">
-                <div className="p-4 rounded-xl bg-rose-950/30 border border-rose-500/40 text-xs">
-                  <span className="text-[10px] font-mono uppercase text-rose-300 font-semibold block">
-                    Severe Waterlogging Wards
-                  </span>
-                  <span className="text-2xl font-bold font-mono text-rose-400 mt-1 block">
-                    {simResult.impactedWards} Wards
-                  </span>
-                </div>
-
-                <div className="p-4 rounded-xl bg-cyan-950/30 border border-cyan-500/40 text-xs">
-                  <span className="text-[10px] font-mono uppercase text-cyan-300 font-semibold block">
-                    Peak Inundation Depth
-                  </span>
-                  <span className="text-2xl font-bold font-mono text-cyan-300 mt-1 block">
-                    {simResult.peakDepthCm} cm
-                  </span>
-                </div>
-
-                <div className="p-4 rounded-xl bg-black/60 border border-white/10 text-xs col-span-2">
-                  <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold block">
-                    Total Estimated Drainage Clearance Time
-                  </span>
-                  <span className="text-xl font-bold font-mono text-white mt-1 block">
-                    ~{simResult.timeToDrainHours} Hours under continuous pumping
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div className="py-16 text-center text-xs text-slate-500 font-mono">
-                Adjust parameters on the left and click "Execute Scenario Simulation" to compute flood risks.
-              </div>
+            {simState === "RESULT" && (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="p-3 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                title="Reset"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
             )}
           </div>
         </div>
+
+        {/* Right Column: Before & After Visual Comparison */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* BEFORE Card */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 border border-rose-200 px-2 py-0.5 rounded">
+                    BEFORE INTERVENTION
+                  </span>
+                  <span className="text-xs text-slate-400 font-mono">
+                    Current State
+                  </span>
+                </div>
+
+                <div className="h-44 rounded-xl bg-slate-100 border border-slate-200 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
+                  <div className="w-16 h-16 rounded-full bg-rose-100 border border-rose-200 flex items-center justify-center mb-2 shadow-2xs">
+                    <span className="text-xl font-bold text-rose-600">
+                      18 cm
+                    </span>
+                  </div>
+                  <span className="text-xs font-semibold text-slate-800">
+                    Severe Inundation
+                  </span>
+                  <span className="text-[11px] text-slate-500 mt-0.5">
+                    2 lanes blocked at College More
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 space-y-1">
+                <div>
+                  Drainage capacity:{" "}
+                  <strong className="text-slate-900">62%</strong>
+                </div>
+                <div>
+                  Risk score:{" "}
+                  <strong className="text-rose-600">82 / 100</strong>
+                </div>
+                <div>
+                  Affected area:{" "}
+                  <strong className="text-slate-900">12,400 m²</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* AFTER Card */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                    AFTER INTERVENTION
+                  </span>
+                  <span className="text-xs text-slate-400 font-mono">
+                    {simState === "RESULT" ? "Simulated Relief" : "Pending Run"}
+                  </span>
+                </div>
+
+                <div className="h-44 rounded-xl bg-slate-100 border border-slate-200 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
+                  <div
+                    className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 shadow-2xs transition-all ${
+                      simState === "RESULT"
+                        ? "bg-emerald-100 border border-emerald-200"
+                        : "bg-slate-200"
+                    }`}
+                  >
+                    <span
+                      className={`text-xl font-bold ${
+                        simState === "RESULT"
+                          ? "text-emerald-700"
+                          : "text-slate-400"
+                      }`}
+                    >
+                      {simState === "RESULT" ? "7 cm" : "—"}
+                    </span>
+                  </div>
+                  <span className="text-xs font-semibold text-slate-800">
+                    {simState === "RESULT"
+                      ? "Safe Traffic Clearance"
+                      : "Run simulation to model relief"}
+                  </span>
+                  <span className="text-[11px] text-slate-500 mt-0.5">
+                    {simState === "RESULT"
+                      ? "61% reduction in water depth"
+                      : "Impact computed in seconds"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 space-y-1">
+                <div>
+                  Drainage capacity:{" "}
+                  <strong className="text-slate-900">
+                    {simState === "RESULT" ? "87%" : "—"}
+                  </strong>
+                </div>
+                <div>
+                  Risk score:{" "}
+                  <strong className="text-emerald-700">
+                    {simState === "RESULT" ? "54 / 100" : "—"}
+                  </strong>
+                </div>
+                <div>
+                  Affected area:{" "}
+                  <strong className="text-slate-900">
+                    {simState === "RESULT" ? "4,100 m²" : "—"}
+                  </strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Outcome Summary & Direct Connection to Action Center */}
+          {simState === "RESULT" && (
+            <div className="p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-slate-900 block">
+                    Intervention Model Verified · Ready for Municipal Dispatch
+                  </span>
+                  <span className="text-xs text-slate-600">
+                    Staging 1 Godwin unit + Unit 04 desilting restores traffic
+                    flow 3.6 hours faster.
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => navigate("/action-center")}
+                className="px-4 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs transition-all active:scale-[0.98] shrink-0 cursor-pointer"
+              >
+                Create Work Order
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default SimulateView
+export default SimulateView;

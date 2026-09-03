@@ -1,11 +1,21 @@
 import { Canvas } from '@react-three/fiber'
 import { Suspense, useRef, useState, useEffect, useCallback } from 'react'
 import * as THREE from 'three'
+import { Sparkles } from '@react-three/drei'
 import { Earth } from './components/Earth'
 import { EarthCamera } from './components/EarthCamera'
 import { GeographicTransition } from './components/GeographicTransition'
 import { RealisticStarfield } from './components/RealisticStarfield'
+import { TacticalHudOverlay } from './components/ui/TacticalHudOverlay'
 import { LandingPage } from './components/landing/LandingPage'
+import { LiveCityPage } from './components/views/LiveCityPage'
+import { SubpageLayout } from './components/views/SubpageLayout'
+import { IncidentsView } from './components/views/IncidentsView'
+import { ForecastView } from './components/views/ForecastView'
+import { SimulateView } from './components/views/SimulateView'
+import { ReportsView } from './components/views/ReportsView'
+import { ActionsView } from './components/views/ActionsView'
+import { useKWIStore } from './store/useKWIStore'
 import './App.css'
 
 function EarthScene({ zoomStarted, earthRef, controlsRef, onZoomComplete }) {
@@ -28,6 +38,7 @@ function EarthScene({ zoomStarted, earthRef, controlsRef, onZoomComplete }) {
       <Suspense fallback={null}>
         <Earth earthRef={earthRef} />
         <RealisticStarfield />
+        <Sparkles count={55} scale={10} size={2.5} speed={0.4} opacity={0.35} color="#00f0ff" />
       </Suspense>
 
       <GeographicTransition
@@ -42,30 +53,43 @@ function EarthScene({ zoomStarted, earthRef, controlsRef, onZoomComplete }) {
 }
 
 function App() {
-  // Stages: 'orbit' (0-5s) -> 'zooming' (point & zoom to India) -> 'black_screen' -> 'landing_page'
-  const [stage, setStage] = useState('orbit')
+  const { currentRoute, navigate } = useKWIStore()
+
+  // Stages for Landing ('/'): 'orbit' (0-5s) -> 'zooming' -> 'black_screen' -> 'landing_page'
+  const isDirectLanding = currentRoute === '/'
+  const [stage, setStage] = useState(isDirectLanding ? 'orbit' : 'landing_page')
   const [blackOverlay, setBlackOverlay] = useState(false)
 
   const earthRef = useRef()
   const controlsRef = useRef()
 
-  // 1. 0s to 5s of clean Earth rotation, then zoom to India
+  // Handle browser back/forward navigation
   useEffect(() => {
-    if (stage !== 'orbit') return
+    const handlePopState = () => {
+      const path = window.location.pathname || '/'
+      navigate(path)
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [navigate])
+
+  // 1. 0s to 5s of clean Earth rotation, then zoom to India (only on initial landing route '/')
+  useEffect(() => {
+    if (currentRoute !== '/' || stage !== 'orbit') return
 
     const timer = setTimeout(() => {
       setStage('zooming')
     }, 5000)
 
     return () => clearTimeout(timer)
-  }, [stage])
+  }, [stage, currentRoute])
 
-  // 2. When zoom into India completes, trigger -> kolkata
+  // 2. When zoom into India completes, trigger -> Kolkata
   const handleZoomComplete = useCallback(() => {
     setStage('black_screen')
     setBlackOverlay(true)
 
-    // 3. After 1.2s of black screen, reveal the landing page with 3D animation + floating navbar
+    // 3. After black screen transition, reveal the landing page
     setTimeout(() => {
       setStage('landing_page')
       setTimeout(() => {
@@ -74,6 +98,52 @@ function App() {
     }, 300)
   }, [])
 
+  // Render Routes
+  if (currentRoute === '/live-city') {
+    return <LiveCityPage />
+  }
+
+  if (currentRoute === '/incidents') {
+    return (
+      <SubpageLayout>
+        <IncidentsView />
+      </SubpageLayout>
+    )
+  }
+
+  if (currentRoute === '/forecast') {
+    return (
+      <SubpageLayout>
+        <ForecastView />
+      </SubpageLayout>
+    )
+  }
+
+  if (currentRoute === '/simulate') {
+    return (
+      <SubpageLayout>
+        <SimulateView />
+      </SubpageLayout>
+    )
+  }
+
+  if (currentRoute === '/reports' || currentRoute === '/report' || currentRoute === '/my-reports') {
+    return (
+      <SubpageLayout>
+        <ReportsView />
+      </SubpageLayout>
+    )
+  }
+
+  if (currentRoute === '/action-center' || currentRoute === '/respond') {
+    return (
+      <SubpageLayout>
+        <ActionsView />
+      </SubpageLayout>
+    )
+  }
+
+  // Root Landing Route ('/')
   return (
     <div className="min-h-screen bg-black text-white relative w-full overflow-x-hidden font-sans">
       {/* Black Screen Overlay for cinematic transitions */}
@@ -82,23 +152,28 @@ function App() {
         aria-hidden="true"
       />
 
-      {/* Intro Phase (0-10s): 3D Earth in Space with zero text */}
+      {/* Intro Phase (0-10s): 3D Earth in Space with Edolus-style HUD */}
       {stage !== 'landing_page' && (
-        <main className="earth-experiment" aria-label="3D Earth Intro">
-          <EarthScene
-            zoomStarted={stage === 'zooming' || stage === 'black_screen'}
-            earthRef={earthRef}
-            controlsRef={controlsRef}
-            onZoomComplete={handleZoomComplete}
+        <>
+          <main className="earth-experiment" aria-label="3D Earth Intro">
+            <EarthScene
+              zoomStarted={stage === 'zooming' || stage === 'black_screen'}
+              earthRef={earthRef}
+              controlsRef={controlsRef}
+              onZoomComplete={handleZoomComplete}
+            />
+          </main>
+          <TacticalHudOverlay
+            stage={stage}
+            onSkip={handleZoomComplete}
           />
-        </main>
+        </>
       )}
 
-      {/* Landing Page Phase: Fullscreen 3D Colorful Tubes Animation + Floating KWI Command Navbar + Footer */}
+      {/* Landing Page Phase */}
       {stage === 'landing_page' && <LandingPage />}
     </div>
   )
 }
 
 export default App
-

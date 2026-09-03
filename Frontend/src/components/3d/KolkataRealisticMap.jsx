@@ -7,23 +7,22 @@ import {
   WATER_BODIES,
   WETLANDS_POLYGON,
   DRAINAGE_CANALS,
+  DRAINAGE_TRUNK_CONDUITS,
+  DRAINAGE_JUNCTIONS,
   PRIMARY_ROADS,
   SECONDARY_ROADS,
   GREEN_RESERVES,
   RISK_OVERLAY_ZONES,
-  HERO_INCIDENT,
+  ACTIVE_INCIDENTS_GEO,
+  PUMPING_STATIONS_GEO,
+  FORECAST_RADAR_CELLS,
   DISTRICT_TARGETS,
   generateKolkataUrbanFabric,
 } from './kolkataGeoData'
+import { useKWIStore } from '../../store/useKWIStore'
 
 /**
- * 1. Procedural High-Resolution Geospatial Basemap Canvas Texture
- * Renders an authentic cartographic basemap of Kolkata directly onto the terrain:
- * - Real Hooghly River S-curve, shoreline, and mudflats
- * - The Maidan, Race Course oval, Victoria gardens, Central Park, Eco Park, Botanical Gardens
- * - Real lakes: Lal Dighi (BBD Bagh), Rabindra Sarobar, Subhas Sarobar, Nalban, Eco Park lake
- * - Authentic road alignments: EM Bypass, Maa Flyover, Central Ave, Strand Rd, DH Rd, VIP Rd
- * - Precision geospatial grid lines & latitude/longitude markings
+ * 1. Procedural Daylight Cartographic Basemap Texture (Light GIS Palette)
  */
 function createKolkataBasemapTexture() {
   const canvas = document.createElement('canvas')
@@ -31,19 +30,18 @@ function createKolkataBasemapTexture() {
   canvas.height = 1024
   const ctx = canvas.getContext('2d')
 
-  // World bounds in 3D scene coordinates: X [-18 to 18], Z [-16 to 16]
   const toCanvas = (x, z) => {
     const cx = ((x + 18) / 36) * 1024
     const cy = ((z + 16) / 32) * 1024
     return [cx, cy]
   }
 
-  // 1. Deep midnight architectural landmass
-  ctx.fillStyle = '#080d16'
+  // 1. Crisp Pearl & Warm Alabaster Terrain Base
+  ctx.fillStyle = '#eef2f6'
   ctx.fillRect(0, 0, 1024, 1024)
 
-  // 2. Subtle cartographic coordinate grid
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.025)'
+  // 2. Subtle Cartographic Coordinate Grid
+  ctx.strokeStyle = 'rgba(100, 116, 139, 0.12)'
   ctx.lineWidth = 1
   for (let x = -16; x <= 16; x += 4) {
     const [cx1, cy1] = toCanvas(x, -16)
@@ -62,8 +60,8 @@ function createKolkataBasemapTexture() {
     ctx.stroke()
   }
 
-  // 3. Green Reserves (The Maidan, Botanical Gardens, Central Park, Eco Park)
-  ctx.fillStyle = '#0b2419'
+  // 3. Green Reserves (The Maidan, Eco Park, Central Park)
+  ctx.fillStyle = '#d1fae5'
   GREEN_RESERVES.forEach((res) => {
     const [cx, cy] = toCanvas(res.center[0], res.center[1])
     const w = (res.size[0] / 36) * 1024
@@ -75,21 +73,21 @@ function createKolkataBasemapTexture() {
   const [rcX, rcY] = toCanvas(-1.2, 1.9)
   ctx.beginPath()
   ctx.ellipse(rcX, rcY, 26, 16, 0.2, 0, Math.PI * 2)
-  ctx.fillStyle = '#0e2b1e'
+  ctx.fillStyle = '#a7f3d0'
   ctx.fill()
-  ctx.strokeStyle = '#1a4732'
-  ctx.lineWidth = 2
+  ctx.strokeStyle = '#6ee7b7'
+  ctx.lineWidth = 1.5
   ctx.stroke()
 
-  // Botanical Gardens Shibpur (West Bank)
+  // Botanical Gardens Shibpur
   const [bgX, bgY] = toCanvas(-5.2, 3.8)
   ctx.beginPath()
   ctx.ellipse(bgX, bgY, 32, 22, -0.2, 0, Math.PI * 2)
-  ctx.fillStyle = '#0a2318'
+  ctx.fillStyle = '#bbf7d0'
   ctx.fill()
 
   // 4. East Kolkata Wetlands
-  ctx.fillStyle = 'rgba(10, 38, 28, 0.7)'
+  ctx.fillStyle = 'rgba(186, 230, 253, 0.55)'
   ctx.beginPath()
   WETLANDS_POLYGON.forEach((pt, i) => {
     const [px, py] = toCanvas(pt.x, pt.z)
@@ -100,11 +98,10 @@ function createKolkataBasemapTexture() {
   ctx.fill()
 
   // 5. Water Bodies (Lal Dighi, Rabindra Sarobar, Subhas Sarobar, Nalban, Eco Park)
-  ctx.fillStyle = '#0c2236'
-  ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)'
+  ctx.fillStyle = '#38bdf8'
+  ctx.strokeStyle = '#0284c7'
   ctx.lineWidth = 1.5
 
-  // Lal Dighi (Historic BBD Bagh Tank)
   const [ldX, ldY] = toCanvas(-0.5, -1.8)
   ctx.fillRect(ldX - 6, ldY - 6, 12, 12)
   ctx.strokeRect(ldX - 6, ldY - 6, 12, 12)
@@ -119,8 +116,8 @@ function createKolkataBasemapTexture() {
     ctx.stroke()
   })
 
-  // 6. Secondary City Streets Grid
-  ctx.strokeStyle = '#141d2c'
+  // 6. Secondary City Streets Grid (Clean Slate Lines)
+  ctx.strokeStyle = '#cbd5e1'
   ctx.lineWidth = 1.5
   SECONDARY_ROADS.forEach((road) => {
     ctx.beginPath()
@@ -132,15 +129,15 @@ function createKolkataBasemapTexture() {
     ctx.stroke()
   })
 
-  // 7. Primary Arterial Expressways (EM Bypass, Maa Flyover, Central Ave, Strand Rd, VIP Rd)
+  // 7. Primary Arterial Expressways (Vibrant High-Contrast Light Tones)
   PRIMARY_ROADS.forEach((road, idx) => {
     const roadColors = [
-      '#f59e0b', // EM Bypass: Warm Amber Gold
-      '#0ea5e9', // Maa Flyover: Turquoise Sky
-      '#10b981', // Central Ave: Emerald
-      '#38bdf8', // Strand Rd: Sapphire
-      '#f43f5e', // Diamond Harbour Rd: Coral
-      '#a855f7', // VIP / Biswa Bangla: Violet
+      '#d97706', // EM Bypass (Warm Amber)
+      '#0284c7', // Maa Flyover (Azure Blue)
+      '#059669', // Central Ave (Emerald)
+      '#2563eb', // Strand Rd (Royal Blue)
+      '#e11d48', // DH Rd (Coral Rose)
+      '#7c3aed', // VIP Rd (Violet)
     ]
     ctx.strokeStyle = roadColors[idx % roadColors.length]
     ctx.lineWidth = 3
@@ -154,16 +151,14 @@ function createKolkataBasemapTexture() {
   })
 
   // 8. Hooghly River S-Curve Channel
-  ctx.fillStyle = '#061726'
+  ctx.fillStyle = '#0284c7'
   ctx.beginPath()
-  // Draw western bank
   HOOGHLY_RIVER_POINTS.forEach((pt, i) => {
     const halfW = pt.width / 2
     const [cx, cy] = toCanvas(pt.x - halfW, pt.z)
     if (i === 0) ctx.moveTo(cx, cy)
     else ctx.lineTo(cx, cy)
   })
-  // Draw eastern bank in reverse
   for (let i = HOOGHLY_RIVER_POINTS.length - 1; i >= 0; i--) {
     const pt = HOOGHLY_RIVER_POINTS[i]
     const halfW = pt.width / 2
@@ -172,13 +167,13 @@ function createKolkataBasemapTexture() {
   }
   ctx.closePath()
   ctx.fill()
-  ctx.strokeStyle = '#10304a'
+  ctx.strokeStyle = '#0369a1'
   ctx.lineWidth = 2
   ctx.stroke()
 
-  // 9. District Cartographic Label Ticks
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.35)'
-  ctx.font = 'bold 9px monospace'
+  // 9. District Cartographic Label Ticks (Crisp Dark Slate)
+  ctx.fillStyle = '#475569'
+  ctx.font = 'bold 10px monospace'
   const labels = [
     { text: 'HOWRAH JN', x: -3.3, z: -2.7 },
     { text: 'B.B.D. BAGH', x: -0.8, z: -1.7 },
@@ -201,7 +196,7 @@ function createKolkataBasemapTexture() {
 }
 
 /**
- * 2. Skyscraper Window Atlas Texture (Soft Champagne & Ivory Lighting)
+ * 2. Skyscraper Window Atlas Texture (Daylight White & Soft Azure Glass)
  */
 function createSkyscraperWindowTexture() {
   const canvas = document.createElement('canvas')
@@ -209,7 +204,7 @@ function createSkyscraperWindowTexture() {
   canvas.height = 512
   const ctx = canvas.getContext('2d')
 
-  ctx.fillStyle = '#0c121b'
+  ctx.fillStyle = '#f1f5f9'
   ctx.fillRect(0, 0, 512, 512)
 
   const floorH = 16
@@ -217,25 +212,25 @@ function createSkyscraperWindowTexture() {
   const winGap = 6
 
   for (let y = 6; y < 512; y += floorH) {
-    ctx.fillStyle = '#172232'
+    ctx.fillStyle = '#e2e8f0'
     ctx.fillRect(0, y - 2, 512, 2)
 
     for (let x = 6; x < 512; x += winW + winGap) {
       const rand = Math.random()
-      if (rand > 0.44) {
+      if (rand > 0.35) {
         const type = Math.random()
-        if (type > 0.55) {
-          ctx.fillStyle = '#fef3c7' // Champagne
+        if (type > 0.5) {
+          ctx.fillStyle = '#0284c7' // Reflective azure glass
         } else if (type > 0.25) {
-          ctx.fillStyle = '#f1f5f9' // Ivory
+          ctx.fillStyle = '#38bdf8' // Sky reflection
         } else {
-          ctx.fillStyle = '#bae6fd' // Soft cyan
+          ctx.fillStyle = '#ffffff' // Pure sunlight glint
         }
-        ctx.globalAlpha = 0.45 + Math.random() * 0.45
+        ctx.globalAlpha = 0.5 + Math.random() * 0.4
         ctx.fillRect(x, y + 2, winW, floorH - 6)
-      } else if (rand > 0.2) {
-        ctx.fillStyle = '#1e2d42'
-        ctx.globalAlpha = 0.2
+      } else {
+        ctx.fillStyle = '#cbd5e1'
+        ctx.globalAlpha = 0.35
         ctx.fillRect(x, y + 2, winW, floorH - 6)
       }
     }
@@ -250,7 +245,7 @@ function createSkyscraperWindowTexture() {
 }
 
 /**
- * 3. Water Ripple Normal Map for Liquid Hooghly River Surface
+ * 3. Water Ripple Normal Map
  */
 function createWaterRippleTexture() {
   const canvas = document.createElement('canvas')
@@ -280,7 +275,7 @@ function createWaterRippleTexture() {
 }
 
 /**
- * 4. Ground Plane with Kolkata Basemap
+ * 4. Ground Plane with Clean Light Basemap
  */
 function AuthenticKolkataTerrain({ basemapTexture }) {
   const geometry = useMemo(() => {
@@ -306,15 +301,15 @@ function AuthenticKolkataTerrain({ basemapTexture }) {
     <mesh geometry={geometry} receiveShadow position={[0, -0.015, 0]}>
       <meshStandardMaterial
         map={basemapTexture}
-        roughness={0.9}
-        metalness={0.12}
+        roughness={0.7}
+        metalness={0.05}
       />
     </mesh>
   )
 }
 
 /**
- * 5. Liquid Hooghly River & Riverbank Quaysides
+ * 5. Liquid Hooghly River with Vibrant Azure Glistening Water
  */
 function AuthenticHooghlyRiver({ waterTexture }) {
   const riverGeometry = useMemo(() => {
@@ -366,44 +361,28 @@ function AuthenticHooghlyRiver({ waterTexture }) {
   })
 
   return (
-    <group>
-      <mesh
-        geometry={riverGeometry}
-        position={[0, 0.038, 0]}
-        receiveShadow
-      >
-        <meshStandardMaterial
-          color="#0a1f33"
-          emissive="#05101a"
-          emissiveIntensity={0.35}
-          normalMap={waterTexture}
-          normalScale={new THREE.Vector2(0.25, 0.25)}
-          roughness={0.2}
-          metalness={0.8}
-          transparent
-          opacity={0.95}
-        />
-      </mesh>
-
-      {/* Riverbank Ghat Beacons */}
-      {HOOGHLY_RIVER_POINTS.map((pt, idx) => (
-        <group key={idx}>
-          <mesh position={[pt.x + pt.width / 2 + 0.05, 0.07, pt.z]}>
-            <sphereGeometry args={[0.035, 8, 8]} />
-            <meshBasicMaterial color="#bae6fd" />
-          </mesh>
-          <mesh position={[pt.x - pt.width / 2 - 0.05, 0.07, pt.z]}>
-            <sphereGeometry args={[0.035, 8, 8]} />
-            <meshBasicMaterial color="#fef3c7" />
-          </mesh>
-        </group>
-      ))}
-    </group>
+    <mesh
+      geometry={riverGeometry}
+      position={[0, 0.038, 0]}
+      receiveShadow
+    >
+      <meshStandardMaterial
+        color="#0284c7"
+        emissive="#0369a1"
+        emissiveIntensity={0.25}
+        normalMap={waterTexture}
+        normalScale={new THREE.Vector2(0.3, 0.3)}
+        roughness={0.15}
+        metalness={0.4}
+        transparent
+        opacity={0.96}
+      />
+    </mesh>
   )
 }
 
 /**
- * 6. Authentic Sculpted 3D Landmarks of Kolkata
+ * 6. Sculpted 3D Landmarks of Kolkata (Daylight Aesthetics)
  */
 function AuthenticKolkataLandmarks() {
   const beaconRef = useRef()
@@ -417,105 +396,96 @@ function AuthenticKolkataLandmarks() {
 
   return (
     <group>
-      {/* 1. HOWRAH BRIDGE (Rabindra Setu) - Cantilever Steel Truss */}
+      {/* 1. HOWRAH BRIDGE */}
       <group position={[-3.1, 0.16, -2.2]}>
-        {/* Roadway Deck */}
         <mesh position={[0, 0, 0]}>
           <boxGeometry args={[1.5, 0.06, 0.24]} />
-          <meshStandardMaterial color="#475569" emissive="#78350f" emissiveIntensity={0.4} metalness={0.6} />
+          <meshStandardMaterial color="#64748b" metalness={0.6} roughness={0.3} />
         </mesh>
-        {/* Cantilever Towers (Howrah & Kolkata piers) */}
         {[-0.55, 0.55].map((tx, i) => (
           <group key={i} position={[tx, 0, 0]}>
             <mesh position={[0, 0.38, -0.1]}>
               <boxGeometry args={[0.07, 0.74, 0.05]} />
-              <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+              <meshStandardMaterial color="#94a3b8" metalness={0.7} roughness={0.2} />
             </mesh>
             <mesh position={[0, 0.38, 0.1]}>
               <boxGeometry args={[0.07, 0.74, 0.05]} />
-              <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+              <meshStandardMaterial color="#94a3b8" metalness={0.7} roughness={0.2} />
             </mesh>
             <mesh position={[0, 0.75, 0]}>
               <boxGeometry args={[0.09, 0.05, 0.25]} />
-              <meshStandardMaterial color="#94a3b8" emissive="#f59e0b" emissiveIntensity={0.35} />
+              <meshStandardMaterial color="#cbd5e1" />
             </mesh>
           </group>
         ))}
         <mesh position={[0, 0.68, 0]}>
           <boxGeometry args={[1.05, 0.045, 0.22]} />
-          <meshStandardMaterial color="#94a3b8" emissive="#d97706" emissiveIntensity={0.35} />
+          <meshStandardMaterial color="#cbd5e1" />
         </mesh>
       </group>
 
-      {/* 2. HOWRAH RAILWAY STATION - Iconic Red Brick Grand Terminal */}
+      {/* 2. HOWRAH RAILWAY STATION */}
       <group position={[-4.2, 0, -2.2]}>
-        {/* Main Red Brick Terminal */}
         <mesh position={[0, 0.25, 0]}>
           <boxGeometry args={[0.95, 0.45, 0.5]} />
-          <meshStandardMaterial color="#881337" roughness={0.7} />
+          <meshStandardMaterial color="#991b1b" roughness={0.6} />
         </mesh>
-        {/* Arched Clock Tower Towers */}
         {[-0.35, 0.35].map((tx, i) => (
           <mesh key={i} position={[tx, 0.55, 0.15]}>
             <boxGeometry args={[0.15, 0.25, 0.15]} />
-            <meshStandardMaterial color="#9f1239" />
+            <meshStandardMaterial color="#b91c1c" />
           </mesh>
         ))}
-        {/* Platform Sheds */}
         <mesh position={[-0.45, 0.14, 0]}>
           <boxGeometry args={[0.5, 0.18, 0.45]} />
-          <meshStandardMaterial color="#334155" metalness={0.5} />
+          <meshStandardMaterial color="#64748b" metalness={0.4} />
         </mesh>
       </group>
 
-      {/* 3. VIDYASAGAR SETU (Second Hooghly Bridge) - Cable-Stayed Pylons */}
+      {/* 3. VIDYASAGAR SETU */}
       <group position={[-3.35, 0.22, -0.5]}>
         <mesh position={[0, 0, 0]}>
           <boxGeometry args={[1.7, 0.06, 0.26]} />
-          <meshStandardMaterial color="#334155" emissive="#0369a1" emissiveIntensity={0.35} metalness={0.6} />
+          <meshStandardMaterial color="#475569" metalness={0.6} />
         </mesh>
         {[-0.6, 0.6].map((px, i) => (
           <group key={i} position={[px, 0, 0]}>
             <mesh position={[0, 0.6, -0.12]}>
               <boxGeometry args={[0.08, 1.2, 0.06]} />
-              <meshStandardMaterial color="#94a3b8" metalness={0.7} />
+              <meshStandardMaterial color="#cbd5e1" metalness={0.6} />
             </mesh>
             <mesh position={[0, 0.6, 0.12]}>
               <boxGeometry args={[0.08, 1.2, 0.06]} />
-              <meshStandardMaterial color="#94a3b8" metalness={0.7} />
+              <meshStandardMaterial color="#cbd5e1" metalness={0.6} />
             </mesh>
             <mesh position={[0, 1.18, 0]}>
               <boxGeometry args={[0.1, 0.07, 0.3]} />
-              <meshStandardMaterial color="#cbd5e1" emissive="#38bdf8" emissiveIntensity={0.45} />
+              <meshStandardMaterial color="#f8fafc" />
             </mesh>
           </group>
         ))}
       </group>
 
-      {/* 4. THE 42 on Chowringhee (Kolkata's Supertall Skyscraper) */}
+      {/* 4. THE 42 */}
       <group position={[-0.62, 0, 0.65]}>
         <mesh position={[0, 2.9, 0]} castShadow>
           <boxGeometry args={[0.38, 5.8, 0.38]} />
           <meshStandardMaterial
-            color="#1e293b"
-            emissive="#0f172a"
-            emissiveIntensity={0.4}
-            roughness={0.2}
-            metalness={0.85}
+            color="#e2e8f0"
+            roughness={0.15}
+            metalness={0.7}
           />
         </mesh>
         <mesh position={[0, 2.9, 0]}>
           <boxGeometry args={[0.4, 5.75, 0.2]} />
           <meshStandardMaterial
-            color="#94a3b8"
-            emissive="#38bdf8"
-            emissiveIntensity={0.35}
+            color="#0284c7"
             wireframe
           />
         </mesh>
         <mesh position={[0, 5.95, 0]}>
           <coneGeometry args={[0.11, 0.55, 8]} />
-          <meshStandardMaterial color="#cbd5e1" metalness={0.9} />
+          <meshStandardMaterial color="#64748b" metalness={0.9} />
         </mesh>
         <mesh ref={beaconRef} position={[0, 6.26, 0]}>
           <sphereGeometry args={[0.07, 8, 8]} />
@@ -523,116 +493,43 @@ function AuthenticKolkataLandmarks() {
         </mesh>
       </group>
 
-      {/* 5. VICTORIA MEMORIAL in The Maidan */}
+      {/* 5. VICTORIA MEMORIAL (Pristine White Makrana Marble) */}
       <group position={[-1.0, 0, 1.0]}>
-        {/* Reflecting Pool */}
         <mesh position={[0, 0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[1.2, 1.0]} />
-          <meshStandardMaterial color="#0c2d4a" roughness={0.15} metalness={0.8} />
+          <meshStandardMaterial color="#0284c7" roughness={0.15} metalness={0.5} />
         </mesh>
-        {/* White Marble Base Plinth */}
         <mesh position={[0, 0.12, 0]}>
           <boxGeometry args={[0.74, 0.18, 0.62]} />
-          <meshStandardMaterial color="#f8fafc" roughness={0.35} metalness={0.15} />
+          <meshStandardMaterial color="#ffffff" roughness={0.2} metalness={0.05} />
         </mesh>
-        {/* Classical Pavilion Hall */}
         <mesh position={[0, 0.32, 0]}>
           <boxGeometry args={[0.44, 0.24, 0.38]} />
-          <meshStandardMaterial color="#ffffff" roughness={0.25} metalness={0.1} />
+          <meshStandardMaterial color="#ffffff" roughness={0.2} metalness={0.05} />
         </mesh>
-        {/* Central Dome */}
         <mesh position={[0, 0.54, 0]}>
           <sphereGeometry args={[0.18, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-          <meshStandardMaterial color="#f8fafc" emissive="#f1f5f9" emissiveIntensity={0.35} />
-        </mesh>
-        {/* Angel of Victory */}
-        <mesh position={[0, 0.74, 0]}>
-          <coneGeometry args={[0.025, 0.12, 8]} />
-          <meshBasicMaterial color="#fbbf24" />
-        </mesh>
-        {/* Corner Chattris */}
-        {[[-0.24, -0.2], [0.24, -0.2], [-0.24, 0.2], [0.24, 0.2]].map(([cx, cz], i) => (
-          <mesh key={i} position={[cx, 0.46, cz]}>
-            <sphereGeometry args={[0.065, 12, 12]} />
-            <meshStandardMaterial color="#f8fafc" />
-          </mesh>
-        ))}
-      </group>
-
-      {/* 6. EDEN GARDENS CRICKET STADIUM */}
-      <group position={[-1.8, 0, -0.2]}>
-        <mesh position={[0, 0.18, 0]}>
-          <cylinderGeometry args={[0.44, 0.5, 0.35, 32]} />
-          <meshStandardMaterial color="#334155" roughness={0.7} />
-        </mesh>
-        <mesh position={[0, 0.36, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.38, 32]} />
-          <meshStandardMaterial color="#064e3b" roughness={0.8} />
-        </mesh>
-        {[[-0.46, -0.46], [0.46, -0.46], [-0.46, 0.46], [0.46, 0.46]].map(([fx, fz], i) => (
-          <group key={i} position={[fx, 0.42, fz]}>
-            <mesh position={[0, 0, 0]}>
-              <cylinderGeometry args={[0.015, 0.02, 0.55, 8]} />
-              <meshStandardMaterial color="#64748b" metalness={0.8} />
-            </mesh>
-            <mesh position={[0, 0.28, 0]}>
-              <boxGeometry args={[0.12, 0.05, 0.07]} />
-              <meshBasicMaterial color="#fef3c7" />
-            </mesh>
-          </group>
-        ))}
-      </group>
-
-      {/* 7. SHAHID MINAR (Ochterlony Monument at Esplanade) */}
-      <group position={[-0.55, 0, -0.7]}>
-        <mesh position={[0, 0.45, 0]}>
-          <cylinderGeometry args={[0.025, 0.045, 0.9, 12]} />
-          <meshStandardMaterial color="#e2e8f0" roughness={0.3} />
-        </mesh>
-        <mesh position={[0, 0.92, 0]}>
-          <sphereGeometry args={[0.045, 12, 12]} />
-          <meshBasicMaterial color="#fef3c7" />
+          <meshStandardMaterial color="#ffffff" roughness={0.15} />
         </mesh>
       </group>
 
-      {/* 8. SCIENCE CITY SPIRAL DOME */}
-      <group position={[3.5, 0, 1.8]}>
-        <mesh position={[0, 0.22, 0]}>
-          <sphereGeometry args={[0.32, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-          <meshStandardMaterial color="#0284c7" emissive="#0369a1" emissiveIntensity={0.5} />
-        </mesh>
-      </group>
-
-      {/* 9. BISWA BANGLA GATE (New Town) */}
+      {/* 6. BISWA BANGLA GATE */}
       <group position={[8.4, 0, -4.2]}>
         <mesh position={[-0.38, 0.48, 0]} rotation={[0, 0, -0.2]}>
           <cylinderGeometry args={[0.035, 0.045, 1.05, 12]} />
-          <meshStandardMaterial color="#e2e8f0" metalness={0.4} />
+          <meshStandardMaterial color="#ffffff" metalness={0.3} />
         </mesh>
         <mesh position={[0.38, 0.48, 0]} rotation={[0, 0, 0.2]}>
           <cylinderGeometry args={[0.035, 0.045, 1.05, 12]} />
-          <meshStandardMaterial color="#e2e8f0" metalness={0.4} />
+          <meshStandardMaterial color="#ffffff" metalness={0.3} />
         </mesh>
         <mesh position={[0, 0.94, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <torusGeometry args={[0.38, 0.08, 16, 32]} />
           <meshStandardMaterial
-            color="#0ea5e9"
-            emissive="#0369a1"
-            emissiveIntensity={0.5}
+            color="#0284c7"
             metalness={0.6}
+            roughness={0.2}
           />
-        </mesh>
-      </group>
-
-      {/* 10. SALT LAKE STADIUM (Yuva Bharati Krirangan) */}
-      <group position={[4.05, 0, -1.6]}>
-        <mesh position={[0, 0.18, 0]}>
-          <cylinderGeometry args={[0.44, 0.48, 0.35, 32]} />
-          <meshStandardMaterial color="#475569" roughness={0.7} />
-        </mesh>
-        <mesh position={[0, 0.36, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.34, 0.48, 32]} />
-          <meshStandardMaterial color="#94a3b8" metalness={0.5} />
         </mesh>
       </group>
     </group>
@@ -640,7 +537,7 @@ function AuthenticKolkataLandmarks() {
 }
 
 /**
- * 7. Flowing Highway Traffic Lights (Champagne Headlights & Muted Coral Taillights)
+ * 7. Traffic Flow (Daylight Slate & Amber Lights)
  */
 function AuthenticTrafficFlow() {
   const headlightsRef = useRef()
@@ -648,10 +545,10 @@ function AuthenticTrafficFlow() {
 
   const trafficCurves = useMemo(() => {
     return [
-      new THREE.CatmullRomCurve3(PRIMARY_ROADS[0].map(([x, z]) => new THREE.Vector3(x, 0.065, z))), // EM Bypass
-      new THREE.CatmullRomCurve3(PRIMARY_ROADS[1].map(([x, z]) => new THREE.Vector3(x, 0.065, z))), // Maa Flyover
-      new THREE.CatmullRomCurve3(PRIMARY_ROADS[2].map(([x, z]) => new THREE.Vector3(x, 0.065, z))), // Central Ave
-      new THREE.CatmullRomCurve3(PRIMARY_ROADS[5].map(([x, z]) => new THREE.Vector3(x, 0.065, z))), // VIP Rd
+      new THREE.CatmullRomCurve3(PRIMARY_ROADS[0].map(([x, z]) => new THREE.Vector3(x, 0.065, z))),
+      new THREE.CatmullRomCurve3(PRIMARY_ROADS[1].map(([x, z]) => new THREE.Vector3(x, 0.065, z))),
+      new THREE.CatmullRomCurve3(PRIMARY_ROADS[2].map(([x, z]) => new THREE.Vector3(x, 0.065, z))),
+      new THREE.CatmullRomCurve3(PRIMARY_ROADS[5].map(([x, z]) => new THREE.Vector3(x, 0.065, z))),
     ]
   }, [])
 
@@ -680,13 +577,11 @@ function AuthenticTrafficFlow() {
       const pos = curve.getPointAt(v.offset)
       const tangent = curve.getTangentAt(v.offset)
 
-      // Forward lanes: Soft warm champagne
       dummy.position.copy(pos)
       dummy.lookAt(pos.clone().add(tangent))
       dummy.updateMatrix()
       headlightsRef.current.setMatrixAt(i, dummy.matrix)
 
-      // Reverse lanes: Soft muted coral
       const revOffset = (1.0 - v.offset + 0.5) % 1.0
       const revPos = curve.getPointAt(revOffset)
       const revTangent = curve.getTangentAt(revOffset).negate()
@@ -704,20 +599,19 @@ function AuthenticTrafficFlow() {
   return (
     <group>
       <instancedMesh ref={headlightsRef} args={[null, null, numVehicles]}>
-        <boxGeometry args={[0.035, 0.02, 0.07]} />
-        <meshBasicMaterial color="#fef3c7" transparent opacity={0.85} />
+        <boxGeometry args={[0.04, 0.025, 0.08]} />
+        <meshBasicMaterial color="#0284c7" />
       </instancedMesh>
-
       <instancedMesh ref={taillightsRef} args={[null, null, numVehicles]}>
-        <boxGeometry args={[0.035, 0.02, 0.07]} />
-        <meshBasicMaterial color="#f87171" transparent opacity={0.75} />
+        <boxGeometry args={[0.04, 0.025, 0.08]} />
+        <meshBasicMaterial color="#e11d48" />
       </instancedMesh>
     </group>
   )
 }
 
 /**
- * 8. High-Rise Instanced Skyscraper City Fabric (Kolkata Density Distribution)
+ * 8. High-Rise Skyscraper City Fabric (White Limestone, Sandstone, Carrara & Smoked Glass)
  */
 function AuthenticSkyscraperCity({ windowTexture }) {
   const meshRef = useRef()
@@ -725,11 +619,11 @@ function AuthenticSkyscraperCity({ windowTexture }) {
 
   const colorPalette = useMemo(
     () => [
-      new THREE.Color('#d4cbbe'), // Warm champagne limestone (Central Kolkata civic)
-      new THREE.Color('#334155'), // Cool titanium slate (Commercial towers)
-      new THREE.Color('#64748b'), // Neutral architectural steel (High-rises)
-      new THREE.Color('#1e293b'), // Smoked obsidian glass (Contemporary tech)
-      new THREE.Color('#cbd5e1'), // Pure architectural platinum
+      new THREE.Color('#ffffff'), // Pure White Carrara Marble
+      new THREE.Color('#e2e8f0'), // Pale Platinum Slate
+      new THREE.Color('#cbd5e1'), // Sandstone Architectural Limestone
+      new THREE.Color('#94a3b8'), // Metallic Silver Architectural Glass
+      new THREE.Color('#f8fafc'), // Pearl White Tower
     ],
     []
   )
@@ -766,20 +660,83 @@ function AuthenticSkyscraperCity({ windowTexture }) {
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial
         map={windowTexture}
-        emissiveMap={windowTexture}
-        emissive="#ffffff"
-        emissiveIntensity={0.45}
-        roughness={0.3}
-        metalness={0.7}
+        roughness={0.25}
+        metalness={0.4}
       />
     </instancedMesh>
   )
 }
 
 /**
- * 9. Road Tubes, Canals & Risk Inundation Zones
+ * 9. Spatial Rainfall Layer
  */
-function AuthenticCityInfrastructure() {
+function SpatialRainfallLayer({ visible }) {
+  const count = 750
+  const pointsRef = useRef()
+
+  const [positions, speeds] = useMemo(() => {
+    const pos = new Float32Array(count * 3)
+    const spd = new Float32Array(count)
+    for (let i = 0; i < count; i++) {
+      pos[i * 3 + 0] = (Math.random() - 0.3) * 16
+      pos[i * 3 + 1] = Math.random() * 8 + 0.5
+      pos[i * 3 + 2] = (Math.random() - 0.4) * 14
+      spd[i] = 7.0 + Math.random() * 6.0
+    }
+    return [pos, spd]
+  }, [])
+
+  useFrame((_, delta) => {
+    if (!pointsRef.current || !visible) return
+    const posAttr = pointsRef.current.geometry.attributes.position
+    for (let i = 0; i < count; i++) {
+      let y = posAttr.getY(i) - speeds[i] * delta
+      if (y < 0.1) {
+        y = 8.0 + Math.random() * 2.0
+      }
+      posAttr.setY(i, y)
+    }
+    posAttr.needsUpdate = true
+  })
+
+  if (!visible) return null
+
+  return (
+    <group>
+      <points ref={pointsRef}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[positions, 3]}
+          />
+        </bufferGeometry>
+        <pointsMaterial
+          size={0.065}
+          color="#0284c7"
+          transparent
+          opacity={0.7}
+          depthWrite={false}
+        />
+      </points>
+
+      {/* Cloud coverage disc */}
+      <mesh position={[3.5, 5.5, -1.0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[7.5, 32]} />
+        <meshBasicMaterial
+          color="#bae6fd"
+          transparent
+          opacity={0.15}
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
+  )
+}
+
+/**
+ * 10. Drainage Network Layer
+ */
+function DrainageNetworkLayer({ visible }) {
   const primaryRoadGeometries = useMemo(() => {
     return PRIMARY_ROADS.map((road) => {
       const points = road.map(([x, z]) => new THREE.Vector3(x, 0.05, z))
@@ -792,62 +749,329 @@ function AuthenticCityInfrastructure() {
     return DRAINAGE_CANALS.map((canal) => {
       const points = canal.map(([x, z]) => new THREE.Vector3(x, 0.04, z))
       const curve = new THREE.CatmullRomCurve3(points)
-      return new THREE.TubeGeometry(curve, 32, 0.055, 6, false)
+      return new THREE.TubeGeometry(curve, 32, 0.065, 6, false)
+    })
+  }, [])
+
+  const conduitLines = useMemo(() => {
+    return DRAINAGE_TRUNK_CONDUITS.map((trunk) => {
+      const points = trunk.map(([x, z]) => new THREE.Vector3(x, 0.035, z))
+      const curve = new THREE.CatmullRomCurve3(points)
+      return new THREE.TubeGeometry(curve, 32, 0.035, 6, false)
     })
   }, [])
 
   return (
     <group>
-      {/* Primary Road Tubes with Sober Glow */}
+      {/* Primary Road Tubes */}
       {primaryRoadGeometries.map((geom, idx) => {
         const colors = [
-          { color: '#b45309', emissive: '#78350f' }, // EM Bypass
-          { color: '#0369a1', emissive: '#075985' }, // Maa Flyover
-          { color: '#047857', emissive: '#065f46' }, // Central Ave
-          { color: '#334155', emissive: '#1e293b' }, // Strand Rd
-          { color: '#be123c', emissive: '#9f1239' }, // DH Rd
-          { color: '#4338ca', emissive: '#3730a3' }, // VIP Rd
+          '#d97706', // EM Bypass
+          '#0284c7', // Maa Flyover
+          '#059669', // Central Ave
+          '#64748b', // Strand Rd
+          '#e11d48', // DH Rd
+          '#7c3aed', // VIP Rd
         ]
         const c = colors[idx % colors.length]
 
         return (
           <mesh key={`p-${idx}`} geometry={geom}>
             <meshStandardMaterial
-              color={c.color}
-              emissive={c.emissive}
-              emissiveIntensity={0.65}
-              roughness={0.5}
-              metalness={0.5}
+              color={c}
+              roughness={0.4}
+              metalness={0.2}
             />
           </mesh>
         )
       })}
 
-      {/* Municipal Drainage Canals */}
-      {canalLines.map((geom, idx) => (
-        <mesh key={idx} geometry={geom}>
-          <meshStandardMaterial
-            color="#0284c7"
-            emissive="#0369a1"
-            emissiveIntensity={0.5}
-            roughness={0.3}
-            metalness={0.6}
-          />
-        </mesh>
-      ))}
+      {/* Municipal Drainage Canals & Trunks */}
+      {visible && (
+        <group>
+          {canalLines.map((geom, idx) => (
+            <mesh key={`canal-${idx}`} geometry={geom}>
+              <meshStandardMaterial
+                color="#0891b2"
+                roughness={0.2}
+                metalness={0.5}
+              />
+            </mesh>
+          ))}
 
-      {/* Inundation Risk Surfaces */}
-      {RISK_OVERLAY_ZONES.map((zone) => (
+          {conduitLines.map((geom, idx) => (
+            <mesh key={`conduit-${idx}`} geometry={geom}>
+              <meshStandardMaterial
+                color="#0284c7"
+                roughness={0.3}
+                metalness={0.4}
+                transparent
+                opacity={0.9}
+              />
+            </mesh>
+          ))}
+
+          {DRAINAGE_JUNCTIONS.map((junc) => (
+            <group key={junc.id} position={junc.pos}>
+              <mesh position={[0, 0.02, 0]}>
+                <boxGeometry args={[0.14, 0.09, 0.14]} />
+                <meshStandardMaterial color="#0284c7" />
+              </mesh>
+            </group>
+          ))}
+        </group>
+      )}
+    </group>
+  )
+}
+
+/**
+ * 11. Geographic Risk Zones Layer (7 Semantic Zones)
+ */
+function RiskZonesLayer({ visible, selectedRiskZone, onSelectRiskZone }) {
+  const pulseRef = useRef()
+
+  useFrame(({ clock }) => {
+    if (pulseRef.current) {
+      const t = clock.getElapsedTime()
+      pulseRef.current.material.opacity = 0.45 + Math.sin(t * 3) * 0.2
+    }
+  })
+
+  if (!visible) return null
+
+  return (
+    <group>
+      {RISK_OVERLAY_ZONES.map((zone) => {
+        const isSelected = selectedRiskZone?.id === zone.id
+        return (
+          <group
+            key={zone.id}
+            position={[zone.center[0], 0.055, zone.center[1]]}
+            onClick={(e) => {
+              e.stopPropagation()
+              onSelectRiskZone(zone)
+            }}
+          >
+            {/* Primary Restrained Risk Zone Disc */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]}>
+              <circleGeometry args={[zone.radiusX, 32]} />
+              <meshBasicMaterial
+                color={zone.color}
+                transparent
+                opacity={isSelected ? 0.4 : 0.22}
+                depthWrite={false}
+              />
+            </mesh>
+
+            {/* Solid Boundary Ring */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 0]}>
+              <ringGeometry args={[zone.radiusX - 0.04, zone.radiusX, 32]} />
+              <meshBasicMaterial
+                color={zone.color}
+                transparent
+                opacity={isSelected ? 0.95 : 0.75}
+              />
+            </mesh>
+
+            {/* Pulsing Highlight if Selected */}
+            {isSelected && (
+              <mesh ref={pulseRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
+                <ringGeometry args={[zone.radiusX + 0.05, zone.radiusX + 0.15, 32]} />
+                <meshBasicMaterial color={zone.color} transparent opacity={0.5} />
+              </mesh>
+            )}
+          </group>
+        )
+      })}
+    </group>
+  )
+}
+
+/**
+ * 12. Active Incidents Layer (Crisp Light Badges)
+ */
+function IncidentsLayer({ visible, selectedIncident, onSelectIncident }) {
+  const pulseRef = useRef()
+
+  useFrame(({ clock }) => {
+    if (pulseRef.current) {
+      const t = clock.getElapsedTime()
+      const s = 1 + Math.sin(t * 3.5) * 0.15
+      pulseRef.current.scale.set(s, s, s)
+    }
+  })
+
+  if (!visible) return null
+
+  return (
+    <group>
+      {ACTIVE_INCIDENTS_GEO.map((inc) => {
+        const isSelected = selectedIncident?.id === inc.id
+        const isCritical = inc.severity === 'CRITICAL'
+        const color = isCritical ? '#e11d48' : '#d97706'
+
+        return (
+          <group key={inc.id} position={inc.position}>
+            {/* Vertical Marker Beam */}
+            <mesh position={[0, 1.2, 0]}>
+              <cylinderGeometry args={[0.02, 0.035, 2.4, 12]} />
+              <meshBasicMaterial color={color} transparent opacity={isSelected ? 0.8 : 0.45} />
+            </mesh>
+
+            {/* Ground Ring */}
+            <mesh
+              ref={inc.isPrimary ? pulseRef : null}
+              rotation={[-Math.PI / 2, 0, 0]}
+              position={[0, 0.08, 0]}
+            >
+              <ringGeometry args={[0.26, 0.42, 32]} />
+              <meshBasicMaterial
+                color={color}
+                transparent
+                opacity={isSelected ? 0.95 : 0.7}
+              />
+            </mesh>
+
+            <mesh position={[0, 0.11, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <circleGeometry args={[0.14, 32]} />
+              <meshBasicMaterial color="#ffffff" />
+            </mesh>
+
+            {/* Spatial GIS Label Pin (Crisp White Card with Soft Shadow) */}
+            <Html position={[0, 0.75, 0]} center distanceFactor={18} zIndexRange={[100, 0]}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onSelectIncident(inc)
+                }}
+                className={`cursor-pointer transition-all duration-200 select-none flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/95 backdrop-blur-md border shadow-[0_4px_16px_rgba(15,23,42,0.14)] ${
+                  isSelected
+                    ? 'border-rose-500 ring-2 ring-rose-500/30 scale-110 text-slate-900'
+                    : isCritical
+                    ? 'border-rose-200 hover:border-rose-400 text-rose-700'
+                    : 'border-amber-200 hover:border-amber-400 text-amber-700'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${isCritical ? 'bg-rose-500 animate-ping' : 'bg-amber-500'}`} />
+                <span className="text-[11px] font-mono font-bold tracking-wider">{inc.id}</span>
+                <span className="text-[10px] font-mono font-semibold pl-1 border-l border-slate-200 text-slate-700">
+                  {inc.waterDepth}
+                </span>
+              </button>
+            </Html>
+
+            <mesh
+              visible={false}
+              position={[0, 0.6, 0]}
+              onClick={(e) => {
+                e.stopPropagation()
+                onSelectIncident(inc)
+              }}
+            >
+              <cylinderGeometry args={[0.6, 0.6, 1.6, 16]} />
+            </mesh>
+          </group>
+        )
+      })}
+    </group>
+  )
+}
+
+/**
+ * 13. Pumping Stations Layer
+ */
+function PumpingStationsLayer({ visible, selectedPumpStation, onSelectPumpStation }) {
+  if (!visible) return null
+
+  return (
+    <group>
+      {PUMPING_STATIONS_GEO.map((ps) => {
+        const isSelected = selectedPumpStation?.id === ps.id
+        const isAtCapacity = ps.status === 'AT CAPACITY'
+        const color = isAtCapacity ? '#e11d48' : '#059669'
+
+        return (
+          <group key={ps.id} position={ps.position}>
+            {/* 3D Pump Structure Model */}
+            <mesh position={[0, 0.14, 0]}>
+              <boxGeometry args={[0.3, 0.28, 0.3]} />
+              <meshStandardMaterial
+                color="#ffffff"
+                roughness={0.3}
+                metalness={0.4}
+              />
+            </mesh>
+            <mesh position={[0, 0.32, 0]}>
+              <cylinderGeometry args={[0.06, 0.06, 0.12, 12]} />
+              <meshStandardMaterial color="#64748b" metalness={0.7} />
+            </mesh>
+
+            {/* Station Status Ground Ring */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
+              <ringGeometry args={[0.22, 0.34, 24]} />
+              <meshBasicMaterial color={color} transparent opacity={isSelected ? 0.95 : 0.75} />
+            </mesh>
+
+            {/* GIS Label Pin */}
+            <Html position={[0, 0.6, 0]} center distanceFactor={18} zIndexRange={[90, 0]}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onSelectPumpStation(ps)
+                }}
+                className={`cursor-pointer transition-all duration-200 select-none flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/95 backdrop-blur-md border shadow-[0_4px_16px_rgba(15,23,42,0.12)] ${
+                  isSelected
+                    ? 'border-emerald-500 ring-2 ring-emerald-500/30 scale-110 text-slate-900'
+                    : isAtCapacity
+                    ? 'border-rose-200 text-rose-700'
+                    : 'border-emerald-200 text-emerald-700'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${isAtCapacity ? 'bg-rose-500 animate-ping' : 'bg-emerald-500'}`} />
+                <span className="text-[10px] font-mono font-bold">{ps.id}</span>
+                <span className="text-[9px] font-mono text-slate-600 font-semibold">{ps.capacity}</span>
+              </button>
+            </Html>
+
+            <mesh
+              visible={false}
+              position={[0, 0.4, 0]}
+              onClick={(e) => {
+                e.stopPropagation()
+                onSelectPumpStation(ps)
+              }}
+            >
+              <cylinderGeometry args={[0.5, 0.5, 1.2, 12]} />
+            </mesh>
+          </group>
+        )
+      })}
+    </group>
+  )
+}
+
+/**
+ * 14. Forecast Radar Visualization Layer
+ */
+function ForecastVisualizationLayer({ visible }) {
+  if (!visible) return null
+
+  return (
+    <group>
+      {FORECAST_RADAR_CELLS.map((cell, idx) => (
         <mesh
-          key={zone.id}
-          position={[zone.center[0], 0.055, zone.center[1]]}
+          key={idx}
+          position={[cell.center[0], 0.09, cell.center[2]]}
           rotation={[-Math.PI / 2, 0, 0]}
         >
-          <circleGeometry args={[zone.radiusX, 32]} />
+          <ringGeometry args={[cell.radius - 0.25, cell.radius, 48]} />
           <meshBasicMaterial
-            color={zone.color}
+            color="#0284c7"
             transparent
-            opacity={0.2}
+            opacity={0.4}
             depthWrite={false}
           />
         </mesh>
@@ -857,164 +1081,75 @@ function AuthenticCityInfrastructure() {
 }
 
 /**
- * 10. Sector V Incident Marker (#SV-024)
+ * 15. Intelligent Smooth Camera Controller
  */
-function AuthenticIncidentMarker({ onSelectIncident, isSelected }) {
-  const [hovered, setHovered] = useState(false)
-  const ringRef = useRef()
-
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime()
-    if (ringRef.current) {
-      const s = 1 + Math.sin(t * 3) * 0.18
-      ringRef.current.scale.set(s, s, s)
-    }
-  })
-
-  return (
-    <group position={HERO_INCIDENT.position}>
-      <mesh position={[0, 1.4, 0]}>
-        <cylinderGeometry args={[0.02, 0.04, 2.8, 12]} />
-        <meshBasicMaterial color="#f43f5e" transparent opacity={0.4} />
-      </mesh>
-
-      <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.08, 0]}>
-        <ringGeometry args={[0.3, 0.46, 32]} />
-        <meshBasicMaterial
-          color="#f43f5e"
-          transparent
-          opacity={hovered || isSelected ? 0.9 : 0.55}
-        />
-      </mesh>
-
-      <mesh position={[0, 0.12, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.15, 32]} />
-        <meshBasicMaterial color="#ffffff" />
-      </mesh>
-
-      <Html position={[0, 0.8, 0]} center distanceFactor={18} zIndexRange={[100, 0]}>
-        <div
-          onClick={onSelectIncident}
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-          className={`cursor-pointer transition-all duration-300 select-none ${
-            isSelected || hovered ? 'scale-105' : 'scale-95 opacity-90'
-          }`}
-        >
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0a0f1a]/95 backdrop-blur-md border border-rose-500/60 shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
-            <span className="w-2 h-2 rounded-full bg-rose-500" />
-            <span className="text-xs font-mono font-bold text-white tracking-wider">
-              {HERO_INCIDENT.id}
-            </span>
-            <span className="text-[11px] font-mono text-rose-300 font-semibold pl-1.5 border-l border-white/20">
-              {HERO_INCIDENT.waterLevel}
-            </span>
-          </div>
-
-          {(isSelected || hovered) && (
-            <div className="mt-2 p-3.5 rounded-xl bg-[#080d16]/95 backdrop-blur-2xl border border-white/15 shadow-[0_10px_35px_rgba(0,0,0,0.8)] w-72 text-left pointer-events-auto">
-              <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-rose-400 font-bold mb-1">
-                <span>{HERO_INCIDENT.alertLevel}</span>
-                <span className="text-neutral-400">TELEMETRY</span>
-              </div>
-              <p className="text-sm font-bold text-white leading-snug">
-                {HERO_INCIDENT.name}
-              </p>
-              <p className="text-xs text-neutral-300 mt-1 font-mono">
-                {HERO_INCIDENT.location}
-              </p>
-              <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between text-[10px] font-mono">
-                <span className="text-neutral-400">DRAINAGE PUMPS:</span>
-                <span className="text-emerald-400 font-semibold">{HERO_INCIDENT.pumpsStatus}</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </Html>
-
-      <mesh
-        visible={false}
-        position={[0, 0.6, 0]}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-        onClick={onSelectIncident}
-      >
-        <cylinderGeometry args={[0.7, 0.7, 1.5, 16]} />
-      </mesh>
-    </group>
-  )
-}
-
-/**
- * 11. Cinematic 3D Camera Controller
- */
-function AuthenticCameraController({ activeTarget }) {
+function OperationalCameraController({ activeTarget, mapMode }) {
   const { camera } = useThree()
   const controlsRef = useRef()
 
-  const arrivalState = useRef({
-    progress: 0,
-    arrived: false,
-    startPos: new THREE.Vector3(0, 14, 14),
-    defaultPos: new THREE.Vector3(-3.4, 4.2, 7.6),
-    defaultLookAt: new THREE.Vector3(0.6, 1.0, -0.6),
-  })
+  const { zoomTrigger, resetCameraTrigger } = useKWIStore()
+  const lastZoomRef = useRef(zoomTrigger)
+  const lastResetRef = useRef(resetCameraTrigger)
 
-  const currentTargetPos = useRef(new THREE.Vector3(-3.4, 4.2, 7.6))
-  const currentLookAt = useRef(new THREE.Vector3(0.6, 1.0, -0.6))
+  const default3DPos = useMemo(() => new THREE.Vector3(-2.8, 5.2, 8.4), [])
+  const default3DLookAt = useMemo(() => new THREE.Vector3(0.8, 0.4, -0.4), [])
+  const default2DPos = useMemo(() => new THREE.Vector3(1.0, 16.0, 0.0), [])
+  const default2DLookAt = useMemo(() => new THREE.Vector3(1.0, 0.0, 0.0), [])
+
+  const targetCamPos = useRef(default3DPos.clone())
+  const targetLookAt = useRef(default3DLookAt.clone())
 
   useEffect(() => {
-    if (activeTarget) {
-      currentTargetPos.current.set(...activeTarget.cameraPos)
-      currentLookAt.current.set(...activeTarget.lookAt)
-    } else {
-      currentTargetPos.current.copy(arrivalState.current.defaultPos)
-      currentLookAt.current.copy(arrivalState.current.defaultLookAt)
-    }
-  }, [activeTarget])
-
-  useFrame((state, delta) => {
-    const s = arrivalState.current
-
-    if (!s.arrived) {
-      s.progress += delta * 0.45
-      const t = Math.min(s.progress, 1)
-      const ease = t * t * (3 - 2 * t)
-
-      camera.position.lerpVectors(s.startPos, s.defaultPos, ease)
-      const targetLook = new THREE.Vector3().lerpVectors(
-        new THREE.Vector3(0, 0, 0),
-        s.defaultLookAt,
-        ease
-      )
-
-      camera.lookAt(targetLook)
-      if (controlsRef.current) {
-        controlsRef.current.target.copy(targetLook)
-        controlsRef.current.update()
-      }
-
-      if (t >= 1) s.arrived = true
-      return
-    }
-
-    if (activeTarget) {
-      camera.position.lerp(currentTargetPos.current, 2.4 * delta)
-      if (controlsRef.current) {
-        controlsRef.current.target.lerp(currentLookAt.current, 2.8 * delta)
-        controlsRef.current.update()
+    if (activeTarget?.cameraPos && activeTarget?.lookAt) {
+      if (mapMode === '2D') {
+        targetCamPos.current.set(activeTarget.lookAt[0], 14.0, activeTarget.lookAt[2])
+        targetLookAt.current.set(activeTarget.lookAt[0], 0, activeTarget.lookAt[2])
+      } else {
+        targetCamPos.current.set(...activeTarget.cameraPos)
+        targetLookAt.current.set(...activeTarget.lookAt)
       }
     } else {
-      const elapsed = state.clock.getElapsedTime()
-      const driftX = Math.sin(elapsed * 0.04) * 0.35
-      const driftZ = Math.cos(elapsed * 0.04) * 0.25
+      if (mapMode === '2D') {
+        targetCamPos.current.copy(default2DPos)
+        targetLookAt.current.copy(default2DLookAt)
+      } else {
+        targetCamPos.current.copy(default3DPos)
+        targetLookAt.current.copy(default3DLookAt)
+      }
+    }
+  }, [activeTarget, mapMode, default2DPos, default2DLookAt, default3DPos, default3DLookAt])
 
-      const targetCam = new THREE.Vector3(
-        s.defaultPos.x + driftX,
-        s.defaultPos.y,
-        s.defaultPos.z + driftZ
-      )
-      camera.position.lerp(targetCam, 1.0 * delta)
+  useEffect(() => {
+    if (zoomTrigger !== lastZoomRef.current) {
+      const dir = zoomTrigger > lastZoomRef.current ? 1 : -1
+      lastZoomRef.current = zoomTrigger
+
+      const forward = new THREE.Vector3()
+      camera.getWorldDirection(forward)
+      targetCamPos.current.addScaledVector(forward, dir * 2.2)
+    }
+  }, [zoomTrigger, camera])
+
+  useEffect(() => {
+    if (resetCameraTrigger !== lastResetRef.current) {
+      lastResetRef.current = resetCameraTrigger
+      if (mapMode === '2D') {
+        targetCamPos.current.copy(default2DPos)
+        targetLookAt.current.copy(default2DLookAt)
+      } else {
+        targetCamPos.current.copy(default3DPos)
+        targetLookAt.current.copy(default3DLookAt)
+      }
+    }
+  }, [resetCameraTrigger, mapMode, default2DPos, default2DLookAt, default3DPos, default3DLookAt])
+
+  useFrame((_, delta) => {
+    const lerpSpeed = 3.2 * delta
+    camera.position.lerp(targetCamPos.current, lerpSpeed)
+
+    if (controlsRef.current) {
+      controlsRef.current.target.lerp(targetLookAt.current, 3.6 * delta)
+      controlsRef.current.update()
     }
   })
 
@@ -1022,34 +1157,60 @@ function AuthenticCameraController({ activeTarget }) {
     <OrbitControls
       ref={controlsRef}
       enableDamping
-      dampingFactor={0.06}
-      rotateSpeed={0.55}
+      dampingFactor={0.08}
+      rotateSpeed={0.6}
       zoomSpeed={0.8}
-      minDistance={2.5}
-      maxDistance={20}
-      maxPolarAngle={Math.PI / 2.3}
-      minPolarAngle={Math.PI / 8}
+      minDistance={2.0}
+      maxDistance={25.0}
+      maxPolarAngle={mapMode === '2D' ? Math.PI / 32 : Math.PI / 2.25}
+      minPolarAngle={mapMode === '2D' ? 0 : Math.PI / 12}
     />
   )
 }
 
 /**
- * Main Authentic 3D Digital Twin Map of Kolkata
+ * Main Kolkata Digital Twin GIS Map Component (Daylight Light Mode)
  */
-export function KolkataRealisticMap({ selectedDistrict, onSelectDistrict }) {
-  const [selectedIncident, setSelectedIncident] = useState(false)
+export function KolkataRealisticMap({
+  selectedDistrict,
+  onSelectDistrict,
+  overrideLayers,
+}) {
+  const store = useKWIStore()
+  const activeLayers = overrideLayers || store.activeLayers
+  const mapMode = store.mapMode
 
-  // Procedural Cartographic & Architectural Textures
+  const selectedIncident = store.selectedIncident
+  const selectedRiskZone = store.selectedRiskZone
+  const selectedPumpStation = store.selectedPumpStation
+
   const basemapTexture = useMemo(() => createKolkataBasemapTexture(), [])
   const windowTexture = useMemo(() => createSkyscraperWindowTexture(), [])
   const waterTexture = useMemo(() => createWaterRippleTexture(), [])
 
   const activeTarget = useMemo(() => {
     if (selectedIncident) {
+      const pos = selectedIncident.position || [selectedIncident.x || 6.2, 0.25, selectedIncident.y || -1.6]
       return {
-        name: HERO_INCIDENT.name,
-        cameraPos: [4.6, 2.4, 0.8],
-        lookAt: [6.2, 0.4, -1.6],
+        name: selectedIncident.name || selectedIncident.id,
+        cameraPos: selectedIncident.cameraPos || [pos[0] - 1.6, 2.4, pos[2] + 2.2],
+        lookAt: selectedIncident.lookAt || [pos[0], 0.2, pos[2]],
+      }
+    }
+    if (selectedRiskZone) {
+      const center = selectedRiskZone.center || [0, 0]
+      return {
+        name: selectedRiskZone.name,
+        cameraPos: selectedRiskZone.cameraPos || [center[0] - 1.2, 2.8, center[1] + 1.8],
+        lookAt: selectedRiskZone.lookAt || [center[0], 0.1, center[1]],
+      }
+    }
+    if (selectedPumpStation) {
+      const pos = selectedPumpStation.position || [selectedPumpStation.x || 5.6, 0.15, selectedPumpStation.y || -1.2]
+      return {
+        name: selectedPumpStation.name,
+        cameraPos: selectedPumpStation.cameraPos || [pos[0] - 1.2, 2.2, pos[2] + 1.6],
+        lookAt: selectedPumpStation.lookAt || [pos[0], 0.15, pos[2]],
       }
     }
     if (selectedDistrict) {
@@ -1063,94 +1224,76 @@ export function KolkataRealisticMap({ selectedDistrict, onSelectDistrict }) {
       }
     }
     return null
-  }, [selectedIncident, selectedDistrict])
-
-  const handleIncidentSelect = () => {
-    setSelectedIncident((prev) => !prev)
-  }
+  }, [selectedIncident, selectedRiskZone, selectedPumpStation, selectedDistrict])
 
   return (
-    <div className="absolute inset-0 z-0 bg-[#060910] w-full h-full overflow-hidden">
+    <div className="absolute inset-0 z-0 bg-[#e0f2fe] w-full h-full overflow-hidden">
       <Canvas
-        camera={{ position: [0, 14, 14], fov: 40 }}
+        camera={{ position: [-2.8, 5.2, 8.4], fov: 40 }}
         shadows
         gl={{
           antialias: true,
           alpha: false,
           powerPreference: 'high-performance',
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.15,
+          toneMappingExposure: 1.05,
         }}
       >
-        <color attach="background" args={['#060910']} />
+        {/* Daylight Pearl Sky Background */}
+        <color attach="background" args={['#e0f2fe']} />
 
-        {/* ======================================================== */}
-        {/* ARCHITECTURAL & SOBER CINEMATIC LIGHTING                 */}
-        {/* ======================================================== */}
+        {/* Ambient Sky Light Radiance */}
+        <ambientLight intensity={0.9} color="#bae6fd" />
 
-        {/* Deep atmospheric midnight fill */}
-        <ambientLight intensity={0.5} color="#1e293b" />
-
-        {/* Soft silver-blue moonlight key light (West) */}
+        {/* Crisp Solar Sunlight (Daylight Key Light) */}
         <directionalLight
-          position={[-12, 18, 10]}
-          intensity={1.9}
-          color="#cbd5e1"
+          position={[-12, 20, 10]}
+          intensity={2.4}
+          color="#fffdf5"
           castShadow
           shadow-mapSize={[2048, 2048]}
           shadow-bias={-0.0003}
         />
 
-        {/* Atmospheric rim light (North-East) */}
-        <directionalLight
-          position={[12, 12, -10]}
-          intensity={1.1}
-          color="#64748b"
-        />
+        {/* Soft Blue Atmospheric Secondary Light */}
+        <directionalLight position={[12, 14, -10]} intensity={1.2} color="#7dd3fc" />
 
-        {/* Warm champagne urban ground ambiance */}
-        <pointLight
-          position={[0, 3.5, 0]}
-          intensity={1.5}
-          distance={24}
-          color="#fde68a"
-        />
+        {/* Warm Ground Fill */}
+        <pointLight position={[0, 4.0, 0]} intensity={1.2} distance={26} color="#fef08a" />
+        <pointLight position={[6.2, 3.0, -1.6]} intensity={1.2} distance={14} color="#38bdf8" />
+        <pointLight position={[-0.6, 3.0, 0.2]} intensity={1.2} distance={14} color="#bae6fd" />
 
-        {/* Sector V subtle fill */}
-        <pointLight
-          position={[6.2, 2.5, -1.6]}
-          intensity={1.4}
-          distance={12}
-          color="#38bdf8"
-        />
+        <fog attach="fog" args={['#e0f2fe', 16, 42]} />
 
-        {/* Central Kolkata warm fill */}
-        <pointLight
-          position={[-0.6, 2.5, 0.2]}
-          intensity={1.4}
-          distance={12}
-          color="#fed7aa"
-        />
-
-        {/* Deep horizon fog */}
-        <fog attach="fog" args={['#060910', 12, 34]} />
-
-        {/* Authentic Kolkata 3D Layers */}
+        {/* 3D City & Geographic Subsystems */}
         <AuthenticKolkataTerrain basemapTexture={basemapTexture} />
         <AuthenticHooghlyRiver waterTexture={waterTexture} />
-        <AuthenticCityInfrastructure />
         <AuthenticKolkataLandmarks />
         <AuthenticSkyscraperCity windowTexture={windowTexture} />
         <AuthenticTrafficFlow />
 
-        {/* Sector V Incident Marker */}
-        <AuthenticIncidentMarker
-          onSelectIncident={handleIncidentSelect}
-          isSelected={selectedIncident}
+        {/* Dynamic GIS Layers */}
+        <DrainageNetworkLayer visible={activeLayers.drainage} />
+        <RiskZonesLayer
+          visible={activeLayers.risk}
+          selectedRiskZone={selectedRiskZone}
+          onSelectRiskZone={store.setSelectedRiskZone}
         />
+        <PumpingStationsLayer
+          visible={activeLayers.pumps}
+          selectedPumpStation={selectedPumpStation}
+          onSelectPumpStation={store.setSelectedPumpStation}
+        />
+        <IncidentsLayer
+          visible={activeLayers.incidents}
+          selectedIncident={selectedIncident}
+          onSelectIncident={store.setSelectedIncident}
+        />
+        <SpatialRainfallLayer visible={activeLayers.rain} />
+        <ForecastVisualizationLayer visible={activeLayers.forecast} />
 
-        {/* 3D Oblique Camera Controller */}
-        <AuthenticCameraController activeTarget={activeTarget} />
+        {/* Smooth Camera Controller */}
+        <OperationalCameraController activeTarget={activeTarget} mapMode={mapMode} />
       </Canvas>
     </div>
   )

@@ -2,6 +2,9 @@ import { EarthAtmosphere } from './EarthAtmosphere'
 import { EarthClouds } from './EarthClouds'
 import { EarthNightLights } from './EarthNightLights'
 import { EarthSurface } from './EarthSurface'
+import { TargetSonarRipple } from './3d/TargetSonarRipple'
+import { GlobalDataStreams } from './3d/GlobalDataStreams'
+import { OrbitalSatellites } from './3d/OrbitalSatellites'
 
 export function Earth({ earthRef }) {
   return (
@@ -10,6 +13,10 @@ export function Earth({ earthRef }) {
       <EarthNightLights />
       <EarthClouds />
       <EarthAtmosphere />
+      <TargetSonarRipple />
+      <GlobalDataStreams />
+      <OrbitalSatellites />
     </group>
   )
 }
+
