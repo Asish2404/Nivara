@@ -7,7 +7,12 @@ import { EarthCamera } from './components/EarthCamera'
 import { GeographicTransition } from './components/GeographicTransition'
 import { RealisticStarfield } from './components/RealisticStarfield'
 import { TacticalHudOverlay } from './components/ui/TacticalHudOverlay'
+import { CursorSpotlight } from './components/ui/CursorSpotlight'
+import { SmoothScrollProvider } from './components/ui/SmoothScrollProvider'
+import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import { LandingPage } from './components/landing/LandingPage'
+
+
 import { LiveCityPage } from './components/views/LiveCityPage'
 import { SubpageLayout } from './components/views/SubpageLayout'
 import { IncidentsView } from './components/views/IncidentsView'
@@ -22,7 +27,7 @@ function EarthScene({ zoomStarted, earthRef, controlsRef, onZoomComplete }) {
   return (
     <Canvas
       camera={{ position: [0, 0.05, 6.6], fov: 35 }}
-      dpr={[1, 1.5]}
+      dpr={[1, 2]}
       gl={{ antialias: true, powerPreference: 'high-performance' }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.AgXToneMapping
@@ -86,93 +91,95 @@ function App() {
 
   // 2. When zoom into India completes, trigger -> Kolkata
   const handleZoomComplete = useCallback(() => {
-    setStage('black_screen')
-    setBlackOverlay(true)
-
-    // 3. After black screen transition, reveal the landing page
-    setTimeout(() => {
-      setStage('landing_page')
-      setTimeout(() => {
-        setBlackOverlay(false)
-      }, 50)
-    }, 300)
+    setStage('landing_page')
+    setBlackOverlay(false)
   }, [])
 
-  // Render Routes
-  if (currentRoute === '/live-city') {
-    return <LiveCityPage />
-  }
+  const renderContent = () => {
+    if (currentRoute === '/live-city') {
+      return <LiveCityPage />
+    }
 
-  if (currentRoute === '/incidents') {
+    if (currentRoute === '/incidents') {
+      return (
+        <SubpageLayout>
+          <IncidentsView />
+        </SubpageLayout>
+      )
+    }
+
+    if (currentRoute === '/forecast') {
+      return (
+        <SubpageLayout>
+          <ForecastView />
+        </SubpageLayout>
+      )
+    }
+
+    if (currentRoute === '/simulate') {
+      return (
+        <SubpageLayout>
+          <SimulateView />
+        </SubpageLayout>
+      )
+    }
+
+    if (currentRoute === '/reports' || currentRoute === '/report' || currentRoute === '/my-reports') {
+      return (
+        <SubpageLayout>
+          <ReportsView />
+        </SubpageLayout>
+      )
+    }
+
+    if (currentRoute === '/action-center' || currentRoute === '/respond') {
+      return (
+        <SubpageLayout>
+          <ActionsView />
+        </SubpageLayout>
+      )
+    }
+
+    // Root Landing Route ('/')
     return (
-      <SubpageLayout>
-        <IncidentsView />
-      </SubpageLayout>
-    )
-  }
+      <div className="min-h-screen bg-black text-white relative w-full overflow-x-hidden font-sans">
+        {/* Interactive Ambient Cursor Glow */}
+        <CursorSpotlight />
 
-  if (currentRoute === '/forecast') {
-    return (
-      <SubpageLayout>
-        <ForecastView />
-      </SubpageLayout>
-    )
-  }
+        {/* Black Screen Overlay for cinematic transitions */}
+        <div
+          className={`cinematic-black-screen ${blackOverlay ? 'active' : ''}`}
+          aria-hidden="true"
+        />
 
-  if (currentRoute === '/simulate') {
-    return (
-      <SubpageLayout>
-        <SimulateView />
-      </SubpageLayout>
-    )
-  }
-
-  if (currentRoute === '/reports' || currentRoute === '/report' || currentRoute === '/my-reports') {
-    return (
-      <SubpageLayout>
-        <ReportsView />
-      </SubpageLayout>
-    )
-  }
-
-  if (currentRoute === '/action-center' || currentRoute === '/respond') {
-    return (
-      <SubpageLayout>
-        <ActionsView />
-      </SubpageLayout>
-    )
-  }
-
-  // Root Landing Route ('/')
-  return (
-    <div className="min-h-screen bg-black text-white relative w-full overflow-x-hidden font-sans">
-      {/* Black Screen Overlay for cinematic transitions */}
-      <div
-        className={`cinematic-black-screen ${blackOverlay ? 'active' : ''}`}
-        aria-hidden="true"
-      />
-
-      {/* Intro Phase (0-10s): 3D Earth in Space with Edolus-style HUD */}
-      {stage !== 'landing_page' && (
-        <>
-          <main className="earth-experiment" aria-label="3D Earth Intro">
-            <EarthScene
-              zoomStarted={stage === 'zooming' || stage === 'black_screen'}
-              earthRef={earthRef}
-              controlsRef={controlsRef}
-              onZoomComplete={handleZoomComplete}
+        {/* Intro Phase (0-10s): 3D Earth in Space with Edolus-style HUD */}
+        {stage !== 'landing_page' && (
+          <>
+            <main className="earth-experiment" aria-label="3D Earth Intro">
+              <EarthScene
+                zoomStarted={stage === 'zooming' || stage === 'black_screen'}
+                earthRef={earthRef}
+                controlsRef={controlsRef}
+                onZoomComplete={handleZoomComplete}
+              />
+            </main>
+            <TacticalHudOverlay
+              stage={stage}
+              onSkip={handleZoomComplete}
             />
-          </main>
-          <TacticalHudOverlay
-            stage={stage}
-            onSkip={handleZoomComplete}
-          />
-        </>
-      )}
+          </>
+        )}
 
-      {/* Landing Page Phase */}
-      {stage === 'landing_page' && <LandingPage />}
-    </div>
+        {/* Landing Page Phase */}
+        {stage === 'landing_page' && <LandingPage />}
+      </div>
+    )
+  }
+
+  return (
+    <ErrorBoundary>
+      <SmoothScrollProvider>{renderContent()}</SmoothScrollProvider>
+    </ErrorBoundary>
   )
 }
 

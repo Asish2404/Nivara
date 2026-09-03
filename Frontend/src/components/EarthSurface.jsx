@@ -7,9 +7,9 @@ export function EarthSurface() {
     specular: '/textures/earth_specular.jpg',
   })
   day.colorSpace = 'srgb'
-  day.anisotropy = 8
-  normal.anisotropy = 8
-  specular.anisotropy = 8
+  day.anisotropy = 16
+  normal.anisotropy = 16
+  specular.anisotropy = 16
   const gradeSurface = (shader) => {
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <map_fragment>',
@@ -22,14 +22,14 @@ export function EarthSurface() {
 
   return (
     <mesh castShadow receiveShadow>
-      <sphereGeometry args={[2.05, 96, 64]} />
+      <sphereGeometry args={[2.05, 128, 96]} />
       <meshPhongMaterial
         map={day}
         normalMap={normal}
-        normalScale={[0.42, 0.42]}
+        normalScale={[0.56, 0.56]}
         specularMap={specular}
         specular="#648896"
-        shininess={11}
+        shininess={14}
         color="#f5f5ed"
         onBeforeCompile={gradeSurface}
       />

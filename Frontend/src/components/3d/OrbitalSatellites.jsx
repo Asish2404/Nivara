@@ -43,7 +43,7 @@ export function OrbitalSatellites() {
   const { equatorialRingGeometry, polarRingGeometry } = useMemo(() => {
     const ringRadius1 = EARTH_RADIUS + 0.42
     const ringRadius2 = EARTH_RADIUS + 0.52
-    const segments = 64
+    const segments = 128
 
     const pts1 = []
     const pts2 = []

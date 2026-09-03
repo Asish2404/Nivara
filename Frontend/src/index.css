@@ -106,3 +106,11 @@
   stroke-dasharray: 8 6;
   animation: flow-shimmer 20s linear infinite;
 }
+
+/* Shimmering Border Beam */
+@keyframes border-beam {
+  100% {
+    offset-distance: 100%;
+  }
+}
+

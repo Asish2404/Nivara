@@ -130,8 +130,8 @@ export function PhoneVerificationPipeline() {
         before municipal dispatch.
       </p>
 
-      {/* 5-Stage Synchronized Cards */}
-      <div className="space-y-2.5 pt-1">
+      {/* 5-Stage Synchronized Cyber Cards */}
+      <div className="space-y-3 pt-1">
         {STAGES.map((stage) => {
           const isDone =
             isReportSubmitted && reportVerificationStage >= stage.id;
@@ -143,67 +143,67 @@ export function PhoneVerificationPipeline() {
           return (
             <div
               key={stage.id}
-              className={`p-3.5 sm:p-4 rounded-xl border transition-all ${
+              className={`p-4 rounded-2xl border transition-all ${
                 isDone
-                  ? "bg-white border-slate-200 shadow-2xs"
+                  ? "bg-white border-slate-200/90 shadow-sm"
                   : isCurrent
-                    ? "bg-blue-50/40 border-blue-400 shadow-xs"
-                    : "bg-slate-50/60 border-slate-200/80 opacity-60"
+                  ? "bg-gradient-to-r from-cyan-50/70 to-blue-50/50 border-cyan-400 shadow-md ring-1 ring-cyan-400/30"
+                  : "bg-slate-50/50 border-slate-200/60 opacity-65"
               }`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
                   <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                    className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 mt-0.5 transition-all shadow-xs ${
                       isDone
-                        ? "bg-emerald-100 border border-emerald-200 text-emerald-700"
+                        ? "bg-emerald-100 border border-emerald-300 text-emerald-700"
                         : isCurrent
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-slate-200 text-slate-400"
+                        ? "bg-gradient-to-tr from-cyan-500 to-blue-600 text-white shadow-[0_0_12px_rgba(6,182,212,0.4)]"
+                        : "bg-slate-200 text-slate-400"
                     }`}
                   >
                     {isDone ? (
-                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <CheckCircle2 className="w-4 h-4" />
                     ) : isCurrent ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <Circle className="w-3.5 h-3.5" />
+                      <Circle className="w-4 h-4" />
                     )}
                   </div>
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-bold text-slate-900">
+                      <span className="text-sm font-bold text-slate-900">
                         {stage.id}. {stage.name}
                       </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-800 font-bold border border-cyan-200">
                         {stage.tag}
                       </span>
                     </div>
                     <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                       {isDone || isCurrent
                         ? stage.detail
-                        : "Awaiting automated check…"}
+                        : "Awaiting automated spatial validation…"}
                     </p>
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
                   <span
-                    className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border transition-colors ${
+                    className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border transition-colors ${
                       isDone
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 shadow-2xs"
                         : isCurrent
-                          ? "bg-blue-50 text-blue-700 border-blue-200"
-                          : "bg-slate-100 text-slate-400 border-slate-200"
+                        ? "bg-cyan-50 text-cyan-800 border-cyan-300 shadow-2xs animate-pulse"
+                        : "bg-slate-100 text-slate-400 border-slate-200"
                     }`}
                   >
                     {isDone
                       ? stage.status
                       : isCurrent
-                        ? "IN PROGRESS"
-                        : "PENDING"}
+                      ? "PROCESSING"
+                      : "STANDBY"}
                   </span>
-                  <span className="text-[9px] font-mono text-slate-400 block mt-1">
+                  <span className="text-[10px] font-mono text-slate-400 block mt-1.5">
                     {stage.metric}
                   </span>
                 </div>
@@ -213,18 +213,18 @@ export function PhoneVerificationPipeline() {
         })}
       </div>
 
-      {/* Connected Action Banner */}
-      <div className="mt-4 p-4 rounded-xl border border-blue-200/80 bg-gradient-to-r from-blue-50/80 to-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+      {/* Connected Action Banner with Border Beam */}
+      <div className="relative overflow-hidden mt-6 p-5 rounded-3xl border border-cyan-200/90 bg-gradient-to-r from-cyan-50/80 via-blue-50/60 to-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
         <div>
-          <span className="text-xs font-bold text-slate-900 block">
+          <span className="text-sm font-bold text-slate-950 block">
             {isReportVerified
-              ? "Signal Confirmed · Dispatched to Ward 31 Drainage Desk"
+              ? "Verified Telemetry Signal · Dispatched to Ward 31 Drainage Operations"
               : isReportSubmitted
-                ? "Signal in Verification Pipeline…"
-                : "Submit Report on Phone to Trigger AI Verification"}
+              ? "Multi-Spectral Verification in Progress…"
+              : "Submit Field Report on Device to Trigger AI Analysis"}
           </span>
-          <span className="text-xs text-slate-600 mt-0.5 block">
-            Linked to Incident #SV-024 · Connected to Pump Station PS-07
+          <span className="text-xs text-slate-600 mt-0.5 block font-mono">
+            Linked to Incident #SV-024 · Connected to Sluice Station PS-07
           </span>
         </div>
 
@@ -232,10 +232,10 @@ export function PhoneVerificationPipeline() {
           <button
             type="button"
             onClick={handleOpenLiveCity}
-            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs transition-all active:scale-[0.98] flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs"
+            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-700 hover:from-cyan-500 hover:to-blue-600 text-white font-bold text-xs transition-all active:scale-[0.98] flex items-center gap-1.5 shrink-0 cursor-pointer shadow-[0_4px_15px_rgba(6,182,212,0.35)]"
           >
-            <span>View on Live Map</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <span>Inspect on Live Map</span>
+            <ArrowRight className="w-4 h-4" />
           </button>
         )}
       </div>

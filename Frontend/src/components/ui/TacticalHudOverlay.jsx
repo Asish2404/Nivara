@@ -1,17 +1,27 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Activity, Compass, Crosshair, Radio, ShieldCheck, ChevronRight } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Activity, Compass, Crosshair, Radio, ChevronRight, Volume2, VolumeX } from 'lucide-react'
+import { audioEngine } from '../../utils/audioEngine'
 
 export function TacticalHudOverlay({ stage, onSkip }) {
   const [altitude, setAltitude] = useState(35786)
+  const [soundActive, setSoundActive] = useState(false)
   const isZooming = stage === 'zooming'
 
-  // Animate altitude counter downwards during zoom
+  // Sync with audio engine mute state
+  useEffect(() => {
+    return audioEngine.subscribe((isActive) => setSoundActive(isActive))
+  }, [])
+
+  // Trigger warp sweep and countdown on zooming
   useEffect(() => {
     if (!isZooming) {
       setAltitude(35786)
       return
     }
+
+    // Play cinematic atmospheric entry sweep if sound is enabled
+    audioEngine.playWarpSweep()
 
     const startTime = performance.now()
     const duration = 4800 // ~5 seconds transition
@@ -19,7 +29,6 @@ export function TacticalHudOverlay({ stage, onSkip }) {
     const interval = setInterval(() => {
       const elapsed = performance.now() - startTime
       const progress = Math.min(elapsed / duration, 1)
-      // Ease out cubic
       const eased = 1 - Math.pow(1 - progress, 3)
       const currentAlt = Math.round(35786 - eased * (35786 - 420))
       setAltitude(currentAlt)
@@ -29,6 +38,10 @@ export function TacticalHudOverlay({ stage, onSkip }) {
 
     return () => clearInterval(interval)
   }, [isZooming])
+
+  const handleAudioToggle = () => {
+    audioEngine.toggleMute()
+  }
 
   return (
     <div className="pointer-events-none fixed inset-0 z-40 flex flex-col justify-between p-6 sm:p-10 font-mono text-cyan-400 select-none">
@@ -59,9 +72,36 @@ export function TacticalHudOverlay({ stage, onSkip }) {
         </div>
 
         <div className="flex items-center gap-4 text-xs">
-          <div className="flex items-center gap-1.5 text-emerald-400">
+          {/* Sound Toggle Button */}
+          <button
+            type="button"
+            onClick={handleAudioToggle}
+            onMouseEnter={() => audioEngine.playUiChirp(1050)}
+            className="pointer-events-auto flex items-center gap-2 px-2.5 py-1 rounded bg-black/60 hover:bg-cyan-950/80 border border-cyan-400/30 hover:border-cyan-400/60 text-cyan-300 text-[11px] transition-colors cursor-pointer shadow-[0_0_10px_rgba(0,240,255,0.15)]"
+            title="Toggle high-tech space sound"
+          >
+            {soundActive ? (
+              <>
+                <Volume2 className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+                <span className="hidden sm:inline">AUDIO ON</span>
+                {/* Micro Animated Equalizer */}
+                <span className="flex items-end gap-0.5 h-2.5 ml-0.5">
+                  <span className="w-0.5 h-2 bg-cyan-400 animate-[pulse_0.8s_ease-in-out_infinite]" />
+                  <span className="w-0.5 h-3 bg-cyan-300 animate-[pulse_0.5s_ease-in-out_infinite]" />
+                  <span className="w-0.5 h-1.5 bg-cyan-400 animate-[pulse_0.9s_ease-in-out_infinite]" />
+                </span>
+              </>
+            ) : (
+              <>
+                <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+                <span className="hidden sm:inline text-slate-400">UNMUTE</span>
+              </>
+            )}
+          </button>
+
+          <div className="hidden md:flex items-center gap-1.5 text-emerald-400">
             <Radio className="w-3.5 h-3.5 animate-pulse" />
-            <span className="hidden md:inline">DOWNLINK:</span> 99.8%
+            <span>DOWNLINK:</span> 99.8%
           </div>
           <div className="text-slate-400 text-[11px]">
             LATENCY: <span className="text-cyan-300">14MS</span>
@@ -69,7 +109,7 @@ export function TacticalHudOverlay({ stage, onSkip }) {
         </div>
       </motion.header>
 
-      {/* 3. Center Target Lock Reticle (Active when zooming or hovering) */}
+      {/* 3. Center Target Lock Reticle */}
       <div className="relative flex flex-col items-center justify-center pointer-events-none my-auto">
         <motion.div
           animate={{
@@ -133,7 +173,11 @@ export function TacticalHudOverlay({ stage, onSkip }) {
         {onSkip && (
           <button
             type="button"
-            onClick={onSkip}
+            onClick={() => {
+              audioEngine.playUiChirp(1200)
+              onSkip()
+            }}
+            onMouseEnter={() => audioEngine.playUiChirp(900)}
             className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-300 text-xs font-semibold tracking-wider hover:text-white transition-all shadow-[0_0_15px_rgba(0,240,255,0.2)] cursor-pointer"
           >
             <span>ENTER CITY SYSTEM</span>

@@ -1,21 +1,57 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useState } from "react";
+import L from "leaflet";
 import {
   HOOGHLY_RIVER,
-  GREEN_RESERVES,
-  WATER_BODIES,
   DRAINAGE_CANALS,
-  DRAINAGE_TRUNK_CONDUITS,
-  ROAD_NETWORK,
-  NEIGHBORHOOD_BLOCKS,
   FLOOD_DEPTH_ZONES,
   RISK_ZONES,
   ACTIVE_INCIDENTS,
   PUMPING_STATIONS,
   SPATIAL_RAIN_CELLS,
-  FORECAST_ISOBARS,
   GEOGRAPHIC_DISTRICTS,
 } from "./kolkataCartographicData";
 import { useKWIStore } from "../../store/useKWIStore";
+import { audioEngine } from "../../utils/audioEngine";
+
+// Real-world geographic center of Kolkata (Esplanade / B.B.D. Bagh)
+const KOLKATA_CENTER = [22.5726, 88.3639];
+
+// Accurate coordinate converter from cartographic km offset to WGS84 Lat/Lng
+function kmToLatLng(kmX, kmY) {
+  // 1 deg lat = 111.13 km
+  // 1 deg lng at 22.57° N = 102.6 km
+  const lat = KOLKATA_CENTER[0] - kmY / 111.13;
+  const lng = KOLKATA_CENTER[1] + kmX / 102.6;
+  return [lat, lng];
+}
+
+// Tile Layer Configurations (Realistic Satellite, Modern Street, Dark Tactical)
+const TILE_PRESETS = {
+  satellite: {
+    id: "satellite",
+    name: "Satellite",
+    icon: "🛰️",
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    attribution: "&copy; Esri, Maxar, Earthstar Geographics",
+    maxZoom: 19,
+  },
+  street: {
+    id: "street",
+    name: "Street",
+    icon: "🗺️",
+    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://carto.com/">CARTO</a>, OpenStreetMap',
+    maxZoom: 19,
+  },
+  dark: {
+    id: "dark",
+    name: "Dark Tactical",
+    icon: "🌙",
+    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://carto.com/">CARTO</a>, OpenStreetMap',
+    maxZoom: 19,
+  },
+};
 
 export function KolkataGisMap({
   selectedDistrict,
@@ -23,7 +59,12 @@ export function KolkataGisMap({
   overrideLayers,
   traceWaterFlow = false,
 }) {
-  const canvasRef = useRef(null);
+  const mapContainerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const tileLayerRef = useRef(null);
+  const layersGroupRef = useRef({});
+
+  const [activePreset, setActivePreset] = useState("satellite"); // Default to realistic satellite imagery
   const store = useKWIStore();
   const activeLayers = overrideLayers || store.activeLayers;
 
@@ -31,794 +72,399 @@ export function KolkataGisMap({
   const selectedRiskZone = store.selectedRiskZone;
   const selectedPumpStation = store.selectedPumpStation;
 
-  // Camera & Viewport Transform State
-  const viewState = useRef({
-    x: 0,
-    y: 0,
-    zoom: 1.0,
-    targetX: 0,
-    targetY: 0,
-    targetZoom: 1.0,
-    isDragging: false,
-    dragStart: { x: 0, y: 0 },
-    flowDashOffset: 0,
-  });
-
-  // Watch selected items and smoothly focus map
+  // Initialize Leaflet Map Instance
   useEffect(() => {
+    const container = mapContainerRef.current;
+    if (!container) return;
+
+    if (mapInstanceRef.current) {
+      try {
+        mapInstanceRef.current.remove();
+      } catch (e) {
+        // ignore
+      }
+      mapInstanceRef.current = null;
+    }
+
+    if (container._leaflet_id) {
+      container._leaflet_id = null;
+    }
+
+    let map = null;
+    try {
+      map = L.map(container, {
+        center: [22.565, 88.375],
+        zoom: 12,
+        minZoom: 10,
+        maxZoom: 18,
+        zoomControl: false,
+        attributionControl: false,
+      });
+
+      // Add base tile layer
+      const preset = TILE_PRESETS[activePreset] || TILE_PRESETS.satellite;
+      const tileLayer = L.tileLayer(preset.url, {
+        maxZoom: preset.maxZoom,
+        subdomains: "abcd",
+      }).addTo(map);
+
+      tileLayerRef.current = tileLayer;
+      mapInstanceRef.current = map;
+
+      // Create Layer Groups
+      layersGroupRef.current = {
+        risk: L.layerGroup().addTo(map),
+        incidents: L.layerGroup().addTo(map),
+        drainage: L.layerGroup().addTo(map),
+        pumps: L.layerGroup().addTo(map),
+        rain: L.layerGroup().addTo(map),
+        forecast: L.layerGroup().addTo(map),
+      };
+
+      setTimeout(() => {
+        try {
+          if (map) map.invalidateSize();
+        } catch (e) {
+          // ignore
+        }
+      }, 100);
+    } catch (err) {
+      console.warn("Leaflet container safe handled:", err);
+    }
+
+    return () => {
+      try {
+        if (map) {
+          map.remove();
+        }
+      } catch (e) {
+        // ignore
+      }
+      if (container) {
+        container._leaflet_id = null;
+      }
+      mapInstanceRef.current = null;
+    };
+  }, []);
+
+  // Handle Base Tile Preset Switch (Satellite vs Street vs Dark)
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    const preset = TILE_PRESETS[activePreset] || TILE_PRESETS.satellite;
+    try {
+      if (tileLayerRef.current) {
+        map.removeLayer(tileLayerRef.current);
+      }
+      const newTileLayer = L.tileLayer(preset.url, {
+        maxZoom: preset.maxZoom,
+        subdomains: "abcd",
+      }).addTo(map);
+
+      tileLayerRef.current = newTileLayer;
+    } catch (e) {
+      console.warn("Tile layer switch error handled:", e);
+    }
+  }, [activePreset]);
+
+  // Synchronize Active Vector Layers (Risk, Incidents, Drainage, Pumps, Rain, Forecast)
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !layersGroupRef.current.risk) return;
+
+    const { risk, incidents, drainage, pumps, rain, forecast } = layersGroupRef.current;
+
+    // 1. RISK ZONES LAYER
+    risk.clearLayers();
+    if (activeLayers.risk !== false) {
+      RISK_ZONES.forEach((zone) => {
+        const polygonCoords = zone.polygon || zone.points || [];
+        if (!polygonCoords.length) return;
+        const latLngs = polygonCoords.map(([x, y]) => kmToLatLng(x, y));
+        const color =
+          zone.level === "CRITICAL"
+            ? "#ef4444"
+            : zone.level === "HIGH"
+            ? "#f97316"
+            : zone.level === "MODERATE"
+            ? "#eab308"
+            : "#22c55e";
+
+        const polygon = L.polygon(latLngs, {
+          color: color,
+          weight: 2,
+          fillColor: color,
+          fillOpacity: 0.28,
+        });
+
+        polygon.bindPopup(`
+          <div style="font-family: sans-serif; font-size: 12px; color: #0f172a; min-width: 170px;">
+            <div style="font-weight: 700; font-size: 13px; margin-bottom: 2px;">${zone.name}</div>
+            <div style="color: ${color}; font-weight: 600; font-size: 11px; margin-bottom: 6px;">
+              SEVERITY: ${zone.level} (Risk ${zone.riskScore})
+            </div>
+            <div style="font-size: 11px; color: #475569;">
+              <div>Water Depth: <b>${zone.waterDepth}</b></div>
+              <div>Rainfall: <b>${zone.rainfall}</b></div>
+              <div>Drainage Load: <b>${zone.drainageLoad}</b></div>
+            </div>
+          </div>
+        `);
+
+        polygon.on("click", () => {
+          audioEngine.playUiChirp(840);
+          store.setSelectedRiskZone(zone);
+        });
+
+        risk.addLayer(polygon);
+      });
+    }
+
+    // 2. INCIDENTS LAYER
+    incidents.clearLayers();
+    if (activeLayers.incidents !== false) {
+      ACTIVE_INCIDENTS.forEach((inc) => {
+        const [lat, lng] = kmToLatLng(inc.x, inc.y);
+        const isCrit = inc.severity === "CRITICAL" || inc.severity === "HIGH";
+
+        // Custom pulsing HTML radar pin
+        const pulseIcon = L.divIcon({
+          className: "custom-incident-pin",
+          html: `
+            <div style="position: relative; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              <span style="position: absolute; inset: 0; border-radius: 9999px; background-color: ${
+                isCrit ? "#f43f5e" : "#eab308"
+              }; opacity: 0.75; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+              <span style="position: relative; width: 14px; height: 14px; border-radius: 9999px; background-color: ${
+                isCrit ? "#e11d48" : "#ca8a04"
+              }; border: 2.5px solid #ffffff; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></span>
+              <div style="position: absolute; top: -18px; background: rgba(15,23,42,0.85); color: #fff; font-size: 9px; font-weight: bold; padding: 1px 4px; border-radius: 4px; white-space: nowrap; border: 1px solid rgba(255,255,255,0.3); font-family: monospace;">
+                ${inc.waterDepth}
+              </div>
+            </div>
+          `,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+        });
+
+        const marker = L.marker([lat, lng], { icon: pulseIcon });
+
+        marker.bindPopup(`
+          <div style="font-family: sans-serif; font-size: 12px; color: #0f172a; min-width: 190px;">
+            <div style="font-weight: 700; font-size: 13px; color: #0f172a;">${inc.location}</div>
+            <div style="font-size: 10px; color: #64748b; font-family: monospace; margin-bottom: 6px;">${inc.id} // ${inc.subdivision}</div>
+            <div style="font-size: 11px; margin-bottom: 6px;">
+              <div>Depth: <b style="color: #e11d48;">${inc.waterDepth}</b></div>
+              <div>Reports: <b>${inc.verifiedReports} verified</b></div>
+              <div>Status: <b>${inc.status}</b></div>
+            </div>
+            <div style="font-size: 10px; color: #0284c7; font-weight: 600;">Nearest Station: ${inc.nearestPump}</div>
+          </div>
+        `);
+
+        marker.on("click", () => {
+          audioEngine.playUiChirp(1040);
+          store.setSelectedIncident(inc);
+        });
+
+        incidents.addLayer(marker);
+      });
+    }
+
+    // 3. DRAINAGE CANALS & TRUNK CONDUITS LAYER
+    drainage.clearLayers();
+    if (activeLayers.drainage !== false) {
+      DRAINAGE_CANALS.forEach((canal) => {
+        const rawPoints = canal.points || canal.path || [];
+        if (!rawPoints.length) return;
+        const latLngs = rawPoints.map(([x, y]) => kmToLatLng(x, y));
+        const polyline = L.polyline(latLngs, {
+          color: "#0284c7",
+          weight: traceWaterFlow ? 4 : 3,
+          dashArray: traceWaterFlow ? "8, 8" : undefined,
+          opacity: 0.85,
+        });
+
+        polyline.bindTooltip(canal.name, { sticky: true, className: "canal-tooltip" });
+        drainage.addLayer(polyline);
+      });
+    }
+
+    // 4. PUMPING STATIONS LAYER
+    pumps.clearLayers();
+    if (activeLayers.pumps !== false) {
+      PUMPING_STATIONS.forEach((ps) => {
+        const [lat, lng] = kmToLatLng(ps.x, ps.y);
+        const isCap = ps.isAtCapacity;
+
+        const pumpIcon = L.divIcon({
+          className: "custom-pump-pin",
+          html: `
+            <div style="background: ${
+              isCap ? "#dc2626" : "#0284c7"
+            }; color: white; width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; border: 1.5px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.4); cursor: pointer; font-family: monospace;">
+              PS
+            </div>
+          `,
+          iconSize: [22, 22],
+          iconAnchor: [11, 11],
+        });
+
+        const marker = L.marker([lat, lng], { icon: pumpIcon });
+        marker.bindPopup(`
+          <div style="font-family: sans-serif; font-size: 12px; color: #0f172a; min-width: 170px;">
+            <div style="font-weight: 700; font-size: 13px;">${ps.name}</div>
+            <div style="color: ${isCap ? "#dc2626" : "#0284c7"}; font-weight: 700; font-size: 11px; margin-bottom: 4px;">
+              STATUS: ${ps.status} (${ps.pumpsRunning} Running)
+            </div>
+            <div style="font-size: 11px; color: #475569;">
+              <div>Capacity: <b>${ps.capacity}</b></div>
+              <div>Discharge: <b>${ps.dischargeRate}</b></div>
+              <div>Outfall: <b>${ps.connectedCanal}</b></div>
+            </div>
+          </div>
+        `);
+
+        marker.on("click", () => {
+          audioEngine.playUiChirp(920);
+          store.setSelectedPumpStation(ps);
+        });
+
+        pumps.addLayer(marker);
+      });
+    }
+
+    // 5. RAINFALL RADAR OVERLAY
+    rain.clearLayers();
+    if (activeLayers.rain !== false) {
+      SPATIAL_RAIN_CELLS.forEach((cell) => {
+        if (!cell || !cell.center) return;
+        const [lat, lng] = kmToLatLng(cell.center[0], cell.center[1]);
+        const radiusKm = cell.radiusX || cell.radiusY || cell.radiusKm || 3.0;
+        const radiusMeters = radiusKm * 1000;
+        if (!radiusMeters || isNaN(radiusMeters)) return;
+
+        const circle = L.circle([lat, lng], {
+          radius: radiusMeters,
+          color: "#38bdf8",
+          fillColor: "#0284c7",
+          fillOpacity: 0.16,
+          weight: 1,
+        });
+        rain.addLayer(circle);
+      });
+    }
+
+    // 6. FORECAST INUNDATION ZONES
+    forecast.clearLayers();
+    if (activeLayers.forecast !== false) {
+      FLOOD_DEPTH_ZONES.forEach((zone) => {
+        const polygonCoords = zone.polygon || [];
+        if (!polygonCoords.length) return;
+        const latLngs = polygonCoords.map(([x, y]) => kmToLatLng(x, y));
+        const poly = L.polygon(latLngs, {
+          color: zone.borderColor || "#f43f5e",
+          fillColor: zone.fillColor || "rgba(244, 63, 94, 0.2)",
+          fillOpacity: 0.22,
+          weight: 2,
+          dashArray: "4, 6",
+        });
+        poly.bindTooltip(`${zone.district || 'Inundation'}: ${zone.depthCm || 20} cm projected`, { sticky: true });
+        forecast.addLayer(poly);
+      });
+    }
+  }, [activeLayers, traceWaterFlow, store]);
+
+  // Smooth Viewport Focus upon Selection
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
     if (selectedIncident) {
-      viewState.current.targetX = selectedIncident.x;
-      viewState.current.targetY = selectedIncident.y;
-      viewState.current.targetZoom = 1.6;
+      const [lat, lng] = kmToLatLng(selectedIncident.x, selectedIncident.y);
+      map.flyTo([lat, lng], 14, { duration: 1.2 });
       return;
     }
+
     if (selectedPumpStation) {
-      viewState.current.targetX = selectedPumpStation.x;
-      viewState.current.targetY = selectedPumpStation.y;
-      viewState.current.targetZoom = 1.5;
+      const [lat, lng] = kmToLatLng(selectedPumpStation.x, selectedPumpStation.y);
+      map.flyTo([lat, lng], 14, { duration: 1.2 });
       return;
     }
+
     if (selectedRiskZone) {
-      viewState.current.targetX = selectedRiskZone.center[0];
-      viewState.current.targetY = selectedRiskZone.center[1];
-      viewState.current.targetZoom = 1.4;
+      const [lat, lng] = kmToLatLng(
+        selectedRiskZone.center[0],
+        selectedRiskZone.center[1],
+      );
+      map.flyTo([lat, lng], 13.5, { duration: 1.2 });
       return;
     }
+
     if (selectedDistrict) {
-      const d = GEOGRAPHIC_DISTRICTS.find(
-        (item) => item.id === selectedDistrict,
-      );
+      const d = GEOGRAPHIC_DISTRICTS.find((item) => item.id === selectedDistrict);
       if (d) {
-        viewState.current.targetX = d.center[0];
-        viewState.current.targetY = d.center[1];
-        viewState.current.targetZoom = d.zoom;
-        return;
+        const [lat, lng] = kmToLatLng(d.center[0], d.center[1]);
+        map.flyTo([lat, lng], 13.5, { duration: 1.2 });
       }
     }
-  }, [
-    selectedIncident,
-    selectedPumpStation,
-    selectedRiskZone,
-    selectedDistrict,
-  ]);
+  }, [selectedIncident, selectedPumpStation, selectedRiskZone, selectedDistrict]);
 
-  // Watch Zoom In / Out / Reset from Store
+  // Handle External Zoom Controls from Store
   const lastZoomTrigger = useRef(store.zoomTrigger);
   useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
     if (store.zoomTrigger !== lastZoomTrigger.current) {
-      const dir = store.zoomTrigger > lastZoomTrigger.current ? 1.25 : 0.8;
+      if (store.zoomTrigger > lastZoomTrigger.current) {
+        map.zoomIn();
+      } else {
+        map.zoomOut();
+      }
       lastZoomTrigger.current = store.zoomTrigger;
-      viewState.current.targetZoom = Math.min(
-        Math.max(viewState.current.targetZoom * dir, 0.6),
-        3.5,
-      );
     }
   }, [store.zoomTrigger]);
 
   const lastResetTrigger = useRef(store.resetCameraTrigger);
   useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
     if (store.resetCameraTrigger !== lastResetTrigger.current) {
+      map.flyTo([22.565, 88.375], 12, { duration: 1.0 });
       lastResetTrigger.current = store.resetCameraTrigger;
-      viewState.current.targetX = 0.5;
-      viewState.current.targetY = 0;
-      viewState.current.targetZoom = 1.0;
     }
   }, [store.resetCameraTrigger]);
 
-  // Coordinate Mapping Helper
-  const getScreenCoords = useCallback((kmX, kmY, width, height) => {
-    const v = viewState.current;
-    const pixelsPerKm = (Math.min(width, height) / 24) * v.zoom;
-    const screenX = width / 2 + (kmX - v.x) * pixelsPerKm;
-    const screenY = height / 2 + (kmY - v.y) * pixelsPerKm;
-    return [screenX, screenY, pixelsPerKm];
-  }, []);
-
-  const getKmCoords = useCallback((screenX, screenY, width, height) => {
-    const v = viewState.current;
-    const pixelsPerKm = (Math.min(width, height) / 24) * v.zoom;
-    const kmX = (screenX - width / 2) / pixelsPerKm + v.x;
-    const kmY = (screenY - height / 2) / pixelsPerKm + v.y;
-    return [kmX, kmY];
-  }, []);
-
-  // Render Loop
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    let animationFrameId;
-
-    const render = () => {
-      const dpr = window.devicePixelRatio || 1;
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-
-      if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-      }
-
-      ctx.save();
-      ctx.scale(dpr, dpr);
-
-      // Smooth Camera Lerp (No bouncing, natural deceleration)
-      const v = viewState.current;
-      v.x += (v.targetX - v.x) * 0.08;
-      v.y += (v.targetY - v.y) * 0.08;
-      v.zoom += (v.targetZoom - v.zoom) * 0.08;
-
-      // Water Flow Animation Offset
-      if (traceWaterFlow) {
-        v.flowDashOffset = (v.flowDashOffset - 0.4) % 16;
-      }
-
-      const toScreen = (kmX, kmY) => getScreenCoords(kmX, kmY, width, height);
-
-      // ========================================================
-      // 1. BASE TERRAIN (Warm Cartographic Off-White)
-      // ========================================================
-      ctx.fillStyle = "#f5f5f1";
-      ctx.fillRect(0, 0, width, height);
-
-      // ========================================================
-      // 2. RESTRAINED GEODETIC GRID
-      // ========================================================
-      ctx.strokeStyle = "rgba(120, 130, 140, 0.06)";
-      ctx.lineWidth = 1;
-      const [gridStartKmX, gridStartKmY] = getKmCoords(0, 0, width, height);
-      const [gridEndKmX, gridEndKmY] = getKmCoords(
-        width,
-        height,
-        width,
-        height,
-      );
-
-      const gridSpacingKm = v.zoom > 1.8 ? 1.0 : 2.5;
-      const minX = Math.floor(gridStartKmX / gridSpacingKm) * gridSpacingKm;
-      const maxX = Math.ceil(gridEndKmX / gridSpacingKm) * gridSpacingKm;
-      const minY = Math.floor(gridStartKmY / gridSpacingKm) * gridSpacingKm;
-      const maxY = Math.ceil(gridEndKmY / gridSpacingKm) * gridSpacingKm;
-
-      for (let gx = minX; gx <= maxX; gx += gridSpacingKm) {
-        const [sx] = toScreen(gx, 0);
-        ctx.beginPath();
-        ctx.moveTo(sx, 0);
-        ctx.lineTo(sx, height);
-        ctx.stroke();
-      }
-      for (let gy = minY; gy <= maxY; gy += gridSpacingKm) {
-        const [, sy] = toScreen(0, gy);
-        ctx.beginPath();
-        ctx.moveTo(0, sy);
-        ctx.lineTo(width, sy);
-        ctx.stroke();
-      }
-
-      // ========================================================
-      // 3. URBAN NEIGHBORHOOD BLOCKS & VARIED PARCELS
-      // ========================================================
-      NEIGHBORHOOD_BLOCKS.forEach((block) => {
-        // District Boundary Fill
-        ctx.beginPath();
-        block.polygon.forEach(([bx, by], i) => {
-          const [sx, sy] = toScreen(bx, by);
-          if (i === 0) ctx.moveTo(sx, sy);
-          else ctx.lineTo(sx, sy);
-        });
-        ctx.closePath();
-        ctx.fillStyle = "#ebebe5";
-        ctx.fill();
-        ctx.strokeStyle = "#deded6";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // Architectural Sub-Parcels (Communicating density & realistic footprint variety)
-        if (block.subParcels) {
-          block.subParcels.forEach((p) => {
-            const [px, py, pKmVal] = toScreen(p.x, p.y);
-            const pw = p.w * pKmVal;
-            const ph = p.h * pKmVal;
-
-            ctx.fillStyle = "#f1f1eb";
-            ctx.fillRect(px, py, pw, ph);
-            ctx.strokeStyle = "#e2e2dc";
-            ctx.lineWidth = 0.75;
-            ctx.strokeRect(px, py, pw, ph);
-          });
-        }
-      });
-
-      // ========================================================
-      // 4. GREEN RESERVES & VEGETATION (Natural Muted Greens)
-      // ========================================================
-      GREEN_RESERVES.forEach((res) => {
-        ctx.beginPath();
-        res.polygon.forEach(([gx, gy], i) => {
-          const [sx, sy] = toScreen(gx, gy);
-          if (i === 0) ctx.moveTo(sx, sy);
-          else ctx.lineTo(sx, sy);
-        });
-        ctx.closePath();
-        ctx.fillStyle =
-          res.id === "wetlands" ? "rgba(215, 235, 222, 0.75)" : "#dbe7d8";
-        ctx.fill();
-        ctx.strokeStyle = res.id === "wetlands" ? "#c2dbcb" : "#c9d8c5";
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      });
-
-      // The Maidan Racecourse Oval
-      const [rcX, rcY, pKm] = toScreen(-1.5, 0.8);
-      ctx.beginPath();
-      ctx.ellipse(rcX, rcY, 0.7 * pKm, 0.45 * pKm, 0.2, 0, Math.PI * 2);
-      ctx.fillStyle = "#cde0ca";
-      ctx.fill();
-      ctx.strokeStyle = "#b9cfb5";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      // Victoria Memorial Footprint in The Maidan
-      const [vmX, vmY] = toScreen(-1.0, 1.2);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(vmX - 6, vmY - 6, 12, 12);
-      ctx.strokeStyle = "#94a3b8";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(vmX - 6, vmY - 6, 12, 12);
-
-      // ========================================================
-      // 5. NATURAL WATER BODIES (Lakes & Retention Basins)
-      // ========================================================
-      WATER_BODIES.forEach((lake) => {
-        const [cx, cy, pKmVal] = toScreen(lake.center[0], lake.center[1]);
-        ctx.beginPath();
-        ctx.ellipse(
-          cx,
-          cy,
-          lake.radiusX * pKmVal,
-          lake.radiusY * pKmVal,
-          lake.rotation,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fillStyle = "#8eaec2";
-        ctx.fill();
-        ctx.strokeStyle = "#7497ad";
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      });
-
-      // ========================================================
-      // 6. HOOGHLY RIVER (Western Waterway with natural shoreline)
-      // ========================================================
-      const leftBank = [];
-      const rightBank = [];
-      const riverPts = HOOGHLY_RIVER.centerline;
-
-      for (let i = 0; i < riverPts.length; i++) {
-        const pt = riverPts[i];
-        const halfW = pt.width / 2;
-
-        let dx = 0;
-        let dy = 1;
-        if (i < riverPts.length - 1) {
-          dx = riverPts[i + 1].x - pt.x;
-          dy = riverPts[i + 1].y - pt.y;
-        } else {
-          dx = pt.x - riverPts[i - 1].x;
-          dy = pt.y - riverPts[i - 1].y;
-        }
-        const len = Math.hypot(dx, dy) || 1;
-        const nx = -dy / len;
-        const ny = dx / len;
-
-        leftBank.push([pt.x - nx * halfW, pt.y - ny * halfW]);
-        rightBank.push([pt.x + nx * halfW, pt.y + ny * halfW]);
-      }
-
-      ctx.beginPath();
-      leftBank.forEach(([lx, ly], i) => {
-        const [sx, sy] = toScreen(lx, ly);
-        if (i === 0) ctx.moveTo(sx, sy);
-        else ctx.lineTo(sx, sy);
-      });
-      for (let i = rightBank.length - 1; i >= 0; i--) {
-        const [rx, ry] = rightBank[i];
-        const [sx, sy] = toScreen(rx, ry);
-        ctx.lineTo(sx, sy);
-      }
-      ctx.closePath();
-      ctx.fillStyle = "#80a3b9";
-      ctx.fill();
-      ctx.strokeStyle = "#688fa7";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // River Bridges
-      HOOGHLY_RIVER.bridges.forEach((bridge) => {
-        const [sx1, sy1] = toScreen(bridge.start[0], bridge.start[1]);
-        const [sx2, sy2] = toScreen(bridge.end[0], bridge.end[1]);
-
-        ctx.beginPath();
-        ctx.moveTo(sx1, sy1);
-        ctx.lineTo(sx2, sy2);
-        ctx.strokeStyle = "#334155";
-        ctx.lineWidth = 3.5;
-        ctx.stroke();
-
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        // Pylon markers
-        if (bridge.pylons) {
-          bridge.pylons.forEach(([px, py]) => {
-            const [spx, spy] = toScreen(px, py);
-            ctx.fillStyle = "#0f172a";
-            ctx.fillRect(spx - 2, spy - 2, 4, 4);
-          });
-        }
-      });
-
-      // Historic Ghat Labels
-      HOOGHLY_RIVER.ghats.forEach((g) => {
-        const [gx, gy] = toScreen(g.x, g.y);
-        ctx.beginPath();
-        ctx.arc(gx, gy, 2, 0, Math.PI * 2);
-        ctx.fillStyle = "#64748b";
-        ctx.fill();
-
-        if (v.zoom > 1.2) {
-          ctx.font = "9px sans-serif";
-          ctx.fillStyle = "#475569";
-          ctx.fillText(g.name, gx + 4, gy + 3);
-        }
-      });
-
-      // ========================================================
-      // 7. ROAD NETWORK (Hierarchical Casing + Core)
-      // ========================================================
-      // Secondary Roads
-      ROAD_NETWORK.secondary.forEach((road) => {
-        ctx.beginPath();
-        road.points.forEach(([rx, ry], i) => {
-          const [sx, sy] = toScreen(rx, ry);
-          if (i === 0) ctx.moveTo(sx, sy);
-          else ctx.lineTo(sx, sy);
-        });
-        ctx.strokeStyle = "#e2e2dc";
-        ctx.lineWidth = 3.0;
-        ctx.stroke();
-
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 1.8;
-        ctx.stroke();
-      });
-
-      // Primary Arterials / Expressways (EM Bypass, Central Ave, Maa Flyover, VIP Rd, DH Rd)
-      ROAD_NETWORK.primary.forEach((road) => {
-        ctx.beginPath();
-        road.points.forEach(([rx, ry], i) => {
-          const [sx, sy] = toScreen(rx, ry);
-          if (i === 0) ctx.moveTo(sx, sy);
-          else ctx.lineTo(sx, sy);
-        });
-        ctx.strokeStyle = "#cbcbc5";
-        ctx.lineWidth = 5.0;
-        ctx.stroke();
-
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 3.2;
-        ctx.stroke();
-      });
-
-      // ========================================================
-      // 8. DRAINAGE LAYER (Canals, Trunks, Flow Animation)
-      // ========================================================
-      if (activeLayers.drainage) {
-        // Municipal Canals (Khals)
-        DRAINAGE_CANALS.forEach((canal) => {
-          ctx.beginPath();
-          canal.points.forEach(([cx, cy], i) => {
-            const [sx, sy] = toScreen(cx, cy);
-            if (i === 0) ctx.moveTo(sx, sy);
-            else ctx.lineTo(sx, sy);
-          });
-          ctx.strokeStyle = "#2e8b8f";
-          ctx.lineWidth = 3.2;
-          ctx.stroke();
-
-          // If Trace Water Flow is active, show directional moving flow dashes
-          if (traceWaterFlow) {
-            ctx.save();
-            ctx.setLineDash([6, 6]);
-            ctx.lineDashOffset = v.flowDashOffset;
-            ctx.strokeStyle = "#ecfeff";
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-            ctx.restore();
-          }
-        });
-
-        // Underground Stormwater Trunk Conduits
-        DRAINAGE_TRUNK_CONDUITS.forEach((trunk) => {
-          ctx.save();
-          ctx.setLineDash(traceWaterFlow ? [4, 4] : [3, 3]);
-          if (traceWaterFlow) ctx.lineDashOffset = v.flowDashOffset;
-
-          ctx.beginPath();
-          trunk.points.forEach(([tx, ty], i) => {
-            const [sx, sy] = toScreen(tx, ty);
-            if (i === 0) ctx.moveTo(sx, sy);
-            else ctx.lineTo(sx, sy);
-          });
-          ctx.strokeStyle = "#439d9a";
-          ctx.lineWidth = 2.0;
-          ctx.stroke();
-          ctx.restore();
-        });
-      }
-
-      // ========================================================
-      // 9. REALISTIC FLOOD DEPTH ZONES (Depths Following Corridors)
-      // ========================================================
-      if (activeLayers.risk) {
-        FLOOD_DEPTH_ZONES.forEach((fz) => {
-          ctx.beginPath();
-          fz.polygon.forEach(([zx, zy], i) => {
-            const [sx, sy] = toScreen(zx, zy);
-            if (i === 0) ctx.moveTo(sx, sy);
-            else ctx.lineTo(sx, sy);
-          });
-          ctx.closePath();
-          ctx.fillStyle = fz.fillColor;
-          ctx.fill();
-          ctx.strokeStyle = fz.borderColor;
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-        });
-
-        // Catchment Risk Boundary Discs
-        RISK_ZONES.forEach((zone) => {
-          const isSelected = selectedRiskZone?.id === zone.id;
-          ctx.beginPath();
-          zone.polygon.forEach(([zx, zy], i) => {
-            const [sx, sy] = toScreen(zx, zy);
-            if (i === 0) ctx.moveTo(sx, sy);
-            else ctx.lineTo(sx, sy);
-          });
-          ctx.closePath();
-          ctx.strokeStyle = zone.severityColor;
-          ctx.lineWidth = isSelected ? 2.5 : 1.2;
-          ctx.stroke();
-        });
-      }
-
-      // ========================================================
-      // 10. SPATIAL RAINFALL PRECIPITATION LAYER
-      // ========================================================
-      if (activeLayers.rain) {
-        SPATIAL_RAIN_CELLS.forEach((cell) => {
-          const [cx, cy, pKmVal] = toScreen(cell.center[0], cell.center[1]);
-          ctx.beginPath();
-          ctx.ellipse(
-            cx,
-            cy,
-            cell.radiusX * pKmVal,
-            cell.radiusY * pKmVal,
-            0.15,
-            0,
-            Math.PI * 2,
-          );
-          ctx.fillStyle = cell.color;
-          ctx.fill();
-          ctx.strokeStyle = "rgba(74, 133, 171, 0.35)";
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        });
-      }
-
-      // ========================================================
-      // 11. FORECAST RADAR ISOBARS
-      // ========================================================
-      if (activeLayers.forecast) {
-        FORECAST_ISOBARS.forEach((isobar) => {
-          const [cx, cy, pKmVal] = toScreen(isobar.center[0], isobar.center[1]);
-          ctx.save();
-          ctx.setLineDash([6, 6]);
-          ctx.beginPath();
-          ctx.arc(cx, cy, isobar.radius * pKmVal, 0, Math.PI * 2);
-          ctx.strokeStyle = "rgba(56, 120, 160, 0.4)";
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-          ctx.restore();
-        });
-      }
-
-      // ========================================================
-      // 12. PUMPING STATIONS (Engineering Nodes)
-      // ========================================================
-      if (activeLayers.pumps) {
-        PUMPING_STATIONS.forEach((ps) => {
-          const isSelected = selectedPumpStation?.id === ps.id;
-          const [sx, sy] = toScreen(ps.x, ps.y);
-
-          ctx.fillStyle = ps.isAtCapacity ? "#dc2626" : "#2e8b8f";
-          ctx.fillRect(sx - 4.5, sy - 4.5, 9, 9);
-          ctx.strokeStyle = isSelected ? "#0f172a" : "#ffffff";
-          ctx.lineWidth = isSelected ? 2 : 1;
-          ctx.strokeRect(sx - 4.5, sy - 4.5, 9, 9);
-
-          ctx.font = "bold 9px monospace";
-          ctx.fillStyle = "#334155";
-          ctx.fillText(ps.id, sx + 7, sy + 3);
-        });
-      }
-
-      // ========================================================
-      // 13. ACTIVE INCIDENTS (Connected Municipal Signals)
-      // ========================================================
-      if (activeLayers.incidents) {
-        ACTIVE_INCIDENTS.forEach((inc) => {
-          const isSelected = selectedIncident?.id === inc.id;
-          const [sx, sy] = toScreen(inc.x, inc.y);
-
-          if (isSelected || inc.isPrimary) {
-            ctx.beginPath();
-            ctx.arc(sx, sy, isSelected ? 12 : 8, 0, Math.PI * 2);
-            ctx.fillStyle = `${inc.severityColor}28`;
-            ctx.fill();
-          }
-
-          ctx.beginPath();
-          ctx.arc(sx, sy, 4.5, 0, Math.PI * 2);
-          ctx.fillStyle = inc.severityColor;
-          ctx.fill();
-          ctx.strokeStyle = "#ffffff";
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-
-          ctx.font = isSelected ? "bold 10px monospace" : "600 9px monospace";
-          ctx.fillStyle = isSelected ? "#0f172a" : "#475569";
-          ctx.fillText(inc.id, sx + 7, sy - 2);
-        });
-      }
-
-      // ========================================================
-      // 14. CARTOGRAPHIC DISTRICT LABELS
-      // ========================================================
-      const labels = [
-        {
-          text: "HOOGHLY RIVER",
-          x: -4.4,
-          y: -4.0,
-          font: "italic 11px sans-serif",
-          color: "#688fa7",
-        },
-        {
-          text: "HOWRAH",
-          x: -4.5,
-          y: -2.0,
-          font: "bold 10px monospace",
-          color: "#64748b",
-        },
-        {
-          text: "B.B.D. BAGH",
-          x: -0.6,
-          y: -2.0,
-          font: "bold 10px monospace",
-          color: "#334155",
-        },
-        {
-          text: "THE MAIDAN",
-          x: -1.4,
-          y: 0.2,
-          font: "bold 10px monospace",
-          color: "#4f7d4e",
-        },
-        {
-          text: "PARK STREET",
-          x: 0.2,
-          y: 0.8,
-          font: "bold 10px monospace",
-          color: "#334155",
-        },
-        {
-          text: "SALT LAKE",
-          x: 5.0,
-          y: -3.8,
-          font: "bold 10px monospace",
-          color: "#475569",
-        },
-        {
-          text: "SECTOR V",
-          x: 6.6,
-          y: -1.2,
-          font: "bold 10px monospace",
-          color: "#334155",
-        },
-        {
-          text: "NEW TOWN",
-          x: 8.8,
-          y: -4.5,
-          font: "bold 10px monospace",
-          color: "#475569",
-        },
-        {
-          text: "E.M. BYPASS",
-          x: 3.8,
-          y: 2.5,
-          font: "bold 9px monospace",
-          color: "#64748b",
-        },
-        {
-          text: "BEHALA",
-          x: -2.4,
-          y: 6.0,
-          font: "bold 10px monospace",
-          color: "#334155",
-        },
-        {
-          text: "BALLYGUNGE",
-          x: 1.8,
-          y: 3.2,
-          font: "bold 10px monospace",
-          color: "#334155",
-        },
-        {
-          text: "EAST KOLKATA WETLANDS",
-          x: 6.8,
-          y: 3.5,
-          font: "italic 10px sans-serif",
-          color: "#4a856a",
-        },
-      ];
-
-      labels.forEach((lbl) => {
-        const [sx, sy] = toScreen(lbl.x, lbl.y);
-        ctx.font = lbl.font;
-        ctx.fillStyle = lbl.color;
-        ctx.fillText(lbl.text, sx, sy);
-      });
-
-      // North Arrow Indicator
-      ctx.save();
-      const naX = width - 40;
-      const naY = 120;
-      ctx.beginPath();
-      ctx.moveTo(naX, naY - 14);
-      ctx.lineTo(naX - 5, naY + 4);
-      ctx.lineTo(naX, naY);
-      ctx.lineTo(naX + 5, naY + 4);
-      ctx.closePath();
-      ctx.fillStyle = "#334155";
-      ctx.fill();
-      ctx.font = "bold 8px monospace";
-      ctx.fillStyle = "#64748b";
-      ctx.fillText("N", naX - 2.5, naY - 18);
-      ctx.restore();
-
-      ctx.restore();
-      animationFrameId = requestAnimationFrame(render);
-    };
-
-    render();
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [
-    activeLayers,
-    getKmCoords,
-    getScreenCoords,
-    selectedIncident,
-    selectedPumpStation,
-    selectedRiskZone,
-    traceWaterFlow,
-  ]);
-
-  // Mouse & Touch Interactions
-  const handleMouseDown = (e) => {
-    viewState.current.isDragging = true;
-    viewState.current.dragStart = { x: e.clientX, y: e.clientY };
-  };
-
-  const handleMouseMove = (e) => {
-    if (!viewState.current.isDragging) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-    const pixelsPerKm = (Math.min(width, height) / 24) * viewState.current.zoom;
-
-    const dx = (e.clientX - viewState.current.dragStart.x) / pixelsPerKm;
-    const dy = (e.clientY - viewState.current.dragStart.y) / pixelsPerKm;
-
-    viewState.current.targetX -= dx;
-    viewState.current.targetY -= dy;
-    viewState.current.x -= dx;
-    viewState.current.y -= dy;
-    viewState.current.dragStart = { x: e.clientX, y: e.clientY };
-  };
-
-  const handleMouseUp = () => {
-    viewState.current.isDragging = false;
-  };
-
-  const handleWheel = (e) => {
-    e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 1.15 : 0.88;
-    viewState.current.targetZoom = Math.min(
-      Math.max(viewState.current.targetZoom * zoomFactor, 0.6),
-      3.5,
-    );
-  };
-
-  const handleClick = (e) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
-    const [clickKmX, clickKmY] = getKmCoords(
-      clickX,
-      clickY,
-      canvas.clientWidth,
-      canvas.clientHeight,
-    );
-
-    // Check Incident Click
-    if (activeLayers.incidents) {
-      const hitIncident = ACTIVE_INCIDENTS.find((inc) => {
-        const dist = Math.hypot(inc.x - clickKmX, inc.y - clickKmY);
-        return dist < 0.6 / viewState.current.zoom;
-      });
-      if (hitIncident) {
-        store.setSelectedIncident(hitIncident);
-        return;
-      }
-    }
-
-    // Check Pump Station Click
-    if (activeLayers.pumps) {
-      const hitPump = PUMPING_STATIONS.find((ps) => {
-        const dist = Math.hypot(ps.x - clickKmX, ps.y - clickKmY);
-        return dist < 0.6 / viewState.current.zoom;
-      });
-      if (hitPump) {
-        store.setSelectedPumpStation(hitPump);
-        return;
-      }
-    }
-
-    // Check Risk Zone Click
-    if (activeLayers.risk) {
-      const hitZone = RISK_ZONES.find((zone) => {
-        const dist = Math.hypot(
-          zone.center[0] - clickKmX,
-          zone.center[1] - clickKmY,
-        );
-        return dist < 1.4 / viewState.current.zoom;
-      });
-      if (hitZone) {
-        store.setSelectedRiskZone(hitZone);
-        return;
-      }
-    }
-
-    store.clearSelections();
-  };
-
   return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden bg-[#f5f5f1] select-none cursor-grab active:cursor-grabbing">
-      <canvas
-        ref={canvasRef}
-        className="w-full h-full block"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onWheel={handleWheel}
-        onClick={handleClick}
-        aria-label="Interactive Cartographic Map of Kolkata"
-      />
+    <div className="relative w-full h-full min-h-[480px]">
+      {/* Realistic Leaflet Map Mount Container */}
+      <div ref={mapContainerRef} className="w-full h-full z-0 cursor-grab active:cursor-grabbing" />
+
+      {/* Floating Realistic Tile Mode Switcher (Top Right) */}
+      <div className="absolute top-4 right-4 z-[400] flex items-center p-1 rounded-xl bg-slate-900/85 backdrop-blur-md border border-white/20 shadow-lg text-xs">
+        {Object.values(TILE_PRESETS).map((preset) => {
+          const isSelected = activePreset === preset.id;
+          return (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => {
+                setActivePreset(preset.id);
+                audioEngine.playUiChirp(isSelected ? 900 : 1100);
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
+                isSelected
+                  ? "bg-cyan-500 text-slate-950 font-bold shadow-xs"
+                  : "text-slate-300 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <span>{preset.icon}</span>
+              <span>{preset.name}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

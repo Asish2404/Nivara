@@ -1,6 +1,8 @@
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Menu, X, Volume2, VolumeX, Sparkles } from "lucide-react";
 import { useKWIStore } from "../../store/useKWIStore";
+import { audioEngine } from "../../utils/audioEngine";
 
 const NAV_ITEMS = [
   { key: "HOME", label: "Home", path: "/" },
@@ -16,34 +18,46 @@ const NAV_ITEMS = [
 export function KWINavbar() {
   const { currentRoute, navigate, toggleAskKolkata } = useKWIStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [soundActive, setSoundActive] = useState(false);
+
+  useEffect(() => {
+    return audioEngine.subscribe((active) => setSoundActive(active));
+  }, []);
 
   const handleNavClick = (path) => {
+    audioEngine.playUiChirp(920);
     navigate(path);
     setMobileMenuOpen(false);
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 transition-colors">
-      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14">
-          {/* Brand Mark + Title */}
+    <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors">
+      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Brand Mark + Civic Title */}
           <div className="flex items-center gap-8">
             <button
               type="button"
               onClick={() => handleNavClick("/")}
-              className="flex items-center gap-2.5 text-left group cursor-pointer focus:outline-none"
+              className="flex items-center gap-3 text-left group cursor-pointer focus:outline-none"
             >
-              {/* Small Blue Square Product Mark */}
-              <div className="w-5 h-5 rounded-md bg-blue-600 flex items-center justify-center text-white font-bold text-[10px] shadow-xs">
-                K
+              {/* Prestigious Deep Navy Seal / Emblem */}
+              <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 border border-slate-700/40 flex items-center justify-center text-white font-bold text-xs shadow-xs group-hover:scale-105 transition-transform">
+                <span className="tracking-tighter font-serif text-sm">K</span>
+                <span className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-400 ring-2 ring-slate-900" />
               </div>
-              <span className="text-xs font-bold tracking-[0.14em] uppercase text-slate-900 font-sans">
-                KOLKATA WATER INTELLIGENCE
-              </span>
+              <div>
+                <span className="text-xs font-bold tracking-[0.14em] uppercase text-slate-900 block font-sans">
+                  KOLKATA WATER INTELLIGENCE
+                </span>
+                <span className="text-[10px] text-slate-500 font-medium tracking-normal block">
+                  Municipal Corporation & Irrigation Department
+                </span>
+              </div>
             </button>
 
-            {/* Desktop Navigation Links */}
-            <nav className="hidden xl:flex items-center gap-1">
+            {/* Desktop Navigation Links with Clean Linear-Style Pill */}
+            <nav className="hidden xl:flex items-center gap-1 p-1 rounded-xl bg-slate-100/90 border border-slate-200/80 relative">
               {NAV_ITEMS.map((item) => {
                 const isActive =
                   item.path === "/"
@@ -54,25 +68,57 @@ export function KWINavbar() {
                     key={item.key}
                     type="button"
                     onClick={() => handleNavClick(item.path)}
-                    className={`px-3 py-1 rounded-md text-xs transition-colors cursor-pointer ${
+                    className={`relative px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer z-10 ${
                       isActive
-                        ? "text-blue-600 font-semibold bg-blue-50/80"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-normal"
+                        ? "text-slate-900 font-semibold"
+                        : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
-                    {item.label}
+                    {isActive && (
+                      <motion.div
+                        layoutId="navbar-active-pill"
+                        transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                        className="absolute inset-0 bg-white rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.06)] border border-slate-200/80 -z-10"
+                      />
+                    )}
+                    <span>{item.label}</span>
                   </button>
                 );
               })}
             </nav>
           </div>
 
-          {/* Right Action: Ask Kolkata */}
-          <div className="flex items-center gap-3">
+          {/* Right Action: Sound Toggle + Ask Kolkata */}
+          <div className="flex items-center gap-2.5">
+            {/* Ambient Sound Toggle Button */}
             <button
               type="button"
-              onClick={toggleAskKolkata}
-              className="px-3.5 py-1.5 rounded-md text-xs font-medium text-slate-700 hover:text-slate-950 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all cursor-pointer shadow-2xs"
+              onClick={() => {
+                audioEngine.toggleMute();
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all cursor-pointer shadow-2xs text-slate-700"
+              title="Toggle ambient hydrological soundscape"
+            >
+              {soundActive ? (
+                <>
+                  <Volume2 className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="hidden sm:inline text-[11px] text-slate-700 font-medium">Sound Active</span>
+                </>
+              ) : (
+                <>
+                  <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="hidden sm:inline text-[11px] text-slate-500">Muted</span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                audioEngine.playUiChirp(880);
+                toggleAskKolkata();
+              }}
+              className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-all cursor-pointer shadow-xs active:scale-[0.98] border border-slate-900"
             >
               Ask Kolkata
             </button>

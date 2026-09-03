@@ -3,6 +3,8 @@ import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import * as THREE from 'three'
 import { EARTH_RADIUS, latitudeLongitudeToVector3 } from '../geoCoordinates'
+import { audioEngine } from '../../utils/audioEngine'
+
 
 const KOLKATA_COORDS = { latitude: 22.5726, longitude: 88.3639 }
 
@@ -96,7 +98,7 @@ export function GlobalDataStreams() {
       control2.normalize().multiplyScalar(EARTH_RADIUS + distance * 0.28)
 
       const curve = new THREE.CubicBezierCurve3(sourcePos, control1, control2, kolkataPos)
-      const points = curve.getPoints(48)
+      const points = curve.getPoints(84)
       const geometry = new THREE.BufferGeometry().setFromPoints(points)
 
       return {
@@ -165,6 +167,7 @@ export function GlobalDataStreams() {
                 e.stopPropagation()
                 setActiveNodeId(stream.id)
                 document.body.style.cursor = 'pointer'
+                audioEngine.playStationLock()
               }}
               onPointerOut={() => {
                 setActiveNodeId(null)
