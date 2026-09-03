@@ -41,10 +41,13 @@ export function KWINavbar() {
               onClick={() => handleNavClick("/")}
               className="flex items-center gap-3 text-left group cursor-pointer focus:outline-none"
             >
-              {/* Prestigious Deep Navy Seal / Emblem */}
-              <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 border border-slate-700/40 flex items-center justify-center text-white font-bold text-xs shadow-xs group-hover:scale-105 transition-transform">
-                <span className="tracking-tighter font-serif text-sm">K</span>
-                <span className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-400 ring-2 ring-slate-900" />
+              {/* KWI Emblem Logo */}
+              <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-white border border-slate-200/80 shadow-xs flex items-center justify-center p-0.5 group-hover:scale-105 group-hover:shadow-sm transition-all duration-200 shrink-0">
+                <img
+                  src="/textures/KWI_LOGO.jpeg"
+                  alt="Kolkata Water Intelligence Logo"
+                  className="w-full h-full object-contain rounded-lg mix-blend-multiply"
+                />
               </div>
               <div>
                 <span className="text-xs font-bold tracking-[0.14em] uppercase text-slate-900 block font-sans">
@@ -68,11 +71,10 @@ export function KWINavbar() {
                     key={item.key}
                     type="button"
                     onClick={() => handleNavClick(item.path)}
-                    className={`relative px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer z-10 ${
-                      isActive
-                        ? "text-slate-900 font-semibold"
-                        : "text-slate-600 hover:text-slate-900"
-                    }`}
+                    className={`relative px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer z-10 ${isActive
+                      ? "text-slate-900 font-semibold"
+                      : "text-slate-600 hover:text-slate-900"
+                      }`}
                   >
                     {isActive && (
                       <motion.div
@@ -153,11 +155,10 @@ export function KWINavbar() {
                 key={item.key}
                 type="button"
                 onClick={() => handleNavClick(item.path)}
-                className={`w-full text-left px-3 py-2 rounded-md text-xs ${
-                  isActive
-                    ? "text-blue-600 font-semibold bg-blue-50"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                }`}
+                className={`w-full text-left px-3 py-2 rounded-md text-xs ${isActive
+                  ? "text-blue-600 font-semibold bg-blue-50"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
               >
                 {item.label}
               </button>
