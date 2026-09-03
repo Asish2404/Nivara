@@ -1058,3 +1058,190 @@ export const GEOGRAPHIC_DISTRICTS = [
     zoom: 1.2,
   },
 ]
+
+// ==========================================
+// WGS84 GeoJSON Spatial Converters (RFC 7946)
+// ==========================================
+export const KOLKATA_CENTER_GEO = [88.3639, 22.5726] // [lng, lat]
+
+export function kmToGeoCoord(kmX, kmY) {
+  // 1 deg lat = 111.13 km
+  // 1 deg lng at 22.57° N = 102.6 km
+  const lat = KOLKATA_CENTER_GEO[1] - kmY / 111.13
+  const lng = KOLKATA_CENTER_GEO[0] + kmX / 102.6
+  return [Number(lng.toFixed(6)), Number(lat.toFixed(6))]
+}
+
+// Authenticated Kolkata Geographic Anchors for Navigation & Reference Labels
+export const REAL_KOLKATA_LANDMARKS = [
+  { id: 'esplanade', name: 'Esplanade / B.B.D. Bagh', coordinates: [88.3512, 22.5697], type: 'core' },
+  { id: 'howrah', name: 'Howrah', coordinates: [88.3300, 22.5850], type: 'west_bank' },
+  { id: 'salt_lake', name: 'Salt Lake / Bidhannagar', coordinates: [88.4180, 22.5830], type: 'east_suburb' },
+  { id: 'sector_v', name: 'Sector V (IT Hub)', coordinates: [88.4320, 22.5730], type: 'commercial' },
+  { id: 'new_town', name: 'New Town', coordinates: [88.4680, 22.5830], type: 'east_expansion' },
+  { id: 'park_street', name: 'Park Street', coordinates: [88.3520, 22.5530], type: 'central' },
+  { id: 'ballygunge', name: 'Ballygunge', coordinates: [88.3650, 22.5280], type: 'south' },
+  { id: 'gariahat', name: 'Gariahat', coordinates: [88.3680, 22.5180], type: 'south' },
+  { id: 'tollygunge', name: 'Tollygunge', coordinates: [88.3470, 22.4980], type: 'south' },
+  { id: 'jadavpur', name: 'Jadavpur', coordinates: [88.3710, 22.4990], type: 'south' },
+  { id: 'behala', name: 'Behala', coordinates: [88.3150, 22.4850], type: 'south_west' },
+  { id: 'dum_dum', name: 'Dum Dum', coordinates: [88.4200, 22.6200], type: 'north' },
+  { id: 'victoria_memorial', name: 'Victoria Memorial', coordinates: [88.3426, 22.5448], type: 'heritage' },
+  { id: 'howrah_bridge', name: 'Howrah Bridge', coordinates: [88.3468, 22.5851], type: 'bridge' },
+  { id: 'vidyasagar_setu', name: 'Vidyasagar Setu', coordinates: [88.3287, 22.5562], type: 'bridge' },
+]
+
+export function getCanalsGeoJson() {
+  return {
+    type: 'FeatureCollection',
+    features: DRAINAGE_CANALS.map((canal) => ({
+      type: 'Feature',
+      id: canal.id,
+      properties: {
+        id: canal.id,
+        name: canal.name,
+        flowDirection: canal.flowDirection,
+        type: 'canal',
+      },
+      geometry: {
+        type: 'LineString',
+        coordinates: canal.points.map(([x, y]) => kmToGeoCoord(x, y)),
+      },
+    })),
+  }
+}
+
+export function getTrunkConduitsGeoJson() {
+  return {
+    type: 'FeatureCollection',
+    features: DRAINAGE_TRUNK_CONDUITS.map((trunk) => ({
+      type: 'Feature',
+      id: trunk.id,
+      properties: {
+        id: trunk.id,
+        name: trunk.name,
+        type: 'trunk',
+      },
+      geometry: {
+        type: 'LineString',
+        coordinates: trunk.points.map(([x, y]) => kmToGeoCoord(x, y)),
+      },
+    })),
+  }
+}
+
+export function getRiskZonesGeoJson() {
+  return {
+    type: 'FeatureCollection',
+    features: RISK_ZONES.map((zone) => {
+      const polygonCoords = zone.polygon.map(([x, y]) => kmToGeoCoord(x, y))
+      // Close the polygon if not already closed
+      if (polygonCoords.length > 0) {
+        const first = polygonCoords[0]
+        const last = polygonCoords[polygonCoords.length - 1]
+        if (first[0] !== last[0] || first[1] !== last[1]) {
+          polygonCoords.push([first[0], first[1]])
+        }
+      }
+      return {
+        type: 'Feature',
+        id: zone.id,
+        properties: {
+          id: zone.id,
+          name: zone.name,
+          districtName: zone.districtName,
+          level: zone.level,
+          color: zone.severityColor || (zone.level === 'CRITICAL' ? '#ef4444' : zone.level === 'HIGH' ? '#f97316' : '#eab308'),
+          waterDepth: zone.waterDepth,
+          rainfall: zone.rainfall,
+          riskScore: zone.riskScore,
+          drainageLoad: zone.drainageLoad,
+        },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [polygonCoords],
+        },
+      }
+    }),
+  }
+}
+
+export function getFloodDepthGeoJson(timeStep = 0) {
+  // Scaling factors for 0-60m timeline
+  // timeStep: 0 (NOW), 15 (+15m), 30 (+30m), 45 (+45m), 60 (+60m)
+  const factor = 1 + (timeStep / 60) * 0.45
+  return {
+    type: 'FeatureCollection',
+    features: FLOOD_DEPTH_ZONES.map((zone) => {
+      const coords = zone.polygon.map(([x, y]) => {
+        // Subtle expansion around zone centroid based on timeline
+        const cx = zone.polygon.reduce((acc, p) => acc + p[0], 0) / zone.polygon.length
+        const cy = zone.polygon.reduce((acc, p) => acc + p[1], 0) / zone.polygon.length
+        const expX = cx + (x - cx) * factor
+        const expY = cy + (y - cy) * factor
+        return kmToGeoCoord(expX, expY)
+      })
+      if (coords.length > 0) {
+        coords.push([coords[0][0], coords[0][1]])
+      }
+      return {
+        type: 'Feature',
+        id: zone.id,
+        properties: {
+          id: zone.id,
+          district: zone.district,
+          depthCategory: zone.depthCategory,
+          depthCm: Math.round(zone.depthCm * factor),
+          borderColor: zone.borderColor || '#dc2626',
+          fillColor: zone.fillColor || 'rgba(239, 68, 68, 0.25)',
+        },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [coords],
+        },
+      }
+    }),
+  }
+}
+
+// "Before" vs "After" Simulation Spread Footprints for Incident Intervention
+export function getSimulationSpreadGeoJson(isMitigated = false) {
+  // Sector V (#SV-024) intervention footprint
+  const beforePolygon = [
+    [5.4, -2.9],
+    [7.3, -2.9],
+    [7.4, -1.1],
+    [5.5, -1.1],
+  ].map(([x, y]) => kmToGeoCoord(x, y))
+  beforePolygon.push([beforePolygon[0][0], beforePolygon[0][1]])
+
+  const afterPolygon = [
+    [5.9, -2.3],
+    [6.6, -2.3],
+    [6.6, -1.7],
+    [5.9, -1.7],
+  ].map(([x, y]) => kmToGeoCoord(x, y))
+  afterPolygon.push([afterPolygon[0][0], afterPolygon[0][1]])
+
+  return {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        id: 'sim_sector_v',
+        properties: {
+          name: isMitigated ? 'Mitigated Footprint (Post-Intervention)' : 'Critical Spread Footprint (Pre-Intervention)',
+          isMitigated,
+          color: isMitigated ? '#10b981' : '#f43f5e',
+          fillColor: isMitigated ? 'rgba(16, 185, 129, 0.25)' : 'rgba(244, 63, 94, 0.35)',
+          depthCm: isMitigated ? 6 : 28,
+          area: isMitigated ? '3,200 m²' : '12,400 m²',
+        },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [isMitigated ? afterPolygon : beforePolygon],
+        },
+      },
+    ],
+  }
+}

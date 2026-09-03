@@ -181,39 +181,15 @@ export function LandingPage() {
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-14 rounded-2xl border border-slate-200/90 bg-white p-2.5 shadow-[0_20px_50px_-12px_rgba(6,182,212,0.22)] hover:shadow-[0_24px_60px_-12px_rgba(6,182,212,0.32)] transition-all duration-500 overflow-hidden h-[480px] sm:h-[560px] relative group"
+          className="mt-12 rounded-3xl border border-slate-200/90 bg-white p-2 shadow-[0_24px_60px_-12px_rgba(6,182,212,0.25)] hover:shadow-[0_28px_70px_-12px_rgba(6,182,212,0.35)] transition-all duration-500 overflow-hidden h-[540px] sm:h-[640px] lg:h-[700px] relative group"
         >
           {/* Shimmering Border Beam Laser */}
-          <BorderBeam size={320} duration={10} colorFrom="#00f0ff" colorTo="#3b82f6" />
+          <BorderBeam size={360} duration={10} colorFrom="#00f0ff" colorTo="#3b82f6" />
 
           {/* Shimmering Top Edge Light */}
-          <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-80" />
+          <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-80 z-10" />
 
           <KolkataGisMap />
-
-          {/* Clean Floating Badge at Bottom */}
-          <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 z-[400] pointer-events-auto">
-            <div className="bg-white/95 backdrop-blur-md border border-slate-200 rounded-lg px-4 py-2.5 shadow-md flex items-center justify-between sm:justify-start gap-4 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="font-semibold text-slate-900">
-                  Kolkata Municipal Grid Active
-                </span>
-              </div>
-              <span className="text-slate-400 hidden sm:inline">|</span>
-              <button
-                type="button"
-                onClick={() => {
-                  audioEngine.playUiChirp(1100);
-                  navigate("/live-city");
-                }}
-                className="text-cyan-700 hover:text-cyan-800 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
-              >
-                <span>Open Fullscreen Map</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
         </motion.div>
 
         {/* City Telemetry Metrics Strip */}
