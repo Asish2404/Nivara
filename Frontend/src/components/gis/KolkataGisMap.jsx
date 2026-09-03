@@ -411,14 +411,12 @@ export function KolkataGisMap({
           el.innerHTML = `
             <div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">
               <!-- Outer radar pulse ripple -->
-              <span style="position: absolute; inset: 0; border-radius: 9999px; background-color: ${
-                isCritical ? "rgba(244, 63, 94, 0.75)" : "rgba(245, 158, 11, 0.7)"
-              }; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+              <span style="position: absolute; inset: 0; border-radius: 9999px; background-color: ${isCritical ? "rgba(244, 63, 94, 0.75)" : "rgba(245, 158, 11, 0.7)"
+            }; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
               
               <!-- Center solid badge -->
-              <span style="position: relative; width: 15px; height: 15px; border-radius: 9999px; background-color: ${
-                isCritical ? "#e11d48" : "#d97706"
-              }; border: 2.5px solid #ffffff; box-shadow: 0 0 12px rgba(0,0,0,0.6);"></span>
+              <span style="position: relative; width: 15px; height: 15px; border-radius: 9999px; background-color: ${isCritical ? "#e11d48" : "#d97706"
+            }; border: 2.5px solid #ffffff; box-shadow: 0 0 12px rgba(0,0,0,0.6);"></span>
               
               <!-- Floating Depth Tag -->
               <div style="position: absolute; top: -20px; background: rgba(15,23,42,0.92); color: #ffffff; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 5px; white-space: nowrap; border: 1px solid rgba(255,255,255,0.25); font-family: monospace; letter-spacing: -0.02em; pointer-events: none; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
@@ -457,13 +455,11 @@ export function KolkataGisMap({
           el.className = "cursor-pointer group flex items-center gap-1";
           el.setAttribute("title", `${ps.name} - ${ps.status}`);
           el.innerHTML = `
-            <div style="background: ${
-              isCap ? "#dc2626" : "#0284c7"
+            <div style="background: ${isCap ? "#dc2626" : "#0284c7"
             }; color: white; width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; border: 1.5px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.45); font-family: monospace;">
               PS
             </div>
-            <div style="background: rgba(15,23,42,0.88); color: ${
-              isCap ? "#fca5a5" : "#7dd3fc"
+            <div style="background: rgba(15,23,42,0.88); color: ${isCap ? "#fca5a5" : "#7dd3fc"
             }; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); font-family: monospace; white-space: nowrap;">
               ${ps.id}: ${ps.capacity}
             </div>
@@ -832,11 +828,10 @@ export function KolkataGisMap({
                   setActiveStyleKey(style.id);
                   audioEngine.playUiChirp(isSelected ? 900 : 1100);
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
-                  isSelected
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${isSelected
                     ? "bg-cyan-500 text-slate-950 font-bold shadow-xs"
                     : "text-slate-300 hover:text-white hover:bg-white/10"
-                }`}
+                  }`}
                 title={style.description}
               >
                 <span>{style.icon}</span>
@@ -850,11 +845,10 @@ export function KolkataGisMap({
         <button
           type="button"
           onClick={handleToggle3D}
-          className={`p-2 rounded-xl backdrop-blur-md border transition-all cursor-pointer shadow-lg text-xs font-mono font-bold flex items-center gap-1 ${
-            is3DMode
+          className={`p-2 rounded-xl backdrop-blur-md border transition-all cursor-pointer shadow-lg text-xs font-mono font-bold flex items-center gap-1 ${is3DMode
               ? "bg-cyan-500/20 text-cyan-300 border-cyan-400/40"
               : "bg-slate-900/90 text-slate-300 border-white/15 hover:bg-slate-800"
-          }`}
+            }`}
           title={is3DMode ? "Switch to 2D Overhead" : "Switch to 3D Perspective"}
         >
           <Compass className="w-4 h-4" />
@@ -927,11 +921,10 @@ export function KolkataGisMap({
                     setTimelineStep(mins);
                     audioEngine.playUiChirp(800 + mins * 10);
                   }}
-                  className={`px-2.5 py-1 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer ${
-                    active
+                  className={`px-2.5 py-1 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer ${active
                       ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_12px_rgba(6,182,212,0.5)] border border-cyan-300/40"
                       : "text-slate-400 hover:text-white hover:bg-white/10"
-                  }`}
+                    }`}
                 >
                   {mins === 0 ? "NOW" : `+${mins}m`}
                 </button>
@@ -1052,11 +1045,10 @@ export function KolkataGisMap({
         <button
           type="button"
           onClick={() => setShowLayerMenu(!showLayerMenu)}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl backdrop-blur-md border shadow-xl text-xs font-semibold transition-all cursor-pointer ${
-            showLayerMenu
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl backdrop-blur-md border shadow-xl text-xs font-semibold transition-all cursor-pointer ${showLayerMenu
               ? "bg-cyan-500 text-slate-950 border-cyan-400"
               : "bg-slate-900/90 text-slate-200 border-white/15 hover:bg-slate-800"
-          }`}
+            }`}
         >
           <Layers className="w-4 h-4" />
           <span>Overlays & Layers</span>
@@ -1237,11 +1229,10 @@ export function KolkataGisMap({
                       audioEngine.playUiChirp(850);
                       setSimulateState("BEFORE");
                     }}
-                    className={`py-1.5 rounded-lg text-xs font-bold font-mono cursor-pointer transition-all ${
-                      simulateState === "BEFORE"
+                    className={`py-1.5 rounded-lg text-xs font-bold font-mono cursor-pointer transition-all ${simulateState === "BEFORE"
                         ? "bg-rose-500/30 text-rose-300 border border-rose-500/40 shadow-xs"
                         : "text-slate-400 hover:text-white"
-                    }`}
+                      }`}
                   >
                     BEFORE (Baseline)
                   </button>
@@ -1251,11 +1242,10 @@ export function KolkataGisMap({
                       audioEngine.playUiChirp(1250);
                       setSimulateState("AFTER");
                     }}
-                    className={`py-1.5 rounded-lg text-xs font-bold font-mono cursor-pointer transition-all ${
-                      simulateState === "AFTER"
+                    className={`py-1.5 rounded-lg text-xs font-bold font-mono cursor-pointer transition-all ${simulateState === "AFTER"
                         ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 shadow-xs"
                         : "text-slate-400 hover:text-white"
-                    }`}
+                      }`}
                   >
                     AFTER (Mitigated)
                   </button>
