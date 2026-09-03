@@ -1,171 +1,488 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Menu, X, Volume2, VolumeX, Sparkles } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Home,
+  Map,
+  FileBarChart2,
+  Brain,
+  TrendingUp,
+  SlidersHorizontal,
+  ShieldCheck,
+  ChevronDown,
+  Sparkles,
+  Menu,
+  X,
+} from "lucide-react";
 import { useKWIStore } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
-
-const NAV_ITEMS = [
-  { key: "HOME", label: "Home", path: "/" },
-  { key: "LIVE_MAP", label: "Live Map", path: "/live-city" },
-  { key: "REPORT", label: "Report", path: "/reports" },
-  { key: "MY_REPORTS", label: "My Reports", path: "/my-reports" },
-  { key: "INTELLIGENCE", label: "Intelligence", path: "/incidents" },
-  { key: "PREDICT", label: "Predict", path: "/forecast" },
-  { key: "SIMULATE", label: "Simulate", path: "/simulate" },
-  { key: "RESPOND", label: "Respond", path: "/action-center" },
-];
 
 export function KWINavbar() {
   const { currentRoute, navigate, toggleAskKolkata } = useKWIStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [soundActive, setSoundActive] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const dropdownTimeoutRef = useRef(null);
 
+  // Initialize theme from document or localStorage
   useEffect(() => {
-    return audioEngine.subscribe((active) => setSoundActive(active));
+    if (typeof window !== "undefined") {
+      const savedTheme = localStorage.getItem("kwi_theme");
+      const initialDark =
+        savedTheme === "dark" ||
+        (!savedTheme && document.documentElement.classList.contains("dark"));
+      setIsDarkMode(Boolean(initialDark));
+      if (initialDark) {
+        document.documentElement.classList.add("dark");
+      }
+    }
   }, []);
+
+  const toggleTheme = () => {
+    const nextDark = !isDarkMode;
+    setIsDarkMode(nextDark);
+    if (nextDark) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("kwi_theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("kwi_theme", "light");
+    }
+    audioEngine.playUiChirp(nextDark ? 740 : 960);
+  };
 
   const handleNavClick = (path) => {
     audioEngine.playUiChirp(920);
     navigate(path);
     setMobileMenuOpen(false);
+    setActiveDropdown(null);
   };
 
-  return (
-    <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors">
-      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Brand Mark + Civic Title */}
-          <div className="flex items-center gap-8">
-            <button
-              type="button"
-              onClick={() => handleNavClick("/")}
-              className="flex items-center gap-3 text-left group cursor-pointer focus:outline-none"
-            >
-              {/* KWI Emblem Logo */}
-              <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-white border border-slate-200/80 shadow-xs flex items-center justify-center p-0.5 group-hover:scale-105 group-hover:shadow-sm transition-all duration-200 shrink-0">
-                <img
-                  src="/textures/KWI_LOGO.jpeg"
-                  alt="Kolkata Water Intelligence Logo"
-                  className="w-full h-full object-contain rounded-lg mix-blend-multiply"
-                />
-              </div>
-              <div>
-                <span className="text-xs font-bold tracking-[0.14em] uppercase text-slate-900 block font-sans">
-                  KOLKATA WATER INTELLIGENCE
-                </span>
-                <span className="text-[10px] text-slate-500 font-medium tracking-normal block">
-                  Municipal Corporation & Irrigation Department
-                </span>
-              </div>
-            </button>
+  const handleMouseEnter = (key) => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+    }
+    setActiveDropdown(key);
+  };
 
-            {/* Desktop Navigation Links with Clean Linear-Style Pill */}
-            <nav className="hidden xl:flex items-center gap-1 p-1 rounded-xl bg-slate-100/90 border border-slate-200/80 relative">
+  const handleMouseLeave = () => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setActiveDropdown(null);
+    }, 200);
+  };
+
+  const NAV_ITEMS = [
+    {
+      key: "HOME",
+      label: "Home",
+      icon: Home,
+      path: "/",
+      isActive: currentRoute === "/",
+    },
+    {
+      key: "LIVE_MAP",
+      label: "Live Map",
+      icon: Map,
+      path: "/live-city",
+      isActive: currentRoute.startsWith("/live-city"),
+    },
+    {
+      key: "REPORTS",
+      label: "Reports",
+      icon: FileBarChart2,
+      path: "/reports",
+      hasDropdown: true,
+      isActive:
+        currentRoute.startsWith("/reports") ||
+        currentRoute.startsWith("/my-reports"),
+      dropdownItems: [
+        { label: "Citizen Field Report", path: "/reports" },
+        { label: "My Submitted Reports", path: "/my-reports" },
+      ],
+    },
+    {
+      key: "INTELLIGENCE",
+      label: "Intelligence",
+      icon: Brain,
+      path: "/incidents",
+      hasDropdown: true,
+      isActive: currentRoute.startsWith("/incidents"),
+      dropdownItems: [
+        { label: "Incident Response Grid", path: "/incidents" },
+        { label: "Live City Surveillance", path: "/live-city" },
+      ],
+    },
+    {
+      key: "PREDICT",
+      label: "Predict",
+      icon: TrendingUp,
+      path: "/forecast",
+      isActive: currentRoute.startsWith("/forecast"),
+    },
+    {
+      key: "SIMULATE",
+      label: "Simulate",
+      icon: SlidersHorizontal,
+      path: "/simulate",
+      isActive: currentRoute.startsWith("/simulate"),
+    },
+    {
+      key: "RESPOND",
+      label: "Respond",
+      icon: ShieldCheck,
+      path: "/action-center",
+      isActive: currentRoute.startsWith("/action-center"),
+    },
+  ];
+
+  return (
+    <header className="sticky top-0 z-50 w-full pt-3.5 pb-2 px-3 sm:px-6 pointer-events-none select-none transition-all">
+      {/* ===================================================== */}
+      {/* REACT BITS ANIMATED BORDER GLOW WRAPPER               */}
+      {/* ===================================================== */}
+      <div className="relative pointer-events-auto max-w-[1380px] mx-auto p-[1.5px] rounded-[30px] overflow-hidden group/nav shadow-[0_14px_45px_rgba(0,0,0,0.08)]">
+        {/* 1. Animated Outer Bloom Layer (Soft Neon Aura) */}
+        <div
+          className="absolute -inset-[180%] animate-[spin_7s_linear_infinite] pointer-events-none opacity-70 blur-[15px]"
+          style={{
+            background: `conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 155deg, #00f0ff 172deg, #3b82f6 185deg, #a855f7 198deg, transparent 215deg, transparent 360deg)`,
+          }}
+          aria-hidden="true"
+        />
+
+        {/* 2. Sharp Traveling Conic Beam (React Bits Border Glow: coneSpread=26) */}
+        <div
+          className="absolute -inset-[180%] animate-[spin_7s_linear_infinite] pointer-events-none"
+          style={{
+            background: `conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 160deg, #00f0ff 174deg, #38bdf8 185deg, #a855f7 196deg, transparent 210deg, transparent 360deg)`,
+          }}
+          aria-hidden="true"
+        />
+
+        {/* ===================================================== */}
+        {/* LIQUID GLASS MAIN CAPSULE CONTAINER                   */}
+        {/* ===================================================== */}
+        <div
+          className={`relative rounded-[28.5px] px-4 sm:px-6 py-2.5 backdrop-blur-3xl backdrop-saturate-[180%] transition-all duration-300 ${isDarkMode
+            ? "border border-white/10 text-white"
+            : "border border-white/70 text-slate-900"
+            }`}
+          style={{
+            background: isDarkMode
+              ? "linear-gradient(135deg, rgba(15, 23, 42, 0.88) 0%, rgba(10, 15, 30, 0.78) 45%, rgba(15, 23, 42, 0.90) 100%)"
+              : "linear-gradient(135deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.55) 45%, rgba(255, 255, 255, 0.75) 100%)",
+            boxShadow: isDarkMode
+              ? "inset 0 1px 1.5px rgba(255, 255, 255, 0.2), inset 0 -1px 2px rgba(0, 0, 0, 0.6), 0 20px 50px rgba(0, 0, 0, 0.45)"
+              : "inset 0 1.5px 2px rgba(255, 255, 255, 0.9), inset 0 -1px 2px rgba(0, 0, 0, 0.04), 0 20px 50px rgba(0, 180, 255, 0.10)",
+          }}
+        >
+          {/* Internal Refractive Glass Caustic Sheen */}
+          <div
+            className="absolute inset-0 rounded-[28.5px] bg-gradient-to-tr from-white/[0.12] via-transparent to-white/[0.22] pointer-events-none"
+            aria-hidden="true"
+          />
+
+          <div className="relative flex items-center justify-between gap-4 z-10">
+            {/* ================================================= */}
+            {/* BRAND IDENTITY (Preserving exact existing logo)  */}
+            {/* ================================================= */}
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => handleNavClick("/")}
+                className="flex items-center gap-3 text-left group cursor-pointer focus:outline-none"
+              >
+                {/* KWI Emblem Logo - Left exactly as is */}
+                <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-white border border-slate-200/80 shadow-xs flex items-center justify-center p-0.5 group-hover:scale-105 group-hover:shadow-sm transition-all duration-200 shrink-0">
+                  <img
+                    src="/textures/KWI_LOGO.jpeg"
+                    alt="Kolkata Water Intelligence Logo"
+                    className="w-full h-full object-contain rounded-lg mix-blend-multiply"
+                  />
+                </div>
+
+                <div>
+                  <div
+                    className={`text-[12px] font-bold tracking-[0.14em] uppercase font-sans leading-tight transition-colors ${isDarkMode ? "text-white" : "text-slate-900"
+                      }`}
+                  >
+                    KOLKATA{" "}
+                    <span className="text-blue-600 dark:text-cyan-400 font-extrabold">
+                      WATER
+                    </span>{" "}
+                    INTELLIGENCE
+                  </div>
+                  <div
+                    className={`text-[10px] font-medium tracking-normal block leading-tight mt-0.5 transition-colors ${isDarkMode ? "text-slate-400" : "text-slate-500"
+                      }`}
+                  >
+                    Municipal Corporation & Irrigation Department
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            {/* ================================================= */}
+            {/* CENTER NAVIGATION (Stacked Liquid Glass Tabs)     */}
+            {/* ================================================= */}
+            <nav className="hidden lg:flex items-center gap-1.5 xl:gap-2">
               {NAV_ITEMS.map((item) => {
-                const isActive =
-                  item.path === "/"
-                    ? currentRoute === "/"
-                    : currentRoute.startsWith(item.path);
+                const isItemActive = item.isActive;
+                return (
+                  <div
+                    key={item.key}
+                    className="relative"
+                    onMouseEnter={() =>
+                      item.hasDropdown && handleMouseEnter(item.key)
+                    }
+                    onMouseLeave={() =>
+                      item.hasDropdown && handleMouseLeave()
+                    }
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleNavClick(item.path)}
+                      className={`relative px-3.5 py-1.5 rounded-2xl flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${isItemActive
+                        ? isDarkMode
+                          ? "bg-gradient-to-b from-blue-950/80 to-indigo-950/70 border border-blue-500/40 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)] min-w-[62px]"
+                          : "bg-gradient-to-b from-[#f0f6ff] to-[#e6f0ff] border border-blue-200/90 shadow-xs text-blue-600 min-w-[62px]"
+                        : isDarkMode
+                          ? "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent min-w-[56px] group"
+                          : "text-slate-500 hover:text-slate-900 hover:bg-slate-50/90 border border-transparent min-w-[56px] group"
+                        }`}
+                    >
+                      <item.icon
+                        className={`w-4 h-4 mb-0.5 transition-colors ${isItemActive
+                          ? isDarkMode
+                            ? "text-cyan-400"
+                            : "text-blue-600"
+                          : isDarkMode
+                            ? "text-slate-400 group-hover:text-white"
+                            : "text-slate-500 group-hover:text-slate-800"
+                          }`}
+                      />
+                      <div className="flex items-center gap-0.5">
+                        <span
+                          className={`text-[11px] leading-none transition-colors ${isItemActive
+                            ? isDarkMode
+                              ? "font-semibold text-cyan-300"
+                              : "font-semibold text-blue-700"
+                            : isDarkMode
+                              ? "font-medium text-slate-300 group-hover:text-white"
+                              : "font-medium text-slate-600 group-hover:text-slate-900"
+                            }`}
+                        >
+                          {item.label}
+                        </span>
+                        {item.hasDropdown && (
+                          <ChevronDown
+                            className={`w-3 h-3 transition-colors ${isItemActive
+                              ? isDarkMode
+                                ? "text-cyan-400"
+                                : "text-blue-500"
+                              : isDarkMode
+                                ? "text-slate-500 group-hover:text-slate-300"
+                                : "text-slate-400 group-hover:text-slate-600"
+                              }`}
+                          />
+                        )}
+                      </div>
+
+                      {/* Glowing Indicator Dot on Active Tab */}
+                      {isItemActive && (
+                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
+                      )}
+                    </button>
+
+                    {/* Dropdown Menu for Reports and Intelligence */}
+                    {item.hasDropdown && activeDropdown === item.key && (
+                      <AnimatePresence>
+                        <motion.div
+                          initial={{ opacity: 0, y: 6, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 4, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className={`absolute top-full mt-2 left-1/2 -translate-x-1/2 min-w-[190px] rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.18)] p-1.5 z-50 flex flex-col gap-0.5 backdrop-blur-2xl ${isDarkMode
+                            ? "bg-slate-900/95 border border-white/10 text-slate-200"
+                            : "bg-white/95 border border-slate-100 text-slate-700"
+                            }`}
+                        >
+                          {item.dropdownItems.map((drop) => (
+                            <button
+                              key={drop.path}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleNavClick(drop.path);
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer ${isDarkMode
+                                ? "hover:text-cyan-400 hover:bg-white/5"
+                                : "hover:text-blue-600 hover:bg-blue-50/80"
+                                }`}
+                            >
+                              {drop.label}
+                            </button>
+                          ))}
+                        </motion.div>
+                      </AnimatePresence>
+                    )}
+                  </div>
+                );
+              })}
+            </nav>
+
+            {/* ================================================= */}
+            {/* RIGHT ACTION CONTROLS                             */}
+            {/* ================================================= */}
+            <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+              {/* ----------------------------------------------- */}
+              {/* GLASSOMORPHISM THEME TOGGLE (Dark vs Light)     */}
+              {/* ----------------------------------------------- */}
+              <button
+                type="button"
+                onClick={toggleTheme}
+                aria-label={isDarkMode ? "Switch to Light mode" : "Switch to Dark mode"}
+                className={`relative w-[114px] h-[38px] rounded-full p-[3px] flex items-center cursor-pointer transition-all duration-500 select-none overflow-hidden group shadow-md border ${isDarkMode
+                  ? "justify-between border-slate-700/60"
+                  : "justify-between border-slate-300/60"
+                  }`}
+                style={{
+                  background: isDarkMode
+                    ? "linear-gradient(135deg, #18191c 0%, #1f2025 50%, #18191c 100%)"
+                    : "linear-gradient(135deg, rgba(161, 161, 170, 0.45) 0%, rgba(148, 163, 184, 0.55) 50%, rgba(161, 161, 170, 0.45) 100%)",
+                  boxShadow: isDarkMode
+                    ? "inset 0 1.5px 2px rgba(255, 255, 255, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.7), 0 4px 16px rgba(0, 0, 0, 0.4)"
+                    : "inset 0 1.5px 2px rgba(255, 255, 255, 0.6), inset 0 -2px 4px rgba(0, 0, 0, 0.1), 0 4px 14px rgba(0, 0, 0, 0.08)",
+                }}
+              >
+                {/* Mode Text: Dark on Left (when thumb on right) */}
+                {isDarkMode && (
+                  <span className="pl-3.5 text-[13px] font-medium text-[#9ca3af] tracking-wide drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">
+                    Dark
+                  </span>
+                )}
+
+                {/* 3D Glass Sphere / Orb Thumb with Refractions */}
+                <motion.div
+                  layout
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  className="relative w-8 h-8 rounded-full flex items-center justify-center shrink-0 z-10"
+                  style={{
+                    background: isDarkMode
+                      ? "radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(30, 32, 38, 0.8) 60%, #151619 100%)"
+                      : "radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.25) 30%, rgba(200, 205, 215, 0.4) 65%, rgba(160, 165, 175, 0.75) 100%)",
+                    boxShadow: isDarkMode
+                      ? "0 4px 14px rgba(0, 0, 0, 0.7), inset 0 1.5px 2px rgba(255, 255, 255, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.8)"
+                      : "0 4px 12px rgba(0, 0, 0, 0.15), inset 0 2px 3px rgba(255, 255, 255, 0.9), inset 0 -2px 3px rgba(0, 0, 0, 0.2)",
+                  }}
+                >
+                  {/* Glass Specular Rim Ring */}
+                  <span
+                    className={`absolute inset-[1.5px] rounded-full border pointer-events-none ${isDarkMode ? "border-white/20" : "border-white/60"
+                      }`}
+                  />
+
+                  {/* Icon inside 3D Glass Sphere */}
+                  {isDarkMode ? (
+                    /* Crisp Glowing White Moon Icon for Dark Mode */
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="w-4 h-4 text-white fill-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                    >
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                  ) : (
+                    /* Crisp Glowing White Sun Icon with radiating rays for Light Mode */
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="w-4 h-4 text-white fill-white drop-shadow-[0_0_6px_rgba(255,255,255,0.7)]"
+                    >
+                      <circle cx="12" cy="12" r="4" />
+                      <path
+                        d="M12 2v2.5M12 19.5V22M4.22 4.22l1.77 1.77M18.01 18.01l1.77 1.77M2 12h2.5M19.5 12H22M4.22 19.78l1.77-1.77M18.01 5.99l1.77-1.77"
+                        stroke="white"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  )}
+                </motion.div>
+
+                {/* Mode Text: Light on Right (when thumb on left) */}
+                {!isDarkMode && (
+                  <span className="pr-3.5 text-[13px] font-semibold text-white tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">
+                    Light
+                  </span>
+                )}
+              </button>
+
+              {/* Glowing Ask Kolkata Gradient Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  audioEngine.playUiChirp(880);
+                  toggleAskKolkata();
+                }}
+                className="flex items-center gap-2 px-4.5 py-2.5 rounded-2xl text-xs font-semibold text-white bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 hover:from-blue-600 hover:to-cyan-400 transition-all cursor-pointer shadow-[0_4px_16px_rgba(0,112,243,0.35)] active:scale-[0.98] border border-blue-400/25 whitespace-nowrap"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-white" />
+                <span>Ask Kolkata</span>
+              </button>
+
+              {/* Mobile Menu Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className={`lg:hidden p-2 rounded-xl transition-colors cursor-pointer ${isDarkMode
+                  ? "text-slate-300 hover:text-white hover:bg-white/10"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  }`}
+                aria-label="Toggle navigation menu"
+              >
+                {mobileMenuOpen ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <Menu className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* ================================================= */}
+          {/* RESPONSIVE MOBILE DRAWER                          */}
+          {/* ================================================= */}
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className={`lg:hidden pt-3 mt-3 border-t space-y-1 ${isDarkMode ? "border-white/10" : "border-slate-100"
+                }`}
+            >
+              {NAV_ITEMS.map((item) => {
+                const isItemActive = item.isActive;
                 return (
                   <button
                     key={item.key}
                     type="button"
                     onClick={() => handleNavClick(item.path)}
-                    className={`relative px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer z-10 ${isActive
-                      ? "text-slate-900 font-semibold"
-                      : "text-slate-600 hover:text-slate-900"
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition-colors cursor-pointer ${isItemActive
+                      ? isDarkMode
+                        ? "text-cyan-400 font-semibold bg-blue-950/60"
+                        : "text-blue-600 font-semibold bg-blue-50/90"
+                      : isDarkMode
+                        ? "text-slate-300 hover:text-white hover:bg-white/5"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                       }`}
                   >
-                    {isActive && (
-                      <motion.div
-                        layoutId="navbar-active-pill"
-                        transition={{ type: "spring", stiffness: 450, damping: 35 }}
-                        className="absolute inset-0 bg-white rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.06)] border border-slate-200/80 -z-10"
-                      />
-                    )}
+                    <item.icon className="w-4 h-4" />
                     <span>{item.label}</span>
                   </button>
                 );
               })}
-            </nav>
-          </div>
-
-          {/* Right Action: Sound Toggle + Ask Kolkata */}
-          <div className="flex items-center gap-2.5">
-            {/* Ambient Sound Toggle Button */}
-            <button
-              type="button"
-              onClick={() => {
-                audioEngine.toggleMute();
-              }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all cursor-pointer shadow-2xs text-slate-700"
-              title="Toggle ambient hydrological soundscape"
-            >
-              {soundActive ? (
-                <>
-                  <Volume2 className="w-3.5 h-3.5 text-blue-600" />
-                  <span className="hidden sm:inline text-[11px] text-slate-700 font-medium">Sound Active</span>
-                </>
-              ) : (
-                <>
-                  <VolumeX className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="hidden sm:inline text-[11px] text-slate-500">Muted</span>
-                </>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                audioEngine.playUiChirp(880);
-                toggleAskKolkata();
-              }}
-              className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-all cursor-pointer shadow-xs active:scale-[0.98] border border-slate-900"
-            >
-              Ask Kolkata
-            </button>
-
-            {/* Mobile Menu Toggle */}
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="xl:hidden p-1.5 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-              aria-label="Toggle navigation menu"
-            >
-              {mobileMenuOpen ? (
-                <X className="w-4 h-4" />
-              ) : (
-                <Menu className="w-4 h-4" />
-              )}
-            </button>
-          </div>
+            </motion.div>
+          )}
         </div>
       </div>
-
-      {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className="xl:hidden bg-white border-b border-slate-200 px-4 py-3 space-y-1">
-          {NAV_ITEMS.map((item) => {
-            const isActive =
-              item.path === "/"
-                ? currentRoute === "/"
-                : currentRoute.startsWith(item.path);
-            return (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => handleNavClick(item.path)}
-                className={`w-full text-left px-3 py-2 rounded-md text-xs ${isActive
-                  ? "text-blue-600 font-semibold bg-blue-50"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                  }`}
-              >
-                {item.label}
-              </button>
-            );
-          })}
-        </div>
-      )}
     </header>
   );
 }
