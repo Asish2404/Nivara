@@ -321,7 +321,7 @@ export function MobileReportPhone() {
                       textAnchor="middle"
                       fontSize="7.5"
                       fontWeight="800"
-                      fontFamily="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Geist', sans-serif"
+                      fontFamily="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Plus Jakarta Sans', sans-serif"
                       fill={
                         batteryLevel > 45
                           ? phoneStep === -1
