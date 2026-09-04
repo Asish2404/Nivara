@@ -194,11 +194,9 @@ export function LandingPage() {
           <div className="absolute inset-y-0 left-0 w-4 sm:w-6 bg-gradient-to-r from-white/40 to-transparent pointer-events-none z-15" />
           <div className="absolute inset-y-0 right-0 w-4 sm:w-6 bg-gradient-to-l from-white/40 to-transparent pointer-events-none z-15" />
 
-          {/* Natural Atmospheric Cloud Blending (Seamlessly connects upper landscape clouds with the satellite map) */}
-          <div className="absolute -top-12 left-2 sm:left-12 w-80 sm:w-[440px] h-36 sm:h-48 rounded-full bg-white/30 blur-3xl pointer-events-none z-10" />
-          <div className="absolute -top-12 right-2 sm:right-12 w-80 sm:w-[440px] h-36 sm:h-48 rounded-full bg-white/25 blur-3xl pointer-events-none z-10" />
-          <div className="absolute top-1/4 left-1/3 w-64 sm:w-96 h-28 sm:h-36 rounded-full bg-white/15 blur-2xl pointer-events-none z-10 animate-pulse duration-[8000ms]" />
-          <div className="absolute top-1/2 right-1/4 w-56 sm:w-80 h-24 sm:h-32 rounded-full bg-white/12 blur-2xl pointer-events-none z-10" />
+          {/* Gentle atmospheric drift over map */}
+          <div className="absolute top-1/4 left-1/3 w-64 sm:w-96 h-28 sm:h-36 rounded-full bg-white/10 blur-2xl pointer-events-none z-10 animate-pulse duration-[8000ms]" />
+          <div className="absolute top-1/2 right-1/4 w-56 sm:w-80 h-24 sm:h-32 rounded-full bg-white/8 blur-2xl pointer-events-none z-10" />
 
           {/* Bottom Left Municipal Telemetry */}
           <div className="absolute bottom-5 left-5 sm:left-7 z-20 pointer-events-none text-left font-mono hidden sm:block">
@@ -384,7 +382,7 @@ export function LandingPage() {
 
             <button
               type="button"
-              onClick={() => { audioEngine.playUiChirp(1050); navigate("/live-city"); }}
+              onClick={() => { audioEngine.playUiChirp(1050); navigate("/simulate"); }}
               className="w-full mt-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold font-mono transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
             >
               <span>Simulate Action</span>
@@ -434,7 +432,7 @@ export function LandingPage() {
       {/* ======================================================== */}
       {/* SECTION: HOW IT WORKS                                   */}
       {/* ======================================================== */}
-      <section className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 max-w-[1280px] mx-auto border-t border-slate-100">
+      <section id="how-it-works" className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 max-w-[1280px] mx-auto border-t border-slate-100 scroll-mt-24">
         <div className="max-w-2xl">
           <span className="text-[11px] font-semibold tracking-[0.2em] uppercase text-cyan-600 font-mono">
             HOW IT WORKS

@@ -78,6 +78,14 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [navigate])
 
+  // Handle route changes: scroll to top and ensure landing stage
+  useEffect(() => {
+    window.scrollTo(0, 0)
+    if (currentRoute !== '/') {
+      setStage('landing_page')
+    }
+  }, [currentRoute])
+
   // 1. 0s to 5s of clean Earth rotation, then zoom to India (only on initial landing route '/')
   useEffect(() => {
     if (currentRoute !== '/' || stage !== 'orbit') return

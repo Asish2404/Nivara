@@ -55,6 +55,9 @@ export function KWINavbar() {
     navigate(path);
     setMobileMenuOpen(false);
     setActiveDropdown(null);
+    if (typeof window !== "undefined" && currentRoute === path) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   const handleMouseEnter = (key) => {
@@ -139,24 +142,25 @@ export function KWINavbar() {
       {/* ===================================================== */}
       {/* REACT BITS ANIMATED BORDER GLOW WRAPPER               */}
       {/* ===================================================== */}
-      <div className="relative pointer-events-auto max-w-[1380px] mx-auto p-[1.5px] rounded-[30px] overflow-hidden group/nav shadow-[0_14px_45px_rgba(0,0,0,0.08)]">
-        {/* 1. Animated Outer Bloom Layer (Soft Neon Aura) */}
-        <div
-          className="absolute -inset-[180%] animate-[spin_7s_linear_infinite] pointer-events-none opacity-70 blur-[15px]"
-          style={{
-            background: `conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 155deg, #00f0ff 172deg, #3b82f6 185deg, #a855f7 198deg, transparent 215deg, transparent 360deg)`,
-          }}
-          aria-hidden="true"
-        />
+      <div className="relative pointer-events-auto max-w-[1380px] mx-auto p-[1.5px] rounded-[30px] group/nav shadow-[0_14px_45px_rgba(0,0,0,0.08)]">
+        {/* Border Glow Beam Container - Isolated with overflow-hidden so it never clips dropdowns */}
+        <div className="absolute inset-0 rounded-[30px] overflow-hidden pointer-events-none" aria-hidden="true">
+          {/* 1. Animated Outer Bloom Layer (Soft Neon Aura) */}
+          <div
+            className="absolute -inset-[180%] animate-[spin_7s_linear_infinite] opacity-70 blur-[15px]"
+            style={{
+              background: `conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 155deg, #00f0ff 172deg, #3b82f6 185deg, #a855f7 198deg, transparent 215deg, transparent 360deg)`,
+            }}
+          />
 
-        {/* 2. Sharp Traveling Conic Beam (React Bits Border Glow: coneSpread=26) */}
-        <div
-          className="absolute -inset-[180%] animate-[spin_7s_linear_infinite] pointer-events-none"
-          style={{
-            background: `conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 160deg, #00f0ff 174deg, #38bdf8 185deg, #a855f7 196deg, transparent 210deg, transparent 360deg)`,
-          }}
-          aria-hidden="true"
-        />
+          {/* 2. Sharp Traveling Conic Beam (React Bits Border Glow: coneSpread=26) */}
+          <div
+            className="absolute -inset-[180%] animate-[spin_7s_linear_infinite]"
+            style={{
+              background: `conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 160deg, #00f0ff 174deg, #38bdf8 185deg, #a855f7 196deg, transparent 210deg, transparent 360deg)`,
+            }}
+          />
+        </div>
 
         {/* ===================================================== */}
         {/* LIQUID GLASS MAIN CAPSULE CONTAINER                   */}
@@ -301,7 +305,7 @@ export function KWINavbar() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 4, scale: 0.95 }}
                           transition={{ duration: 0.15 }}
-                          className={`absolute top-full mt-2 left-1/2 -translate-x-1/2 min-w-[190px] rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.18)] p-1.5 z-50 flex flex-col gap-0.5 backdrop-blur-2xl ${isDarkMode
+                          className={`absolute top-full mt-2 left-1/2 -translate-x-1/2 min-w-[190px] rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.18)] p-1.5 z-50 flex flex-col gap-0.5 backdrop-blur-2xl pointer-events-auto ${isDarkMode
                             ? "bg-slate-900/95 border border-white/10 text-slate-200"
                             : "bg-white/95 border border-slate-100 text-slate-700"
                             }`}

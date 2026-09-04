@@ -287,7 +287,7 @@ export function LiveCityPage() {
         </div>
 
         {/* Large Map Container with Border Beam Laser & Tactical HUD Framing */}
-        <div className="relative w-full h-[660px] rounded-3xl border border-slate-200/90 bg-slate-950 overflow-hidden shadow-2xl">
+        <div id="gis-map-viewport" className="relative w-full h-[660px] rounded-3xl border border-slate-200/90 bg-slate-950 overflow-hidden shadow-2xl scroll-mt-24">
           <BorderBeam size={400} duration={14} colorFrom="#00f0ff" colorTo="#3b82f6" />
 
           {/* Cybernetic HUD Corner Brackets */}
@@ -620,6 +620,10 @@ export function LiveCityPage() {
                   onClick={() => {
                     audioEngine.playUiChirp(1040);
                     setSelectedIncident(inc);
+                    const mapElem = document.getElementById("gis-map-viewport");
+                    if (mapElem) {
+                      mapElem.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }
                   }}
                   className="p-5 cursor-pointer bg-white/95 border-slate-200/90 shadow-sm"
                 >

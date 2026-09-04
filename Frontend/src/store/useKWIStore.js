@@ -53,18 +53,25 @@ export const useKWIStore = create((set, get) => ({
   activeSection: routeToSection(getInitialRoute()),
   
   navigate: (path) => {
-    if (typeof window !== 'undefined' && window.location.pathname !== path) {
-      window.history.pushState({}, '', path)
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname !== path) {
+        window.history.pushState({}, '', path)
+      }
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
     }
     const section = routeToSection(path)
     set({ currentRoute: path, activeSection: section })
   },
 
-  // Shared Mobile Report & Verification State
-  reportPhoto: '/images/kolkata_waterlog_sector_v.jpg',
-  reportDescription: 'Waterlogging near Sector V main road after heavy rainfall.',
-  reportLocation: 'Sector V, Kolkata',
-  reportDepth: '20–30 cm',
+  // Shared Mobile Report & Verification State (Stores original user input)
+  reportPhoto: null,
+  reportDescription: '',
+  reportLocation: 'Salt Lake, Sector V, Kolkata',
+  reportLocality: 'Salt Lake, Sector V',
+  reportCity: 'Kolkata, West Bengal',
+  reportCoords: { lat: 22.5735, lon: 88.4331, accuracy: 10 },
+  reportDepth: '15–30 cm',
+  reportTimestamp: 'Just now',
   isReportSubmitted: false,
   reportVerificationStage: 0, // 0 = idle, 1..5 = stages
   isReportVerified: false,
@@ -72,22 +79,31 @@ export const useKWIStore = create((set, get) => ({
   setReportPhoto: (photo) => set({ reportPhoto: photo }),
   setReportDescription: (desc) => set({ reportDescription: desc }),
   setReportLocation: (loc) => set({ reportLocation: loc }),
+  setReportLocality: (loc) => set({ reportLocality: loc }),
+  setReportCity: (city) => set({ reportCity: city }),
+  setReportCoords: (coords) => set({ reportCoords: coords }),
   setReportDepth: (depth) => set({ reportDepth: depth }),
 
   submitCitizenReport: () => {
-    set({ isReportSubmitted: true, reportVerificationStage: 1, isReportVerified: false })
+    const now = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+    set({
+      isReportSubmitted: true,
+      reportVerificationStage: 1,
+      isReportVerified: false,
+      reportTimestamp: now,
+    })
     setTimeout(() => {
       set({ reportVerificationStage: 2 })
-    }, 550)
+    }, 600)
     setTimeout(() => {
       set({ reportVerificationStage: 3 })
-    }, 1100)
+    }, 1200)
     setTimeout(() => {
       set({ reportVerificationStage: 4 })
-    }, 1650)
+    }, 1800)
     setTimeout(() => {
       set({ reportVerificationStage: 5, isReportVerified: true })
-    }, 2200)
+    }, 2400)
   },
 
   resetCitizenReport: () => {
@@ -95,6 +111,8 @@ export const useKWIStore = create((set, get) => ({
       isReportSubmitted: false,
       reportVerificationStage: 0,
       isReportVerified: false,
+      reportPhoto: null,
+      reportDescription: '',
     })
   },
 

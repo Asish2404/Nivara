@@ -1,4 +1,6 @@
 import { motion } from 'framer-motion'
+import { useKWIStore } from '../store/useKWIStore'
+import { audioEngine } from '../utils/audioEngine'
 
 const GithubIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-[17px] h-[17px]">
@@ -56,19 +58,45 @@ const ChevronRightIcon = () => (
 const NAV_COLUMNS = [
   {
     title: 'PLATFORM',
-    links: ['City Intelligence', 'Incidents', 'Forecast', 'Simulate'],
+    links: [
+      { label: 'City Intelligence', path: '/live-city' },
+      { label: 'Incidents Grid', path: '/incidents' },
+      { label: 'Forecast Nowcast', path: '/forecast' },
+      { label: 'Simulate Interventions', path: '/simulate' },
+    ],
   },
   {
     title: 'INTELLIGENCE',
-    links: ['Water Network', 'Live Systems', 'Reports', 'Data Insights'],
+    links: [
+      { label: 'Water Network GIS', path: '/live-city' },
+      { label: 'Live Systems', path: '/live-city' },
+      { label: 'Citizen Reports', path: '/reports' },
+      { label: 'Action Center', path: '/action-center' },
+    ],
   },
   {
     title: 'COMMAND',
-    links: ['Actions', 'Ask Kolkata', 'Admin Console', 'System Status'],
+    links: [
+      { label: 'Emergency Actions', path: '/action-center' },
+      { label: 'Ask Kolkata AI', isAskKolkata: true },
+      { label: 'Hydrological Twin', path: '/simulate' },
+      { label: 'System Overview', path: '/' },
+    ],
   },
 ]
 
 export default function Footer() {
+  const { navigate, toggleAskKolkata } = useKWIStore()
+
+  const handleLinkClick = (linkItem) => {
+    audioEngine.playUiChirp(920)
+    if (linkItem.isAskKolkata) {
+      toggleAskKolkata()
+    } else if (linkItem.path) {
+      navigate(linkItem.path)
+    }
+  }
+
   return (
     <footer className="relative w-full min-h-[410px] overflow-hidden isolate bg-[#020608] text-white select-none font-sans">
       {/* ===================================================== */}
@@ -98,45 +126,47 @@ export default function Footer() {
               90deg,
               rgba(1, 6, 9, 0.55) 0%,
               rgba(1, 6, 9, 0.18) 35%,
-              rgba(1, 6, 9, 0.12) 50%,
-              rgba(1, 6, 9, 0.22) 75%,
-              rgba(1, 6, 9, 0.55) 100%
+              rgba(1, 6, 9, 0.25) 70%,
+              rgba(1, 6, 9, 0.75) 100%
             )
           `,
         }}
         aria-hidden="true"
       />
 
-      {/* Soft Top Atmospheric Fog Fade blending footer into the white page */}
-
+      {/* Top Subtle Cyan Separator Line */}
       <div
-        className="absolute top-0 inset-x-0 h-[125px] pointer-events-none -z-30"
-        style={{
-          background:
-            'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.94) 18%, rgba(255,255,255,0.68) 38%, rgba(255,255,255,0.32) 65%, rgba(255,255,255,0) 100%)',
-        }}
+        className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#00f5d4]/45 to-transparent pointer-events-none"
+        aria-hidden="true"
+      />
+
+      {/* Ambient Top Glow Line */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-12 bg-[radial-gradient(ellipse_at_top,rgba(0,245,212,0.18),transparent_70%)] pointer-events-none"
         aria-hidden="true"
       />
 
       {/* ===================================================== */}
       {/* MAIN FOOTER CONTENT CONTAINER                         */}
       {/* ===================================================== */}
-      <div className="relative w-[min(1360px,calc(100%-48px))] lg:w-[min(1360px,calc(100%-80px))] mx-auto pt-35 pb-8">
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.35fr_0.75fr_0.8fr_0.8fr_1.1fr] gap-8 lg:gap-6 items-start"
-          initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        >
+      <div className="relative z-10 max-w-[1380px] mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-8 flex flex-col justify-between min-h-[390px]">
+        {/* Top 5-Column Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 mb-12">
           {/* ------------------------------------------------- */}
           {/* 1. BRAND + DESCRIPTION + SOCIALS                  */}
           {/* ------------------------------------------------- */}
           <div className="flex flex-col pr-0 lg:pr-4">
             {/* Brand Logo & Header */}
-            <div className="flex items-center gap-3.5 mb-4">
+            <button
+              type="button"
+              onClick={() => {
+                audioEngine.playUiChirp(920)
+                navigate('/')
+              }}
+              className="flex items-center gap-3.5 mb-4 text-left cursor-pointer group focus:outline-none"
+            >
               {/* KWI Emblem Logo Badge */}
-              <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-white border border-[#26d0ce]/40 shadow-[0_0_20px_rgba(0,240,213,0.18)] flex items-center justify-center p-0.5 shrink-0">
+              <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-white border border-[#26d0ce]/40 shadow-[0_0_20px_rgba(0,240,213,0.18)] flex items-center justify-center p-0.5 shrink-0 group-hover:scale-105 transition-transform duration-200">
                 <img
                   src="/textures/KWI_LOGO.jpeg"
                   alt="Kolkata Water Intelligence Logo"
@@ -156,7 +186,7 @@ export default function Footer() {
                   URBAN WATER COMMAND SYSTEM
                 </span>
               </div>
-            </div>
+            </button>
 
             {/* Subtext description */}
             <p className="text-[13px] leading-[1.65] text-[#b4cbce] max-w-[315px] mb-6">
@@ -204,7 +234,7 @@ export default function Footer() {
           </div>
 
           {/* ------------------------------------------------- */}
-          {/* 2. NAVIGATION COLUMNS (PLATFORM, INTELLIGENCE, COMMAND) */}
+          {/* 2. NAVIGATION COLUMNS                             */}
           {/* ------------------------------------------------- */}
           {NAV_COLUMNS.map((col) => (
             <div key={col.title} className="flex flex-col">
@@ -214,22 +244,21 @@ export default function Footer() {
 
               <div className="flex flex-col gap-2.5">
                 {col.links.map((link) => (
-                  <a
-                    key={link}
-                    href={`#${link.toLowerCase().replaceAll(' ', '-')}`}
-                    className="group flex items-center justify-between gap-3 text-[13px] text-white/75 hover:text-white transition-colors duration-150"
+                  <button
+                    key={link.label}
+                    type="button"
+                    onClick={() => handleLinkClick(link)}
+                    className="group flex items-center justify-between gap-3 text-[13px] text-white/75 hover:text-white transition-colors duration-150 text-left cursor-pointer w-full"
                   >
                     <span className="group-hover:translate-x-0.5 transition-transform duration-150">
-                      {link}
+                      {link.label}
                     </span>
                     <ChevronRightIcon />
-                  </a>
+                  </button>
                 ))}
               </div>
             </div>
           ))}
-
-          {/* ------------------------------------------------- */}
           {/* 3. LIVE STATUS CARD                               */}
           {/* ------------------------------------------------- */}
           <div className="flex flex-col">
@@ -263,7 +292,7 @@ export default function Footer() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* ===================================================== */}
         {/* DIVIDER LINE & BOTTOM COPYRIGHT / LEGAL BAR           */}

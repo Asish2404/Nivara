@@ -5,6 +5,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Waves,
+  MapPin,
 } from "lucide-react";
 import { useKWIStore } from "../../store/useKWIStore";
 
@@ -15,51 +16,100 @@ export function PhoneVerificationPipeline() {
     isReportSubmitted,
     setSelectedIncident,
     navigate,
+    reportPhoto,
+    reportDescription,
+    reportLocation,
+    reportLocality,
+    reportCity,
+    reportCoords,
+    reportDepth,
+    reportTimestamp,
   } = useKWIStore();
 
+  // Real-time dynamic values derived from user's live phone input
+  const locality = reportLocality || "Ward 31 (Bidhannagar)";
+  const city = reportCity || "Kolkata, West Bengal";
+  const coords = reportCoords || { lat: 22.5735, lon: 88.4331, accuracy: 3 };
+  const depth = reportDepth || "15–30 cm";
+
+  // Dynamic incident identifier and sluice station linked to coordinates
+  const localityCode = (locality.replace(/[^a-zA-Z]/g, "").slice(0, 2) || "SV").toUpperCase();
+  const incidentNum = Math.floor(10 + (Math.abs(coords.lat * 1000) % 90));
+  const incidentId = `#${localityCode}-${incidentNum}`;
+  const sluiceStation = `PS-${Math.floor(1 + (Math.abs(coords.lon * 10) % 12)).toString().padStart(2, "0")}`;
+
+  // Water depth computation based on real selected bracket
+  const depthTag =
+    depth === "0–15 cm"
+      ? "12 cm ± 1.5 cm"
+      : depth === "30+ cm"
+      ? "38 cm ± 2.5 cm"
+      : "28 cm ± 2.0 cm";
+
+  const depthMetric =
+    depth === "30+ cm"
+      ? "Severe Hazard >30cm"
+      : depth === "15–30 cm"
+      ? "Critical Depth >15cm"
+      : "Moderate Inundation <15cm";
+
+  const throttledFlow =
+    depth === "30+ cm" ? "82%" : depth === "15–30 cm" ? "64%" : "38%";
+
+  // Confidence computation influenced by GPS accuracy & photo attachment
+  const confidenceScore = (
+    93.5 +
+    (reportPhoto ? 2.5 : 1.0) -
+    Math.min(2, (coords.accuracy || 3) * 0.1)
+  ).toFixed(1);
+
+  // Dynamic 5-Stage Pipeline matching real data
   const STAGES = [
     {
       id: 1,
       name: "Location Analysis",
-      tag: "Ward 31 (Bidhannagar)",
-      detail:
-        "GPS Lat: 22.5735° N, Long: 88.4331° E. Triangulated within municipal GIS catchment boundary.",
-      metric: "±3m GPS Accuracy",
+      tag: locality,
+      detail: `GPS Lat: ${coords.lat.toFixed(4)}° N, Long: ${coords.lon.toFixed(4)}° E. Triangulated within municipal GIS catchment boundary.`,
+      metric: `±${coords.accuracy || 3}m GPS Accuracy`,
       status: "VERIFIED",
     },
     {
       id: 2,
       name: "Image Analysis",
-      tag: "Vehicular Asphalt Inundation",
-      detail:
-        "Hydro-Vision model identified surface water accumulation across 2 lanes with vehicular wake.",
-      metric: "96.2% Confidence",
+      tag: reportPhoto ? "Vehicular Asphalt Inundation" : "Terrain Satellite Inundation",
+      detail: reportPhoto
+        ? "Hydro-Vision model identified surface water accumulation across active roadway from device camera capture."
+        : "Hydro-Vision multi-spectral model identified surface water accumulation across active municipal carriageway.",
+      metric: `${confidenceScore}% Confidence`,
       status: "DETECTED",
     },
     {
       id: 3,
       name: "Condition Assessment",
-      tag: "Catchment Inlet Silt Obstruction",
-      detail:
-        "Surface inlet capacity constrained by stormwater silt. Correlated with Bagjola Canal branch.",
-      metric: "Flow Throttled: 64%",
+      tag: reportDescription
+        ? reportDescription.length > 28
+          ? reportDescription.slice(0, 26) + "…"
+          : reportDescription
+        : "Catchment Inlet Silt Obstruction",
+      detail: reportDescription
+        ? `Citizen signal recorded: "${reportDescription}". Correlated with municipal drainage conduit load.`
+        : "Surface inlet capacity constrained by stormwater silt. Correlated with municipal canal branch.",
+      metric: `Flow Throttled: ${throttledFlow}`,
       status: "VERIFIED",
     },
     {
       id: 4,
       name: "Water Depth",
-      tag: "28 cm ± 2.0 cm",
-      detail:
-        "Calculated using standard 15 cm concrete curb marker reference and taxi wheel submersion ratio.",
-      metric: "Critical Depth >15cm",
+      tag: depthTag,
+      detail: `Calculated using reported ${depth} bracket, standard concrete curb marker reference, and street sensor calibration.`,
+      metric: depthMetric,
       status: "COMPUTED",
     },
     {
       id: 5,
       name: "Duplicate Check",
-      tag: "Aggregated to #SV-024",
-      detail:
-        "Matched with 17 citizen and officer signals within 200m radius into unified operational incident.",
+      tag: `Aggregated to ${incidentId}`,
+      detail: `Matched with 17 citizen and officer signals within 200m radius of ${locality} into unified operational incident.`,
       metric: "18 Linked Signals",
       status: "CORRELATED",
     },
@@ -67,58 +117,48 @@ export function PhoneVerificationPipeline() {
 
   const handleOpenLiveCity = () => {
     setSelectedIncident({
-      id: "#SV-024",
-      name: "Sector V Incident #SV-024",
-      subdivision: "SECTOR V // SALT LAKE",
-      location: "College More & Ring Road, Salt Lake Sector V",
-      x: 6.2,
-      y: -2.0,
-      timestamp: "10:42 AM",
-      waterDepth: "28 cm",
+      id: incidentId,
+      name: `${locality} Incident ${incidentId}`,
+      subdivision: locality.toUpperCase(),
+      location: `${locality}, ${city}`,
+      x: (coords.lon - 88.3639) * 20,
+      y: (22.5726 - coords.lat) * 20,
+      timestamp: reportTimestamp || "Just now",
+      waterDepth: depthTag.split(" ")[0] + " cm",
       rainfall: "74 mm / 3 hr",
       verifiedReports: 18,
       affectedArea: "12,400 m²",
       riskScore: "82 / 100",
-      connectedDrainage: "Sector V Main Trunk",
-      nearestPump: "PS-07",
-      probableCause: "Rainfall exceeding local drainage capacity.",
-      severity: "HIGH",
-      severityColor: "#d64545",
+      connectedDrainage: "Municipal Canal Trunk",
+      nearestPump: sluiceStation,
+      probableCause: reportDescription || "Rainfall exceeding local drainage capacity.",
+      severity: depth === "30+ cm" ? "CRITICAL" : "HIGH",
+      severityColor: depth === "30+ cm" ? "#e11d48" : "#d64545",
       status: "Needs Intervention",
-      workOrderId: "WO-2026-0323-0041",
+      workOrderId: `WO-${Date.now().toString().slice(-8)}`,
     });
     navigate("/live-city");
   };
 
   return (
-    <div className="space-y-4 text-left">
+    <div className="space-y-4 text-left font-sans">
       {/* Verification Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200 gap-2">
         <div>
           <span className="text-[10px] font-semibold tracking-wider text-slate-500 uppercase block font-mono">
             AI DRAINAGE PLATFORM
           </span>
-          <h2 className="text-base sm:text-lg font-bold text-slate-950">
+          <h2 className="text-base sm:text-lg font-bold text-slate-950 font-sans">
             Five-Stage Validation Pipeline
           </h2>
         </div>
         <div className="flex items-center gap-2">
-          <span
-            className={`text-xs font-bold px-3 py-1 rounded-md border flex items-center gap-1.5 transition-colors ${
-              isReportVerified
-                ? "text-emerald-700 bg-emerald-50 border-emerald-200"
-                : isReportSubmitted
-                  ? "text-blue-700 bg-blue-50 border-blue-200"
-                  : "text-slate-600 bg-slate-50 border-slate-200"
-            }`}
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
+          <span className="text-xs font-bold px-3 py-1 rounded-md border flex items-center gap-1.5 transition-colors text-emerald-700 bg-emerald-50 border-emerald-200 shadow-2xs">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
             <span>
-              {isReportVerified
-                ? "94.8% Confidence · VERIFIED"
-                : isReportSubmitted
-                  ? "Validating Ground Truth…"
-                  : "Ready for Signal"}
+              {isReportSubmitted && !isReportVerified
+                ? "Validating Telemetry Signal…"
+                : `${confidenceScore}% Confidence · VERIFIED`}
             </span>
           </span>
         </div>
@@ -130,15 +170,13 @@ export function PhoneVerificationPipeline() {
         before municipal dispatch.
       </p>
 
-      {/* 5-Stage Synchronized Cyber Cards */}
+      {/* 5-Stage Synchronized Cards Driven by Real Data */}
       <div className="space-y-3 pt-1">
         {STAGES.map((stage) => {
-          const isDone =
-            isReportSubmitted && reportVerificationStage >= stage.id;
-          const isCurrent =
-            isReportSubmitted &&
-            reportVerificationStage === stage.id &&
-            !isReportVerified;
+          // When not submitted yet, cards show live preview matching user mockup
+          const isSubmittedMode = isReportSubmitted;
+          const isDone = !isSubmittedMode || reportVerificationStage >= stage.id;
+          const isCurrent = isSubmittedMode && reportVerificationStage === stage.id && !isReportVerified;
 
           return (
             <div
@@ -180,9 +218,7 @@ export function PhoneVerificationPipeline() {
                       </span>
                     </div>
                     <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                      {isDone || isCurrent
-                        ? stage.detail
-                        : "Awaiting automated spatial validation…"}
+                      {stage.detail}
                     </p>
                   </div>
                 </div>
@@ -213,31 +249,27 @@ export function PhoneVerificationPipeline() {
         })}
       </div>
 
-      {/* Connected Action Banner with Border Beam */}
+      {/* Connected Action Banner Dynamic to Real Data */}
       <div className="relative overflow-hidden mt-6 p-5 rounded-3xl border border-cyan-200/90 bg-gradient-to-r from-cyan-50/80 via-blue-50/60 to-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
         <div>
           <span className="text-sm font-bold text-slate-950 block">
-            {isReportVerified
-              ? "Verified Telemetry Signal · Dispatched to Ward 31 Drainage Operations"
-              : isReportSubmitted
+            {isReportSubmitted && !isReportVerified
               ? "Multi-Spectral Verification in Progress…"
-              : "Submit Field Report on Device to Trigger AI Analysis"}
+              : `Verified Telemetry Signal · Dispatched to ${locality} Drainage Operations`}
           </span>
           <span className="text-xs text-slate-600 mt-0.5 block font-mono">
-            Linked to Incident #SV-024 · Connected to Sluice Station PS-07
+            Linked to Incident {incidentId} · Connected to Sluice Station {sluiceStation}
           </span>
         </div>
 
-        {isReportVerified && (
-          <button
-            type="button"
-            onClick={handleOpenLiveCity}
-            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-700 hover:from-cyan-500 hover:to-blue-600 text-white font-bold text-xs transition-all active:scale-[0.98] flex items-center gap-1.5 shrink-0 cursor-pointer shadow-[0_4px_15px_rgba(6,182,212,0.35)]"
-          >
-            <span>Inspect on Live Map</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={handleOpenLiveCity}
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-700 hover:from-cyan-500 hover:to-blue-600 text-white font-bold text-xs transition-all active:scale-[0.98] flex items-center gap-1.5 shrink-0 cursor-pointer shadow-[0_4px_15px_rgba(6,182,212,0.35)]"
+        >
+          <span>Inspect on Live Map</span>
+          <ArrowRight className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );
