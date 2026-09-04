@@ -37,7 +37,7 @@ const KOLKATA_PRESETS = [
   { name: 'Alipore / Chetla', ward: 'Ward 74, Borough IX', lat: 22.5312, lon: 88.3371 },
 ]
 
-export function MobileReportForm() {
+export function MobileReportForm({ onBackToStep1 }) {
   const {
     reportPhoto,
     setReportPhoto,
@@ -419,27 +419,46 @@ export function MobileReportForm() {
       {step === 0 && (
         <div className="flex flex-col h-full justify-between animate-in fade-in duration-200">
           <div>
-            {/* Top Brand Header: KWI Icon + Kolkata Water Intelligence */}
-            <div className="flex items-center gap-2.5 mb-4 pt-1">
-              <div className="w-9 h-9 rounded-xl bg-[#edf5fc] text-[#1d63a8] flex items-center justify-center shadow-2xs">
-                <MapPin className="w-5 h-5 fill-current" />
+            {/* Subtle Back Button to Screen 2 */}
+            {onBackToStep1 && (
+              <button
+                type="button"
+                onClick={() => {
+                  audioEngine.playUiChirp(900)
+                  onBackToStep1()
+                }}
+                className="text-[13px] font-semibold text-blue-600 flex items-center gap-1 cursor-pointer opacity-85 hover:opacity-100 mb-2 -mt-1"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </button>
+            )}
+
+            {/* Top Brand Header: Official KWI Logo + Kolkata Water Intelligence */}
+            <div className="flex items-center gap-2.5 mb-3 pt-0.5">
+              <div className="w-8 h-8 rounded-xl overflow-hidden bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center p-0.5 shrink-0">
+                <img
+                  src="/textures/KWI_LOGO.jpeg"
+                  alt="KWI Logo"
+                  className="w-full h-full object-contain rounded-lg"
+                />
               </div>
               <div>
-                <span className="text-[13px] font-extrabold text-slate-900 tracking-tight block leading-tight">
+                <span className="text-[12px] font-extrabold text-slate-900 tracking-tight block leading-tight font-sans">
                   KWI
                 </span>
-                <span className="text-[11px] text-slate-500 font-medium block">
+                <span className="text-[10.5px] text-slate-500 font-medium block leading-tight">
                   Kolkata Water Intelligence
                 </span>
               </div>
             </div>
 
-            {/* Clean Native Mobile Heading (NO SERIF) */}
-            <div className="mb-4">
-              <h2 className="text-[25px] sm:text-[27px] font-sans font-extrabold text-slate-900 tracking-tight leading-[1.12]">
+            {/* Clean Native Mobile Heading */}
+            <div className="mb-3.5">
+              <h2 className="text-[23px] sm:text-[25px] font-sans font-extrabold text-slate-900 tracking-tight leading-[1.12]">
                 Report<br />Waterlogging
               </h2>
-              <p className="text-[13px] text-slate-500 mt-1 leading-relaxed">
+              <p className="text-[12.5px] text-slate-500 mt-1 leading-relaxed">
                 Help Kolkata respond faster.
               </p>
             </div>
@@ -531,17 +550,24 @@ export function MobileReportForm() {
           </div>
 
           {/* Primary Continue Button */}
-          <div className="pt-3 pb-1">
+          <div className="pt-2 pb-1">
             <button
               type="button"
               onClick={() => {
                 audioEngine.playUiChirp(1200)
                 setStep(1)
               }}
-              className="w-full h-12 rounded-2xl bg-[#1d63a8] hover:bg-[#155696] active:scale-[0.98] text-white font-bold text-[14px] transition-all shadow-xs cursor-pointer flex items-center justify-center"
+              className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-[14px] transition-all shadow-xs cursor-pointer flex items-center justify-center"
             >
               <span>Continue</span>
             </button>
+
+            {/* Subtle Progress Indicator Dots */}
+            <div className="flex justify-center items-center gap-1.5 mt-2.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+              <span className="w-4 h-1.5 rounded-full bg-blue-600" />
+            </div>
           </div>
         </div>
       )}
