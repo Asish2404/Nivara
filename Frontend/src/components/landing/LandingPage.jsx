@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, CheckCircle2, Play, Waves, Activity, ShieldCheck, Cpu, Database } from "lucide-react";
 import { KWINavbar } from "../navigation/KWINavbar";
 import { AskKolkataDrawer } from "../navigation/AskKolkataDrawer";
@@ -11,6 +11,7 @@ import { useKWIStore } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
 import { CitizenReportingSection } from "./CitizenReportingSection";
 import { KolkataDecorativeLayer } from "./KolkataDecorativeLayer";
+import { RopeHumanJourney } from "./RopeHumanJourney";
 
 function Sparkline({ data = [20, 24, 30, 28, 35, 42], color = "#0284c7" }) {
   const points = data
@@ -30,6 +31,67 @@ function Sparkline({ data = [20, 24, 30, 28, 35, 42], color = "#0284c7" }) {
   );
 }
 
+const PIPELINE_PROGRESS_PERCENT = [14, 29, 43, 57, 71, 86, 100];
+
+const STEP_TELEMETRY = [
+  {
+    header: "CITIZEN SIGNAL INGESTION",
+    badge: "GEO-LOCATED",
+    activeProcess: "Report → Mobile Ingest & Geotag",
+    line1: "COORDINATES: 22.5726° N, 88.3639° E",
+    line2: "SOURCE: Citizen Mobile App + Photo Geotag",
+    systemImpact: "+1 Incident Logged for Review",
+  },
+  {
+    header: "AI VERIFICATION",
+    badge: "99.4% CONFIDENCE",
+    activeProcess: "Verify → Spatial Validation",
+    line1: "ESTIMATED DEPTH: 38.5 CM (Curb Overflow)",
+    line2: "DEBRIS FACTOR: High Obstruction Detected",
+    systemImpact: "Depth Validated in 3.2 Seconds",
+  },
+  {
+    header: "INFRASTRUCTURE CORRELATION",
+    badge: "41 GATES SYNCED",
+    activeProcess: "Connect → Infrastructure Correlation",
+    line1: "SLUICE GATES LINKED: 4 (Hooghly Outfall)",
+    line2: "TRUNK CONDUIT: Circular Canal 72% Saturated",
+    systemImpact: "Drainage Graph Calibrated",
+  },
+  {
+    header: "RISK INTELLIGENCE",
+    badge: "RISK: 84/100",
+    activeProcess: "Understand → Risk Intelligence",
+    line1: "CATCHMENT RISK: 84/100 (Critical Flag)",
+    line2: "BOTTLENECK: Palmer Bridge Conduit Silt",
+    systemImpact: "Surge Trajectory Modeled",
+  },
+  {
+    header: "PREDICTION ENGINE",
+    badge: "+18CM AT T+25M",
+    activeProcess: "Predict → 60-Minute Prediction",
+    line1: "RADAR INTENSITY: 42 mm/hr Cloud Burst",
+    line2: "HOOGHLY STAGE: High Tide +3.8M Resistance",
+    systemImpact: "Early Warning Broadcasted",
+  },
+  {
+    header: "INTERVENTION SIMULATION",
+    badge: "3 PUMPS STAGED",
+    activeProcess: "Simulate → Intervention Simulation",
+    line1: "REQUIRED PUMPS: 3 Units (500 m³/h capacity)",
+    line2: "GRAVITY OUTFALL: Gate #14 Scheduled at Low Tide",
+    systemImpact: "-24 CM Depth Reduction Modeled",
+  },
+  {
+    header: "FIELD DISPATCH",
+    badge: "ORDER #KMC-WRK-9418",
+    activeProcess: "Act → Field Dispatch",
+    line1: "DISPATCH ORDER: #KMC-WRK-2026-9418",
+    line2: "ASSIGNED CREW: Borough VII Field Rapid Response",
+    systemImpact: "Crew En Route (ETA 11 Minutes)",
+  },
+];
+
 export function LandingPage() {
   const {
     navigate,
@@ -39,7 +101,128 @@ export function LandingPage() {
     totalPumps,
   } = useKWIStore();
   const [activeWorkflowStep, setActiveWorkflowStep] = useState(0);
+  const [revealedStepsCount, setRevealedStepsCount] = useState(1);
+  const [isSectionVisible, setIsSectionVisible] = useState(false);
+  const howItWorksRef = useRef(null);
   const [simActive, setSimActive] = useState(false);
+
+  // Rope & Human Journey synchronization states
+  const [isSliding, setIsSliding] = useState(false);
+  const [slideDirection, setSlideDirection] = useState(1);
+  const [isResetting, setIsResetting] = useState(false);
+  const stepCardRefs = useRef([]);
+  const stepSectionRef = useRef(null);
+  const [stepPositions, setStepPositions] = useState([]);
+
+  // Precise geometric calculation of step card centers for rope & human alignment
+  const measureStepPositions = useCallback(() => {
+    if (!stepSectionRef.current) return;
+    const parentRect = stepSectionRef.current.getBoundingClientRect();
+    const positions = stepCardRefs.current.map((cardEl) => {
+      if (!cardEl) return 0;
+      const rect = cardEl.getBoundingClientRect();
+      return rect.top - parentRect.top + rect.height / 2;
+    });
+    setStepPositions(positions);
+  }, []);
+
+  useEffect(() => {
+    measureStepPositions();
+    const handleResize = () => measureStepPositions();
+    window.addEventListener("resize", handleResize);
+
+    const ro = new ResizeObserver(() => measureStepPositions());
+    if (stepSectionRef.current) {
+      ro.observe(stepSectionRef.current);
+    }
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      ro.disconnect();
+    };
+  }, [measureStepPositions, revealedStepsCount]);
+
+  // IntersectionObserver to start animation only when section enters viewport
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsSectionVisible(entry.isIntersecting);
+      },
+      { threshold: 0.2 }
+    );
+
+    if (howItWorksRef.current) {
+      observer.observe(howItWorksRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Sequential step appearance synchronized with human rappeller descent
+  useEffect(() => {
+    if (!isSectionVisible || isResetting) return;
+
+    if (revealedStepsCount < 7) {
+      // Hold each step for ~2.2 seconds before advancing to next step
+      const timer = setTimeout(() => {
+        const nextStep = revealedStepsCount; // next step index (1 to 6)
+
+        // 1. Reveal next card & node in DOM (0ms)
+        setRevealedStepsCount(nextStep + 1);
+
+        // 2. Human begins downward slide at 150ms (matches sync timeline)
+        const slideTimer = setTimeout(() => {
+          setSlideDirection(1);
+          setIsSliding(true);
+          setActiveWorkflowStep(nextStep);
+          audioEngine.playUiChirp(700 + nextStep * 50);
+
+          // Settle human at destination after 850ms
+          const settleTimer = setTimeout(() => {
+            setIsSliding(false);
+          }, 850);
+
+          return () => clearTimeout(settleTimer);
+        }, 150);
+
+        return () => clearTimeout(slideTimer);
+      }, 2200);
+
+      return () => clearTimeout(timer);
+    } else {
+      // Step 07 holds for 3.5s then smooth coordinated reset
+      const resetTimer = setTimeout(() => {
+        setIsResetting(true);
+        setIsSliding(true);
+        setSlideDirection(-1);
+        setActiveWorkflowStep(0); // Human glides smoothly back up to Step 01
+
+        const finishResetTimer = setTimeout(() => {
+          setRevealedStepsCount(1);
+          setIsResetting(false);
+          setIsSliding(false);
+        }, 1000);
+
+        return () => clearTimeout(finishResetTimer);
+      }, 3500);
+
+      return () => clearTimeout(resetTimer);
+    }
+  }, [isSectionVisible, revealedStepsCount, activeWorkflowStep, isResetting]);
+
+  const handleStepClick = (idx) => {
+    if (idx === activeWorkflowStep) return;
+    if (idx >= revealedStepsCount) {
+      setRevealedStepsCount(idx + 1);
+    }
+    setSlideDirection(idx > activeWorkflowStep ? 1 : -1);
+    setIsSliding(true);
+    setActiveWorkflowStep(idx);
+    audioEngine.playUiChirp(700 + idx * 70);
+    setTimeout(() => {
+      setIsSliding(false);
+    }, 850);
+  };
 
   const WORKFLOW_STEPS = [
     {
@@ -189,230 +372,194 @@ export function LandingPage() {
           <div className="relative w-full h-[620px] sm:h-[680px] lg:h-[740px] overflow-hidden">
             <KolkataGisMap />
 
-          {/* Subtle Outer Edge Dissolves (Bottom & Sides only - NO top white stripe) */}
-          <div className="absolute bottom-0 inset-x-0 h-8 sm:h-10 bg-gradient-to-t from-white/50 via-white/20 to-transparent pointer-events-none z-15" />
-          <div className="absolute inset-y-0 left-0 w-4 sm:w-6 bg-gradient-to-r from-white/40 to-transparent pointer-events-none z-15" />
-          <div className="absolute inset-y-0 right-0 w-4 sm:w-6 bg-gradient-to-l from-white/40 to-transparent pointer-events-none z-15" />
+            {/* Subtle Outer Edge Dissolves (Bottom & Sides only - NO top white stripe) */}
+            <div className="absolute bottom-0 inset-x-0 h-8 sm:h-10 bg-gradient-to-t from-white/50 via-white/20 to-transparent pointer-events-none z-15" />
+            <div className="absolute inset-y-0 left-0 w-4 sm:w-6 bg-gradient-to-r from-white/40 to-transparent pointer-events-none z-15" />
+            <div className="absolute inset-y-0 right-0 w-4 sm:w-6 bg-gradient-to-l from-white/40 to-transparent pointer-events-none z-15" />
 
-          {/* Gentle atmospheric drift over map */}
-          <div className="absolute top-1/4 left-1/3 w-64 sm:w-96 h-28 sm:h-36 rounded-full bg-white/10 blur-2xl pointer-events-none z-10 animate-pulse duration-[8000ms]" />
-          <div className="absolute top-1/2 right-1/4 w-56 sm:w-80 h-24 sm:h-32 rounded-full bg-white/8 blur-2xl pointer-events-none z-10" />
-        </div>
+            {/* Gentle atmospheric drift over map */}
+            <div className="absolute top-1/4 left-1/3 w-64 sm:w-96 h-28 sm:h-36 rounded-full bg-white/10 blur-2xl pointer-events-none z-10 animate-pulse duration-[8000ms]" />
+            <div className="absolute top-1/2 right-1/4 w-56 sm:w-80 h-24 sm:h-32 rounded-full bg-white/8 blur-2xl pointer-events-none z-10" />
+          </div>
 
-        {/* CITY PULSE: Floating panel positioned cleanly below the top-left map telemetry badge */}
-        <div className="absolute left-4 sm:left-6 lg:left-8 top-28 sm:top-32 z-20 w-52 sm:w-60 text-left pointer-events-auto">
-          <div className="p-3.5 sm:p-4 rounded-3xl bg-white/90 backdrop-blur-xl border border-white/70 shadow-[0_12px_40px_rgba(15,23,42,0.14)] space-y-2">
-            <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
-              <div className="flex items-center gap-1.5">
-                <Activity className="w-3.5 h-3.5 text-blue-600" />
-                <span className="font-mono text-[11px] font-bold tracking-wider text-slate-800">CITY PULSE</span>
-              </div>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 font-mono text-[9px] font-bold flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live
-              </span>
-            </div>
-
-            {/* Rainfall */}
-            <div className="p-2 rounded-2xl bg-slate-50/85 border border-slate-100/90 flex items-center justify-between">
-              <div className="flex items-start gap-2">
-                <div className="p-1 rounded-lg bg-sky-100/70 text-sky-600 mt-0.5">
-                  <Waves className="w-3.5 h-3.5" />
+          {/* CITY PULSE: Floating panel positioned cleanly below the top-left map telemetry badge */}
+          <div className="absolute left-4 sm:left-6 lg:left-8 top-28 sm:top-32 z-20 w-52 sm:w-60 text-left pointer-events-auto">
+            <div className="p-3.5 sm:p-4 rounded-3xl bg-white/90 backdrop-blur-xl border border-white/70 shadow-[0_12px_40px_rgba(15,23,42,0.14)] space-y-2">
+              <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
+                <div className="flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="font-mono text-[11px] font-bold tracking-wider text-slate-800">CITY PULSE</span>
                 </div>
-                <div>
-                  <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase block">RAINFALL</span>
-                  <div className="flex items-baseline gap-1">
+                <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 font-mono text-[9px] font-bold flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live
+                </span>
+              </div>
+
+              {/* Rainfall */}
+              <div className="p-2 rounded-2xl bg-slate-50/85 border border-slate-100/90 flex items-center justify-between">
+                <div className="flex items-start gap-2">
+                  <div className="p-1 rounded-lg bg-sky-100/70 text-sky-600 mt-0.5">
+                    <Waves className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase block">RAINFALL</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-base font-bold text-slate-900 font-mono leading-none">
+                        {rainfallDisplay ? rainfallDisplay.replace(/[^0-9]/g, "") : "42"}
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-500">mm</span>
+                    </div>
+                    <span className="text-[8px] text-slate-400 font-mono">Last 60 min</span>
+                  </div>
+                </div>
+                <Sparkline data={[18, 22, 29, 35, 38, 42]} color="#0284c7" />
+              </div>
+
+              {/* Active Incidents */}
+              <div className="p-2 rounded-2xl bg-slate-50/85 border border-slate-100/90 flex items-center justify-between">
+                <div className="flex items-start gap-2">
+                  <div className="p-1 rounded-lg bg-rose-100/70 text-rose-600 mt-0.5">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase block">ACTIVE INCIDENTS</span>
                     <span className="text-base font-bold text-slate-900 font-mono leading-none">
-                      {rainfallDisplay ? rainfallDisplay.replace(/[^0-9]/g, "") : "42"}
+                      {incidents.length || 18}
                     </span>
-                    <span className="text-[10px] font-mono text-slate-500">mm</span>
-                  </div>
-                  <span className="text-[8px] text-slate-400 font-mono">Last 60 min</span>
-                </div>
-              </div>
-              <Sparkline data={[18, 22, 29, 35, 38, 42]} color="#0284c7" />
-            </div>
-
-            {/* Active Incidents */}
-            <div className="p-2 rounded-2xl bg-slate-50/85 border border-slate-100/90 flex items-center justify-between">
-              <div className="flex items-start gap-2">
-                <div className="p-1 rounded-lg bg-rose-100/70 text-rose-600 mt-0.5">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                </div>
-                <div>
-                  <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase block">ACTIVE INCIDENTS</span>
-                  <span className="text-base font-bold text-slate-900 font-mono leading-none">
-                    {incidents.length || 18}
-                  </span>
-                  <span className="text-[9px] text-rose-600 font-mono font-semibold block mt-0.5">
-                    {incidents.filter((i) => i.severity === "CRITICAL").length || 7} Critical
-                  </span>
-                </div>
-              </div>
-              <Sparkline data={[6, 9, 14, 12, 16, 18]} color="#e11d48" />
-            </div>
-
-            {/* Waterlogged Area */}
-            <div className="p-2 rounded-2xl bg-slate-50/85 border border-slate-100/90 flex items-center justify-between">
-              <div className="flex items-start gap-2">
-                <div className="p-1 rounded-lg bg-blue-100/70 text-blue-600 mt-0.5">
-                  <Database className="w-3.5 h-3.5" />
-                </div>
-                <div>
-                  <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase block">WATERLOGGED AREA</span>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-base font-bold text-slate-900 font-mono leading-none">12.4</span>
-                    <span className="text-[10px] font-mono text-slate-500">km²</span>
+                    <span className="text-[9px] text-rose-600 font-mono font-semibold block mt-0.5">
+                      {incidents.filter((i) => i.severity === "CRITICAL").length || 7} Critical
+                    </span>
                   </div>
                 </div>
+                <Sparkline data={[6, 9, 14, 12, 16, 18]} color="#e11d48" />
               </div>
-              <Sparkline data={[4.2, 6.8, 8.5, 10.1, 11.5, 12.4]} color="#2563eb" />
-            </div>
 
-            {/* Pump Stations */}
-            <div className="p-2 rounded-2xl bg-slate-50/85 border border-slate-100/90 flex items-center justify-between">
-              <div className="flex items-start gap-2">
-                <div className="p-1 rounded-lg bg-emerald-100/70 text-emerald-600 mt-0.5">
-                  <Cpu className="w-3.5 h-3.5" />
+              {/* Waterlogged Area */}
+              <div className="p-2 rounded-2xl bg-slate-50/85 border border-slate-100/90 flex items-center justify-between">
+                <div className="flex items-start gap-2">
+                  <div className="p-1 rounded-lg bg-blue-100/70 text-blue-600 mt-0.5">
+                    <Database className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase block">WATERLOGGED AREA</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-base font-bold text-slate-900 font-mono leading-none">12.4</span>
+                      <span className="text-[10px] font-mono text-slate-500">km²</span>
+                    </div>
+                  </div>
                 </div>
+                <Sparkline data={[4.2, 6.8, 8.5, 10.1, 11.5, 12.4]} color="#2563eb" />
+              </div>
+
+              {/* Pump Stations */}
+              <div className="p-2 rounded-2xl bg-slate-50/85 border border-slate-100/90 flex items-center justify-between">
+                <div className="flex items-start gap-2">
+                  <div className="p-1 rounded-lg bg-emerald-100/70 text-emerald-600 mt-0.5">
+                    <Cpu className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase block">PUMP STATIONS</span>
+                    <span className="text-base font-bold text-slate-900 font-mono leading-none">
+                      {String(activePumps || 7).padStart(2, "0")}
+                    </span>
+                    <span className="text-[9px] text-emerald-600 font-mono font-semibold block mt-0.5">
+                      {activePumps || 3} Active
+                    </span>
+                  </div>
+                </div>
+                <Sparkline data={[2, 3, 5, 6, 7, 7]} color="#059669" />
+              </div>
+
+              {/* Status */}
+              <div className="pt-1.5 border-t border-slate-100 flex items-center gap-1.5 text-[10px] font-mono">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="font-bold text-slate-700">STATUS:</span>
+                <span className="text-emerald-700 font-medium">All systems operational</span>
+              </div>
+            </div>
+          </div>
+
+          {/* AI INTELLIGENCE: Floating panel positioned cleanly below the top-right map controls */}
+          <div className="absolute right-4 sm:right-6 lg:right-8 top-28 sm:top-32 z-20 w-52 sm:w-60 text-left pointer-events-auto">
+            <div className="p-3.5 sm:p-4 rounded-3xl bg-white/90 backdrop-blur-xl border border-white/70 shadow-[0_12px_40px_rgba(15,23,42,0.14)] space-y-2.5">
+              <div className="flex items-center gap-2 pb-1.5 border-b border-slate-100">
+                <Cpu className="w-4 h-4 text-blue-600" />
+                <span className="font-mono text-[11px] font-bold tracking-wider text-slate-800">AI INTELLIGENCE</span>
+              </div>
+
+              {/* High Risk Zones */}
+              <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase block">PUMP STATIONS</span>
-                  <span className="text-base font-bold text-slate-900 font-mono leading-none">
-                    {String(activePumps || 7).padStart(2, "0")}
-                  </span>
-                  <span className="text-[9px] text-emerald-600 font-mono font-semibold block mt-0.5">
-                    {activePumps || 3} Active
-                  </span>
+                  <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase block">HIGH RISK ZONES</span>
+                  <div className="text-2xl font-extrabold text-slate-900 font-mono leading-none mt-1">07</div>
+                  <span className="text-[10px] text-slate-500 font-mono">Areas</span>
                 </div>
+                {/* SVG Mini Donut Chart */}
+                <svg viewBox="0 0 44 44" className="w-10 h-10">
+                  <circle cx="22" cy="22" r="15" fill="none" stroke="#e2e8f0" strokeWidth="5.5" />
+                  <circle
+                    cx="22"
+                    cy="22"
+                    r="15"
+                    fill="none"
+                    stroke="#f43f5e"
+                    strokeWidth="5.5"
+                    strokeDasharray="62 32"
+                    strokeDashoffset="15"
+                    strokeLinecap="round"
+                    transform="rotate(-90 22 22)"
+                  />
+                </svg>
               </div>
-              <Sparkline data={[2, 3, 5, 6, 7, 7]} color="#059669" />
-            </div>
 
-            {/* Status */}
-            <div className="pt-1.5 border-t border-slate-100 flex items-center gap-1.5 text-[10px] font-mono">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="font-bold text-slate-700">STATUS:</span>
-              <span className="text-emerald-700 font-medium">All systems operational</span>
-            </div>
-          </div>
-        </div>
-
-        {/* AI INTELLIGENCE: Floating panel positioned cleanly below the top-right map controls */}
-        <div className="absolute right-4 sm:right-6 lg:right-8 top-28 sm:top-32 z-20 w-52 sm:w-60 text-left pointer-events-auto">
-          <div className="p-3.5 sm:p-4 rounded-3xl bg-white/90 backdrop-blur-xl border border-white/70 shadow-[0_12px_40px_rgba(15,23,42,0.14)] space-y-2.5">
-            <div className="flex items-center gap-2 pb-1.5 border-b border-slate-100">
-              <Cpu className="w-4 h-4 text-blue-600" />
-              <span className="font-mono text-[11px] font-bold tracking-wider text-slate-800">AI INTELLIGENCE</span>
-            </div>
-
-            {/* High Risk Zones */}
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase block">HIGH RISK ZONES</span>
-                <div className="text-2xl font-extrabold text-slate-900 font-mono leading-none mt-1">07</div>
-                <span className="text-[10px] text-slate-500 font-mono">Areas</span>
+              {/* Top Bottlenecks */}
+              <div className="space-y-1">
+                <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase block">TOP BOTTLENECKS</span>
+                {[
+                  { name: "D-17 Outlet 04", impact: "High Impact", color: "text-rose-600" },
+                  { name: "D-24 Canal Gate", impact: "High Impact", color: "text-rose-600" },
+                  { name: "S-09 Sluice Gate", impact: "Medium Impact", color: "text-amber-600" },
+                ].map((b, i) => (
+                  <div key={i} className="flex items-center justify-between text-[10px] font-mono py-0.5">
+                    <span className="text-slate-700 font-medium">{b.name}</span>
+                    <span className={`font-bold flex items-center gap-1 ${b.color}`}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                      {b.impact}
+                    </span>
+                  </div>
+                ))}
               </div>
-              {/* SVG Mini Donut Chart */}
-              <svg viewBox="0 0 44 44" className="w-10 h-10">
-                <circle cx="22" cy="22" r="15" fill="none" stroke="#e2e8f0" strokeWidth="5.5" />
-                <circle
-                  cx="22"
-                  cy="22"
-                  r="15"
-                  fill="none"
-                  stroke="#f43f5e"
-                  strokeWidth="5.5"
-                  strokeDasharray="62 32"
-                  strokeDashoffset="15"
-                  strokeLinecap="round"
-                  transform="rotate(-90 22 22)"
-                />
-              </svg>
-            </div>
 
-            {/* Top Bottlenecks */}
-            <div className="space-y-1">
-              <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase block">TOP BOTTLENECKS</span>
-              {[
-                { name: "D-17 Outlet 04", impact: "High Impact", color: "text-rose-600" },
-                { name: "D-24 Canal Gate", impact: "High Impact", color: "text-rose-600" },
-                { name: "S-09 Sluice Gate", impact: "Medium Impact", color: "text-amber-600" },
-              ].map((b, i) => (
-                <div key={i} className="flex items-center justify-between text-[10px] font-mono py-0.5">
-                  <span className="text-slate-700 font-medium">{b.name}</span>
-                  <span className={`font-bold flex items-center gap-1 ${b.color}`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                    {b.impact}
-                  </span>
+              {/* Recommended Action */}
+              <div className="pt-2 border-t border-slate-100 space-y-1">
+                <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase block">RECOMMENDED ACTION</span>
+                <div className="text-[10px] text-slate-500 font-mono">Activate Pump Station</div>
+                <div className="text-xl font-extrabold text-slate-900 font-mono leading-tight">P-07</div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-emerald-600 font-bold text-xs">↓ 31%</span>
+                  <span className="text-[9px] text-slate-500 font-mono">Water Accumulation</span>
                 </div>
-              ))}
-            </div>
-
-            {/* Recommended Action */}
-            <div className="pt-2 border-t border-slate-100 space-y-1">
-              <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase block">RECOMMENDED ACTION</span>
-              <div className="text-[10px] text-slate-500 font-mono">Activate Pump Station</div>
-              <div className="text-xl font-extrabold text-slate-900 font-mono leading-tight">P-07</div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-emerald-600 font-bold text-xs">↓ 31%</span>
-                <span className="text-[9px] text-slate-500 font-mono">Water Accumulation</span>
+                <div className="text-[9px] text-slate-500 font-mono">Est. Clearance: 24–32 min</div>
               </div>
-              <div className="text-[9px] text-slate-500 font-mono">Est. Clearance: 24–32 min</div>
+
+              <button
+                type="button"
+                onClick={() => { audioEngine.playUiChirp(1050); navigate("/simulate"); }}
+                className="w-full mt-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold font-mono transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                <span>Simulate Action</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
             </div>
-
-            <button
-              type="button"
-              onClick={() => { audioEngine.playUiChirp(1050); navigate("/simulate"); }}
-              className="w-full mt-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold font-mono transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
-            >
-              <span>Simulate Action</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-        </div>
-      </section>
-
-      {/* Workflow Strip: FROM REPORT TO RESPONSE - Placed cleanly below the map */}
-      <section className="py-6 px-4 sm:px-6 lg:px-8 max-w-[1280px] mx-auto">
-        <div className="w-full max-w-4xl mx-auto p-3 sm:p-4 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6">
-          <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400 uppercase whitespace-nowrap">
-            FROM REPORT TO RESPONSE
-          </span>
-          <div className="flex items-center justify-between w-full sm:w-auto gap-2 sm:gap-4 overflow-x-auto text-[11px] font-mono font-semibold text-slate-700">
-            {[
-              { num: "01", label: "Report", icon: "📱" },
-              { num: "02", label: "AI Verify", icon: "🛡️" },
-              { num: "03", label: "Cluster", icon: "👥" },
-              { num: "04", label: "Diagnose", icon: "🔍" },
-              { num: "05", label: "Predict", icon: "📈" },
-              { num: "06", label: "Act", icon: "⚡" },
-            ].map((step, idx, arr) => (
-              <div key={step.num} className="flex items-center gap-2 sm:gap-3 shrink-0">
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
-                  <span className="text-xs">{step.icon}</span>
-                  <span className="text-[10px] text-slate-400 font-normal">{step.num}</span>
-                  <span className="text-[11px] text-slate-800 font-bold">{step.label}</span>
-                </div>
-                {idx < arr.length - 1 && (
-                  <ArrowRight className="w-3 h-3 text-slate-300 shrink-0" />
-                )}
-              </div>
-            ))}
           </div>
         </div>
       </section>
-
-
-
-
-
-
 
       {/* ======================================================== */}
       {/* SECTION: HOW IT WORKS                                   */}
       {/* ======================================================== */}
-      <section id="how-it-works" className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 max-w-[1280px] mx-auto border-t border-slate-100 scroll-mt-24">
+      <section ref={howItWorksRef} id="how-it-works" className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 max-w-[1280px] mx-auto border-t border-slate-100 scroll-mt-24">
         <div className="max-w-2xl">
           <span className="text-[11px] font-semibold tracking-[0.2em] uppercase text-cyan-600 font-mono">
             HOW IT WORKS
@@ -429,177 +576,179 @@ export function LandingPage() {
 
         {/* Ciao Energy-style Sticky Pinned Split-Screen Showcase */}
         <div className="mt-14 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left: 7 Interactive Workflow Narrative Cards (7 cols) */}
-          <div className="lg:col-span-7 space-y-3.5">
-            {WORKFLOW_STEPS.map((step, idx) => {
-              const isSelected = activeWorkflowStep === idx;
-              return (
-                <CardSpotlight
-                  key={step.num}
-                  soundFreq={750 + idx * 60}
-                  spotlightColor="rgba(6, 182, 212, 0.12)"
-                  borderColor="rgba(6, 182, 212, 0.45)"
-                  onClick={() => {
-                    setActiveWorkflowStep(idx);
-                    audioEngine.playUiChirp(700 + idx * 70);
-                  }}
-                  onMouseEnter={() => {
-                    setActiveWorkflowStep(idx);
-                    audioEngine.playUiChirp(750 + idx * 50);
-                  }}
-                  className={`p-5 rounded-2xl cursor-pointer text-left relative overflow-hidden transition-all duration-300 ${isSelected
-                    ? "border-cyan-500 bg-gradient-to-r from-cyan-50/70 to-white shadow-md ring-1 ring-cyan-400/40 -translate-y-0.5"
-                    : "border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/50"
-                    }`}
-                >
-                  {/* Active Accent Bar */}
-                  {isSelected && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-cyan-500 to-blue-600" />
-                  )}
+          {/* Left: Rope + Human Journey Animation Track & 7 Interactive Workflow Narrative Cards (7 cols) */}
+          <div
+            ref={stepSectionRef}
+            className="lg:col-span-7 flex items-start gap-2 sm:gap-4 relative"
+          >
+            {/* The Rope & Synchronized Human Operator Column */}
+            <RopeHumanJourney
+              steps={WORKFLOW_STEPS}
+              activeStep={activeWorkflowStep}
+              revealedCount={revealedStepsCount}
+              stepPositions={stepPositions}
+              isSliding={isSliding}
+              slideDirection={slideDirection}
+              isResetting={isResetting}
+              onStepSelect={handleStepClick}
+            />
 
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <span className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-full ${isSelected ? "bg-cyan-600 text-white shadow-xs" : "bg-slate-100 text-slate-500"
-                        }`}>
-                        {step.num}
+            {/* Step Cards Column */}
+            <div className="flex-1 min-w-0 space-y-2">
+              {WORKFLOW_STEPS.slice(0, revealedStepsCount).map((step, idx) => {
+                const isSelected = activeWorkflowStep === idx;
+                return (
+                  <motion.div
+                    key={step.num}
+                    ref={(el) => (stepCardRefs.current[idx] = el)}
+                    initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                    animate={{
+                      opacity: isResetting && idx > 0 ? 0.35 : 1,
+                      y: 0,
+                      scale: 1,
+                    }}
+                    transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    <CardSpotlight
+                      soundFreq={750 + idx * 60}
+                      spotlightColor="rgba(6, 182, 212, 0.12)"
+                      borderColor="rgba(6, 182, 212, 0.45)"
+                      onClick={() => handleStepClick(idx)}
+                      onMouseEnter={() => {
+                        handleStepClick(idx);
+                      }}
+                      className={`px-4 py-2.5 sm:px-4.5 sm:py-2.5 rounded-xl cursor-pointer text-left relative overflow-hidden transition-all duration-300 ${
+                        isSelected
+                          ? "border-cyan-500 bg-gradient-to-r from-cyan-50/70 to-white shadow-md ring-1 ring-cyan-400/40 -translate-y-0.5"
+                          : "border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/50"
+                      }`}
+                    >
+                      {/* Active Accent Bar */}
+                      {isSelected && (
+                        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-cyan-500 to-blue-600" />
+                      )}
+
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2.5">
+                          <span
+                            className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-md ${
+                              isSelected ? "bg-cyan-600 text-white shadow-xs" : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
+                            {step.num}
+                          </span>
+                          <h3 className="text-[14px] sm:text-[15px] font-bold text-slate-900 leading-none">
+                            {step.title}
+                          </h3>
+                        </div>
+                        <span className="text-[9px] font-mono tracking-wider text-slate-400 uppercase hidden sm:inline">
+                          STEP {idx + 1} OF 7
+                        </span>
+                      </div>
+
+                      <p className="text-[12px] sm:text-[12.5px] text-slate-600 leading-snug font-normal pl-7 sm:pl-7.5">
+                        {step.desc}
+                      </p>
+                    </CardSpotlight>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right: Sticky Pinned High-Tech Visual Holographic Card (5 cols) - #778899 Theme */}
+          <div className="lg:col-span-5 sticky top-28 lg:translate-x-5 lg:translate-y-3.5 w-full flex justify-center lg:justify-start">
+            <div className="w-full max-w-[448px] min-h-[410px] rounded-3xl border border-[#5d6d7e] bg-[#778899] text-white p-5 sm:p-5.5 shadow-xl shadow-slate-900/15 relative overflow-hidden text-left font-mono flex flex-col justify-between">
+              <BorderBeam size={280} duration={12} colorFrom="#38bdf8" colorTo="#818cf8" />
+              {/* Subtle Micro-Grid in Background */}
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff12_1px,transparent_1px),linear-gradient(to_bottom,#ffffff12_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+
+              {/* Dynamic Internal Content Transition */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeWorkflowStep}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+                  className="relative z-10 space-y-3"
+                >
+                  {/* Top Telemetry Header */}
+                  <div className="flex items-center justify-between border-b border-white/20 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-cyan-300 animate-ping" />
+                      <span className="text-[11px] font-bold text-white tracking-wider">
+                        STEP {WORKFLOW_STEPS[activeWorkflowStep].num} // {STEP_TELEMETRY[activeWorkflowStep].header}
                       </span>
-                      <h3 className="text-base font-bold text-slate-900">
-                        {step.title}
-                      </h3>
                     </div>
-                    <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase hidden sm:inline">
-                      STEP {idx + 1} OF 7
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-900/40 border border-white/25 text-cyan-200 font-bold shadow-2xs">
+                      {STEP_TELEMETRY[activeWorkflowStep].badge}
                     </span>
                   </div>
 
-                  <p className="text-sm text-slate-600 leading-relaxed font-normal pl-9">
-                    {step.desc}
-                  </p>
-                </CardSpotlight>
-              );
-            })}
-          </div>
+                  {/* Main Feature Title */}
+                  <div>
+                    <div className="text-[10px] text-slate-200 tracking-wider uppercase mb-0.5 font-bold">ACTIVE PROCESS</div>
+                    <div className="text-base font-extrabold text-white tracking-wide">
+                      {STEP_TELEMETRY[activeWorkflowStep].activeProcess}
+                    </div>
+                  </div>
 
-          {/* Right: Sticky Pinned High-Tech Visual Holographic Card (5 cols) */}
-          <div className="lg:col-span-5 sticky top-24">
-            <div className="rounded-3xl border border-slate-200/90 bg-slate-950 text-white p-6 shadow-2xl relative overflow-hidden text-left font-mono">
-              <BorderBeam size={280} duration={12} colorFrom="#00f0ff" colorTo="#3b82f6" />
-              {/* Subtle Cyan Grid in Background */}
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,#00f0ff08_1px,transparent_1px),linear-gradient(to_bottom,#00f0ff08_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+                  {/* Live Data Lines */}
+                  <div className="space-y-1.5 bg-slate-900/35 rounded-xl p-3 border border-white/15 backdrop-blur-sm shadow-inner text-xs">
+                    <div className="text-cyan-200 font-medium flex items-center gap-2">
+                      <span className="text-cyan-400 font-bold">›</span>
+                      <span>{STEP_TELEMETRY[activeWorkflowStep].line1}</span>
+                    </div>
+                    <div className="text-slate-200 flex items-center gap-2">
+                      <span className="text-cyan-400 font-bold">›</span>
+                      <span>{STEP_TELEMETRY[activeWorkflowStep].line2}</span>
+                    </div>
+                  </div>
 
-              {/* Top Telemetry Header */}
-              <div className="relative z-10 flex items-center justify-between border-b border-cyan-500/20 pb-3 mb-5">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                  <span className="text-[11px] font-bold text-cyan-300 tracking-wider">
-                    STEP {WORKFLOW_STEPS[activeWorkflowStep].num} // {
-                      activeWorkflowStep === 0 ? "CITIZEN SIGNAL INGESTION" :
-                        activeWorkflowStep === 1 ? "SPATIAL COMPUTER VISION" :
-                          activeWorkflowStep === 2 ? "HYDRAULIC GRAPH LINK" :
-                            activeWorkflowStep === 3 ? "CATCHMENT DYNAMICS" :
-                              activeWorkflowStep === 4 ? "60-MIN RUNOFF AI" :
-                                activeWorkflowStep === 5 ? "PUMP RELIEF SIMULATION" :
-                                  "MUNICIPAL ACTION DISPATCH"
-                    }
-                  </span>
+                  {/* System Impact Outcome */}
+                  <div className="flex items-center justify-between text-xs pt-0.5">
+                    <span className="text-slate-200 font-medium">SYSTEM IMPACT:</span>
+                    <span className="text-emerald-300 font-bold tracking-wide flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      {STEP_TELEMETRY[activeWorkflowStep].systemImpact}
+                    </span>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Bottom Area: Pipeline Progress Bar & CTA */}
+              <div className="relative z-10 pt-3 space-y-3.5 border-t border-white/20">
+                <div>
+                  <div className="flex justify-between text-[10px] text-slate-200 mb-1.5 font-mono font-medium">
+                    <span>PIPELINE COMPLETION</span>
+                    <span className="text-cyan-200 font-bold">
+                      {PIPELINE_PROGRESS_PERCENT[activeWorkflowStep]}%
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-900/35 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full"
+                      initial={false}
+                      animate={{ width: `${PIPELINE_PROGRESS_PERCENT[activeWorkflowStep]}%` }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                    />
+                  </div>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/40 text-cyan-300">
-                  {activeWorkflowStep === 0 ? "GEO-LOCATED" :
-                    activeWorkflowStep === 1 ? "99.4% CONFIDENCE" :
-                      activeWorkflowStep === 2 ? "41 GATES SYNCED" :
-                        activeWorkflowStep === 3 ? "RISK: 84/100" :
-                          activeWorkflowStep === 4 ? "+18CM AT T+25M" :
-                            activeWorkflowStep === 5 ? "3 PUMPS STAGED" :
-                              "ORDER #KMC-WRK-9418"}
-                </span>
+
+                {/* Bottom CTA */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    audioEngine.playUiChirp(1000);
+                    navigate("/live-city");
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white text-xs font-semibold tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg hover:shadow-xl"
+                >
+                  <span>OPEN IN LIVE CITY SYSTEM</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
-
-              {/* Main Feature Title */}
-              <div className="relative z-10 mb-4">
-                <div className="text-xs text-slate-400 mb-0.5">ACTIVE PROCESS</div>
-                <div className="text-lg font-bold text-white tracking-wide">
-                  {WORKFLOW_STEPS[activeWorkflowStep].title} â€” {
-                    activeWorkflowStep === 0 ? "Mobile Ingest & Geotag" :
-                      activeWorkflowStep === 1 ? "Automated Depth AI" :
-                        activeWorkflowStep === 2 ? "Network Correlation" :
-                          activeWorkflowStep === 3 ? "Catchment Risk Quantification" :
-                            activeWorkflowStep === 4 ? "Storm Surge Forecast" :
-                              activeWorkflowStep === 5 ? "Dispatch Feasibility" :
-                                "Field Work-Order Issuance"
-                  }
-                </div>
-              </div>
-
-              {/* Live Data Lines */}
-              <div className="relative z-10 space-y-2 bg-black/60 rounded-xl p-3.5 border border-cyan-500/20 text-xs mb-5">
-                <div className="text-cyan-200/90 flex items-center gap-2">
-                  <span className="text-cyan-400">â¯</span>
-                  <span>{
-                    activeWorkflowStep === 0 ? "COORDINATES: 22.5726Â° N, 88.3639Â° E" :
-                      activeWorkflowStep === 1 ? "ESTIMATED DEPTH: 38.5 CM (Curb Overflow)" :
-                        activeWorkflowStep === 2 ? "SLUICE GATES LINKED: 4 (Hooghly Outfall)" :
-                          activeWorkflowStep === 3 ? "CATCHMENT RISK: 84/100 (Critical Flag)" :
-                            activeWorkflowStep === 4 ? "RADAR INTENSITY: 42 mm/hr Cloud Burst" :
-                              activeWorkflowStep === 5 ? "REQUIRED PUMPS: 3 Units (500 mÂ³/h capacity)" :
-                                "DISPATCH ORDER: #KMC-WRK-2026-9418"
-                  }</span>
-                </div>
-                <div className="text-slate-300 flex items-center gap-2">
-                  <span className="text-cyan-400">â¯</span>
-                  <span>{
-                    activeWorkflowStep === 0 ? "SOURCE: Citizen Mobile App + Photo Geotag" :
-                      activeWorkflowStep === 1 ? "DEBRIS FACTOR: High Obstruction Detected" :
-                        activeWorkflowStep === 2 ? "TRUNK CONDUIT: Circular Canal 72% Saturated" :
-                          activeWorkflowStep === 3 ? "BOTTLENECK: Palmer Bridge Conduit Silt" :
-                            activeWorkflowStep === 4 ? "HOOGHLY STAGE: High Tide +3.8M Resistance" :
-                              activeWorkflowStep === 5 ? "GRAVITY OUTFALL: Gate #14 Scheduled at Low Tide" :
-                                "ASSIGNED CREW: Borough VII Field Rapid Response"
-                  }</span>
-                </div>
-              </div>
-
-              {/* System Impact Outcome */}
-              <div className="relative z-10 flex items-center justify-between text-xs mb-4 pt-1">
-                <span className="text-slate-400">SYSTEM IMPACT:</span>
-                <span className="text-emerald-400 font-bold tracking-wide">
-                  {activeWorkflowStep === 0 ? "+1 Incident Logged for Review" :
-                    activeWorkflowStep === 1 ? "Depth Validated in 3.2 Seconds" :
-                      activeWorkflowStep === 2 ? "Drainage Graph Calibrated" :
-                        activeWorkflowStep === 3 ? "Surge Trajectory Modeled" :
-                          activeWorkflowStep === 4 ? "Early Warning Broadcasted" :
-                            activeWorkflowStep === 5 ? "-24 CM Depth Reduction Modeled" :
-                              "Crew En Route (ETA 11 Minutes)"}
-                </span>
-              </div>
-
-              {/* Pipeline Progress Bar */}
-              <div className="relative z-10">
-                <div className="flex justify-between text-[10px] text-slate-400 mb-1.5">
-                  <span>PIPELINE COMPLETION</span>
-                  <span className="text-cyan-300 font-bold">
-                    {Math.round(((activeWorkflowStep + 1) / 7) * 100)}%
-                  </span>
-                </div>
-                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500 rounded-full"
-                    style={{ width: `${Math.round(((activeWorkflowStep + 1) / 7) * 100)}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Bottom CTA */}
-              <button
-                type="button"
-                onClick={() => {
-                  audioEngine.playUiChirp(1000);
-                  navigate("/live-city");
-                }}
-                className="relative z-10 mt-6 w-full py-2.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-300 hover:text-white text-xs font-semibold tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_15px_rgba(0,240,255,0.15)]"
-              >
-                <span>OPEN IN LIVE CITY SYSTEM</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
             </div>
           </div>
         </div>
