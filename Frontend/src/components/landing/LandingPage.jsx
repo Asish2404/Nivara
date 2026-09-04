@@ -197,26 +197,6 @@ export function LandingPage() {
           {/* Gentle atmospheric drift over map */}
           <div className="absolute top-1/4 left-1/3 w-64 sm:w-96 h-28 sm:h-36 rounded-full bg-white/10 blur-2xl pointer-events-none z-10 animate-pulse duration-[8000ms]" />
           <div className="absolute top-1/2 right-1/4 w-56 sm:w-80 h-24 sm:h-32 rounded-full bg-white/8 blur-2xl pointer-events-none z-10" />
-
-          {/* Bottom Left Municipal Telemetry */}
-          <div className="absolute bottom-5 left-5 sm:left-7 z-20 pointer-events-none text-left font-mono hidden sm:block">
-            <div className="text-[10px] sm:text-[11px] font-bold tracking-widest text-slate-400/90 uppercase">
-              WATER INTELLIGENCE
-            </div>
-            <div className="text-[8px] sm:text-[9px] tracking-wider text-slate-400/80 font-medium uppercase mt-0.5">
-              FOR A RESILIENT KOLKATA
-            </div>
-          </div>
-
-          {/* Bottom Right Municipal Telemetry */}
-          <div className="absolute bottom-5 right-5 sm:right-7 z-20 pointer-events-none text-right font-mono hidden sm:block">
-            <div className="text-[10px] sm:text-[11px] font-bold tracking-widest text-slate-400/90 uppercase">
-              KOLKATA
-            </div>
-            <div className="text-[8px] sm:text-[9px] tracking-wider text-slate-400/80 font-medium uppercase mt-0.5">
-              A SAFER, SMARTER TOMORROW
-            </div>
-          </div>
         </div>
 
         {/* CITY PULSE: Floating panel positioned cleanly below the top-left map telemetry badge */}

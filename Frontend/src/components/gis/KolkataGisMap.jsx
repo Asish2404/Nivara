@@ -147,6 +147,7 @@ export function KolkataGisMap({
   onSelectDistrict,
   overrideLayers,
   traceWaterFlow = false,
+  showLegend = true,
   className = "",
 }) {
   const mapContainerRef = useRef(null);
@@ -1066,47 +1067,49 @@ export function KolkataGisMap({
       {/* ------------------------------------------------------------- */}
       {/* Bottom Left: Quiet GIS Map Legend */}
       {/* ------------------------------------------------------------- */}
-      <div className="absolute bottom-4 left-4 z-20 pointer-events-auto bg-slate-900/90 backdrop-blur-md border border-white/15 rounded-xl p-3 text-[11px] text-slate-300 shadow-xl space-y-1.5 hidden sm:block">
-        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
-          Hydrological Legend
+      {showLegend && (
+        <div className="absolute bottom-4 left-4 z-20 pointer-events-auto bg-slate-900/90 backdrop-blur-md border border-white/15 rounded-xl p-3 text-[11px] text-slate-300 shadow-xl space-y-1.5 hidden sm:block">
+          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
+            Hydrological Legend
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-[#22c55e]" />
+              Low
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-[#eab308]" />
+              Moderate
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-[#f97316]" />
+              High
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-[#ef4444]" />
+              Critical
+            </span>
+          </div>
+          <div className="flex items-center gap-3 pt-1 border-t border-white/10 text-[10px] text-slate-400">
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-0.5 bg-cyan-400" />
+              Canal
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-0.5 bg-blue-400 border-dashed" />
+              Conduit
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-xs bg-sky-500" />
+              Pump
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-rose-500" />
+              Incident
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[#22c55e]" />
-            Low
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[#eab308]" />
-            Moderate
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[#f97316]" />
-            High
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[#ef4444]" />
-            Critical
-          </span>
-        </div>
-        <div className="flex items-center gap-3 pt-1 border-t border-white/10 text-[10px] text-slate-400">
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-0.5 bg-cyan-400" />
-            Canal
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-0.5 bg-blue-400 border-dashed" />
-            Conduit
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-xs bg-sky-500" />
-            Pump
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-rose-500" />
-            Incident
-          </span>
-        </div>
-      </div>
+      )}
 
       {/* ------------------------------------------------------------- */}
       {/* Docked AI VERIFIED INCIDENT Intelligence Panel */}

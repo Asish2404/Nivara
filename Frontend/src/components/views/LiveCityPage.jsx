@@ -307,51 +307,6 @@ export function LiveCityPage() {
           {/* Authentic Realistic Satellite & Street Map */}
           <KolkataGisMap traceWaterFlow={traceWaterFlow} />
 
-          {/* Quiet GIS Legend (Bottom Left) */}
-          <div className="absolute bottom-4 left-4 z-[400] bg-white/95 backdrop-blur-md border border-slate-200 rounded-lg p-3 text-[11px] shadow-md space-y-2 pointer-events-auto">
-            <div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                Risk Severity
-              </span>
-              <div className="flex items-center gap-3 text-slate-700">
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-[#4f9160]" />
-                  Low
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-[#d99b38]" />
-                  Moderate
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-[#e07a38]" />
-                  High
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-[#d64545]" />
-                  Critical
-                </span>
-              </div>
-            </div>
-            <div className="pt-1.5 border-t border-slate-100 flex items-center gap-3 text-slate-600">
-              <span className="flex items-center gap-1">
-                <span className="w-2.5 h-0.5 bg-[#5c94b8]" />
-                Rain
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-2.5 h-0.5 bg-[#2e8b8f]" />
-                Drainage
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-[#2e8b8f]" />
-                Pump
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#d64545]" />
-                Incident
-              </span>
-            </div>
-          </div>
-
           {/* Docked Context Card: Selected Incident (Smooth Slide-In) */}
           <AnimatePresence>
             {selectedIncident && (
