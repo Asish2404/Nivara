@@ -778,12 +778,20 @@ export function KolkataGisMap({
   return (
     <div
       ref={wrapperRef}
-      className={`relative w-full h-full min-h-[500px] overflow-hidden bg-slate-950 select-none ${className}`}
+      className={`relative w-full h-full min-h-[500px] overflow-hidden bg-transparent select-none ${className}`}
     >
-      {/* MapLibre WebGL Mount Canvas */}
+      {/* MapLibre WebGL Mount Canvas: Smooth top dissolve seamlessly materializes map from atmospheric haze */}
       <div
         ref={mapContainerRef}
         className="w-full h-full cursor-grab active:cursor-grabbing"
+        style={{
+          maskImage: isFullscreen
+            ? "none"
+            : "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.15) 20px, rgba(0,0,0,0.65) 55px, rgba(0,0,0,0.96) 95px, #000 130px)",
+          WebkitMaskImage: isFullscreen
+            ? "none"
+            : "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.15) 20px, rgba(0,0,0,0.65) 55px, rgba(0,0,0,0.96) 95px, #000 130px)",
+        }}
       />
 
       {/* ------------------------------------------------------------- */}

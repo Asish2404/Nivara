@@ -10,6 +10,7 @@ import Footer from "../Footer";
 import { useKWIStore } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
 import { CitizenReportingSection } from "./CitizenReportingSection";
+import { KolkataDecorativeLayer } from "./KolkataDecorativeLayer";
 
 function Sparkline({ data = [20, 24, 30, 28, 35, 42], color = "#0284c7" }) {
   const points = data
@@ -103,43 +104,11 @@ export function LandingPage() {
       {/* ======================================================== */}
       {/* 1. ATMOSPHERIC DIGITAL-TWIN HERO AREA                    */}
       {/* ======================================================== */}
-      <section className="relative w-full overflow-hidden bg-gradient-to-b from-sky-50/40 via-white to-sky-50/20 pt-6 sm:pt-8 pb-5 text-center z-20">
-        
-        {/* Soft Center Radial Illumination behind "See the water." */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[680px] sm:w-[780px] h-[320px] bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.16),rgba(14,165,233,0.05),transparent_70%)] pointer-events-none -z-10 blur-xl" />
+      <section className="relative w-full overflow-hidden bg-white pt-8 sm:pt-12 pb-6 sm:pb-10 text-center z-20">
+        {/* Authentic Kolkata Atmospheric Landscape (Howrah Bridge, Victoria Memorial, Writers' Building & Moving Clouds) */}
+        <KolkataDecorativeLayer />
 
-        {/* Very subtle water ripple contour rings */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[880px] h-[400px] rounded-full border border-sky-400/[0.07] pointer-events-none -z-10" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1120px] h-[520px] rounded-full border border-cyan-400/[0.04] pointer-events-none -z-10" />
-
-        {/* Faint Architectural Kolkata Blueprint Line-Art (Victoria Memorial & Howrah Bridge) */}
-        <svg
-          className="absolute top-2 right-4 sm:right-16 lg:right-28 w-64 sm:w-80 lg:w-[420px] h-32 sm:h-40 text-blue-800/[0.07] pointer-events-none select-none -z-10"
-          viewBox="0 0 500 240"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.2"
-        >
-          {/* Howrah Bridge Silhouette */}
-          <path d="M20 200 L120 70 L220 200" strokeWidth="1.6" />
-          <path d="M120 70 L120 200" strokeWidth="1.2" />
-          <path d="M50 160 L120 70 L190 160" strokeWidth="0.8" strokeDasharray="3 3" />
-          <path d="M20 200 L220 200" strokeWidth="2" />
-          <path d="M70 135 L170 135" strokeWidth="0.8" />
-          <line x1="40" y1="200" x2="120" y2="70" strokeWidth="0.7" />
-          <line x1="200" y1="200" x2="120" y2="70" strokeWidth="0.7" />
-
-          {/* Victoria Memorial Dome Silhouette */}
-          <path d="M300 200 L300 160 Q300 120 370 110 Q440 120 440 160 L440 200 Z" strokeWidth="1" />
-          <path d="M340 110 Q370 60 370 50 Q370 60 400 110" strokeWidth="1.6" />
-          <line x1="370" y1="35" x2="370" y2="50" strokeWidth="1.6" />
-          <circle cx="370" cy="32" r="3" strokeWidth="1.2" />
-          <line x1="280" y1="200" x2="460" y2="200" strokeWidth="2" />
-          <path d="M320 160 L420 160" strokeWidth="0.8" />
-          <path d="M330 140 Q370 125 410 140" strokeWidth="0.8" />
-        </svg>
-
-        <div className="relative max-w-4xl mx-auto px-4">
+        <div className="relative max-w-4xl mx-auto px-4 z-10">
           {/* ● LIVE KOLKATA Location Pill */}
           <motion.div
             initial={{ opacity: 0, y: -6 }}
@@ -214,18 +183,42 @@ export function LandingPage() {
             </button>
           </motion.div>
         </div>
-      </section>
 
-      {/* ======================================================== */}
-      {/* 2. BORDERLESS MAP STAGE WITH SUBTLE ATMOSPHERIC BLEND   */}
-      {/* ======================================================== */}
-      <section className="relative w-full max-w-[1520px] mx-auto min-h-[620px] sm:min-h-[680px] lg:min-h-[740px]">
-        {/* Seamless Smooth Atmospheric Blend (from white hero into crisp map) */}
-        <div className="absolute top-0 inset-x-0 h-28 sm:h-32 bg-gradient-to-b from-white via-white/75 via-white/20 to-transparent pointer-events-none z-10" />
+        {/* The Locked Real Kolkata Map: seamlessly flowing directly beneath the buttons as one unified stage */}
+        <div className="relative w-full min-h-[620px] sm:min-h-[680px] lg:min-h-[740px] z-10">
+          <div className="relative w-full h-[620px] sm:h-[680px] lg:h-[740px] overflow-hidden">
+            <KolkataGisMap />
 
-        {/* The Locked Real Kolkata Map: completely borderless, filling the canvas */}
-        <div className="relative w-full h-[620px] sm:h-[680px] lg:h-[740px] overflow-hidden">
-          <KolkataGisMap />
+          {/* Subtle Outer Edge Dissolves (Bottom & Sides only - NO top white stripe) */}
+          <div className="absolute bottom-0 inset-x-0 h-8 sm:h-10 bg-gradient-to-t from-white/50 via-white/20 to-transparent pointer-events-none z-15" />
+          <div className="absolute inset-y-0 left-0 w-4 sm:w-6 bg-gradient-to-r from-white/40 to-transparent pointer-events-none z-15" />
+          <div className="absolute inset-y-0 right-0 w-4 sm:w-6 bg-gradient-to-l from-white/40 to-transparent pointer-events-none z-15" />
+
+          {/* Natural Atmospheric Cloud Blending (Seamlessly connects upper landscape clouds with the satellite map) */}
+          <div className="absolute -top-12 left-2 sm:left-12 w-80 sm:w-[440px] h-36 sm:h-48 rounded-full bg-white/30 blur-3xl pointer-events-none z-10" />
+          <div className="absolute -top-12 right-2 sm:right-12 w-80 sm:w-[440px] h-36 sm:h-48 rounded-full bg-white/25 blur-3xl pointer-events-none z-10" />
+          <div className="absolute top-1/4 left-1/3 w-64 sm:w-96 h-28 sm:h-36 rounded-full bg-white/15 blur-2xl pointer-events-none z-10 animate-pulse duration-[8000ms]" />
+          <div className="absolute top-1/2 right-1/4 w-56 sm:w-80 h-24 sm:h-32 rounded-full bg-white/12 blur-2xl pointer-events-none z-10" />
+
+          {/* Bottom Left Municipal Telemetry */}
+          <div className="absolute bottom-5 left-5 sm:left-7 z-20 pointer-events-none text-left font-mono hidden sm:block">
+            <div className="text-[10px] sm:text-[11px] font-bold tracking-widest text-slate-400/90 uppercase">
+              WATER INTELLIGENCE
+            </div>
+            <div className="text-[8px] sm:text-[9px] tracking-wider text-slate-400/80 font-medium uppercase mt-0.5">
+              FOR A RESILIENT KOLKATA
+            </div>
+          </div>
+
+          {/* Bottom Right Municipal Telemetry */}
+          <div className="absolute bottom-5 right-5 sm:right-7 z-20 pointer-events-none text-right font-mono hidden sm:block">
+            <div className="text-[10px] sm:text-[11px] font-bold tracking-widest text-slate-400/90 uppercase">
+              KOLKATA
+            </div>
+            <div className="text-[8px] sm:text-[9px] tracking-wider text-slate-400/80 font-medium uppercase mt-0.5">
+              A SAFER, SMARTER TOMORROW
+            </div>
+          </div>
         </div>
 
         {/* CITY PULSE: Floating panel positioned cleanly below the top-left map telemetry badge */}
@@ -398,6 +391,7 @@ export function LandingPage() {
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
+        </div>
         </div>
       </section>
 
