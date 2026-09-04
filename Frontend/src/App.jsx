@@ -7,7 +7,7 @@ import { EarthCamera } from './components/EarthCamera'
 import { GeographicTransition } from './components/GeographicTransition'
 import { RealisticStarfield } from './components/RealisticStarfield'
 import { TacticalHudOverlay } from './components/ui/TacticalHudOverlay'
-import { CursorSpotlight } from './components/ui/CursorSpotlight'
+import { KWISignatureCursor } from './components/ui/KWISignatureCursor'
 import { SmoothScrollProvider } from './components/ui/SmoothScrollProvider'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import { LandingPage } from './components/landing/LandingPage'
@@ -151,9 +151,6 @@ function App() {
     // Root Landing Route ('/')
     return (
       <div className="min-h-screen bg-black text-white relative w-full overflow-x-hidden font-sans">
-        {/* Interactive Ambient Cursor Glow */}
-        <CursorSpotlight />
-
         {/* Black Screen Overlay for cinematic transitions */}
         <div
           className={`cinematic-black-screen ${blackOverlay ? 'active' : ''}`}
@@ -186,7 +183,11 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <SmoothScrollProvider>{renderContent()}</SmoothScrollProvider>
+      <SmoothScrollProvider>
+        {/* Global KWI Signature "Live Water Signal" Cursor */}
+        <KWISignatureCursor />
+        {renderContent()}
+      </SmoothScrollProvider>
     </ErrorBoundary>
   )
 }

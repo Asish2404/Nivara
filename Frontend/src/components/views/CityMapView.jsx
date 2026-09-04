@@ -15,7 +15,7 @@ export function CityMapView() {
   const { hooghlyTideLevel, cityAvgRainfall, activePumps, totalPumps, setActiveSection } = useKWIStore()
 
   return (
-    <div className="relative w-full h-screen bg-[#f4f3ef] overflow-hidden select-none font-sans">
+    <div data-cursor="map" className="relative w-full h-screen bg-[#f4f3ef] overflow-hidden select-none font-sans">
       {/* GIS Basemap Grid & Stylized Urban Vector Topography */}
       <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:24px_24px] opacity-60" />
 
@@ -57,6 +57,7 @@ export function CityMapView() {
       {KEY_LOCATIONS.map((loc, idx) => (
         <div
           key={idx}
+          data-cursor={loc.type === 'PUMP' ? 'pump' : loc.type === 'FLOOD' ? 'incident' : loc.type === 'CANAL' ? 'drainage' : loc.type === 'SLUICE' ? 'river' : 'interactive'}
           style={{ left: loc.x, top: loc.y }}
           className="absolute -translate-x-1/2 -translate-y-1/2 z-20 group cursor-pointer"
           onClick={() => setActiveSection('INCIDENTS')}

@@ -183,6 +183,7 @@ export function MobileReportPhone() {
       {/* Phone Hardware Mockup Shell */}
       <motion.div
         ref={phoneContainerRef}
+        data-phone-mockup="true"
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}

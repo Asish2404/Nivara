@@ -1245,3 +1245,100 @@ export function getSimulationSpreadGeoJson(isMitigated = false) {
     ],
   }
 }
+
+// 6. Authentic Hooghly River GeoJSON Channel
+export function getHooghlyRiverGeoJson() {
+  const points = HOOGHLY_RIVER.centerline.map((pt) => kmToGeoCoord(pt.x, pt.y))
+  return {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        id: 'hooghly_river_main',
+        properties: {
+          name: 'Hooghly River (Bhagirathi-Hooghly Artery)',
+          type: 'river',
+          flow: 'Tidal Sluice Outfall',
+        },
+        geometry: {
+          type: 'LineString',
+          coordinates: points,
+        },
+      },
+    ],
+  }
+}
+
+// 7. Authentic Kolkata Waterbodies, Ponds & Wetlands (EKW, Sarobar, Jheel)
+export const KOLKATA_WATERBODIES = [
+  {
+    id: 'rabindra_sarobar',
+    name: 'Rabindra Sarobar (Dhakuria Lake)',
+    type: 'lake',
+    polygon: [
+      [-0.6, 5.2],
+      [0.6, 5.2],
+      [0.8, 5.8],
+      [-0.4, 5.8],
+    ],
+  },
+  {
+    id: 'subhas_sarobar',
+    name: 'Subhas Sarobar (Beliaghata Lake)',
+    type: 'lake',
+    polygon: [
+      [3.2, 0.2],
+      [4.2, 0.2],
+      [4.2, 0.8],
+      [3.2, 0.8],
+    ],
+  },
+  {
+    id: 'ekw_wetlands',
+    name: 'East Kolkata Wetlands (Ramsar Site 1208)',
+    type: 'wetland',
+    polygon: [
+      [5.5, 0.5],
+      [9.5, 1.2],
+      [9.2, 6.5],
+      [5.2, 5.2],
+    ],
+  },
+  {
+    id: 'santragachi_jheel',
+    name: 'Santragachi Jheel',
+    type: 'lake',
+    polygon: [
+      [-7.5, 2.0],
+      [-6.5, 2.0],
+      [-6.5, 2.8],
+      [-7.5, 2.8],
+    ],
+  },
+]
+
+export function getWaterbodiesGeoJson() {
+  return {
+    type: 'FeatureCollection',
+    features: KOLKATA_WATERBODIES.map((wb) => {
+      const coords = wb.polygon.map(([x, y]) => kmToGeoCoord(x, y))
+      if (coords.length > 0) {
+        coords.push([coords[0][0], coords[0][1]])
+      }
+      return {
+        type: 'Feature',
+        id: wb.id,
+        properties: {
+          id: wb.id,
+          name: wb.name,
+          type: 'waterbody',
+        },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [coords],
+        },
+      }
+    }),
+  }
+}
+

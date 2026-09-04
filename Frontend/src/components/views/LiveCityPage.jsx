@@ -569,6 +569,7 @@ export function LiveCityPage() {
               return (
                 <CardSpotlight
                   key={inc.id}
+                  data-cursor="incident"
                   soundFreq={880}
                   spotlightColor={isCrit ? "rgba(244, 63, 94, 0.12)" : "rgba(6, 182, 212, 0.12)"}
                   borderColor={isCrit ? "rgba(244, 63, 94, 0.45)" : "rgba(6, 182, 212, 0.45)"}

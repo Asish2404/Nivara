@@ -10,6 +10,8 @@ import {
   getRiskZonesGeoJson,
   getFloodDepthGeoJson,
   getSimulationSpreadGeoJson,
+  getHooghlyRiverGeoJson,
+  getWaterbodiesGeoJson,
   kmToGeoCoord,
   KOLKATA_CENTER_GEO,
 } from "./kolkataCartographicData";
@@ -202,6 +204,34 @@ export function KolkataGisMap({
     (map) => {
       if (!map || !map.isStyleLoaded()) return;
 
+      // 0. HOOGHLY RIVER (LineString / Western Artery)
+      if (!map.getSource("hooghly-source")) {
+        map.addSource("hooghly-source", {
+          type: "geojson",
+          data: getHooghlyRiverGeoJson(),
+        });
+        map.addLayer({
+          id: "hooghly-river-casing",
+          type: "line",
+          source: "hooghly-source",
+          paint: {
+            "line-color": "#0284c7",
+            "line-width": 14,
+            "line-opacity": 0.45,
+          },
+        });
+        map.addLayer({
+          id: "hooghly-river-line",
+          type: "line",
+          source: "hooghly-source",
+          paint: {
+            "line-color": "#38bdf8",
+            "line-width": 6,
+            "line-opacity": 0.9,
+          },
+        });
+      }
+
       // 1. CANALS (LineString)
       if (!map.getSource("canals-source")) {
         map.addSource("canals-source", {
@@ -276,7 +306,33 @@ export function KolkataGisMap({
         });
       }
 
-      // 4. AI PREDICTED SPREAD / INUNDATION FOOTPRINT (Polygon)
+      // 4. WATERBODIES, PONDS & WETLANDS (Polygon)
+      if (!map.getSource("waterbodies-source")) {
+        map.addSource("waterbodies-source", {
+          type: "geojson",
+          data: getWaterbodiesGeoJson(),
+        });
+        map.addLayer({
+          id: "waterbodies-fill",
+          type: "fill",
+          source: "waterbodies-source",
+          paint: {
+            "fill-color": "#0284c7",
+            "fill-opacity": 0.35,
+          },
+        });
+        map.addLayer({
+          id: "waterbodies-line",
+          type: "line",
+          source: "waterbodies-source",
+          paint: {
+            "line-color": "#38bdf8",
+            "line-width": 1.5,
+          },
+        });
+      }
+
+      // 5. AI PREDICTED SPREAD / INUNDATION FOOTPRINT (Polygon)
       if (!map.getSource("spread-source")) {
         map.addSource("spread-source", {
           type: "geojson",
@@ -303,7 +359,7 @@ export function KolkataGisMap({
         });
       }
 
-      // 5. SIMULATION SPREAD (Before vs After Mitigation)
+      // 6. SIMULATION SPREAD (Before vs After Mitigation)
       if (!map.getSource("simulation-source")) {
         map.addSource("simulation-source", {
           type: "geojson",
@@ -385,6 +441,38 @@ export function KolkataGisMap({
           simulateState ? "visible" : "none"
         );
       }
+
+      // -------------------------------------------------------------
+      // Dynamic GIS Cursor State Listeners for Map Layers
+      // -------------------------------------------------------------
+      const container = wrapperRef.current;
+      if (container) {
+        const setMapCursor = (mode) => {
+          container.setAttribute("data-cursor", mode);
+        };
+        const resetMapCursor = () => {
+          container.setAttribute("data-cursor", "map");
+        };
+
+        const layerModeBindings = [
+          { layers: ["hooghly-river-line", "hooghly-river-casing"], mode: "river" },
+          { layers: ["canals-line", "canals-casing", "trunk-line"], mode: "drainage" },
+          { layers: ["risk-fill", "risk-line"], mode: "risk" },
+          {
+            layers: ["waterbodies-fill", "waterbodies-line", "spread-fill", "spread-line", "simulation-fill"],
+            mode: "waterbody",
+          },
+        ];
+
+        layerModeBindings.forEach(({ layers, mode }) => {
+          layers.forEach((layerId) => {
+            if (map.getLayer(layerId)) {
+              map.on("mouseenter", layerId, () => setMapCursor(mode));
+              map.on("mouseleave", layerId, resetMapCursor);
+            }
+          });
+        });
+      }
     },
     [activeLayers, traceWaterFlow, timelineStep, simulateState]
   );
@@ -408,6 +496,7 @@ export function KolkataGisMap({
 
           const el = document.createElement("div");
           el.className = "cursor-pointer group relative flex items-center justify-center";
+          el.setAttribute("data-cursor", "incident");
           el.setAttribute("title", `${inc.name}: ${inc.waterDepth}`);
           el.innerHTML = `
             <div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">
@@ -454,6 +543,7 @@ export function KolkataGisMap({
 
           const el = document.createElement("div");
           el.className = "cursor-pointer group flex items-center gap-1";
+          el.setAttribute("data-cursor", "pump");
           el.setAttribute("title", `${ps.name} - ${ps.status}`);
           el.innerHTML = `
             <div style="background: ${isCap ? "#dc2626" : "#0284c7"
@@ -492,6 +582,7 @@ export function KolkataGisMap({
           const el = document.createElement("div");
           el.className =
             "pointer-events-auto px-2 py-0.5 rounded-md bg-slate-950/75 backdrop-blur-xs border border-white/20 text-[10px] font-semibold text-slate-200 tracking-tight shadow-xs hover:border-cyan-400 hover:text-white transition-all cursor-pointer font-sans select-none";
+          el.setAttribute("data-cursor", "map");
           el.textContent = lm.name;
 
           el.addEventListener("click", (e) => {
@@ -779,6 +870,7 @@ export function KolkataGisMap({
   return (
     <div
       ref={wrapperRef}
+      data-cursor="map"
       className={`relative w-full h-full min-h-[500px] overflow-hidden bg-transparent select-none ${className}`}
     >
       {/* MapLibre WebGL Mount Canvas: Smooth top dissolve seamlessly materializes map from atmospheric haze */}

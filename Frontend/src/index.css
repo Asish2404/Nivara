@@ -127,3 +127,343 @@
     offset-distance: 100%;
   }
 }
+
+/* ========================================================= */
+/* KWI "LIVE WATER SIGNAL" SIGNATURE CURSOR STYLES           */
+/* ========================================================= */
+
+.kwi-cursor-instrument {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  user-select: none;
+  transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Default state: Razor-Sharp Precision Geographic Coordinate Marker */
+.kwi-cursor-default {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kwi-cursor-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1.2px solid #0f172a;
+  background: transparent;
+}
+
+/* 4 Micro Crosshair Ticks for Cartographic Precision */
+.kwi-tick {
+  position: absolute;
+  background-color: #0f172a;
+}
+
+.tick-n {
+  top: -2.5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1.2px;
+  height: 2.5px;
+}
+
+.tick-s {
+  bottom: -2.5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1.2px;
+  height: 2.5px;
+}
+
+.tick-w {
+  left: -2.5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.5px;
+  height: 1.2px;
+}
+
+.tick-e {
+  right: -2.5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.5px;
+  height: 1.2px;
+}
+
+.kwi-cursor-dot {
+  position: relative;
+  width: 4.5px;
+  height: 4.5px;
+  border-radius: 9999px;
+  background-color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.kwi-cursor-dot-lg {
+  width: 5.5px;
+  height: 5.5px;
+  background-color: #0284c7;
+}
+
+.kwi-cursor-center {
+  width: 1.5px;
+  height: 1.5px;
+  border-radius: 9999px;
+  background-color: #ffffff;
+}
+
+/* Interactive State: Buttons / Links */
+.mode-interactive {
+  transform: translate(-50%, -50%) scale(1.12);
+}
+
+.mode-interactive .kwi-cursor-ring {
+  border-color: #2563eb;
+}
+
+.mode-interactive .kwi-tick {
+  background-color: #2563eb;
+}
+
+.mode-interactive .kwi-cursor-dot {
+  background-color: #2563eb;
+}
+
+/* Map Mode: 4 Corner Brackets + Center Coordinate Point */
+.kwi-cursor-map {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bracket {
+  position: absolute;
+  width: 4.5px;
+  height: 4.5px;
+  border-color: #0f172a;
+  border-style: solid;
+}
+
+.bracket-tl {
+  top: 0;
+  left: 0;
+  border-width: 1.2px 0 0 1.2px;
+}
+
+.bracket-tr {
+  top: 0;
+  right: 0;
+  border-width: 1.2px 1.2px 0 0;
+}
+
+.bracket-bl {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 1.2px 1.2px;
+}
+
+.bracket-br {
+  bottom: 0;
+  right: 0;
+  border-width: 0 1.2px 1.2px 0;
+}
+
+/* Drainage / Canal Mode: Flow line + moving dot */
+.kwi-cursor-drainage {
+  position: relative;
+  width: 22px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kwi-flow-track {
+  position: absolute;
+  width: 20px;
+  height: 1px;
+  background-color: #0891b2;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+}
+
+.kwi-flow-track::before,
+.kwi-flow-track::after {
+  content: '';
+  position: absolute;
+  width: 2.5px;
+  height: 2.5px;
+  border-radius: 9999px;
+  background-color: #0891b2;
+  top: -0.75px;
+}
+
+.kwi-flow-track::before {
+  left: 0;
+}
+
+.kwi-flow-track::after {
+  right: 0;
+}
+
+.kwi-flow-particle {
+  position: absolute;
+  width: 2.5px;
+  height: 2.5px;
+  border-radius: 9999px;
+  background-color: #06b6d4;
+  top: -0.75px;
+  animation: kwiFlowDot 700ms linear infinite;
+}
+
+@keyframes kwiFlowDot {
+  0% {
+    left: 2px;
+    opacity: 0.2;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    left: 16px;
+    opacity: 0.2;
+  }
+}
+
+/* Pumping Station Mode: Thin targeting ring */
+.kwi-cursor-pump {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kwi-pump-target-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1px solid #0284c7;
+  animation: kwiPumpTarget 200ms ease-out forwards;
+}
+
+@keyframes kwiPumpTarget {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}
+
+/* Incident Mode: Target ring */
+.kwi-cursor-incident {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kwi-incident-target-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1.2px solid #e11d48;
+  animation: kwiPumpTarget 200ms ease-out forwards;
+}
+
+/* Waterbody Mode: Single expanding ripple */
+.kwi-cursor-waterbody {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kwi-waterbody-ripple {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1px solid #0891b2;
+  animation: kwiRippleClick 350ms ease-out forwards;
+}
+
+/* Water Click Ripple: Hairline stroke with zero solid background fill */
+.kwi-cursor-click-ripple {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  border: 1px solid #2563eb;
+  background: transparent;
+  pointer-events: none;
+  animation: kwiRippleClick 380ms cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes kwiRippleClick {
+  0% {
+    transform: translate(-50%, -50%) scale(0.4);
+    opacity: 0.45;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.4);
+    opacity: 0;
+  }
+}
+
+/* Smartphone Mockup Isolation */
+[data-phone-mockup] {
+  cursor: auto !important;
+}
+
+[data-phone-mockup] * {
+  cursor: inherit;
+}
+
+/* Respect Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .kwi-cursor-click-ripple,
+  .kwi-waterbody-ripple,
+  .kwi-pump-target-ring,
+  .kwi-incident-target-ring,
+  .kwi-flow-particle {
+    animation: none !important;
+    display: none !important;
+  }
+
+  .kwi-cursor-instrument {
+    transition: none !important;
+  }
+}
+
+
