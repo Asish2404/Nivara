@@ -3,56 +3,35 @@ import { useKWIStore } from '../store/useKWIStore'
 import { audioEngine } from '../utils/audioEngine'
 
 const GithubIcon = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className="w-[17px] h-[17px]">
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
     <path d="M12 .7a11.3 11.3 0 0 0-3.57 22c.57.1.78-.25.78-.55v-2.1c-3.18.69-3.85-1.35-3.85-1.35-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.68 1.24 3.33.95.1-.74.4-1.24.73-1.53-2.54-.29-5.21-1.27-5.21-5.65 0-1.25.45-2.27 1.18-3.07-.12-.29-.51-1.45.11-3.02 0 0 .96-.31 3.12 1.17a10.8 10.8 0 0 1 5.68 0c2.16-1.48 3.12-1.17 3.12-1.17.62 1.57.23 2.73.11 3.02.73.8 1.18 1.82 1.18 3.07 0 4.39-2.68 5.35-5.23 5.64.41.35.78 1.05.78 2.12v3.13c0 .3.2.66.79.55A11.3 11.3 0 0 0 12 .7Z" />
   </svg>
 )
 
 const LinkedinIcon = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className="w-[16px] h-[16px]">
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
     <path d="M5.1 3.6a2.1 2.1 0 1 1 0 4.2 2.1 2.1 0 0 1 0-4.2ZM3.3 9h3.6v11.5H3.3V9Zm5.8 0h3.4v1.57h.05c.47-.9 1.62-1.85 3.34-1.85 3.58 0 4.24 2.36 4.24 5.43v6.35h-3.55v-5.63c0-1.34-.03-3.06-1.87-3.06-1.87 0-2.16 1.46-2.16 2.96v5.73H9.1V9Z" />
   </svg>
 )
 
 const XIcon = () => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    className="w-[16px] h-[16px]"
-  >
-    <path d="M5 4l14 16" />
-    <path d="M19 4L5 20" />
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
   </svg>
 )
 
 const InstagramIcon = () => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    className="w-[16px] h-[16px]"
-  >
-    <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
-    <circle cx="12" cy="12" r="4" />
-    <circle cx="17.5" cy="6.7" r=".8" fill="currentColor" stroke="none" />
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
   </svg>
 )
 
 const ChevronRightIcon = () => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="w-3.5 h-3.5 text-white/35 group-hover:text-[#00f5d4] group-hover:translate-x-0.5 transition-all duration-150 shrink-0"
-  >
-    <path d="m9 18 6-6-6-6" />
-  </svg>
+  <span className="text-white/30 text-xs group-hover:text-cyan-400 group-hover:translate-x-1 transition-all duration-150 font-mono">
+    &gt;
+  </span>
 )
 
 const NAV_COLUMNS = [
@@ -60,27 +39,27 @@ const NAV_COLUMNS = [
     title: 'PLATFORM',
     links: [
       { label: 'City Intelligence', path: '/live-city' },
-      { label: 'Incidents Grid', path: '/incidents' },
-      { label: 'Forecast Nowcast', path: '/forecast' },
-      { label: 'Simulate Interventions', path: '/simulate' },
+      { label: 'Incidents', path: '/incidents' },
+      { label: 'Forecast', path: '/forecast' },
+      { label: 'Simulate', path: '/simulate' },
     ],
   },
   {
     title: 'INTELLIGENCE',
     links: [
-      { label: 'Water Network GIS', path: '/live-city' },
+      { label: 'Water Network', path: '/live-city' },
       { label: 'Live Systems', path: '/live-city' },
-      { label: 'Citizen Reports', path: '/reports' },
-      { label: 'Action Center', path: '/action-center' },
+      { label: 'Reports', path: '/reports' },
+      { label: 'Data Insights', path: '/live-city' },
     ],
   },
   {
     title: 'COMMAND',
     links: [
-      { label: 'Emergency Actions', path: '/action-center' },
-      { label: 'Ask Kolkata AI', isAskKolkata: true },
-      { label: 'Hydrological Twin', path: '/simulate' },
-      { label: 'System Overview', path: '/' },
+      { label: 'Actions', path: '/action-center' },
+      { label: 'Ask Kolkata', isAskKolkata: true },
+      { label: 'Admin Console', path: '/action-center' },
+      { label: 'System Status', path: '/live-city' },
     ],
   },
 ]
@@ -89,7 +68,7 @@ export default function Footer() {
   const { navigate, toggleAskKolkata } = useKWIStore()
 
   const handleLinkClick = (linkItem) => {
-    audioEngine.playUiChirp(920)
+    if (audioEngine) audioEngine.playUiChirp(920)
     if (linkItem.isAskKolkata) {
       toggleAskKolkata()
     } else if (linkItem.path) {
@@ -98,75 +77,75 @@ export default function Footer() {
   }
 
   return (
-    <footer className="relative w-full min-h-[410px] overflow-hidden isolate bg-[#020608] text-white select-none font-sans">
+    <footer className="relative w-full overflow-hidden isolate text-white select-none font-sans">
       {/* ===================================================== */}
-      {/* BACKGROUND IMAGE - HOWRAH BRIDGE AT SUNSET            */}
+      {/* 1. TOP SEAMLESS ATMOSPHERIC GRADIENT FADE (TIGHT)     */}
       {/* ===================================================== */}
       <div
-        className="absolute inset-0 -z-50 bg-cover bg-[center_30%] contrast-[1.08] saturate-[0.95] brightness-[0.58] pointer-events-none"
+        className="absolute top-0 inset-x-0 h-16 sm:h-24 z-10 pointer-events-none"
+        style={{
+          background:
+            'linear-gradient(to bottom, #f8fafc 0%, rgba(248, 250, 252, 0.85) 35%, rgba(248, 250, 252, 0) 100%)',
+        }}
+        aria-hidden="true"
+      />
+
+      {/* ===================================================== */}
+      {/* 2. BACKGROUND PANORAMA - HOWRAH BRIDGE AT NIGHT       */}
+      {/* ===================================================== */}
+      <div
+        className="absolute inset-0 -z-20 bg-cover bg-bottom md:bg-[center_42%] bg-no-repeat contrast-[1.08] brightness-[0.72] saturate-[1.15]"
         style={{
           backgroundImage: "url('/textures/Footer_img2.png')",
         }}
         aria-hidden="true"
       />
 
-      {/* Cinematic Dark Overlays for Optimal Legibility */}
+      {/* Deep Rich Gradient Overlays for High-Contrast Readability */}
       <div
-        className="absolute inset-0 -z-40 pointer-events-none"
+        className="absolute inset-0 -z-10 pointer-events-none"
         style={{
           background: `
             linear-gradient(
               180deg,
               rgba(2, 6, 9, 0.05) 0%,
-              rgba(2, 6, 9, 0.18) 35%,
-              rgba(1, 6, 9, 0.45) 72%,
-              rgba(1, 5, 8, 0.70) 100%
+              rgba(2, 8, 12, 0.35) 25%,
+              rgba(1, 6, 10, 0.82) 65%,
+              rgba(1, 5, 8, 0.98) 100%
             ),
             linear-gradient(
               90deg,
-              rgba(1, 6, 9, 0.55) 0%,
-              rgba(1, 6, 9, 0.18) 35%,
-              rgba(1, 6, 9, 0.25) 70%,
-              rgba(1, 6, 9, 0.75) 100%
+              rgba(1, 6, 9, 0.70) 0%,
+              rgba(1, 6, 9, 0.25) 40%,
+              rgba(1, 6, 9, 0.35) 70%,
+              rgba(1, 6, 9, 0.80) 100%
             )
           `,
         }}
         aria-hidden="true"
       />
 
-      {/* Top Subtle Cyan Separator Line */}
-      <div
-        className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#00f5d4]/45 to-transparent pointer-events-none"
-        aria-hidden="true"
-      />
-
-      {/* Ambient Top Glow Line */}
-      <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-12 bg-[radial-gradient(ellipse_at_top,rgba(0,245,212,0.18),transparent_70%)] pointer-events-none"
-        aria-hidden="true"
-      />
-
       {/* ===================================================== */}
-      {/* MAIN FOOTER CONTENT CONTAINER                         */}
+      {/* 3. MAIN FOOTER CONTENT CONTAINER                      */}
       {/* ===================================================== */}
-      <div className="relative z-10 max-w-[1380px] mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-8 flex flex-col justify-between min-h-[390px]">
+      <div className="relative z-20 max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-14 pt-16 sm:pt-20 pb-8 flex flex-col justify-between">
         {/* Top 5-Column Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-6 mb-12 items-start">
           {/* ------------------------------------------------- */}
-          {/* 1. BRAND + DESCRIPTION + SOCIALS                  */}
+          {/* Column 1: BRAND + TAGLINE + SOCIALS (Span 4)     */}
           {/* ------------------------------------------------- */}
-          <div className="flex flex-col pr-0 lg:pr-4">
+          <div className="lg:col-span-4 flex flex-col pr-0 lg:pr-6">
             {/* Brand Logo & Header */}
             <button
               type="button"
               onClick={() => {
-                audioEngine.playUiChirp(920)
+                if (audioEngine) audioEngine.playUiChirp(920)
                 navigate('/')
               }}
               className="flex items-center gap-3.5 mb-4 text-left cursor-pointer group focus:outline-none"
             >
-              {/* KWI Emblem Logo Badge */}
-              <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-white border border-[#26d0ce]/40 shadow-[0_0_20px_rgba(0,240,213,0.18)] flex items-center justify-center p-0.5 shrink-0 group-hover:scale-105 transition-transform duration-200">
+              {/* Official KWI Emblem Logo */}
+              <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-white border border-cyan-400/40 shadow-[0_0_20px_rgba(6,182,212,0.3)] flex items-center justify-center p-0.5 shrink-0 group-hover:scale-105 transition-transform duration-200">
                 <img
                   src="/textures/KWI_LOGO.jpeg"
                   alt="Kolkata Water Intelligence Logo"
@@ -176,27 +155,26 @@ export default function Footer() {
 
               {/* Title Text */}
               <div className="flex flex-col">
-                <span className="text-[12px] font-semibold tracking-[0.09em] text-slate-200 uppercase leading-none mb-1">
+                <span className="text-[12px] font-bold tracking-[0.14em] text-slate-200 uppercase leading-tight font-sans">
                   KOLKATA WATER
                 </span>
-                <span className="text-[17px] font-black tracking-[0.06em] text-white uppercase leading-none">
+                <span className="text-[18px] font-black tracking-[0.08em] text-white uppercase leading-tight font-sans">
                   INTELLIGENCE
                 </span>
-                <span className="text-[8.5px] font-mono tracking-[0.2em] text-[#60d6d3]/85 uppercase leading-none mt-1">
+                <span className="text-[9px] font-mono tracking-[0.22em] text-cyan-400 font-bold uppercase leading-tight mt-0.5">
                   URBAN WATER COMMAND SYSTEM
                 </span>
               </div>
             </button>
 
-            {/* Subtext description */}
-            <p className="text-[13px] leading-[1.65] text-[#b4cbce] max-w-[315px] mb-6">
-              Empowering Kolkata with real-time water intelligence, predictive
-              insights, and rapid response systems for a resilient, flood-safe
-              future.
+            {/* Tagline Description */}
+            <p className="text-[13px] leading-[1.65] text-slate-300/90 max-w-[340px] mb-6 font-normal">
+              Empowering Kolkata with real-time water intelligence, predictive insights, and rapid
+              response systems for a resilient, flood-safe future.
             </p>
 
-            {/* Social Channels */}
-            <div className="flex items-center gap-2.5">
+            {/* Social Pill Buttons */}
+            <div className="flex items-center gap-3">
               {[
                 {
                   href: 'https://github.com',
@@ -225,7 +203,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={item.label}
-                  className="w-9 h-9 rounded-xl border border-white/20 bg-black/40 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-[#00f5d4] hover:border-[#00f5d4]/50 hover:bg-[#00f5d4]/10 transition-all duration-200"
+                  className="w-8 h-8 rounded-full border border-white/20 bg-black/40 backdrop-blur-md flex items-center justify-center text-slate-300 hover:text-cyan-300 hover:border-cyan-400/60 hover:bg-cyan-950/30 transition-all duration-200 shadow-sm"
                 >
                   {item.icon}
                 </a>
@@ -234,11 +212,11 @@ export default function Footer() {
           </div>
 
           {/* ------------------------------------------------- */}
-          {/* 2. NAVIGATION COLUMNS                             */}
+          {/* Columns 2, 3, 4: NAV COLUMNS (Each Span 2)        */}
           {/* ------------------------------------------------- */}
           {NAV_COLUMNS.map((col) => (
-            <div key={col.title} className="flex flex-col">
-              <div className="mb-4 font-mono text-[11.5px] font-bold tracking-[0.14em] text-[#00e5bf] uppercase">
+            <div key={col.title} className="lg:col-span-2 flex flex-col">
+              <div className="mb-4 font-mono text-[11px] font-bold tracking-[0.2em] text-cyan-400 uppercase">
                 {col.title}
               </div>
 
@@ -248,9 +226,9 @@ export default function Footer() {
                     key={link.label}
                     type="button"
                     onClick={() => handleLinkClick(link)}
-                    className="group flex items-center justify-between gap-3 text-[13px] text-white/75 hover:text-white transition-colors duration-150 text-left cursor-pointer w-full"
+                    className="group flex items-center justify-between gap-2 text-[13px] text-slate-300 hover:text-white transition-colors duration-150 text-left cursor-pointer w-full max-w-[160px]"
                   >
-                    <span className="group-hover:translate-x-0.5 transition-transform duration-150">
+                    <span className="group-hover:translate-x-0.5 transition-transform duration-150 font-normal">
                       {link.label}
                     </span>
                     <ChevronRightIcon />
@@ -259,34 +237,36 @@ export default function Footer() {
               </div>
             </div>
           ))}
-          {/* 3. LIVE STATUS CARD                               */}
+
           {/* ------------------------------------------------- */}
-          <div className="flex flex-col">
-            <div className="mb-4 font-mono text-[11.5px] font-bold tracking-[0.14em] text-[#00e5bf] uppercase">
+          {/* Column 5: LIVE STATUS CARD (Span 2)               */}
+          {/* ------------------------------------------------- */}
+          <div className="lg:col-span-2 flex flex-col">
+            <div className="mb-4 font-mono text-[11px] font-bold tracking-[0.2em] text-cyan-400 uppercase">
               LIVE STATUS
             </div>
 
-            <div className="w-full max-w-[270px] rounded-xl border border-white/10 bg-[#001316]/60 backdrop-blur-md p-4 shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
+            <div className="w-full rounded-2xl border border-cyan-500/25 bg-[#031518]/75 backdrop-blur-xl p-4 sm:p-5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
               {/* Operational Indicator */}
-              <div className="flex items-center gap-2.5 mb-2.5">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00f5d4] opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00f5d4] shadow-[0_0_8px_#00f5d4]" />
+              <div className="flex items-center gap-2.5 mb-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400 shadow-[0_0_10px_#34d399]" />
                 </span>
-                <span className="font-mono text-[10.5px] font-bold tracking-[0.14em] text-[#00f5d4] uppercase">
+                <span className="font-mono text-[10.5px] font-bold tracking-[0.16em] text-cyan-300 uppercase">
                   SYSTEM OPERATIONAL
                 </span>
               </div>
 
               {/* Status Message */}
-              <p className="text-[12px] text-white/75 leading-normal mb-4">
+              <p className="text-[12.5px] text-slate-300/90 leading-normal mb-3 font-normal">
                 All systems are running smoothly.
               </p>
 
               {/* Last Updated Timestamp */}
-              <div className="flex items-center text-[11px] font-mono">
-                <span className="text-white/40">Last updated</span>
-                <span className="text-[#00f5d4] font-medium ml-2">
+              <div className="flex items-center text-[11px] font-mono text-slate-400">
+                <span>Last updated</span>
+                <span className="text-cyan-400 font-bold ml-1.5">
                   2 min ago
                 </span>
               </div>
@@ -295,27 +275,27 @@ export default function Footer() {
         </div>
 
         {/* ===================================================== */}
-        {/* DIVIDER LINE & BOTTOM COPYRIGHT / LEGAL BAR           */}
+        {/* 4. DIVIDER LINE & BOTTOM COPYRIGHT / LEGAL BAR        */}
         {/* ===================================================== */}
-        <div className="w-full h-[1px] bg-white/[0.12] mt-12 mb-5" />
+        <div className="w-full h-[1px] bg-white/10 mt-6 mb-6" />
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[10.5px] font-mono tracking-[0.12em] text-white/40 uppercase">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[10.5px] font-mono tracking-[0.16em] text-slate-400 uppercase">
           {/* Copyright */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <span>© 2026 KWI COMMAND</span>
-            <span className="text-white/25">•</span>
+            <span className="text-slate-600">•</span>
             <span>ALL RIGHTS RESERVED</span>
           </div>
 
           {/* Legal Links */}
           <div className="flex items-center gap-6 sm:gap-8">
-            <a href="#privacy" className="hover:text-white transition-colors duration-150">
+            <a href="#privacy" className="hover:text-cyan-300 transition-colors duration-150">
               PRIVACY POLICY
             </a>
-            <a href="#terms" className="hover:text-white transition-colors duration-150">
+            <a href="#terms" className="hover:text-cyan-300 transition-colors duration-150">
               TERMS OF SERVICE
             </a>
-            <a href="#contact" className="hover:text-white transition-colors duration-150">
+            <a href="#contact" className="hover:text-cyan-300 transition-colors duration-150">
               CONTACT
             </a>
           </div>
