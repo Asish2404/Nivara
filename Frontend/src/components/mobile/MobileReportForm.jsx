@@ -453,13 +453,13 @@ export function MobileReportForm({ onBackToStep1 }) {
               </div>
             </div>
 
-            {/* Clean Native Mobile Heading */}
+            {/* Clean Native Mobile Heading matching Screenshot 1 */}
             <div className="mb-3.5">
-              <h2 className="text-[23px] sm:text-[25px] font-sans font-extrabold text-slate-900 tracking-tight leading-[1.12]">
-                Report<br />Waterlogging
+              <h2 className="text-[23px] sm:text-[25px] font-sans font-extrabold text-slate-900 tracking-tight leading-tight">
+                Report Your Problem<br />Here
               </h2>
               <p className="text-[12.5px] text-slate-500 mt-1 leading-relaxed">
-                Help Kolkata respond faster.
+                Tell us what you're experiencing and help Kolkata respond faster.
               </p>
             </div>
 
@@ -562,9 +562,8 @@ export function MobileReportForm({ onBackToStep1 }) {
               <span>Continue</span>
             </button>
 
-            {/* Subtle Progress Indicator Dots */}
+            {/* Subtle Progress Indicator Dots: Screen 2 Active */}
             <div className="flex justify-center items-center gap-1.5 mt-2.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-200" />
               <span className="w-1.5 h-1.5 rounded-full bg-slate-200" />
               <span className="w-4 h-1.5 rounded-full bg-blue-600" />
             </div>

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Signal, Wifi, MapPin, Droplets, ChevronLeft, Zap, Lock, Flashlight, Camera, ChevronUp } from 'lucide-react'
-import gsap from 'gsap'
 import { useKWIStore } from '../../store/useKWIStore'
 import { audioEngine } from '../../utils/audioEngine'
 import { MobileReportForm } from './MobileReportForm'
@@ -10,10 +9,6 @@ import { MobileReportVerification } from './MobileReportVerification'
 export function MobileReportPhone() {
   const { isReportSubmitted } = useKWIStore()
   const phoneContainerRef = useRef(null)
-  const beaconRef = useRef(null)
-  const ripple1Ref = useRef(null)
-  const ripple2Ref = useRef(null)
-  const ripple3Ref = useRef(null)
 
   // -1: Lock Screen with Indian Flag Wallpaper, 0: Welcome Screen, 1: Report Your Problem, 2: Existing Report Form
   const [phoneStep, setPhoneStep] = useState(-1)
@@ -86,108 +81,21 @@ export function MobileReportPhone() {
     }
   }, [])
 
-  // 3. GSAP Realistic Micro-Animations & Interactive Parallax (No Up-Down Bobbing)
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Atmospheric ambient breathing glow behind phone
-      if (phoneContainerRef.current) {
-        gsap.to(phoneContainerRef.current, {
-          boxShadow: '0 30px 70px -15px rgba(37, 99, 235, 0.18), 0 12px 30px -8px rgba(15, 23, 42, 0.15)',
-          duration: 3.5,
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut',
-        })
-      }
-
-      // Organic radar sonar expansion on Kolkata pin
-      if (ripple1Ref.current && ripple2Ref.current && ripple3Ref.current) {
-        gsap.to(ripple1Ref.current, {
-          scale: 1.25,
-          opacity: 0.15,
-          duration: 2.2,
-          repeat: -1,
-          ease: 'power2.out',
-        })
-        gsap.to(ripple2Ref.current, {
-          scale: 1.35,
-          opacity: 0.1,
-          duration: 2.2,
-          repeat: -1,
-          delay: 0.6,
-          ease: 'power2.out',
-        })
-        gsap.to(ripple3Ref.current, {
-          scale: 1.45,
-          opacity: 0.05,
-          duration: 2.2,
-          repeat: -1,
-          delay: 1.2,
-          ease: 'power2.out',
-        })
-      }
-
-      // Soft radar pulse on location beacon
-      if (beaconRef.current) {
-        gsap.to(beaconRef.current, {
-          scale: 1.04,
-          duration: 1.8,
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut',
-        })
-      }
-    })
-
-    return () => ctx.revert()
-  }, [phoneStep])
-
-  // Interactive smooth GSAP micro-tilt on mouse move (Silk-smooth physics)
-  const handleMouseMove = (e) => {
-    if (!phoneContainerRef.current) return
-    const rect = phoneContainerRef.current.getBoundingClientRect()
-    const x = e.clientX - rect.left - rect.width / 2
-    const y = e.clientY - rect.top - rect.height / 2
-    
-    gsap.to(phoneContainerRef.current, {
-      rotationY: (x / rect.width) * 6,
-      rotationX: -(y / rect.height) * 6,
-      ease: 'power2.out',
-      duration: 0.6,
-      transformPerspective: 1000,
-      transformOrigin: 'center center',
-    })
-  }
-
-  const handleMouseLeave = () => {
-    if (!phoneContainerRef.current) return
-    gsap.to(phoneContainerRef.current, {
-      rotationY: 0,
-      rotationX: 0,
-      ease: 'power2.out',
-      duration: 0.9,
-    })
-  }
-
   const screenTransition = {
-    duration: 0.28,
-    ease: [0.16, 1, 0.3, 1],
+    duration: 0.2,
+    ease: 'easeInOut',
   }
 
   return (
-    <div 
-      className="w-full flex justify-center py-4 select-none perspective-[1200px]"
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-    >
-      {/* Phone Hardware Mockup Shell */}
+    <div className="w-full flex justify-center py-4 select-none">
+      {/* Phone Hardware Mockup Shell - Stable, No Up/Down Vibrations */}
       <motion.div
         ref={phoneContainerRef}
         data-phone-mockup="true"
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="w-[310px] sm:w-[325px] h-[620px] rounded-[48px] bg-[#18181b] p-[9px] shadow-[0_25px_60px_-15px_rgba(15,23,42,0.22),0_10px_25px_-5px_rgba(15,23,42,0.1)] ring-1 ring-slate-800/80 flex flex-col justify-between relative will-change-transform"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="w-[310px] sm:w-[325px] h-[620px] rounded-[48px] bg-[#18181b] p-[9px] shadow-[0_25px_60px_-15px_rgba(15,23,42,0.22),0_10px_25px_-5px_rgba(15,23,42,0.1)] ring-1 ring-slate-800/80 flex flex-col justify-between relative"
       >
         {/* Physical Side Buttons (Titanium Finish) - Power Button clicks to lock/unlock */}
         <div className="absolute -left-[11px] top-24 w-[3.5px] h-9 bg-slate-700 rounded-l-xs shadow-xs pointer-events-none" />
@@ -356,10 +264,10 @@ export function MobileReportPhone() {
                 {phoneStep === -1 && (
                   <motion.div
                     key="phone-lock-screen"
-                    initial={{ opacity: 0, scale: 1.04 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, y: -40, scale: 0.98 }}
-                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={screenTransition}
                     onClick={() => {
                       if (audioEngine) audioEngine.playUiChirp(1200)
                       setPhoneStep(0)
@@ -463,7 +371,7 @@ export function MobileReportPhone() {
                       {/* Swipe Up Unlock Text & Home Indicator */}
                       <div className="flex flex-col items-center gap-1">
                         <span className="text-[10.5px] font-semibold text-white/90 tracking-wider flex items-center gap-1 drop-shadow-sm font-sans">
-                          Swipe up to open <ChevronUp className="w-3.5 h-3.5 animate-bounce text-white" />
+                          Swipe up to open <ChevronUp className="w-3.5 h-3.5 text-white" />
                         </span>
                         <div className="w-28 h-1 bg-white rounded-full shadow-xs" />
                       </div>
@@ -477,9 +385,9 @@ export function MobileReportPhone() {
                 {phoneStep === 0 && (
                   <motion.div
                     key="phone-step-0"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                     transition={screenTransition}
                     className="p-4 flex flex-col justify-between h-full text-left"
                   >
@@ -695,119 +603,24 @@ export function MobileReportPhone() {
                       <div className="flex justify-center items-center gap-1.5 mt-3">
                         <span className="w-4 h-1.5 rounded-full bg-blue-600 transition-all" />
                         <span className="w-1.5 h-1.5 rounded-full bg-slate-200 transition-all" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-200 transition-all" />
                       </div>
                     </div>
                   </motion.div>
                 )}
 
                 {/* ========================================================= */}
-                {/* SCREEN 2: REPORT YOUR PROBLEM                             */}
+                {/* SCREEN 1: REPORT FORM (DIRECT REPORTING PAGE)             */}
                 {/* ========================================================= */}
                 {phoneStep === 1 && (
                   <motion.div
                     key="phone-step-1"
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={screenTransition}
-                    className="p-4 flex flex-col justify-between h-full text-left"
-                  >
-                    <div>
-                      {/* Subtle Back Button */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (audioEngine) audioEngine.playUiChirp(900)
-                          setPhoneStep(0)
-                        }}
-                        className="text-[13px] font-semibold text-blue-600 flex items-center gap-1 cursor-pointer opacity-85 hover:opacity-100 mb-2 -mt-1"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                        Back
-                      </button>
-
-                      {/* Top Brand Header */}
-                      <div className="flex items-center gap-2.5 mb-3 pt-0.5">
-                        <div className="w-8 h-8 rounded-xl overflow-hidden bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center p-0.5 shrink-0">
-                          <img
-                            src="/textures/KWI_LOGO.jpeg"
-                            alt="KWI Logo"
-                            className="w-full h-full object-contain rounded-lg"
-                          />
-                        </div>
-                        <div>
-                          <span className="text-[12px] font-bold text-slate-900 tracking-[0.08em] block leading-tight font-sans">
-                            KWI
-                          </span>
-                          <span className="text-[10.5px] text-slate-500 font-medium block leading-tight mt-0.5">
-                            Kolkata Water Intelligence
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Section Heading */}
-                      <div className="mb-4">
-                        <h2 className="text-[23px] sm:text-[25px] font-extrabold text-slate-900 tracking-tight leading-tight font-sans">
-                          Report Your Problem Here
-                        </h2>
-                        <p className="text-[13px] text-slate-500 mt-1 leading-relaxed">
-                          Tell us what you're experiencing and help Kolkata respond faster.
-                        </p>
-                      </div>
-
-                      {/* Clean Action Card */}
-                      <div className="mt-4 p-4 rounded-2xl border-2 border-blue-600 bg-blue-50/50 flex items-start gap-3.5 shadow-xs cursor-pointer transition-all">
-                        <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                          <Droplets className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <span className="text-[14px] font-bold text-slate-900 block leading-tight font-sans">
-                            Report Waterlogging
-                          </span>
-                          <span className="text-[12px] text-slate-600 mt-0.5 block leading-normal">
-                            Waterlogging, flooding or drainage issues
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Bottom CTA & Progress Dots */}
-                    <div className="pt-2 pb-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (audioEngine) audioEngine.playUiChirp(1050)
-                          setPhoneStep(2)
-                        }}
-                        className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-[14px] transition-all cursor-pointer shadow-xs flex items-center justify-center font-sans"
-                      >
-                        CONTINUE
-                      </button>
-
-                      {/* Screen Indicator Dots: Step 2 Active */}
-                      <div className="flex justify-center items-center gap-1.5 mt-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-200 transition-all" />
-                        <span className="w-4 h-1.5 rounded-full bg-blue-600 transition-all" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-200 transition-all" />
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* ========================================================= */}
-                {/* SCREEN 3: EXISTING REPORT FORM                            */}
-                {/* ========================================================= */}
-                {phoneStep === 2 && (
-                  <motion.div
-                    key="phone-step-2"
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                     transition={screenTransition}
                     className="flex-1 h-full flex flex-col p-4"
                   >
-                    <MobileReportForm onBackToStep1={() => setPhoneStep(1)} />
+                    <MobileReportForm onBackToStep1={() => setPhoneStep(0)} />
                   </motion.div>
                 )}
               </AnimatePresence>
