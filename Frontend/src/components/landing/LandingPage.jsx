@@ -528,7 +528,7 @@ export function LandingPage() {
       <section
         ref={howItWorksRef}
         id="how-it-works"
-        className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 max-w-[1280px] mx-auto border-t border-slate-100 scroll-mt-24"
+        className="py-16 sm:py-24 px-3 sm:px-6 lg:px-8 max-w-[1480px] mx-auto border-t border-slate-100 scroll-mt-24"
       >
         <RobotPipelineStepping
           isSectionVisible={isSectionVisible}

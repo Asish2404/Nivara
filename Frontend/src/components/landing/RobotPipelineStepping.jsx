@@ -5,8 +5,6 @@ import {
   Pause,
   RotateCcw,
   ArrowRight,
-  Droplets,
-  Layers,
   Users,
   Brain,
   Shield,
@@ -118,182 +116,17 @@ export const KWI_PIPELINE_STAGES = [
  * Each platform has guaranteed collision-free safe portal placement!
  */
 const STAIR_PLATFORMS = [
-  { x: 155, y: 460, label: "DETECT", portalX: 340, portalY: 280, anchorX: 205, anchorY: 465 },
-  { x: 310, y: 405, label: "VERIFY", portalX: 470, portalY: 235, anchorX: 360, anchorY: 410 },
-  { x: 395, y: 345, label: "CORRELATE", portalX: 550, portalY: 175, anchorX: 445, anchorY: 350 },
-  { x: 485, y: 285, label: "SIMULATE", portalX: 640, portalY: 120, anchorX: 535, anchorY: 290 },
-  { x: 570, y: 225, label: "PREDICT", portalX: 685, portalY: 195, anchorX: 620, anchorY: 230, openDown: true },
-  { x: 655, y: 165, label: "ALERT", portalX: 700, portalY: 235, anchorX: 705, anchorY: 170, openDown: true },
-  // Step 7 Summit: Opens into the wide-open LEFT space with ZERO robot overlap!
-  { x: 740, y: 105, label: "ACT", portalX: 230, portalY: 95, anchorX: 740, anchorY: 110, openLeft: true },
+  { x: 155, y: 460, label: "DETECT", portalX: 320, portalY: 250, anchorX: 205, anchorY: 465 },
+  { x: 310, y: 405, label: "VERIFY", portalX: 430, portalY: 215, anchorX: 360, anchorY: 410 },
+  { x: 395, y: 345, label: "CORRELATE", portalX: 490, portalY: 195, anchorX: 445, anchorY: 350 },
+  { x: 485, y: 285, label: "SIMULATE", portalX: 550, portalY: 185, anchorX: 535, anchorY: 290 },
+  { x: 570, y: 225, label: "PREDICT", portalX: 620, portalY: 200, anchorX: 620, anchorY: 230, openDown: true },
+  { x: 655, y: 165, label: "ALERT", portalX: 630, portalY: 215, anchorX: 705, anchorY: 170, openDown: true },
+  // Step 7 Summit: Safely positioned in the central open area below header with zero overlap!
+  { x: 740, y: 105, label: "ACT", portalX: 370, portalY: 195, anchorX: 740, anchorY: 110, openLeft: true },
 ];
 
-/* ========================================================================= */
-/* 1. SOPHISTICATED ARCHITECTURAL ISOMETRIC CITY LAYER (PURE VECTOR SVG)     */
-/* Features layered building extrusions, Hooghly river flow, bridge & Victoria */
-/* ========================================================================= */
-const ArchitecturalCityscape = ({ activeStep, mouseOffset }) => {
-  return (
-    <div
-      className="absolute inset-0 pointer-events-none transition-transform duration-700 ease-out"
-      style={{
-        transform: `translate3d(${mouseOffset.x * 3}px, ${mouseOffset.y * 3}px, 0)`,
-      }}
-    >
-      <svg
-        className="w-full h-full"
-        viewBox="0 0 1024 560"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          {/* Subtle River Gradient */}
-          <linearGradient id="hooghlyWaterFlow" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#bfdbfe" stopOpacity="0.5" />
-            <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.68" />
-            <stop offset="100%" stopColor="#dbeafe" stopOpacity="0.45" />
-          </linearGradient>
 
-          {/* Micro Isometric Topography Pattern */}
-          <pattern id="isoGridMap" width="32" height="18.47" patternUnits="userSpaceOnUse">
-            <path d="M 0,9.23 L 16,0 L 32,9.23 L 16,18.47 Z" fill="none" stroke="#e2e8f0" strokeWidth="0.45" strokeOpacity="0.5" />
-          </pattern>
-        </defs>
-
-        {/* Ambient Topography Grid */}
-        <rect width="1024" height="560" fill="url(#isoGridMap)" opacity="0.65" />
-
-        {/* ================================================================ */}
-        {/* HOOGHLY RIVER CHANNEL MEANDERING THROUGH KOLKATA                 */}
-        {/* ================================================================ */}
-        <g opacity="0.9">
-          <path
-            d="M 580,0 Q 640,120 720,180 T 840,260 T 730,410 T 510,560 L 650,560 Q 820,430 940,290 T 840,160 T 710,0 Z"
-            fill="url(#hooghlyWaterFlow)"
-          />
-          {/* Riverbank Shoreline Traces */}
-          <path
-            d="M 580,0 Q 640,120 720,180 T 840,260 T 730,410 T 510,560"
-            fill="none"
-            stroke="#60a5fa"
-            strokeWidth="1.2"
-            strokeOpacity="0.65"
-          />
-          <path
-            d="M 710,0 Q 840,160 940,290 T 650,560"
-            fill="none"
-            stroke="#60a5fa"
-            strokeWidth="1.2"
-            strokeOpacity="0.65"
-          />
-
-          {/* Flow Lines inside the River */}
-          <path
-            d="M 640,0 Q 700,130 770,185 T 870,265 T 780,410 T 570,560"
-            fill="none"
-            stroke="#ffffff"
-            strokeWidth="0.9"
-            strokeDasharray="8 12"
-            strokeOpacity="0.6"
-            className="animate-pulse"
-          />
-
-          {/* "K O L K A T A" Geographic Watermark Label */}
-          <text
-            x="675"
-            y="355"
-            fill="#2563eb"
-            fillOpacity="0.3"
-            fontSize="14"
-            fontFamily="sans-serif"
-            fontWeight="bold"
-            letterSpacing="0.45em"
-            transform="rotate(-28, 675, 355)"
-          >
-            K O L K A T A
-          </text>
-        </g>
-
-        {/* ================================================================ */}
-        {/* ICONIC HOWRAH BRIDGE OVER THE HOOGHLY RIVER                      */}
-        {/* ================================================================ */}
-        <g opacity="0.82">
-          {/* Bridge Roadway Deck */}
-          <line x1="770" y1="210" x2="990" y2="155" stroke="#94a3b8" strokeWidth="4" />
-          <line x1="770" y1="209" x2="990" y2="154" stroke="#ffffff" strokeWidth="1.2" />
-          
-          {/* West Tower (Howrah) */}
-          <path d="M 820,210 L 828,138 L 836,210 Z" fill="#e2e8f0" stroke="#64748b" strokeWidth="1" />
-          <line x1="828" y1="138" x2="828" y2="210" stroke="#64748b" strokeWidth="1" />
-          <line x1="820" y1="174" x2="836" y2="174" stroke="#64748b" strokeWidth="1" />
-
-          {/* East Tower (Kolkata) */}
-          <path d="M 940,180 L 948,108 L 956,180 Z" fill="#e2e8f0" stroke="#64748b" strokeWidth="1" />
-          <line x1="948" y1="108" x2="948" y2="180" stroke="#64748b" strokeWidth="1" />
-          <line x1="940" y1="144" x2="956" y2="144" stroke="#64748b" strokeWidth="1" />
-
-          {/* Cantilever Truss Structure */}
-          <path d="M 770,210 L 828,138 L 888,178 L 948,108 L 990,155" fill="none" stroke="#64748b" strokeWidth="1.2" />
-          <line x1="828" y1="138" x2="948" y2="108" stroke="#64748b" strokeWidth="1" strokeDasharray="3 2" />
-        </g>
-
-        {/* ================================================================ */}
-        {/* VICTORIA MEMORIAL ISOMETRIC ARCHITECTURAL MONUMENT               */}
-        {/* ================================================================ */}
-        <g transform="translate(810, 240)" opacity="0.88">
-          {/* Symmetrical Base Plinth */}
-          <polygon points="40,25 76,42 40,60 4,42" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1" />
-          {/* Main Classical Dome Drum */}
-          <polygon points="40,12 60,22 40,32 20,22" fill="#ffffff" stroke="#94a3b8" strokeWidth="0.8" />
-          <ellipse cx="40" cy="12" rx="14" ry="8" fill="#e2e8f0" stroke="#64748b" strokeWidth="0.8" />
-          <ellipse cx="40" cy="8" rx="8" ry="12" fill="#ffffff" stroke="#64748b" strokeWidth="0.8" />
-          <line x1="40" y1="0" x2="40" y2="5" stroke="#08B8F5" strokeWidth="1.5" />
-          {/* Flanking Corner Pavilions */}
-          <ellipse cx="18" cy="30" rx="5" ry="7" fill="#ffffff" stroke="#94a3b8" strokeWidth="0.8" />
-          <ellipse cx="62" cy="30" rx="5" ry="7" fill="#ffffff" stroke="#94a3b8" strokeWidth="0.8" />
-        </g>
-
-        {/* ================================================================ */}
-        {/* ISOMETRIC CITY BLOCKS & EXTRUDED ARCHITECTURAL BUILDINGS          */}
-        {/* ================================================================ */}
-        <g opacity="0.55">
-          {/* Cluster 1: Salt Lake & Sector V IT Hub (Left/Center) */}
-          <g>
-            <polygon points="320,230 335,222 350,230 335,238" fill="#ffffff" stroke="#cbd5e1" strokeWidth="0.6" />
-            <polygon points="320,230 335,238 335,280 320,272" fill="#edf2f7" stroke="#cbd5e1" strokeWidth="0.6" />
-            <polygon points="335,238 350,230 350,272 335,280" fill="#e2e8f0" stroke="#cbd5e1" strokeWidth="0.6" />
-
-            <polygon points="345,190 360,182 375,190 360,198" fill="#ffffff" stroke="#cbd5e1" strokeWidth="0.6" />
-            <polygon points="345,190 360,198 360,260 345,252" fill="#edf2f7" stroke="#cbd5e1" strokeWidth="0.6" />
-            <polygon points="360,198 375,190 375,252 360,260" fill="#e2e8f0" stroke="#cbd5e1" strokeWidth="0.6" />
-
-            <polygon points="410,380 425,372 440,380 425,388" fill="#ffffff" stroke="#cbd5e1" strokeWidth="0.6" />
-            <polygon points="410,380 425,388 425,430 410,422" fill="#edf2f7" stroke="#cbd5e1" strokeWidth="0.6" />
-            <polygon points="425,388 440,380 440,422 425,430" fill="#e2e8f0" stroke="#cbd5e1" strokeWidth="0.6" />
-
-            <polygon points="440,340 455,332 470,340 455,348" fill="#ffffff" stroke="#cbd5e1" strokeWidth="0.6" />
-            <polygon points="440,340 455,348 455,420 440,412" fill="#edf2f7" stroke="#cbd5e1" strokeWidth="0.6" />
-            <polygon points="455,348 470,340 470,412 455,420" fill="#e2e8f0" stroke="#cbd5e1" strokeWidth="0.6" />
-          </g>
-
-          {/* Cluster 2: New Town & Rajarhat Blocks (Upper Right) */}
-          <g>
-            <polygon points="840,80 852,73 864,80 852,87" fill="#ffffff" stroke="#cbd5e1" strokeWidth="0.6" />
-            <polygon points="840,80 852,87 852,130 840,123" fill="#edf2f7" stroke="#cbd5e1" strokeWidth="0.6" />
-            <polygon points="852,87 864,80 864,123 852,130" fill="#e2e8f0" stroke="#cbd5e1" strokeWidth="0.6" />
-
-            <polygon points="870,100 885,92 900,100 885,108" fill="#ffffff" stroke="#cbd5e1" strokeWidth="0.6" />
-            <polygon points="870,100 885,108 885,160 870,152" fill="#edf2f7" stroke="#cbd5e1" strokeWidth="0.6" />
-            <polygon points="885,108 900,100 900,152 885,160" fill="#e2e8f0" stroke="#cbd5e1" strokeWidth="0.6" />
-          </g>
-
-          {/* Subtle Connecting Infrastructure Arteries */}
-          <path d="M 280,480 L 460,380 L 640,330 L 800,230" stroke="#94a3b8" strokeWidth="1" strokeDasharray="6 6" strokeOpacity="0.4" />
-        </g>
-      </svg>
-    </div>
-  );
-};
 
 /* ========================================================================= */
 /* 2. TRANSLUCENT ARCHITECTURAL GLASS STAIR PLATFORM COMPONENT               */
@@ -406,7 +239,7 @@ const ArchitecturalGlassPlatform = ({
 };
 
 /* ========================================================================= */
-/* 3. PHYSICAL ROBOT PROTAGONIST WITH BELIEVABLE KINEMATICS                  */
+/* 3. PHYSICAL ROBOT PROTAGONIST WITH BELIEVABLE STEPPING KINEMATICS         */
 /* ========================================================================= */
 const ProtagonistRobot = ({ isAnticipating, isJumping, isLanding }) => {
   const shouldReduceMotion = useReducedMotion();
@@ -414,32 +247,34 @@ const ProtagonistRobot = ({ isAnticipating, isJumping, isLanding }) => {
   return (
     <motion.div
       className="relative flex flex-col items-center select-none pointer-events-none z-40"
-      style={{ width: "64px" }}
+      style={{ width: "74px" }}
       animate={
         shouldReduceMotion
           ? {}
           : isAnticipating
           ? {
-              y: 4, // Anticipation compression
+              y: 5, // Anticipation crouch / spring compression
               scaleY: 0.92,
-              rotate: 2, // Slight forward pitch
+              scaleX: 1.05,
+              rotate: 4, // Forward pitch toward next step
             }
           : isJumping
           ? {
-              y: [4, -38, 0], // Smooth parabolic height arc
-              scaleY: [0.92, 1.07, 0.98, 1],
-              rotate: [2, 4, 1, 0],
+              y: [5, -46, 0], // Smooth parabolic stair-stepping ascent arc
+              scaleY: [0.92, 1.08, 0.97, 1],
+              scaleX: [1.05, 0.96, 1.02, 1],
+              rotate: [4, -5, 2, 0], // Natural forward climbing momentum & tilt
             }
           : isLanding
           ? {
-              y: [0, 3.5, 0], // Controlled landing compression
+              y: [0, 4.5, 0], // Controlled spring touchdown on platform
               scaleY: [1, 0.88, 1],
+              scaleX: [1, 1.06, 1],
               rotate: 0,
             }
           : {
-              y: [0, -3.5, 0], // Gentle idle floating/breathing
-              scaleY: 1,
-              rotate: 0,
+              y: [0, -4, 0], // Lifelike breathing & balancing on stair
+              rotate: [-1, 1.5, -1], // Friendly gentle waving balance sway
             }
       }
       transition={
@@ -450,32 +285,32 @@ const ProtagonistRobot = ({ isAnticipating, isJumping, isLanding }) => {
           : isJumping
           ? { duration: 0.65, ease: [0.25, 1, 0.5, 1] }
           : isLanding
-          ? { duration: 0.2, ease: "easeOut" }
+          ? { duration: 0.22, ease: "easeOut" }
           : { repeat: Infinity, duration: 2.8, ease: "easeInOut" }
       }
     >
-      {/* Soft Ambient Reflected Cyan Glow */}
-      <div className="absolute top-1.5 inset-x-1.5 h-8 rounded-full bg-[#08B8F5]/25 blur-md -z-10" />
+      {/* Ambient Reflected Cyan Glow behind robot */}
+      <div className="absolute top-4 inset-x-2 h-14 rounded-full bg-[#08B8F5]/22 blur-lg -z-10" />
 
-      {/* Glossy 3D Robot Character */}
+      {/* Full-Body 3D Stepping Robot Character */}
       <img
-        src="/assets/ai-bot.png"
+        src="/assets/kwi-stepping-bot.png"
         alt="KWI AI Timeline Robot"
-        className="w-full h-auto object-contain filter drop-shadow-[0_8px_16px_rgba(8,184,245,0.38)] drop-shadow-[0_12px_22px_rgba(15,23,42,0.16)]"
+        className="w-full h-auto object-contain filter drop-shadow-[0_8px_18px_rgba(8,184,245,0.35)] drop-shadow-[0_14px_26px_rgba(15,23,42,0.18)]"
         draggable="false"
       />
 
-      {/* Contact Shadow on Stair Surface */}
+      {/* Dynamic Foot Contact Shadow on Stair Surface */}
       <motion.div
-        className="w-11 h-2 bg-slate-900/35 rounded-full blur-[2px] -mt-1"
+        className="w-16 h-2.5 bg-slate-900/40 rounded-full blur-[2px] -mt-1.5"
         animate={
           isAnticipating
-            ? { scale: 1.15, opacity: 0.45 }
+            ? { scale: 1.15, opacity: 0.5 }
             : isJumping
-            ? { scale: [1.1, 0.35, 1], opacity: [0.45, 0.08, 0.4] }
+            ? { scale: [1.1, 0.28, 1], opacity: [0.5, 0.08, 0.45] }
             : isLanding
-            ? { scale: [1, 1.35, 1], opacity: [0.4, 0.6, 0.4] }
-            : { scale: [1, 0.94, 1], opacity: [0.4, 0.26, 0.4] }
+            ? { scale: [1, 1.35, 1], opacity: [0.45, 0.7, 0.45] }
+            : { scale: [1, 0.92, 1], opacity: [0.45, 0.3, 0.45] }
         }
         transition={
           isAnticipating
@@ -483,7 +318,7 @@ const ProtagonistRobot = ({ isAnticipating, isJumping, isLanding }) => {
             : isJumping
             ? { duration: 0.65, ease: "easeInOut" }
             : isLanding
-            ? { duration: 0.2, ease: "easeOut" }
+            ? { duration: 0.22, ease: "easeOut" }
             : { repeat: Infinity, duration: 2.8, ease: "easeInOut" }
         }
       />
@@ -871,14 +706,10 @@ export const RobotPipelineStepping = ({
   const handleSelectStage = (idx) => {
     clearTimer();
     audioEngine.playUiChirp(700 + idx * 40);
-    setIsChapterOpen(false);
-    setPhase("COLLAPSING");
-
-    setTimeout(() => {
-      setActiveStageIdx(idx);
-      setPhase("ANTICIPATING");
-      setAutoplay(false);
-    }, 250);
+    setActiveStageIdx(idx);
+    setPhase("HOLDING");
+    setIsChapterOpen(true);
+    setAutoplay(false);
   };
 
   const currentStage = KWI_PIPELINE_STAGES[activeStageIdx];
@@ -909,17 +740,42 @@ export const RobotPipelineStepping = ({
       */}
       <div
         onMouseMove={handleMouseMove}
-        className="relative w-full max-w-[1240px] aspect-[1024/560] min-h-[580px] rounded-[32px] sm:rounded-[40px] border border-slate-200/90 shadow-[0_25px_60px_rgba(15,23,42,0.06)] overflow-hidden bg-gradient-to-br from-[#f8fbfe] via-[#ffffff] to-[#f0f6fc]"
+        className="relative w-full max-w-[1440px] aspect-[1024/560] min-h-[640px] sm:min-h-[700px] rounded-[32px] sm:rounded-[44px] border border-slate-200/90 shadow-[0_30px_70px_rgba(15,23,42,0.07)] overflow-hidden bg-gradient-to-br from-[#f8fbfe] via-[#ffffff] to-[#f0f6fc]"
       >
+
         {/* 
           ============================================================
-          1. LAYER 1: PURE NATIVE VECTOR ARCHITECTURAL CITYSCAPE
+          1. LAYER 1: SERENE MUTED SKY & SUBTLE WISPY CLOUDS (NO MONUMENTS)
           ============================================================
         */}
-        <ArchitecturalCityscape
-          activeStep={activeStageIdx}
-          mouseOffset={mouseOffset}
-        />
+        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none">
+          {/* Serene daylight sky with subtle clouds, zero monuments, and comfortable muted brightness */}
+          <div
+            className="absolute inset-0 w-full h-full bg-no-repeat bg-cover pointer-events-none opacity-80"
+            style={{
+              backgroundImage: `url('/assets/serene-sky-bg.jpg')`,
+              backgroundPosition: "center 25%",
+              backgroundSize: "cover",
+              filter: "brightness(0.92) contrast(1.04) saturate(0.95)",
+            }}
+          />
+
+          {/* Soft comfortable ambient shading so it's not overly bright */}
+          <div className="absolute inset-0 bg-slate-900/[0.04] pointer-events-none" />
+
+          {/* Soft diffused radial glow behind left header to guarantee text readability */}
+          <div
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(ellipse 50% 50% at 24% 20%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.2) 55%, transparent 80%)",
+            }}
+          />
+
+          {/* Soft edge dissolves */}
+          <div className="absolute top-0 inset-x-0 h-16 bg-gradient-to-b from-white/30 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-white/60 via-white/10 to-transparent pointer-events-none" />
+        </div>
 
         {/* 
           ============================================================
@@ -950,9 +806,9 @@ export const RobotPipelineStepping = ({
           {/* Top Row: Title + CTA */}
           <div className="flex items-start justify-between gap-4">
             
-            {/* Left Header Title */}
-            <div className="text-left max-w-xl">
-              <div className="flex items-center gap-1.5 mb-1.5">
+            {/* Left Header Title & 7 Dynamic Steps */}
+            <div className="text-left max-w-2xl sm:max-w-3xl">
+              <div className="flex items-center gap-1.5 mb-1 sm:mb-1.5">
                 <span className="w-1.5 h-3 bg-[#08B8F5] rounded-full" />
                 <span className="text-[10px] sm:text-[11px] font-mono font-bold tracking-[0.2em] text-slate-500 uppercase">
                   KOLKATA WATER INTELLIGENCE
@@ -966,10 +822,30 @@ export const RobotPipelineStepping = ({
                 </span>
               </h1>
 
-              <p className="text-[#71839B] text-xs sm:text-[13px] font-normal mt-1.5 leading-relaxed max-w-lg">
-                A 7-stage autonomous pipeline that transforms citizen inputs
-                into real-time action for a safer, more resilient Kolkata.
-              </p>
+              {/* Row of 7 Compact Dynamic Stage Navigation Steps (Shifted Upward) */}
+              <div className="flex items-center gap-1.5 sm:gap-2 mt-2.5 sm:mt-3 overflow-x-auto py-1 max-w-full">
+                {KWI_PIPELINE_STAGES.map((stg, i) => {
+                  const isActive = i === activeStageIdx;
+
+                  return (
+                    <button
+                      key={stg.id}
+                      type="button"
+                      onClick={() => handleSelectStage(i)}
+                      className={`px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                        isActive
+                          ? "bg-[#0070F3] text-white font-bold shadow-[0_4px_12px_rgba(0,112,243,0.35)]"
+                          : "bg-white/85 hover:bg-white text-slate-600 font-semibold border border-slate-200/80 shadow-2xs"
+                      }`}
+                    >
+                      <span className={isActive ? "text-white" : "text-slate-400"}>
+                        {stg.num}
+                      </span>
+                      <span>{stg.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Right Top CTA & Autoplay Toggle */}
@@ -1014,78 +890,15 @@ export const RobotPipelineStepping = ({
               </div>
             </div>
           </div>
-
-          {/* Row of 7 Compact Stage Navigation Pills */}
-          <div className="flex items-center gap-1.5 sm:gap-2 mt-4 sm:mt-5 overflow-x-auto py-1 max-w-full">
-            {KWI_PIPELINE_STAGES.map((stg, i) => {
-              const isActive = i === activeStageIdx;
-
-              return (
-                <button
-                  key={stg.id}
-                  type="button"
-                  onClick={() => handleSelectStage(i)}
-                  className={`px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap ${
-                    isActive
-                      ? "bg-[#0070F3] text-white font-bold shadow-[0_4px_12px_rgba(0,112,243,0.35)]"
-                      : "bg-white/85 hover:bg-white text-slate-600 font-semibold border border-slate-200/80 shadow-2xs"
-                  }`}
-                >
-                  <span className={isActive ? "text-white" : "text-slate-400"}>
-                    {stg.num}
-                  </span>
-                  <span>{stg.name}</span>
-                </button>
-              );
-            })}
-          </div>
         </div>
 
-        {/* 
-          ============================================================
-          4. LEFT-SIDE SUPPORTING METRIC CARDS
-          ============================================================
-        */}
-        <div className="absolute left-6 sm:left-10 top-[215px] sm:top-[235px] z-10 flex flex-col gap-3 pointer-events-auto">
-          {/* Card 1: REAL-TIME ANALYSIS */}
-          <div className="w-[125px] sm:w-[135px] bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 p-3 text-left shadow-sm">
-            <div className="w-5 h-5 rounded-md text-[#0070F3] flex items-center justify-center mb-1.5">
-              <Droplets className="w-4 h-4 stroke-[2.2]" />
-            </div>
-            <div className="text-[9px] font-mono font-bold text-slate-400 uppercase leading-none">
-              REAL-TIME ANALYSIS
-            </div>
-            <div className="text-xl font-extrabold text-[#0070F3] font-sans mt-0.5">
-              24/7
-            </div>
-            <div className="text-[10px] text-slate-500 font-medium leading-none mt-0.5">
-              City Coverage
-            </div>
-          </div>
-
-          {/* Card 2: DATA SOURCES */}
-          <div className="w-[125px] sm:w-[135px] bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 p-3 text-left shadow-sm">
-            <div className="w-5 h-5 rounded-md text-[#08B8F5] flex items-center justify-center mb-1.5">
-              <Layers className="w-4 h-4 stroke-[2.2]" />
-            </div>
-            <div className="text-[9px] font-mono font-bold text-slate-400 uppercase leading-none">
-              DATA SOURCES
-            </div>
-            <div className="text-xl font-extrabold text-[#0070F3] font-sans mt-0.5">
-              12+
-            </div>
-            <div className="text-[10px] text-slate-500 font-medium leading-none mt-0.5">
-              Integrated Systems
-            </div>
-          </div>
-        </div>
 
         {/* 
           ============================================================
           5. THE 7 ARCHITECTURAL GLASS STAIR PLATFORMS
           ============================================================
         */}
-        <div className="absolute inset-0 z-15 pointer-events-none">
+        <div className="absolute inset-0 z-30 pointer-events-none">
           {STAIR_PLATFORMS.map((pos, idx) => {
             const isActive = idx === activeStageIdx;
             const stage = KWI_PIPELINE_STAGES[idx];
@@ -1168,18 +981,18 @@ export const RobotPipelineStepping = ({
             className="absolute z-40 pointer-events-none flex flex-col items-center"
             animate={{
               left: `${(activeCoord.x / 1024) * 100}%`,
-              top: `${((activeCoord.y - 44) / 560) * 100}%`,
+              top: `${((activeCoord.y - 4) / 560) * 100}%`,
             }}
             transition={{
               duration: shouldReduceMotion ? 0.01 : 0.65,
               ease: [0.25, 1, 0.5, 1],
             }}
-            style={{ transform: "translate(-50%, -50%)" }}
+            style={{ transform: "translate(-50%, -100%)" }}
           >
-            {/* Concentric Active Glow Rings on the Active Landing Surface */}
-            <div className="absolute top-10 w-24 h-12 flex items-center justify-center -z-10 pointer-events-none">
-              <div className="absolute w-20 h-8 rounded-full border border-[#08B8F5] animate-ping opacity-45" />
-              <div className="w-16 h-6 rounded-full bg-[#08B8F5]/25 blur-sm" />
+            {/* Concentric Active Holographic Stepping Ring on the Active Landing Surface */}
+            <div className="absolute -bottom-1 w-24 h-8 flex items-center justify-center -z-10 pointer-events-none">
+              <div className="absolute w-20 h-6 rounded-full border border-[#08B8F5] animate-ping opacity-45" />
+              <div className="w-16 h-4 rounded-full bg-[#08B8F5]/30 blur-sm" />
             </div>
 
             {/* Protagonist Robot Character */}
@@ -1191,32 +1004,8 @@ export const RobotPipelineStepping = ({
           </motion.div>
 
           {/* 
-            SPEECH BUBBLE BESIDE ROBOT
-          */}
-          <motion.div
-            className="absolute z-35 pointer-events-auto bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl px-3.5 py-2.5 shadow-md text-left max-w-[170px]"
-            animate={{
-              left: `${((activeCoord.x + 46) / 1024) * 100}%`,
-              top: `${((activeCoord.y - 75) / 560) * 100}%`,
-            }}
-            transition={{
-              duration: shouldReduceMotion ? 0.01 : 0.65,
-              ease: [0.25, 1, 0.5, 1],
-            }}
-          >
-            <div className="text-[12px] font-bold text-slate-900 leading-tight">
-              {currentStage.speechTitle}
-            </div>
-            <div className="text-[10px] text-slate-500 leading-snug mt-0.5">
-              {currentStage.speechSub}
-            </div>
-            {/* Speech bubble tail */}
-            <div className="absolute -left-1.5 top-4 w-3 h-3 bg-white border-l border-b border-slate-200/90 transform rotate-45" />
-          </motion.div>
-
-          {/* 
-            FLOATING ANALYTICAL CHAPTER CARD (COLLISION-AWARE SAFE PLACEMENT)
-            Unfolds without covering the robot!
+            UNIFIED SINGLE STAGE CHAPTER BOX (COMBINES SPEECH INSIGHTS + ANALYTICS + MICRO-VISUAL)
+            Carefully calibrated placement with zero collision or header overlap!
           */}
           <AnimatePresence>
             {isChapterOpen && (
@@ -1230,29 +1019,54 @@ export const RobotPipelineStepping = ({
                   left: `${(activeCoord.portalX / 1024) * 100}%`,
                   top: `${(activeCoord.portalY / 560) * 100}%`,
                 }}
-                className="absolute z-35 w-[250px] sm:w-[270px] bg-white/95 backdrop-blur-xl rounded-2xl border border-sky-200/80 shadow-xl p-3.5 pointer-events-auto text-left font-sans"
+                className="absolute z-40 w-[325px] sm:w-[355px] md:w-[375px] bg-white/95 backdrop-blur-xl rounded-2xl border border-sky-200/90 shadow-[0_20px_50px_rgba(15,23,42,0.14)] p-3.5 sm:p-4 pointer-events-auto text-left font-sans"
               >
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2">
-                  <span className="text-[9px] font-mono font-bold text-[#08B8F5] uppercase">
-                    STAGE {currentStage.num} // {currentStage.name}
-                  </span>
+                {/* 1. Header Bar: Stage Badge + Micro Label + Close */}
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="px-2 py-0.5 rounded-md bg-sky-50 text-[#0070F3] border border-sky-200/70 font-mono font-bold text-[9.5px] tracking-wider uppercase">
+                      STAGE {currentStage.num} // {currentStage.name}
+                    </span>
+                    <span className="text-[8.5px] font-mono text-slate-400 uppercase tracking-wide">
+                      {currentStage.microLabel}
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={() => setIsChapterOpen(false)}
-                    className="text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
+                    className="text-slate-400 hover:text-slate-600 w-5 h-5 rounded-md flex items-center justify-center hover:bg-slate-100 text-xs font-bold transition-colors cursor-pointer flex-shrink-0"
+                    title="Close"
                   >
                     ✕
                   </button>
                 </div>
 
-                <div className="text-[11px] font-bold text-slate-900 leading-tight mb-0.5">
-                  {currentStage.cardTitle}
+                {/* 2. Unified Robot Speech / Live Signal Highlight Banner */}
+                <div className="flex items-start gap-2 bg-gradient-to-r from-sky-50/90 via-sky-50/40 to-transparent border border-sky-200/70 rounded-xl p-2 sm:p-2.5 mb-2.5">
+                  <div className="w-5 h-5 rounded-lg bg-white shadow-xs border border-sky-200/80 flex items-center justify-center text-[#08B8F5] flex-shrink-0 mt-0.5">
+                    <Sparkles className="w-3 h-3 text-[#08B8F5]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11.5px] font-bold text-slate-900 leading-tight">
+                      {currentStage.speechTitle}
+                    </div>
+                    <div className="text-[10px] text-slate-600 leading-snug mt-0.5 font-medium">
+                      {currentStage.speechSub}
+                    </div>
+                  </div>
                 </div>
-                <p className="text-[9px] text-slate-500 leading-normal mb-2">
-                  {currentStage.cardSubtitle}
-                </p>
 
-                {/* Analytical Micro-Visual */}
+                {/* 3. Stage Analysis Title & Context */}
+                <div className="mb-2.5">
+                  <h4 className="text-[12px] sm:text-[13px] font-bold text-slate-900 leading-snug">
+                    {currentStage.cardTitle}
+                  </h4>
+                  <p className="text-[9.5px] sm:text-[10px] text-slate-500 leading-relaxed mt-0.5">
+                    {currentStage.cardSubtitle}
+                  </p>
+                </div>
+
+                {/* 4. Analytical Micro-Visual */}
                 <div>
                   {activeStageIdx === 0 && <DetectArtVisual />}
                   {activeStageIdx === 1 && <VerifyArtVisual />}
@@ -1273,15 +1087,6 @@ export const RobotPipelineStepping = ({
           ============================================================
         */}
         <div className="absolute right-6 sm:right-10 bottom-8 sm:bottom-10 z-10 flex flex-col items-end pointer-events-auto">
-          {/* Technical Vertical Hierarchy Label */}
-          <div className="flex items-center gap-2 mb-2 text-left mr-2">
-            <span className="w-0.5 h-6 bg-[#08B8F5]" />
-            <div className="text-[8px] font-mono font-bold text-slate-400 leading-tight tracking-wider uppercase">
-              <div>FROM CITIZEN INPUT</div>
-              <div>TO A SAFER KOLKATA</div>
-            </div>
-          </div>
-
           {/* White Pill Banner */}
           <div className="bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 px-4 py-2.5 shadow-sm flex items-center gap-3 text-xs">
             {/* 1. Citizens Reports */}
@@ -1342,7 +1147,6 @@ export const RobotPipelineStepping = ({
         */}
         <div className="absolute bottom-3 left-6 sm:left-10 right-6 sm:right-10 z-10 flex items-center justify-between text-[8px] sm:text-[9px] font-mono text-slate-400 uppercase tracking-wider pointer-events-none">
           <span>7-STAGE AUTONOMOUS WATER INTELLIGENCE MATRIX</span>
-          <span>CLICK ANY TILE TO DISPATCH ROBOT</span>
         </div>
 
       </div>
