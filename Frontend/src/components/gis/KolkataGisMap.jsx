@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import * as maplibregl from "maplibre-gl";
 import {
   HOOGHLY_RIVER,
@@ -144,7 +144,7 @@ const MAP_STYLES = {
   },
 };
 
-export function KolkataGisMap({
+export const KolkataGisMap = React.memo(function KolkataGisMap({
   selectedDistrict,
   onSelectDistrict,
   overrideLayers,
@@ -177,15 +177,32 @@ export function KolkataGisMap({
     landmarks: true,
   });
 
-  const activeLayers = overrideLayers || {
-    canals: layerVisibility.canals && store.activeLayers.drainage !== false,
-    drainage: layerVisibility.drainage && store.activeLayers.drainage !== false,
-    incidents: layerVisibility.incidents && store.activeLayers.incidents !== false,
-    risk: layerVisibility.risk && store.activeLayers.risk !== false,
-    pumps: layerVisibility.pumps && store.activeLayers.pumps !== false,
-    spread: layerVisibility.spread && store.activeLayers.forecast !== false,
-    landmarks: layerVisibility.landmarks,
-  };
+  const activeLayers = useMemo(() => {
+    if (overrideLayers) return overrideLayers;
+    return {
+      canals: layerVisibility.canals && store.activeLayers.drainage !== false,
+      drainage: layerVisibility.drainage && store.activeLayers.drainage !== false,
+      incidents: layerVisibility.incidents && store.activeLayers.incidents !== false,
+      risk: layerVisibility.risk && store.activeLayers.risk !== false,
+      pumps: layerVisibility.pumps && store.activeLayers.pumps !== false,
+      spread: layerVisibility.spread && store.activeLayers.forecast !== false,
+      landmarks: layerVisibility.landmarks,
+    };
+  }, [
+    overrideLayers,
+    layerVisibility.canals,
+    layerVisibility.drainage,
+    layerVisibility.incidents,
+    layerVisibility.risk,
+    layerVisibility.pumps,
+    layerVisibility.spread,
+    layerVisibility.landmarks,
+    store.activeLayers?.drainage,
+    store.activeLayers?.incidents,
+    store.activeLayers?.risk,
+    store.activeLayers?.pumps,
+    store.activeLayers?.forecast,
+  ]);
 
   const selectedIncident = store.selectedIncident;
   const selectedRiskZone = store.selectedRiskZone;
@@ -604,7 +621,7 @@ export function KolkataGisMap({
         });
       }
     },
-    [activeLayers, is3DMode, store]
+    [activeLayers.incidents, activeLayers.pumps, activeLayers.landmarks, is3DMode]
   );
 
   // -------------------------------------------------------------
@@ -654,9 +671,19 @@ export function KolkataGisMap({
   // -------------------------------------------------------------
   // Handle Style Switching (Satellite vs Street vs Intelligence)
   // -------------------------------------------------------------
+  const prevStyleKeyRef = useRef(activeStyleKey);
+  const syncMapOverlaysRef = useRef(syncMapOverlays);
+  syncMapOverlaysRef.current = syncMapOverlays;
+  const syncMarkersRef = useRef(syncMarkers);
+  syncMarkersRef.current = syncMarkers;
+
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
+
+    // Only switch style if activeStyleKey actually changed!
+    if (prevStyleKeyRef.current === activeStyleKey) return;
+    prevStyleKeyRef.current = activeStyleKey;
 
     const currentPreset = MAP_STYLES[activeStyleKey] || MAP_STYLES.satellite;
 
@@ -665,12 +692,102 @@ export function KolkataGisMap({
     });
 
     const handleStyleLoad = () => {
-      syncMapOverlays(map);
-      syncMarkers(map);
+      syncMapOverlaysRef.current(map);
+      syncMarkersRef.current(map);
     };
 
     map.once("style.load", handleStyleLoad);
-  }, [activeStyleKey, syncMapOverlays, syncMarkers]);
+  }, [activeStyleKey]);
+
+  // -------------------------------------------------------------
+  // Synchronize Layer Visibilities (Instantaneous WebGL toggle, NO blinking)
+  // -------------------------------------------------------------
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+
+    if (map.getLayer("canals-line")) {
+      map.setLayoutProperty(
+        "canals-line",
+        "visibility",
+        activeLayers.canals ? "visible" : "none"
+      );
+      map.setLayoutProperty(
+        "canals-casing",
+        "visibility",
+        activeLayers.canals ? "visible" : "none"
+      );
+    }
+    if (map.getLayer("trunk-line")) {
+      map.setLayoutProperty(
+        "trunk-line",
+        "visibility",
+        activeLayers.drainage ? "visible" : "none"
+      );
+    }
+    if (map.getLayer("risk-fill")) {
+      map.setLayoutProperty(
+        "risk-fill",
+        "visibility",
+        activeLayers.risk ? "visible" : "none"
+      );
+      map.setLayoutProperty(
+        "risk-line",
+        "visibility",
+        activeLayers.risk ? "visible" : "none"
+      );
+    }
+    if (map.getLayer("spread-fill")) {
+      map.setLayoutProperty(
+        "spread-fill",
+        "visibility",
+        activeLayers.spread && !simulateState ? "visible" : "none"
+      );
+      map.setLayoutProperty(
+        "spread-line",
+        "visibility",
+        activeLayers.spread && !simulateState ? "visible" : "none"
+      );
+    }
+    if (map.getLayer("simulation-fill")) {
+      map.setLayoutProperty(
+        "simulation-fill",
+        "visibility",
+        simulateState ? "visible" : "none"
+      );
+      map.setLayoutProperty(
+        "simulation-line",
+        "visibility",
+        simulateState ? "visible" : "none"
+      );
+    }
+  }, [
+    activeLayers.canals,
+    activeLayers.drainage,
+    activeLayers.risk,
+    activeLayers.spread,
+    simulateState,
+  ]);
+
+  // -------------------------------------------------------------
+  // Synchronize Markers (Toggling incident, pump, or landmark markers)
+  // -------------------------------------------------------------
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+    syncMarkers(map);
+  }, [syncMarkers]);
+
+  // -------------------------------------------------------------
+  // Synchronize Water Flow Animation Trace
+  // -------------------------------------------------------------
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+    if (map.getLayer("canals-line")) {
+      map.setPaintProperty("canals-line", "line-width", traceWaterFlow ? 4.5 : 3.0);
+    }
+  }, [traceWaterFlow]);
 
   // -------------------------------------------------------------
   // Synchronize Timeline Scrubber with Flood Spread GeoJSON
@@ -1398,6 +1515,6 @@ export function KolkataGisMap({
       )}
     </div>
   );
-}
+});
 
 export default KolkataGisMap;
