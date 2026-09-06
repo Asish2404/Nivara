@@ -1,3 +1,4 @@
+
 import { create } from 'zustand'
 
 // Helper to determine initial route safely
@@ -13,7 +14,9 @@ const getInitialRoute = () => {
       p === '/report' ||
       p === '/my-reports' ||
       p === '/action-center' ||
-      p === '/respond'
+      p === '/respond' ||
+      p === '/login' ||
+      p === '/auth'
     ) {
       return p
     }
@@ -42,6 +45,9 @@ const routeToSection = (path) => {
     case '/action-center':
     case '/respond':
       return 'RESPOND'
+    case '/login':
+    case '/auth':
+      return 'LOGIN'
     default:
       return 'HOME'
   }
@@ -126,12 +132,14 @@ export const useKWIStore = create((set, get) => ({
       PREDICT: '/forecast',
       SIMULATE: '/simulate',
       RESPOND: '/action-center',
+      LOGIN: '/login',
       // backward compatibility aliases
       CITY: '/live-city',
       INCIDENTS: '/incidents',
       FORECAST: '/forecast',
       REPORTS: '/reports',
       ACTIONS: '/action-center',
+      AUTH: '/login',
     }
     const targetRoute = routeMap[section] || '/'
     if (typeof window !== 'undefined' && window.location.pathname !== targetRoute) {
@@ -224,6 +232,30 @@ export const useKWIStore = create((set, get) => ({
   askKolkataOpen: false,
   setAskKolkataOpen: (open) => set({ askKolkataOpen: open }),
   toggleAskKolkata: () => set((state) => ({ askKolkataOpen: !state.askKolkataOpen })),
+
+  // Login & Authentication state
+  isLoginModalOpen: false,
+  openLoginModal: () => set({ isLoginModalOpen: true }),
+  closeLoginModal: () => set({ isLoginModalOpen: false }),
+  toggleLoginModal: () => set((state) => ({ isLoginModalOpen: !state.isLoginModalOpen })),
+
+  currentUser: typeof window !== 'undefined' && localStorage.getItem('kwi_user')
+    ? JSON.parse(localStorage.getItem('kwi_user'))
+    : null,
+
+  loginUser: (userData) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kwi_user', JSON.stringify(userData))
+    }
+    set({ currentUser: userData, isLoginModalOpen: false })
+  },
+
+  logoutUser: () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('kwi_user')
+    }
+    set({ currentUser: null })
+  },
 
   adminMenuOpen: false,
   setAdminMenuOpen: (open) => set({ adminMenuOpen: open }),
