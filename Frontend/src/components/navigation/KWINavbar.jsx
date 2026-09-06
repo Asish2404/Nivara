@@ -12,25 +12,18 @@ import {
   Sparkles,
   Menu,
   X,
-  Fingerprint,
   User,
-  LogOut,
-  Building2,
-  KeyRound,
-  Shield,
-  Zap,
 } from "lucide-react";
 import { useKWIStore } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
+import { CommandProfileDropdown } from "./CommandProfileDropdown";
 
 export function KWINavbar() {
   const { currentRoute, navigate, toggleAskKolkata, openLoginModal, currentUser, logoutUser } = useKWIStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const dropdownTimeoutRef = useRef(null);
-  const userDropdownRef = useRef(null);
 
   // Initialize theme from document or localStorage
   useEffect(() => {
@@ -44,17 +37,6 @@ export function KWINavbar() {
         document.documentElement.classList.add("dark");
       }
     }
-  }, []);
-
-  // Handle outside click for user profile dropdown
-  useEffect(() => {
-    const handleOutsideClick = (e) => {
-      if (userDropdownRef.current && !userDropdownRef.current.contains(e.target)) {
-        setUserDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
   const toggleTheme = () => {
@@ -359,7 +341,7 @@ export function KWINavbar() {
             {/* ================================================= */}
             <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
               {/* ----------------------------------------------- */}
-              {/* SIGN IN ACTION BUTTON (Matching Navbar Style)   */}
+              {/* SIGN IN ACTION BUTTON / COMMAND PROFILE DROPDOWN*/}
               {/* ----------------------------------------------- */}
               {!currentUser ? (
                 <button
@@ -409,97 +391,8 @@ export function KWINavbar() {
                   )}
                 </button>
               ) : (
-                /* Authenticated Officer Pill & Dropdown */
-                <div className="relative" ref={userDropdownRef}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      audioEngine.playUiChirp(880);
-                      setUserDropdownOpen(!userDropdownOpen);
-                    }}
-                    className={`relative px-3 py-1.5 rounded-2xl flex items-center gap-2 cursor-pointer transition-all duration-200 border ${
-                      isDarkMode
-                        ? "bg-slate-900/90 border-emerald-500/40 text-slate-200 hover:border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
-                        : "bg-white/95 border-emerald-300 text-slate-800 hover:border-emerald-400 shadow-[0_4px_14px_rgba(16,185,129,0.15)]"
-                    }`}
-                  >
-                    <div className="w-6 h-6 rounded-xl bg-gradient-to-br from-emerald-400/20 to-teal-500/30 border border-emerald-400/50 flex items-center justify-center text-xs">
-                      {currentUser.avatar || "👨‍✈️"}
-                    </div>
-                    <div className="flex flex-col text-left">
-                      <span className="text-[11px] font-bold leading-tight truncate max-w-[100px]">
-                        {currentUser.name?.split(" ")[0] || "Officer"}
-                      </span>
-                      <span className="text-[8px] font-mono text-emerald-400 font-semibold leading-none">
-                        ONLINE // CL-4
-                      </span>
-                    </div>
-                    <ChevronDown className="w-3 h-3 text-slate-400" />
-                  </button>
-
-                  {/* User Profile Dropdown Menu */}
-                  <AnimatePresence>
-                    {userDropdownOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 6, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 4, scale: 0.95 }}
-                        transition={{ duration: 0.15 }}
-                        className={`absolute top-full right-0 mt-2 min-w-[240px] rounded-2xl p-3 shadow-[0_20px_50px_rgba(0,0,0,0.4)] z-50 backdrop-blur-2xl border ${
-                          isDarkMode
-                            ? "bg-[#091124]/98 border-cyan-500/30 text-white"
-                            : "bg-white/98 border-slate-200 text-slate-900"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 pb-2.5 border-b border-white/10">
-                          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-lg">
-                            {currentUser.avatar || "👨‍✈️"}
-                          </div>
-                          <div>
-                            <div className="text-xs font-bold leading-tight text-white">
-                              {currentUser.name}
-                            </div>
-                            <div className="text-[10px] font-mono text-cyan-400">
-                              {currentUser.badgeId || "KMC-DIR-7049"}
-                            </div>
-                            <div className="text-[9px] text-slate-400 truncate max-w-[150px]">
-                              {currentUser.role || "Chief Drainage Officer"}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="py-2 space-y-1 text-xs">
-                          <div className="px-2 py-1.5 rounded-xl bg-white/5 text-[10px] font-mono text-slate-300">
-                            Clearance: <span className="text-emerald-400 font-semibold">{currentUser.clearance || "Level 4 // Command"}</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setUserDropdownOpen(false);
-                              navigate('/signup');
-                            }}
-                            className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-slate-300 hover:text-cyan-300 hover:bg-white/5 transition-colors flex items-center justify-between cursor-pointer"
-                          >
-                            <span>Switch Account / Sign Up</span>
-                            <Zap className="w-3 h-3 text-cyan-400" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              audioEngine.playUiChirp(700);
-                              logoutUser();
-                              setUserDropdownOpen(false);
-                            }}
-                            className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors flex items-center justify-between cursor-pointer"
-                          >
-                            <span>Sign Out // Clear Token</span>
-                            <LogOut className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                /* Authenticated Command Officer Dropdown with High-End Glassmorphism */
+                <CommandProfileDropdown isDarkMode={isDarkMode} />
               )}
 
               {/* ----------------------------------------------- */}
