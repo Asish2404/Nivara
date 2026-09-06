@@ -58,19 +58,21 @@ const NAV_COLUMNS = [
     links: [
       { label: 'Actions', path: '/action-center' },
       { label: 'Ask Kolkata', isAskKolkata: true },
-      { label: 'Admin Console', path: '/action-center' },
+      { label: 'Sign Up / Join', path: '/signup' },
       { label: 'System Status', path: '/live-city' },
     ],
   },
 ]
 
 export default function Footer() {
-  const { navigate, toggleAskKolkata } = useKWIStore()
+  const { navigate, toggleAskKolkata, openLoginModal } = useKWIStore()
 
   const handleLinkClick = (linkItem) => {
     if (audioEngine) audioEngine.playUiChirp(920)
     if (linkItem.isAskKolkata) {
       toggleAskKolkata()
+    } else if (linkItem.isLogin) {
+      openLoginModal()
     } else if (linkItem.path) {
       navigate(linkItem.path)
     }

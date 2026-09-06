@@ -2,29 +2,32 @@ import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 
 /**
- * KWI “LIVE WATER SIGNAL” SIGNATURE CURSOR (GSAP-POWERED)
- * Ultra-smooth, high-precision geospatial inspection instrument.
- * Uses GSAP quickTo for zero-lag 120fps hardware-accelerated tracking,
- * GSAP state morphing transitions, and clean hairline click shockwaves.
+ * 3D GLOSSY OBSIDIAN SIGNATURE CURSOR (GSAP-POWERED)
+ * High-precision hardware-accelerated 120fps tracking with 3D glossy black pointer.
+ * Perfect tip alignment (0,0 hotspot), tactile click feedback, and contextual telemetry.
  */
 export function KWISignatureCursor() {
   const [cursorMode, setCursorMode] = useState('default')
   const [isVisible, setIsVisible] = useState(false)
   const [isInsidePhone, setIsInsidePhone] = useState(false)
+  const [isClicking, setIsClicking] = useState(false)
 
   const cursorRef = useRef(null)
+  const cursorImgRef = useRef(null)
   const rippleContainerRef = useRef(null)
   const currentModeRef = useRef('default')
   const insidePhoneRef = useRef(false)
   const xQuickRef = useRef(null)
   const yQuickRef = useRef(null)
-  const flowTweenRef = useRef(null)
 
   useEffect(() => {
     // 1. Mobile & Touch Screen Guard
     if (typeof window === 'undefined') return
     const isTouch = window.matchMedia('(pointer: coarse)').matches
     if (isTouch) return
+
+    // Hide native cursor when custom cursor is active
+    document.documentElement.classList.add('custom-cursor-active')
 
     // 2. Reduced Motion check
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -36,11 +39,11 @@ export function KWISignatureCursor() {
     if (cursorEl) {
       // Initialize GSAP quickTo setters for instant, butter-smooth 120fps tracking
       xQuickRef.current = gsap.quickTo(cursorEl, 'x', {
-        duration: 0.04,
+        duration: 0.035,
         ease: 'power3.out',
       })
       yQuickRef.current = gsap.quickTo(cursorEl, 'y', {
-        duration: 0.04,
+        duration: 0.035,
         ease: 'power3.out',
       })
     }
@@ -57,11 +60,11 @@ export function KWISignatureCursor() {
 
       gsap.fromTo(
         ripple,
-        { scale: 0.35, opacity: 0.55 },
+        { scale: 0.2, opacity: 0.7 },
         {
-          scale: 1.45,
+          scale: 1.6,
           opacity: 0,
-          duration: 0.38,
+          duration: 0.42,
           ease: 'power2.out',
           onComplete: () => {
             if (ripple.parentNode === rippleContainer) {
@@ -83,7 +86,7 @@ export function KWISignatureCursor() {
       if (!isVisible) {
         setIsVisible(true)
         if (cursorEl) {
-          gsap.to(cursorEl, { opacity: 1, duration: 0.2, ease: 'power2.out' })
+          gsap.to(cursorEl, { opacity: 1, duration: 0.15, ease: 'power2.out' })
         }
       }
 
@@ -96,7 +99,7 @@ export function KWISignatureCursor() {
 
         if (cursorEl) {
           if (isPhone) {
-            gsap.to(cursorEl, { opacity: 0, scale: 0.4, duration: 0.15, ease: 'power2.in' })
+            gsap.to(cursorEl, { opacity: 0, scale: 0.3, duration: 0.15, ease: 'power2.in' })
           } else {
             gsap.to(cursorEl, { opacity: 1, scale: 1, duration: 0.2, ease: 'power2.out' })
           }
@@ -134,7 +137,19 @@ export function KWISignatureCursor() {
 
     const handleMouseDown = (e) => {
       if (insidePhoneRef.current) return
+      setIsClicking(true)
       spawnClickRipple(e.clientX, e.clientY)
+      if (cursorRef.current) {
+        gsap.to(cursorRef.current, { scale: 0.94, duration: 0.1, ease: 'power2.out' })
+      }
+    }
+
+    const handleMouseUp = () => {
+      setIsClicking(false)
+      if (cursorRef.current) {
+        const targetScale = currentModeRef.current === 'interactive' ? 1.08 : 1.0
+        gsap.to(cursorRef.current, { scale: targetScale, duration: 0.18, ease: 'power2.out' })
+      }
     }
 
     const handleMouseLeave = () => {
@@ -153,31 +168,33 @@ export function KWISignatureCursor() {
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true })
     window.addEventListener('mousedown', handleMouseDown, { passive: true })
+    window.addEventListener('mouseup', handleMouseUp, { passive: true })
     document.addEventListener('mouseleave', handleMouseLeave)
     document.addEventListener('mouseenter', handleMouseEnter)
 
     return () => {
+      document.documentElement.classList.remove('custom-cursor-active')
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mousedown', handleMouseDown)
+      window.removeEventListener('mouseup', handleMouseUp)
       document.removeEventListener('mouseleave', handleMouseLeave)
       document.removeEventListener('mouseenter', handleMouseEnter)
-      if (flowTweenRef.current) flowTweenRef.current.kill()
     }
   }, [isVisible])
 
   // GSAP Mode Transition Effect
   useEffect(() => {
     const cursorEl = cursorRef.current
-    if (!cursorEl || isInsidePhone) return
+    if (!cursorEl || isInsidePhone || isClicking) return
 
     if (cursorMode === 'interactive') {
-      gsap.to(cursorEl, { scale: 1.15, duration: 0.18, ease: 'power2.out', overwrite: 'auto' })
-    } else if (cursorMode === 'incident' || cursorMode === 'pump') {
-      gsap.to(cursorEl, { scale: 1.1, duration: 0.2, ease: 'back.out(1.5)', overwrite: 'auto' })
+      gsap.to(cursorEl, { scale: 1.08, duration: 0.18, ease: 'power2.out', overwrite: 'auto' })
+    } else if (cursorMode === 'incident' || cursorMode === 'pump' || cursorMode === 'risk') {
+      gsap.to(cursorEl, { scale: 1.05, duration: 0.2, ease: 'back.out(1.5)', overwrite: 'auto' })
     } else {
       gsap.to(cursorEl, { scale: 1, duration: 0.2, ease: 'power2.out', overwrite: 'auto' })
     }
-  }, [cursorMode, isInsidePhone])
+  }, [cursorMode, isInsidePhone, isClicking])
 
   // Don't render if touch device
   if (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) {
@@ -193,85 +210,58 @@ export function KWISignatureCursor() {
         className="pointer-events-none fixed inset-0 z-[99998] overflow-hidden"
       />
 
-      {/* 2. Main Signature Cursor Instrument (Managed via GSAP) */}
+      {/* 2. 3D Glossy Obsidian Cursor Container */}
       <div
         ref={cursorRef}
         aria-hidden="true"
-        className="pointer-events-none fixed top-0 left-0 z-[99999] will-change-transform opacity-0"
+        className="pointer-events-none fixed top-0 left-0 z-[99999] will-change-transform opacity-0 select-none"
         style={{
           transform: 'translate3d(-100px, -100px, 0)',
         }}
       >
-        <div className={`kwi-cursor-instrument mode-${cursorMode}`}>
-          {/* Default / Interactive / River Mode: Precision Coordinate Reticle */}
-          {(cursorMode === 'default' || cursorMode === 'interactive' || cursorMode === 'river') && (
-            <div className="kwi-cursor-default">
-              {/* Outer Precision Ring with 4 Micro Crosshair Ticks */}
-              <div className="kwi-cursor-ring">
-                <span className="kwi-tick tick-n" />
-                <span className="kwi-tick tick-s" />
-                <span className="kwi-tick tick-e" />
-                <span className="kwi-tick tick-w" />
-              </div>
-              {/* High-Precision Center Coordinate Core */}
-              <div className="kwi-cursor-dot">
-                <div className="kwi-cursor-center" />
-              </div>
-            </div>
-          )}
+        <div className={`kwi-3d-cursor-wrapper mode-${cursorMode}`}>
+          {/* Main 3D Glossy Obsidian Pointer Arrow */}
+          <div className="kwi-3d-pointer-container">
+            <img
+              ref={cursorImgRef}
+              src="/assets/cursor-black-3d.png"
+              alt=""
+              draggable="false"
+              className="kwi-3d-pointer-img"
+            />
+            {/* Subtle glow accent when hovering interactive elements */}
+            <div className="kwi-3d-pointer-glow" />
+          </div>
 
-          {/* Map Mode & Risk Zone Mode: Geographic Inspection with 4 Corner Brackets */}
+          {/* Contextual Telemetry Badges (Geospatial inspection modes) */}
           {(cursorMode === 'map' || cursorMode === 'risk') && (
-            <div className="kwi-cursor-map">
-              <span className="bracket bracket-tl" />
-              <span className="bracket bracket-tr" />
-              <span className="bracket bracket-bl" />
-              <span className="bracket bracket-br" />
-              <div className="kwi-cursor-dot">
-                <div className="kwi-cursor-center" />
-              </div>
+            <div className="kwi-cursor-telemetry-badge">
+              <span className="kwi-telemetry-corner tl" />
+              <span className="kwi-telemetry-corner tr" />
+              <span className="kwi-telemetry-corner bl" />
+              <span className="kwi-telemetry-corner br" />
+              <span className="kwi-telemetry-text">GIS INSPECT</span>
             </div>
           )}
 
-          {/* Drainage / Canal Mode: Flow Inspection with moving flow dot */}
           {cursorMode === 'drainage' && (
-            <div className="kwi-cursor-drainage">
-              <div className="kwi-cursor-dot">
-                <div className="kwi-cursor-center" />
-              </div>
-              <div className="kwi-flow-track">
-                <div className="kwi-flow-particle" />
-              </div>
+            <div className="kwi-cursor-telemetry-flow">
+              <span className="kwi-flow-dot" />
+              <span className="kwi-flow-tag">HYDRO FLOW</span>
             </div>
           )}
 
-          {/* Pumping Station Mode: Station Inspection with targeting ring */}
           {cursorMode === 'pump' && (
-            <div className="kwi-cursor-pump">
-              <div className="kwi-pump-target-ring" />
-              <div className="kwi-cursor-dot kwi-cursor-dot-lg">
-                <div className="kwi-cursor-center" />
-              </div>
+            <div className="kwi-cursor-telemetry-pump">
+              <div className="kwi-pump-pulse-ring" />
+              <span className="kwi-pump-tag">PUMP TELEMETRY</span>
             </div>
           )}
 
-          {/* Incident Target Mode: Incident marker target ring */}
           {cursorMode === 'incident' && (
-            <div className="kwi-cursor-incident">
-              <div className="kwi-incident-target-ring" />
-              <div className="kwi-cursor-dot">
-                <div className="kwi-cursor-center" />
-              </div>
-            </div>
-          )}
-
-          {/* Waterbody / Wetland Mode: Water inspection ripple */}
-          {cursorMode === 'waterbody' && (
-            <div className="kwi-cursor-waterbody">
-              <div className="kwi-waterbody-ripple" />
-              <div className="kwi-cursor-dot">
-                <div className="kwi-cursor-center" />
-              </div>
+            <div className="kwi-cursor-telemetry-incident">
+              <div className="kwi-incident-pulse-ring" />
+              <span className="kwi-incident-tag">ALERT NODE</span>
             </div>
           )}
         </div>

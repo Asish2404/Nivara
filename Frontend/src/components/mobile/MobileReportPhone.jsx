@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Signal, Wifi, MapPin, Droplets, ChevronLeft, Zap, Lock, Flashlight, Camera, ChevronUp } from 'lucide-react'
+import { Signal, Wifi, MapPin, Droplets, ChevronLeft, Zap, Lock, ChevronUp } from 'lucide-react'
 import { useKWIStore } from '../../store/useKWIStore'
 import { audioEngine } from '../../utils/audioEngine'
 import { MobileReportForm } from './MobileReportForm'
@@ -12,7 +12,7 @@ export function MobileReportPhone() {
 
   // -1: Lock Screen with Indian Flag Wallpaper, 0: Welcome Screen, 1: Report Your Problem, 2: Existing Report Form
   const [phoneStep, setPhoneStep] = useState(-1)
-  const [flashlightOn, setFlashlightOn] = useState(false)
+  const [islandExpanded, setIslandExpanded] = useState(false)
 
   // 1. Live Real-Time Clock & Date (iPhone Lock Screen Style)
   const [currentTime, setCurrentTime] = useState(() => {
@@ -88,18 +88,28 @@ export function MobileReportPhone() {
 
   return (
     <div className="w-full flex justify-center py-4 select-none">
-      {/* Phone Hardware Mockup Shell - Stable, No Up/Down Vibrations */}
+      {/* Phone Hardware Mockup Shell - Exact iPhone 15/16 Pro Titanium Chassis */}
       <motion.div
         ref={phoneContainerRef}
         data-phone-mockup="true"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className="w-[310px] sm:w-[325px] h-[620px] rounded-[48px] bg-[#18181b] p-[9px] shadow-[0_25px_60px_-15px_rgba(15,23,42,0.22),0_10px_25px_-5px_rgba(15,23,42,0.1)] ring-1 ring-slate-800/80 flex flex-col justify-between relative"
+        className="w-[348px] sm:w-[374px] md:w-[384px] h-[710px] sm:h-[746px] rounded-[58px] sm:rounded-[60px] bg-gradient-to-b from-[#2a2a2e] via-[#1c1c20] to-[#141416] p-[10px] sm:p-[11px] shadow-[0_40px_90px_-20px_rgba(0,0,0,0.5),0_15px_35px_-8px_rgba(0,0,0,0.3)] ring-1 ring-white/20 border border-[#3e3e44] flex flex-col justify-between relative"
       >
-        {/* Physical Side Buttons (Titanium Finish) - Power Button clicks to lock/unlock */}
-        <div className="absolute -left-[11px] top-24 w-[3.5px] h-9 bg-slate-700 rounded-l-xs shadow-xs pointer-events-none" />
-        <div className="absolute -left-[11px] top-37 w-[3.5px] h-9 bg-slate-700 rounded-l-xs shadow-xs pointer-events-none" />
+        {/* Antenna Bands (Exact iPhone Placement) */}
+        <div className="absolute -left-[1px] top-24 w-[2.5px] h-[3px] bg-[#44444a]" />
+        <div className="absolute -right-[1px] top-24 w-[2.5px] h-[3px] bg-[#44444a]" />
+        <div className="absolute -left-[1px] bottom-24 w-[2.5px] h-[3px] bg-[#44444a]" />
+        <div className="absolute -right-[1px] bottom-24 w-[2.5px] h-[3px] bg-[#44444a]" />
+
+        {/* Physical Side Buttons (Exact Pro Dimensions) */}
+        {/* Left: Action Button & Volume Rockers */}
+        <div className="absolute -left-[4px] top-26 w-[3px] h-6 bg-[#3a3a40] rounded-l-xs shadow-xs pointer-events-none" />
+        <div className="absolute -left-[4px] top-37 w-[3px] h-12 bg-[#3a3a40] rounded-l-xs shadow-xs pointer-events-none" />
+        <div className="absolute -left-[4px] top-52 w-[3px] h-12 bg-[#3a3a40] rounded-l-xs shadow-xs pointer-events-none" />
+
+        {/* Right: Side / Power Button (Click to Lock/Unlock Phone) */}
         <button
           type="button"
           title={phoneStep === -1 ? 'Unlock Phone' : 'Lock Phone'}
@@ -107,40 +117,109 @@ export function MobileReportPhone() {
             if (audioEngine) audioEngine.playUiChirp(phoneStep === -1 ? 1200 : 700)
             setPhoneStep((prev) => (prev === -1 ? 0 : -1))
           }}
-          className="absolute -right-[11px] top-28 w-[3.5px] h-14 bg-slate-600 hover:bg-slate-500 active:scale-95 rounded-r-xs shadow-xs cursor-pointer transition-all z-30"
+          className="absolute -right-[4px] top-38 w-[3px] h-16 bg-[#3a3a40] hover:bg-[#52525c] active:scale-95 rounded-r-xs shadow-xs cursor-pointer transition-all z-40"
         />
 
-        {/* Screen Inner Bezel */}
+        {/* Top Speaker Micro-slit (Seamlessly Integrated Into Top Bezel) */}
+        <div className="absolute top-[5px] left-1/2 -translate-x-1/2 w-16 h-[2.5px] bg-[#0c0c0e] rounded-full z-30 pointer-events-none" />
+
+        {/* Screen Inner Bezel (Exact Symmetrical Apple Margins) */}
         <div
-          className={`w-full h-full rounded-[40px] overflow-hidden flex flex-col justify-between relative border border-slate-200/90 shadow-inner transition-colors duration-300 ${
+          className={`w-full h-full rounded-[48px] sm:rounded-[50px] overflow-hidden flex flex-col justify-between relative border border-slate-900/80 shadow-inner transition-colors duration-300 ${
             phoneStep === -1 ? 'bg-[#488bc6]' : 'bg-white'
           }`}
         >
-          {/* 1. Dynamic Island & Native iPhone Status Bar (Floating transparently) */}
-          <div className="pt-3 px-5 pb-1 flex items-center justify-between z-30 relative select-none shrink-0 bg-transparent">
-            {/* Real Time Display (iPhone SF Pro style font) */}
-            <span
-              className={`text-[12px] font-bold font-sans tracking-tight min-w-[32px] transition-colors duration-300 ${
-                phoneStep === -1 ? 'text-white drop-shadow-sm' : 'text-slate-900'
-              }`}
+          {/* Ceramic Shield Diagonal Glass Glint */}
+          <div className="absolute -top-28 -left-20 w-80 h-[430px] bg-gradient-to-br from-white/14 via-white/4 to-transparent rotate-[35deg] pointer-events-none z-40" />
+
+          {/* ============================================================ */}
+          {/* EXACT APPLE DYNAMIC ISLAND WITH FLUID EXPANSION              */}
+          {/* ============================================================ */}
+          <div className="absolute top-[11px] left-1/2 -translate-x-1/2 z-50 pointer-events-auto">
+            <motion.div
+              layout
+              onMouseEnter={() => setIslandExpanded(true)}
+              onMouseLeave={() => setIslandExpanded(false)}
+              onClick={() => {
+                if (audioEngine) audioEngine.playUiChirp(900)
+                setIslandExpanded((prev) => !prev)
+              }}
+              animate={{
+                width: islandExpanded ? 196 : 124,
+                height: 34,
+              }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className="bg-black rounded-full px-3 flex items-center justify-between shadow-[0_4px_14px_rgba(0,0,0,0.85)] ring-[0.5px] ring-white/15 select-none cursor-pointer transition-shadow hover:shadow-cyan-500/10"
             >
-              {currentTime}
-            </span>
+              {/* Left Side: TrueDepth Sensor / Face ID */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#0a0a0f] flex items-center justify-center">
+                  <div className="w-1 h-1 rounded-full bg-[#040406]" />
+                </div>
+                {islandExpanded && (
+                  <motion.span
+                    initial={{ opacity: 0, x: -4 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-[9.5px] font-mono font-bold text-cyan-300 tracking-wider uppercase pl-1"
+                  >
+                    KWI GRID
+                  </motion.span>
+                )}
+              </div>
 
-            {/* Pill Dynamic Island */}
-            <div className="w-20 h-[18px] bg-black rounded-full flex items-center justify-end px-2 gap-1.5 shadow-inner">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#111] ring-1 ring-slate-800" />
-              <div className="w-1 h-1 rounded-full bg-blue-900/60" />
-            </div>
+              {/* Center Activity Element */}
+              {!islandExpanded ? (
+                phoneStep >= 0 ? (
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.9)] animate-pulse" />
+                ) : (
+                  <div className="w-1 h-1 rounded-full bg-white/10" />
+                )
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex items-center gap-1 text-[9px] font-mono text-white/80"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span>ONLINE</span>
+                </motion.div>
+              )}
 
-            {/* Native iPhone Status Icons */}
+              {/* Right Side: TrueDepth Camera with Sapphire Lens Glint */}
+              <div className="w-3.5 h-3.5 rounded-full bg-[#030611] border border-[#1e293b]/90 flex items-center justify-center relative overflow-hidden shrink-0">
+                <div className="w-2 h-2 rounded-full bg-[#020308]" />
+                {/* Blue/Violet Lens Coating Glint */}
+                <div className="w-1 h-1 rounded-full bg-blue-500/40 absolute top-[2px] right-[2px]" />
+                {/* Specular White Highlight */}
+                <div className="w-0.5 h-0.5 rounded-full bg-white/80 absolute top-[1.5px] right-[1.5px]" />
+              </div>
+            </motion.div>
+          </div>
+
+          {/* 1. Native iPhone Status Bar (Symmetrically Flanking Dynamic Island) */}
+          <div className="pt-2.5 px-6 sm:px-7 pb-1 flex items-center justify-between z-30 relative select-none shrink-0 bg-transparent">
+            {/* Top Left: On Lock Screen, shows Carrier 'Jio 5G'; Inside App, shows Time '9:41' */}
+            {phoneStep === -1 ? (
+              <span className="text-[12px] font-semibold font-sans tracking-tight text-white/95 drop-shadow-sm flex items-center gap-1 min-w-[40px]">
+                Jio 5G
+              </span>
+            ) : (
+              <span className="text-[13px] font-semibold font-sans tracking-tight text-slate-900 min-w-[40px]">
+                {currentTime}
+              </span>
+            )}
+
+            {/* Empty Center Space: Guarantees Dynamic Island Clearance */}
+            <div className="w-[126px] h-[34px] pointer-events-none" />
+
+            {/* Top Right: Native iOS Status Icons (Cellular, WiFi, Battery) */}
             <div
               className={`flex items-center gap-1.5 transition-colors duration-300 ${
                 phoneStep === -1 ? 'text-white' : 'text-slate-900'
               }`}
             >
               {/* iPhone 4-Bar Cellular Signal */}
-              <div className="flex items-end gap-[1.5px] h-[10px] pb-[0.5px]">
+              <div className="flex items-end gap-[1.5px] h-[11px] pb-[0.5px]">
                 <span
                   className={`w-[2.5px] h-[3.5px] rounded-[0.8px] ${
                     phoneStep === -1 ? 'bg-white shadow-xs' : 'bg-slate-900'
@@ -165,7 +244,7 @@ export function MobileReportPhone() {
 
               {/* iPhone WiFi Icon */}
               <Wifi
-                className={`w-[12.5px] h-[12.5px] stroke-[2.4] ${
+                className={`w-[13.5px] h-[13.5px] stroke-[2.4] ${
                   phoneStep === -1 ? 'text-white' : 'text-slate-900'
                 }`}
               />
@@ -173,8 +252,8 @@ export function MobileReportPhone() {
               {/* Authentic iPhone Battery Capsule with Percentage INSIDE */}
               <div className="flex items-center pl-0.5">
                 <svg
-                  width="25"
-                  height="12"
+                  width="26"
+                  height="13"
                   viewBox="0 0 25 12"
                   className="overflow-visible select-none"
                 >
@@ -259,7 +338,7 @@ export function MobileReportPhone() {
             ) : (
               <AnimatePresence mode="wait">
                 {/* ========================================================= */}
-                {/* SCREEN -1: AUTHENTIC IPHONE LOCK SCREEN (INDIAN FLAG)      */}
+                {/* SCREEN -1: EXACT IPHONE LOCK SCREEN (INDIAN FLAG)         */}
                 {/* ========================================================= */}
                 {phoneStep === -1 && (
                   <motion.div
@@ -272,48 +351,43 @@ export function MobileReportPhone() {
                       if (audioEngine) audioEngine.playUiChirp(1200)
                       setPhoneStep(0)
                     }}
-                    className="absolute inset-0 -top-12 -bottom-2 w-full h-[calc(100%+56px)] flex flex-col justify-between pt-14 pb-4 px-3.5 cursor-pointer select-none z-10 bg-[#488bc6]"
+                    className="absolute inset-0 -top-12 -bottom-2 w-full h-[calc(100%+56px)] flex flex-col justify-between pt-16 pb-4 px-3.5 cursor-pointer select-none z-10 bg-[#488bc6]"
                   >
-                    {/* Indian Flag Wallpaper (Full Edge-to-Edge Bleed from Top Bezel to Bottom) */}
+                    {/* Indian Flag Wallpaper (Edge-to-Edge Bleed with Contrast Vignette) */}
                     <div className="absolute inset-0 w-full h-full bg-[#488bc6] flex items-center justify-center overflow-hidden z-0 pointer-events-none">
                       <img
                         src="/textures/indian_flag_wallpaper.png"
                         alt="Indian Flag Wallpaper"
-                        className="w-full h-full object-contain object-center scale-[1.28] translate-y-2 select-none"
+                        className="w-full h-full object-contain object-center scale-[1.32] translate-y-2 select-none"
                       />
                     </div>
 
-                    {/* Subtle Sky Vignette for Text Contrast */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/55 pointer-events-none z-0" />
+                    {/* Authentic iOS Gradient Vignette for Razor-Sharp Text Contrast */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-black/60 pointer-events-none z-0" />
 
-                    {/* Flashlight beam simulation */}
-                    {flashlightOn && (
-                      <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-white/30 to-transparent pointer-events-none z-0" />
-                    )}
-
-                    {/* Lock Screen Header: Lock Icon, Date & Big iOS Clock */}
-                    <div className="relative z-10 flex flex-col items-center pt-2 text-center pointer-events-none">
-                      <div className="flex items-center gap-1 text-white/95 mb-0.5 drop-shadow-sm">
-                        <Lock className="w-3.5 h-3.5 stroke-[2.4]" />
+                    {/* Exact iOS Lock Screen Header: Lock Icon, Date & Huge iOS Clock */}
+                    <div className="relative z-10 flex flex-col items-center pt-3 text-center pointer-events-none">
+                      <div className="flex items-center gap-1 text-white/95 mb-1 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]">
+                        <Lock className="w-3.5 h-3.5 stroke-[2.5]" />
                       </div>
-                      <p className="text-[12px] font-semibold text-white/95 tracking-tight font-sans drop-shadow-sm">
+                      <p className="text-[13.5px] font-medium text-white/95 tracking-tight font-sans drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]">
                         {currentDate}
                       </p>
-                      <h1 className="text-[52px] font-extrabold text-white tracking-tight font-sans leading-none drop-shadow-md my-0.5 select-none">
+                      <h1 className="text-[70px] sm:text-[76px] font-bold text-white tracking-tight font-sans leading-none drop-shadow-[0_2px_14px_rgba(0,0,0,0.45)] my-1 select-none">
                         {currentTime}
                       </h1>
                     </div>
 
-                    {/* Spacer: Keeps Center Flag 100% Clear and Unobstructed */}
+                    {/* Spacer: Keeps Center Flag Clear */}
                     <div className="flex-1" />
 
-                    {/* Bottom Area: Slim iOS Notification + Quick Action Buttons */}
-                    <div className="relative z-10 flex flex-col gap-2 pt-1 pb-0">
+                    {/* Bottom Area: Clean iOS Live Activity & Home Indicator */}
+                    <div className="relative z-10 flex flex-col gap-3 pt-1 pb-1">
                       {/* Slim iOS Live Activity Notification Pill */}
-                      <div className="w-full bg-black/40 backdrop-blur-xl border border-white/20 rounded-xl px-3 py-2 shadow-lg text-left transition-all hover:bg-black/55">
+                      <div className="w-full bg-black/45 hover:bg-black/60 backdrop-blur-2xl border border-white/25 rounded-2xl px-3.5 py-2.5 shadow-2xl text-left transition-all active:scale-[0.99] cursor-pointer">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-md overflow-hidden bg-white flex items-center justify-center p-0.5">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-5 h-5 rounded-md overflow-hidden bg-white flex items-center justify-center p-0.5 shadow-2xs">
                               <img
                                 src="/textures/KWI_LOGO.jpeg"
                                 alt="KWI Logo"
@@ -321,59 +395,25 @@ export function MobileReportPhone() {
                               />
                             </div>
                             <div>
-                              <span className="text-[11px] font-bold text-white tracking-tight block leading-tight">
+                              <span className="text-[11.5px] font-bold text-white tracking-tight block leading-tight">
                                 KWI Waterlogging Grid Active
                               </span>
-                              <span className="text-[9.5px] text-white/80 block leading-tight">
+                              <span className="text-[10px] text-white/85 block leading-tight mt-0.5">
                                 Tap anywhere to unlock & report
                               </span>
                             </div>
                           </div>
-                          <span className="text-[9px] font-mono text-white/70">now</span>
+                          <span className="text-[9.5px] font-mono text-white/70">now</span>
                         </div>
                       </div>
 
-                      {/* Quick Action Buttons */}
-                      <div className="w-full flex items-center justify-between px-1">
-                        {/* Flashlight Button */}
-                        <button
-                          type="button"
-                          title="Toggle Flashlight"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setFlashlightOn((v) => !v)
-                            if (audioEngine) audioEngine.playUiChirp(800)
-                          }}
-                          className={`w-9.5 h-9.5 rounded-full backdrop-blur-md border border-white/30 flex items-center justify-center cursor-pointer transition-all shadow-md active:scale-95 ${
-                            flashlightOn
-                              ? 'bg-white text-slate-900 ring-2 ring-white/60'
-                              : 'bg-black/40 text-white hover:bg-black/60'
-                          }`}
-                        >
-                          <Flashlight className="w-3.5 h-3.5 fill-current" />
-                        </button>
-
-                        {/* Camera Button */}
-                        <button
-                          type="button"
-                          title="Open Camera"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            if (audioEngine) audioEngine.playUiChirp(1100)
-                            setPhoneStep(0)
-                          }}
-                          className="w-9.5 h-9.5 rounded-full bg-black/40 hover:bg-black/60 active:scale-95 backdrop-blur-md border border-white/30 text-white flex items-center justify-center cursor-pointer transition-all shadow-md"
-                        >
-                          <Camera className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-
-                      {/* Swipe Up Unlock Text & Home Indicator */}
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="text-[10.5px] font-semibold text-white/90 tracking-wider flex items-center gap-1 drop-shadow-sm font-sans">
-                          Swipe up to open <ChevronUp className="w-3.5 h-3.5 text-white" />
+                      {/* Swipe Up Unlock Text & Apple Home Indicator */}
+                      <div className="flex flex-col items-center gap-1.5 pt-0.5">
+                        <span className="text-[11px] font-semibold text-white/90 tracking-wide flex items-center gap-1 drop-shadow-sm font-sans">
+                          Swipe up to open <ChevronUp className="w-3.5 h-3.5 text-white/90" />
                         </span>
-                        <div className="w-28 h-1 bg-white rounded-full shadow-xs" />
+                        {/* Apple Home Indicator */}
+                        <div className="w-36 h-[4.5px] bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.5)]" />
                       </div>
                     </div>
                   </motion.div>

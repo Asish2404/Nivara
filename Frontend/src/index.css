@@ -129,339 +129,221 @@
 }
 
 /* ========================================================= */
-/* KWI "LIVE WATER SIGNAL" SIGNATURE CURSOR STYLES           */
+/* 3D GLOSSY OBSIDIAN SIGNATURE CURSOR STYLES               */
 /* ========================================================= */
 
-.kwi-cursor-instrument {
-  position: relative;
-  width: 20px;
-  height: 20px;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  user-select: none;
-  transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
+/* Native fallback cursor across site */
+html, body {
+  cursor: url('/assets/cursor-black-3d-20.png') 1 0, auto;
 }
 
-/* Default state: Razor-Sharp Precision Geographic Coordinate Marker */
-.kwi-cursor-default {
-  position: relative;
-  width: 18px;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+button, a, [role="button"], input[type="submit"], input[type="button"], select, .cursor-pointer {
+  cursor: url('/assets/cursor-black-3d-20.png') 1 0, pointer;
 }
 
-.kwi-cursor-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  border: 1.2px solid #0f172a;
-  background: transparent;
+/* When custom GSAP hardware-accelerated cursor is active on non-touch devices */
+html.custom-cursor-active,
+html.custom-cursor-active body,
+html.custom-cursor-active a,
+html.custom-cursor-active button,
+html.custom-cursor-active [role="button"],
+html.custom-cursor-active input,
+html.custom-cursor-active select,
+html.custom-cursor-active textarea,
+html.custom-cursor-active .cursor-pointer {
+  cursor: none !important;
 }
 
-/* 4 Micro Crosshair Ticks for Cartographic Precision */
-.kwi-tick {
-  position: absolute;
-  background-color: #0f172a;
-}
-
-.tick-n {
-  top: -2.5px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 1.2px;
-  height: 2.5px;
-}
-
-.tick-s {
-  bottom: -2.5px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 1.2px;
-  height: 2.5px;
-}
-
-.tick-w {
-  left: -2.5px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 2.5px;
-  height: 1.2px;
-}
-
-.tick-e {
-  right: -2.5px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 2.5px;
-  height: 1.2px;
-}
-
-.kwi-cursor-dot {
-  position: relative;
-  width: 4.5px;
-  height: 4.5px;
-  border-radius: 9999px;
-  background-color: #0f172a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
-}
-
-.kwi-cursor-dot-lg {
-  width: 5.5px;
-  height: 5.5px;
-  background-color: #0284c7;
-}
-
-.kwi-cursor-center {
-  width: 1.5px;
-  height: 1.5px;
-  border-radius: 9999px;
-  background-color: #ffffff;
-}
-
-/* Interactive State: Buttons / Links */
-.mode-interactive {
-  transform: translate(-50%, -50%) scale(1.12);
-}
-
-.mode-interactive .kwi-cursor-ring {
-  border-color: #2563eb;
-}
-
-.mode-interactive .kwi-tick {
-  background-color: #2563eb;
-}
-
-.mode-interactive .kwi-cursor-dot {
-  background-color: #2563eb;
-}
-
-/* Map Mode: 4 Corner Brackets + Center Coordinate Point */
-.kwi-cursor-map {
-  position: relative;
-  width: 18px;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.bracket {
-  position: absolute;
-  width: 4.5px;
-  height: 4.5px;
-  border-color: #0f172a;
-  border-style: solid;
-}
-
-.bracket-tl {
-  top: 0;
-  left: 0;
-  border-width: 1.2px 0 0 1.2px;
-}
-
-.bracket-tr {
-  top: 0;
-  right: 0;
-  border-width: 1.2px 1.2px 0 0;
-}
-
-.bracket-bl {
-  bottom: 0;
-  left: 0;
-  border-width: 0 0 1.2px 1.2px;
-}
-
-.bracket-br {
-  bottom: 0;
-  right: 0;
-  border-width: 0 1.2px 1.2px 0;
-}
-
-/* Drainage / Canal Mode: Flow line + moving dot */
-.kwi-cursor-drainage {
-  position: relative;
-  width: 22px;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.kwi-flow-track {
-  position: absolute;
-  width: 20px;
-  height: 1px;
-  background-color: #0891b2;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-}
-
-.kwi-flow-track::before,
-.kwi-flow-track::after {
-  content: '';
-  position: absolute;
-  width: 2.5px;
-  height: 2.5px;
-  border-radius: 9999px;
-  background-color: #0891b2;
-  top: -0.75px;
-}
-
-.kwi-flow-track::before {
-  left: 0;
-}
-
-.kwi-flow-track::after {
-  right: 0;
-}
-
-.kwi-flow-particle {
-  position: absolute;
-  width: 2.5px;
-  height: 2.5px;
-  border-radius: 9999px;
-  background-color: #06b6d4;
-  top: -0.75px;
-  animation: kwiFlowDot 700ms linear infinite;
-}
-
-@keyframes kwiFlowDot {
-  0% {
-    left: 2px;
-    opacity: 0.2;
-  }
-  20% {
-    opacity: 1;
-  }
-  80% {
-    opacity: 1;
-  }
-  100% {
-    left: 16px;
-    opacity: 0.2;
-  }
-}
-
-/* Pumping Station Mode: Thin targeting ring */
-.kwi-cursor-pump {
-  position: relative;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.kwi-pump-target-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  border: 1px solid #0284c7;
-  animation: kwiPumpTarget 200ms ease-out forwards;
-}
-
-@keyframes kwiPumpTarget {
-  0% {
-    transform: scale(0.85);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 0.7;
-  }
-}
-
-/* Incident Mode: Target ring */
-.kwi-cursor-incident {
-  position: relative;
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.kwi-incident-target-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  border: 1.2px solid #e11d48;
-  animation: kwiPumpTarget 200ms ease-out forwards;
-}
-
-/* Waterbody Mode: Single expanding ripple */
-.kwi-cursor-waterbody {
-  position: relative;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.kwi-waterbody-ripple {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  border: 1px solid #0891b2;
-  animation: kwiRippleClick 350ms ease-out forwards;
-}
-
-/* Water Click Ripple: Hairline stroke with zero solid background fill */
-.kwi-cursor-click-ripple {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  border-radius: 9999px;
-  border: 1px solid #2563eb;
-  background: transparent;
-  pointer-events: none;
-  animation: kwiRippleClick 380ms cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
-}
-
-@keyframes kwiRippleClick {
-  0% {
-    transform: translate(-50%, -50%) scale(0.4);
-    opacity: 0.45;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1.4);
-    opacity: 0;
-  }
-}
-
-/* Smartphone Mockup Isolation */
-[data-phone-mockup] {
+/* Maintain native cursor inside isolated elements like phone mockup */
+html.custom-cursor-active [data-phone-mockup],
+html.custom-cursor-active [data-phone-mockup] * {
   cursor: auto !important;
 }
 
-[data-phone-mockup] * {
-  cursor: inherit;
+/* 3D Cursor Container: Hotspot tip is at the exact origin (0, 0) */
+.kwi-3d-cursor-wrapper {
+  position: relative;
+  pointer-events: none;
+  user-select: none;
+  display: flex;
+  align-items: flex-start;
+}
+
+.kwi-3d-pointer-container {
+  position: relative;
+  width: 20px;
+  height: 19px;
+  /* Shift so that the apex tip of the arrow aligns precisely with (0, 0) */
+  transform: translate(-0.5px, 0);
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+  transition: filter 160ms ease;
+}
+
+.kwi-3d-pointer-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  transform-origin: 0 0;
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Subtle glow accent behind cursor on interactive hover */
+.kwi-3d-pointer-glow {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, rgba(59, 130, 246, 0) 70%);
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 200ms ease, transform 200ms ease;
+  pointer-events: none;
+}
+
+/* Interactive Mode Styling */
+.mode-interactive .kwi-3d-pointer-glow {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.mode-interactive .kwi-3d-pointer-container {
+  filter: drop-shadow(0 4px 10px rgba(37, 99, 235, 0.35)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.55));
+}
+
+/* Contextual Telemetry Badges (Geospatial inspection modes) */
+.kwi-cursor-telemetry-badge {
+  position: absolute;
+  left: 17px;
+  top: 7px;
+  padding: 2px 6px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  backdrop-filter: blur(8px);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #60a5fa;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.kwi-telemetry-corner {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-color: #3b82f6;
+  border-style: solid;
+}
+.kwi-telemetry-corner.tl { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+.kwi-telemetry-corner.tr { top: -1px; right: -1px; border-width: 1px 1px 0 0; }
+.kwi-telemetry-corner.bl { bottom: -1px; left: -1px; border-width: 0 0 1px 1px; }
+.kwi-telemetry-corner.br { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+
+.kwi-cursor-telemetry-flow {
+  position: absolute;
+  left: 17px;
+  top: 7px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 5px;
+  background: rgba(8, 51, 68, 0.9);
+  border: 1px solid rgba(6, 182, 212, 0.45);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  color: #22d3ee;
+  white-space: nowrap;
+}
+
+.kwi-flow-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background-color: #06b6d4;
+  animation: pulse-subtle 1.2s infinite;
+}
+
+.kwi-cursor-telemetry-pump {
+  position: absolute;
+  left: 26px;
+  top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 6px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(14, 165, 233, 0.5);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: #38bdf8;
+  white-space: nowrap;
+}
+
+.kwi-pump-pulse-ring {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: #0284c7;
+  animation: pulse-subtle 1.5s infinite;
+}
+
+.kwi-cursor-telemetry-incident {
+  position: absolute;
+  left: 26px;
+  top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 6px;
+  background: rgba(69, 10, 10, 0.92);
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: #fca5a5;
+  white-space: nowrap;
+}
+
+.kwi-incident-pulse-ring {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: #ef4444;
+  animation: pulse-subtle 0.8s infinite;
+}
+
+/* Water Click Ripple: Hairline stroke */
+.kwi-cursor-click-ripple {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  border: 1.5px solid #3b82f6;
+  background: transparent;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
 }
 
 /* Respect Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   .kwi-cursor-click-ripple,
-  .kwi-waterbody-ripple,
-  .kwi-pump-target-ring,
-  .kwi-incident-target-ring,
-  .kwi-flow-particle {
+  .kwi-pump-pulse-ring,
+  .kwi-incident-pulse-ring,
+  .kwi-flow-dot {
     animation: none !important;
     display: none !important;
   }
 
-  .kwi-cursor-instrument {
+  .kwi-3d-pointer-container {
     transition: none !important;
   }
 }

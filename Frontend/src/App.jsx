@@ -20,6 +20,7 @@ import { ForecastView } from './components/views/ForecastView'
 import { SimulateView } from './components/views/SimulateView'
 import { ReportsView } from './components/views/ReportsView'
 import { ActionsView } from './components/views/ActionsView'
+import AIUnleashedAuth from './components/auth/AIUnleashedAuth'
 import { useKWIStore } from './store/useKWIStore'
 import './App.css'
 
@@ -146,6 +147,10 @@ function App() {
           <ActionsView />
         </SubpageLayout>
       )
+    }
+
+    if (currentRoute === '/login' || currentRoute === '/auth' || currentRoute === '/signup') {
+      return <AIUnleashedAuth />
     }
 
     // Root Landing Route ('/')
