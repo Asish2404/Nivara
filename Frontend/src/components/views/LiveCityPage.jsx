@@ -68,7 +68,7 @@ export function LiveCityPage() {
     { key: "rain", label: "Rainfall Radar", icon: "🌧️", color: "border-cyan-400/60 text-cyan-700 bg-cyan-50/80" },
     { key: "risk", label: "Flood Risk", icon: "⚠️", color: "border-amber-400/60 text-amber-700 bg-amber-50/80" },
     { key: "incidents", label: "Incidents", icon: "🚨", color: "border-rose-400/60 text-rose-700 bg-rose-50/80" },
-    { key: "drainage", label: "Canal Conduits", icon: "🌊", color: "border-blue-400/60 text-blue-700 bg-blue-50/80" },
+    { key: "drainage", label: "Drainage Network", icon: "🌊", color: "border-blue-400/60 text-blue-700 bg-blue-50/80" },
     { key: "pumps", label: "Sluice Pumps", icon: "⚡", color: "border-emerald-400/60 text-emerald-700 bg-emerald-50/80" },
     { key: "forecast", label: "60m Inundation", icon: "🔮", color: "border-purple-400/60 text-purple-700 bg-purple-50/80" },
   ];
@@ -425,6 +425,15 @@ export function LiveCityPage() {
                   onClick={() => {
                     audioEngine.playUiChirp(active ? 780 : 1080);
                     toggleLayer(layer.key);
+                    if (layer.key === "drainage" && !active && typeof window !== "undefined" && window.__kolkataMapInstance) {
+                      window.__kolkataMapInstance.flyTo({
+                        center: [88.34255, 22.5450],
+                        zoom: 14.5,
+                        pitch: 36,
+                        bearing: -5,
+                        duration: 1400,
+                      });
+                    }
                   }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${active
                     ? `${layer.color} border shadow-xs font-semibold`

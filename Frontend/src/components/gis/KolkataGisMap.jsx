@@ -5,6 +5,8 @@ import {
   ACTIVE_INCIDENTS,
   PUMPING_STATIONS,
   REAL_KOLKATA_LANDMARKS,
+  WARD63_OVERLAY_CONFIG,
+  WARD63_CALIBRATION_POINTS,
   getCanalsGeoJson,
   getTrunkConduitsGeoJson,
   getRiskZonesGeoJson,
@@ -296,6 +298,24 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
         });
       }
 
+      // 2b. AUTHORITATIVE WARD 63 DRAINAGE NETWORK OVERLAY (Orthorectified Raster from Scanned Engineering Blueprint)
+      if (!map.getSource(WARD63_OVERLAY_CONFIG.sourceId)) {
+        map.addSource(WARD63_OVERLAY_CONFIG.sourceId, {
+          type: "image",
+          url: WARD63_OVERLAY_CONFIG.url,
+          coordinates: WARD63_OVERLAY_CONFIG.coordinates,
+        });
+        map.addLayer({
+          id: WARD63_OVERLAY_CONFIG.layerId,
+          type: "raster",
+          source: WARD63_OVERLAY_CONFIG.sourceId,
+          paint: {
+            "raster-opacity": 0.98,
+            "raster-fade-duration": 150,
+          },
+        });
+      }
+
       // 3. RISK ZONES (Polygon)
       if (!map.getSource("risk-source")) {
         map.addSource("risk-source", {
@@ -416,8 +436,16 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
         );
       }
       if (map.getLayer("trunk-line")) {
+        // Authoritative Ward 63 drainage raster replaces synthetic conduit lines
         map.setLayoutProperty(
           "trunk-line",
+          "visibility",
+          "none"
+        );
+      }
+      if (map.getLayer(WARD63_OVERLAY_CONFIG.layerId)) {
+        map.setLayoutProperty(
+          WARD63_OVERLAY_CONFIG.layerId,
           "visibility",
           activeLayers.drainage ? "visible" : "none"
         );
@@ -620,8 +648,54 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
           markersRef.current.push(marker);
         });
       }
+
+      // 4. TEMPORARY CALIBRATION CONTROL POINTS FOR WARD 63 / VICTORIA OVERLAY
+      if (activeLayers.drainage) {
+        WARD63_CALIBRATION_POINTS.forEach((cp) => {
+          const el = document.createElement("div");
+          el.className = "cursor-pointer group relative flex flex-col items-center select-none";
+          el.setAttribute("data-cursor", "target");
+          el.setAttribute("title", `${cp.id}: ${cp.name}`);
+          el.innerHTML = `
+            <div style="position: relative; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;">
+              <!-- Outer calibration reticle ripple -->
+              <span style="position: absolute; inset: 0; border-radius: 9999px; border: 1.5px dashed #06b6d4; animation: spin 8s linear infinite; background: rgba(6, 182, 212, 0.2);"></span>
+              
+              <!-- Center crosshair node -->
+              <span style="position: relative; width: 10px; height: 10px; border-radius: 9999px; background-color: #22d3ee; border: 2px solid #ffffff; box-shadow: 0 0 10px #06b6d4;"></span>
+              
+              <!-- Target Crosshair Lines -->
+              <span style="position: absolute; width: 24px; height: 1px; background: rgba(34, 211, 238, 0.7); pointer-events: none;"></span>
+              <span style="position: absolute; width: 1px; height: 24px; background: rgba(34, 211, 238, 0.7); pointer-events: none;"></span>
+            </div>
+            
+            <!-- Calibration ID & Landmark Label Tag -->
+            <div style="margin-top: 2px; background: rgba(15, 23, 42, 0.94); color: #e2e8f0; font-size: 8.5px; font-weight: 700; padding: 2px 6px; border-radius: 6px; border: 1px solid rgba(6, 182, 212, 0.6); font-family: monospace; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 4px; pointer-events: none;">
+              <span style="color: #22d3ee; font-weight: 800;">[${cp.id}]</span>
+              <span>${cp.name}</span>
+            </div>
+          `;
+
+          el.addEventListener("click", (e) => {
+            e.stopPropagation();
+            audioEngine.playUiChirp(1350);
+            map.flyTo({
+              center: cp.coords,
+              zoom: 16.0,
+              pitch: is3DMode ? 42 : 0,
+              duration: 1200,
+            });
+          });
+
+          const marker = new maplibregl.Marker({ element: el, anchor: "center" })
+            .setLngLat(cp.coords)
+            .addTo(map);
+
+          markersRef.current.push(marker);
+        });
+      }
     },
-    [activeLayers.incidents, activeLayers.pumps, activeLayers.landmarks, is3DMode]
+    [activeLayers.incidents, activeLayers.pumps, activeLayers.landmarks, activeLayers.drainage, is3DMode]
   );
 
   // -------------------------------------------------------------
@@ -657,10 +731,16 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
     });
 
     mapInstanceRef.current = map;
+    if (typeof window !== "undefined") {
+      window.__kolkataMapInstance = map;
+    }
 
     return () => {
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
+      if (typeof window !== "undefined") {
+        window.__kolkataMapInstance = null;
+      }
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -721,6 +801,13 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
     if (map.getLayer("trunk-line")) {
       map.setLayoutProperty(
         "trunk-line",
+        "visibility",
+        "none"
+      );
+    }
+    if (map.getLayer(WARD63_OVERLAY_CONFIG.layerId)) {
+      map.setLayoutProperty(
+        WARD63_OVERLAY_CONFIG.layerId,
         "visibility",
         activeLayers.drainage ? "visible" : "none"
       );

@@ -1411,3 +1411,96 @@ export function getWaterbodiesGeoJson() {
   }
 }
 
+// -------------------------------------------------------------
+// Authoritative Ward 63 / Victoria Memorial Drainage Overlay Config
+// Georeferenced via 12-control-point Thin Plate Spline (TPS) Orthorectification
+// -------------------------------------------------------------
+export const WARD63_OVERLAY_CONFIG = {
+  id: "ward63-drainage",
+  sourceId: "ward63-drainage-source",
+  layerId: "ward63-drainage-layer",
+  url: "/images/ward63_drainage_calibrated.png",
+  coordinates: [
+    [88.3220, 22.5540], // Top-Left (NW)
+    [88.3540, 22.5540], // Top-Right (NE)
+    [88.3540, 22.5380], // Bottom-Right (SE)
+    [88.3220, 22.5380], // Bottom-Left (SW)
+  ],
+};
+
+// 12 Verified Ground-Truth Calibration Control Points Across Ward 63
+export const WARD63_CALIBRATION_POINTS = [
+  {
+    id: "CP1",
+    name: "Queen's Way North Roundabout (Victoria Memorial)",
+    coords: [88.342550, 22.547960],
+    category: "Victoria Memorial"
+  },
+  {
+    id: "CP2",
+    name: "Queen's Way & Cathedral Road Junction",
+    coords: [88.346976, 22.546025],
+    category: "Cathedral Road"
+  },
+  {
+    id: "CP3",
+    name: "Cathedral Rd & AJC Bose Rd (Rabindra Sadan)",
+    coords: [88.344133, 22.541646],
+    category: "Cathedral Road"
+  },
+  {
+    id: "CP4",
+    name: "Exide Crossing (Chowringhee & AJC Bose)",
+    coords: [88.347222, 22.541742],
+    category: "Chowringhee / AJC Bose"
+  },
+  {
+    id: "CP5",
+    name: "AJC Bose Rd & Camac Street Junction",
+    coords: [88.351563, 22.541322],
+    category: "AJC Bose Road"
+  },
+  {
+    id: "CP6",
+    name: "Chowringhee Rd & Shakespeare Sarani Crossing",
+    coords: [88.347867, 22.545897],
+    category: "Chowringhee Road"
+  },
+  {
+    id: "CP7",
+    name: "Chowringhee Rd & Outram Rd Roundabout",
+    coords: [88.351600, 22.553200],
+    category: "Chowringhee / Outram"
+  },
+  {
+    id: "CP8",
+    name: "Kidderpore Rd & Casuarina Roundabout",
+    coords: [88.343347, 22.552378],
+    category: "Kidderpore Road"
+  },
+  {
+    id: "CP9",
+    name: "Kolkata Race Course Track North Apex",
+    coords: [88.338361, 22.548342],
+    category: "Race Course"
+  },
+  {
+    id: "CP10",
+    name: "Kolkata Race Course Track South Apex",
+    coords: [88.336869, 22.540306],
+    category: "Race Course"
+  },
+  {
+    id: "CP11",
+    name: "Fort William / Clyde Row (Hastings)",
+    coords: [88.329240, 22.548539],
+    category: "Fort William"
+  },
+  {
+    id: "CP12",
+    name: "Kidderpore Rd & AJC Bose (Zeerut Approach)",
+    coords: [88.324500, 22.543500],
+    category: "Kidderpore / AJC Bose"
+  }
+];
+
