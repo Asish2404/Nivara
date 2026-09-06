@@ -1,72 +1,63 @@
-# Backend Project
+# ⚡ Kolkata Water Intelligence (KWI) - FastAPI Backend
 
-This project is a backend application structured to support a variety of functionalities, including API development, data management, and integration with external services.
+High-performance asynchronous municipal telemetry, hydraulic stress simulation, and SCADA telecontrol engine.
 
-## Directory Structure
+---
 
-- **app/**: Contains the main application code.
-  - **api/**: Versioned API routes and controllers.
-    - **v1/**: Route handlers for version 1 of the API.
-  - **core/**: Core functionalities and application configuration.
-  - **models/**: Data models defining the structure of application data.
-  - **schemas/**: Data validation schemas for input validation.
-  - **services/**: Business logic and service classes.
-  - **repositories/**: Data access logic for interacting with databases.
-  - **engines/**: Processing engines for specific tasks.
-  - **integrations/**: External service integrations.
-  - **middleware/**: Middleware functions for request processing.
-  - **utils/**: Utility functions for reuse across the application.
-  - **websocket/**: WebSocket functionalities for real-time communication.
+## 🛠️ Architecture & Tech Stack
+- **Framework**: FastAPI (Python 3.10+)
+- **ASGI Server**: Uvicorn with standard workers
+- **Database & ORM**: SQLAlchemy 2.0 (Async) + aiosqlite / PostgreSQL
+- **Data Validation**: Pydantic v2 & Pydantic-Settings
+- **Migrations**: Alembic
+- **Real-time Protocol**: Webhooks & WebSockets
 
-- **alembic/**: Database migration scripts.
-  - **versions/**: Migration versions managed by Alembic.
+---
 
-- **tests/**: Unit and integration tests for the application.
+## 🚀 Getting Started
 
-- **scripts/**: Automation and setup scripts.
+### 1. Setup Virtual Environment & Install Dependencies
+```bash
+# In the Backend directory:
+python -m venv venv
 
-- **data/**: Static data files or datasets.
+# Windows:
+.\venv\Scripts\activate
 
-- **uploads/**: Directory for storing uploaded files.
+# macOS / Linux:
+source venv/bin/activate
 
-- **requirements/**: Dependency management files.
+# Install dependencies:
+pip install -r requirements.txt
+```
 
-## Setup Instructions
+### 2. Run the FastAPI Development Server
+```bash
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
 
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   ```
+### 3. Interactive Documentation
+- **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
-2. Navigate to the project directory:
-   ```
-   cd Backend
-   ```
+---
 
-3. Install the required dependencies:
-   ```
-   pip install -r requirements/requirements.txt
-   ```
+## 📡 API Endpoints Matrix
 
-4. Run database migrations:
-   ```
-   alembic upgrade head
-   ```
-
-5. Start the application:
-   ```
-   <command to start the application>
-   ```
-
-## Usage
-
-- Access the API at `http://localhost:<port>/api/v1/`.
-- Refer to the API documentation for available endpoints and usage instructions.
-
-## Contributing
-
-Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
-
-## License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/` | API Root & Service Discovery |
+| `GET` | `/api/v1/health` | Service health & telemetry sync status |
+| `GET` | `/api/v1/incidents` | List active municipal waterlogging incidents |
+| `GET` | `/api/v1/incidents/{id}` | Get incident details |
+| `POST` | `/api/v1/incidents` | Create a new municipal incident |
+| `POST` | `/api/v1/incidents/{id}/resolve` | Resolve/dispatch incident work order |
+| `GET` | `/api/v1/forecast/radar` | Alipore Doppler rainfall curve & Hooghly tides |
+| `POST` | `/api/v1/simulate` | Execute hydraulic scenario simulation (PDE solver) |
+| `GET` | `/api/v1/reports` | Retrieve citizen reports & municipal drainage audits |
+| `POST` | `/api/v1/reports` | Submit a new citizen waterlogging report |
+| `GET` | `/api/v1/actions` | List all SCADA pumping station states |
+| `POST` | `/api/v1/actions/{id}/toggle` | SCADA pump actuation & sluice throttle |
+| `POST` | `/api/v1/copilot/ask` | Natural language Ask Kolkata Copilot query |
+| `POST` | `/api/v1/webhook/telemetry` | Ingest external SCADA / IoT telemetry webhooks |
+| `WS` | `/api/v1/ws/telemetry` | Real-time live SCADA telemetry WebSocket |
