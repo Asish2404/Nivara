@@ -231,45 +231,45 @@ export function SimulateView() {
               soundFreq={860}
               spotlightColor="rgba(244, 63, 94, 0.12)"
               borderColor="rgba(244, 63, 94, 0.45)"
-              className="rounded-3xl border border-slate-200/90 bg-white p-5 shadow-sm flex flex-col justify-between"
+              className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#16213a] p-5 shadow-sm flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-bold font-mono text-rose-600 uppercase tracking-wider bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold font-mono text-rose-600 uppercase tracking-wider bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full dark:bg-rose-500/15 dark:border-rose-500/30 dark:text-rose-400">
                     BASELINE RISK
                   </span>
-                  <span className="text-xs text-slate-400 font-mono">
+                  <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">
                     Pre-Intervention
                   </span>
                 </div>
 
-                <div className="h-44 rounded-2xl bg-gradient-to-b from-rose-50/50 to-slate-50 border border-rose-100 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
-                  <div className="w-16 h-16 rounded-full bg-rose-100 border border-rose-200 flex items-center justify-center mb-2 shadow-xs">
-                    <span className="text-xl font-bold font-mono text-rose-600">
+                <div className="h-44 rounded-2xl bg-gradient-to-b from-rose-50/50 to-slate-50 border border-rose-100 dark:from-rose-950/30 dark:to-slate-900/40 dark:border-rose-900/40 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
+                  <div className="w-16 h-16 rounded-full bg-rose-100 border border-rose-200 dark:bg-rose-500/20 dark:border-rose-500/40 flex items-center justify-center mb-2 shadow-xs">
+                    <span className="text-xl font-bold font-mono text-rose-600 dark:text-rose-400">
                       18 cm
                     </span>
                   </div>
-                  <span className="text-xs font-bold text-slate-900">
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
                     Severe Street Inundation
                   </span>
-                  <span className="text-[11px] text-slate-500 mt-0.5">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                     2 arterial lanes blocked at College More
                   </span>
                 </div>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 space-y-1.5 font-mono">
+              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/60 text-xs text-slate-600 dark:text-slate-300 space-y-1.5 font-mono">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Drainage Load:</span>
-                  <strong className="text-slate-900">62%</strong>
+                  <span className="text-slate-500 dark:text-slate-400">Drainage Load:</span>
+                  <strong className="text-slate-900 dark:text-white">62%</strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Risk Score:</span>
-                  <strong className="text-rose-600">82 / 100</strong>
+                  <span className="text-slate-500 dark:text-slate-400">Risk Score:</span>
+                  <strong className="text-rose-600 dark:text-rose-400">82 / 100</strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Affected Area:</span>
-                  <strong className="text-slate-900">12,400 m²</strong>
+                  <span className="text-slate-500 dark:text-slate-400">Affected Area:</span>
+                  <strong className="text-slate-900 dark:text-white">12,400 m²</strong>
                 </div>
               </div>
             </CardSpotlight>
@@ -279,42 +279,42 @@ export function SimulateView() {
               soundFreq={1100}
               spotlightColor="rgba(16, 185, 129, 0.12)"
               borderColor="rgba(16, 185, 129, 0.45)"
-              className="rounded-3xl border border-slate-200/90 bg-white p-5 shadow-sm flex flex-col justify-between"
+              className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#16213a] p-5 shadow-sm flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-bold font-mono text-emerald-700 uppercase tracking-wider bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold font-mono text-emerald-700 uppercase tracking-wider bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full dark:bg-emerald-500/15 dark:border-emerald-500/30 dark:text-emerald-400">
                     SIMULATED OUTCOME
                   </span>
-                  <span className="text-xs text-slate-400 font-mono">
+                  <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">
                     {simState === "RESULT" ? "Relief Verified" : "Awaiting Run"}
                   </span>
                 </div>
 
-                <div className="h-44 rounded-2xl bg-gradient-to-b from-emerald-50/50 to-slate-50 border border-emerald-100 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
+                <div className="h-44 rounded-2xl bg-gradient-to-b from-emerald-50/50 to-slate-50 border border-emerald-100 dark:from-emerald-950/30 dark:to-slate-900/40 dark:border-emerald-900/40 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
                   <div
                     className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 shadow-xs transition-all ${
                       simState === "RESULT"
-                        ? "bg-emerald-100 border border-emerald-300"
-                        : "bg-slate-200"
+                        ? "bg-emerald-100 border border-emerald-300 dark:bg-emerald-500/20 dark:border-emerald-500/40"
+                        : "bg-slate-200 dark:bg-slate-700"
                     }`}
                   >
                     <span
                       className={`text-xl font-bold font-mono ${
                         simState === "RESULT"
-                          ? "text-emerald-700"
-                          : "text-slate-400"
+                          ? "text-emerald-700 dark:text-emerald-400"
+                          : "text-slate-400 dark:text-slate-500"
                       }`}
                     >
                       {simState === "RESULT" ? "7 cm" : "—"}
                     </span>
                   </div>
-                  <span className="text-xs font-bold text-slate-900">
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
                     {simState === "RESULT"
                       ? "Safe Vehicular Clearance"
                       : "Trigger simulation to model relief"}
                   </span>
-                  <span className="text-[11px] text-slate-500 mt-0.5">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                     {simState === "RESULT"
                       ? "61% water depth reduction achieved"
                       : "Transient flow solver ready"}
@@ -322,22 +322,22 @@ export function SimulateView() {
                 </div>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 space-y-1.5 font-mono">
+              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/60 text-xs text-slate-600 dark:text-slate-300 space-y-1.5 font-mono">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Drainage Load:</span>
-                  <strong className="text-slate-900">
+                  <span className="text-slate-500 dark:text-slate-400">Drainage Load:</span>
+                  <strong className="text-slate-900 dark:text-white">
                     {simState === "RESULT" ? "87%" : "—"}
                   </strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Risk Score:</span>
-                  <strong className="text-emerald-700">
+                  <span className="text-slate-500 dark:text-slate-400">Risk Score:</span>
+                  <strong className="text-emerald-700 dark:text-emerald-400">
                     {simState === "RESULT" ? "54 / 100" : "—"}
                   </strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Affected Area:</span>
-                  <strong className="text-slate-900">
+                  <span className="text-slate-500 dark:text-slate-400">Affected Area:</span>
+                  <strong className="text-slate-900 dark:text-white">
                     {simState === "RESULT" ? "4,100 m²" : "—"}
                   </strong>
                 </div>
@@ -347,17 +347,17 @@ export function SimulateView() {
 
           {/* Outcome Summary & Direct Connection to Action Center with Border Beam */}
           {simState === "RESULT" && (
-            <div className="relative overflow-hidden p-6 rounded-3xl bg-gradient-to-r from-emerald-50/90 via-teal-50/70 to-emerald-50/90 border border-emerald-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg">
+            <div className="relative overflow-hidden p-6 rounded-3xl bg-gradient-to-r from-emerald-50/90 via-teal-50/70 to-emerald-50/90 dark:from-emerald-950/50 dark:via-teal-950/40 dark:to-emerald-950/50 border border-emerald-300 dark:border-emerald-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg">
               <BorderBeam size={280} duration={10} colorFrom="#10b981" colorTo="#06b6d4" />
               <div className="flex items-center gap-3.5">
                 <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-sm font-bold text-slate-950 block">
+                  <span className="text-sm font-bold text-slate-950 dark:text-white block">
                     Intervention Verified · Ready for Immediate KMC Dispatch
                   </span>
-                  <span className="text-xs text-slate-600 mt-0.5 block">
+                  <span className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 block">
                     Staging Godwin pump + Unit 04 desilting restores traffic clearance 3.6 hours ahead of flood crest.
                   </span>
                 </div>

@@ -69,8 +69,8 @@ export function CommandProfileDropdown({ isDarkMode }) {
     };
   }, []);
 
-  // Compute initials from real user name with fallback
-  const userName = currentUser?.name || "ASISHBOSE313";
+  // Compute initials from real user name — show initials or placeholder when no user is logged in
+  const userName = currentUser?.name || "Guest";
   const userOrg = currentUser?.department || "Kolkata Water Intelligence";
   const avatarUrl = currentUser?.avatarUrl || null;
 

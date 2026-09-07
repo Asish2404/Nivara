@@ -1,5 +1,6 @@
 
 import { create } from 'zustand'
+import { api } from '../utils/api'
 
 // Helper to determine initial route safely
 const getInitialRoute = () => {
@@ -253,42 +254,107 @@ export const useKWIStore = create((set, get) => ({
   closeLoginModal: () => set({ isLoginModalOpen: false }),
   toggleLoginModal: () => set((state) => ({ isLoginModalOpen: !state.isLoginModalOpen })),
 
+  // Real user identity — hydrated from localStorage cache and refreshed from the backend.
   currentUser: typeof window !== 'undefined' && localStorage.getItem('kwi_user')
     ? JSON.parse(localStorage.getItem('kwi_user'))
-    : {
-        name: 'ASISHBOSE313',
-        username: 'asishbose313',
-        department: 'Kolkata Water Intelligence',
-        email: 'asish.bose@kolkata-water.gov.in',
-        avatarUrl: null,
-        phone: '',
-        location: 'Kolkata, West Bengal',
-        institution: '',
-        bio: 'Computer Science student with a strong interest in technology, data-driven solutions, and building impactful applications. Currently contributing to the Kolkata Water Intelligence platform to help create a safer and smarter city.',
-        createdAt: '2026-08-15',
-      },
+    : null,
 
-  loginUser: (userData) => {
+  // Helper: normalize a backend UserResponse into the frontend profile shape,
+  // preserving any local-only fields (institution, username) not served by the API.
+  mapBackendUser: (be) => {
+    const cached = get().currentUser || {}
+    const email = be.email || cached.email || ''
+    return {
+      ...cached,                       // keep local-only fields (institution, username)
+      id: be.id || cached.id || null,
+      name: be.name || be.full_name || cached.name || '',
+      username: cached.username || email.split('@')[0] || '',
+      email,
+      phone: be.phone ?? cached.phone ?? '',
+      location: be.location ?? cached.location ?? '',
+      institution: cached.institution ?? '',
+      department: be.department || cached.department || '',
+      bio: be.bio ?? cached.bio ?? '',
+      avatarUrl: be.avatar_url ?? cached.avatarUrl ?? null,
+      role: be.role || cached.role || 'Command Officer',
+      badgeId: be.badgeId || be.badge_id || cached.badgeId || '',
+      clearance: be.clearance || cached.clearance || '',
+      createdAt: be.created_at || cached.createdAt || null,
+    }
+  },
+
+  // Persist a hydrated/authenticated user.
+  setCurrentUser: (userData) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('kwi_user', JSON.stringify(userData))
     }
-    set({ currentUser: userData, isLoginModalOpen: false })
+    set({ currentUser: userData })
   },
 
-  updateUserProfile: (profileData) => {
-    const updatedUser = {
-      ...(get().currentUser || {}),
-      ...profileData,
+  // On app mount: refresh the profile from the backend using the stored JWT.
+  initUser: async () => {
+    if (typeof window === 'undefined') return
+    const token = localStorage.getItem('kwi_token')
+    if (!token) return
+    try {
+      const me = await api.get('/auth/me', token)
+      get().setCurrentUser(get().mapBackendUser(me))
+    } catch (err) {
+      // Unauthorized / invalid token → drop the stale session.
+      if (err?.message && /unauthorized|invalid|expired|not found|inactive/i.test(err.message)) {
+        localStorage.removeItem('kwi_token')
+        localStorage.removeItem('kwi_user')
+        set({ currentUser: null })
+      }
+      // Otherwise (backend offline) keep the cached localStorage user.
     }
+  },
+
+  // Persist a login/signup result: JWT token + normalized user.
+  loginUser: (userData) => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('kwi_user', JSON.stringify(updatedUser))
+      if (userData?.access_token) {
+        localStorage.setItem('kwi_token', userData.access_token)
+      }
     }
-    set({ currentUser: updatedUser })
+    const user = get().mapBackendUser(userData?.user || userData || {})
+    get().setCurrentUser(user)
+    set({ isLoginModalOpen: false })
+  },
+
+  // Merge local edits into state + localStorage, and best-effort sync to backend.
+  updateUserProfile: (profileData) => {
+    const merged = { ...(get().currentUser || {}), ...profileData }
+    get().setCurrentUser(merged)
+    // Best-effort backend sync (non-blocking; ignore failures when server is down).
+    const token = typeof window !== 'undefined' ? localStorage.getItem('kwi_token') : null
+    if (!token) return
+    api
+      .patch(
+        '/auth/me',
+        {
+          fullName: merged.name ?? undefined,
+          department: merged.department ?? undefined,
+          phone: merged.phone ?? '',
+          location: merged.location ?? '',
+          bio: merged.bio ?? '',
+          avatar_url: merged.avatarUrl ?? '',
+        },
+        token
+      )
+      .then((me) => {
+        // Refresh with any server-normalized values (e.g. full name).
+        get().setCurrentUser(get().mapBackendUser({ ...me, ...merged }))
+      })
+      .catch(() => {
+        // Keep local state; the next successful sync covers the difference.
+      })
   },
 
   logoutUser: () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('kwi_user')
+      localStorage.removeItem('kwi_token')
     }
     set({ currentUser: null })
   },

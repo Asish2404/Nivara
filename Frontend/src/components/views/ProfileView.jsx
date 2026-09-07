@@ -43,7 +43,7 @@ export function ProfileView() {
       currentUser?.bio ||
       "Computer Science student with a strong interest in technology, data-driven solutions, and building impactful applications. Contributing to a safer and smarter Kolkata.",
     profileImage: currentUser?.avatarUrl || null,
-    createdAt: currentUser?.createdAt || "2026-08-15",
+    createdAt: currentUser?.createdAt || null,
   });
 
   // Keep local profile synchronized if currentUser changes in store
@@ -89,7 +89,7 @@ export function ProfileView() {
 
   /* ── Preferences State ── */
   const [preferences, setPreferences] = useState({
-    theme: theme || "light",
+    theme: theme || "system",
     alertNotifications: true,
     emailNotifications: false,
     mapStyle: "satellite",
@@ -110,17 +110,20 @@ export function ProfileView() {
 
   /* ── Computed Values ── */
   const userInitials = useMemo(() => {
-    const clean = (profile.fullName || "Officer Roy").replace(/[^a-zA-Z0-9]/g, " ").trim();
+    const clean = (profile.fullName || currentUser?.name || "Officer Roy").replace(/[^a-zA-Z0-9]/g, " ").trim();
     const parts = clean.split(/\s+/).filter(Boolean);
     if (parts.length >= 2) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }
     return clean.slice(0, 2).toUpperCase() || "OR";
-  }, [profile.fullName]);
+  }, [profile.fullName, currentUser?.name]);
+
+  const userInitial = userInitials;
 
   const memberSince = useMemo(() => {
     try {
-      return new Date(profile.createdAt).toLocaleDateString("en-US", {
+      if (!profile.createdAt) return "August 2026";
+      return new Date(profile.createdAt).toLocaleDateString("en-IN", {
         month: "long",
         year: "numeric",
       });

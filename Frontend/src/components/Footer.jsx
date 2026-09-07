@@ -84,10 +84,18 @@ export default function Footer() {
       {/* 1. TOP SEAMLESS ATMOSPHERIC GRADIENT FADE (TIGHT)     */}
       {/* ===================================================== */}
       <div
-        className="absolute top-0 inset-x-0 h-16 sm:h-24 z-10 pointer-events-none"
+        className="absolute top-0 inset-x-0 h-16 sm:h-24 z-10 pointer-events-none dark:hidden"
         style={{
           background:
             'linear-gradient(to bottom, #f8fafc 0%, rgba(248, 250, 252, 0.85) 35%, rgba(248, 250, 252, 0) 100%)',
+        }}
+        aria-hidden="true"
+      />
+      <div
+        className="absolute top-0 inset-x-0 h-16 sm:h-24 z-10 pointer-events-none hidden dark:block"
+        style={{
+          background:
+            'linear-gradient(to bottom, #0b1220 0%, rgba(11, 18, 32, 0.85) 35%, rgba(11, 18, 32, 0) 100%)',
         }}
         aria-hidden="true"
       />

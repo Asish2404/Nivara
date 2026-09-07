@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useKWIStore } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
+import { api } from "../../utils/api";
 import { KWINavbar } from "../navigation/KWINavbar";
 import { AskKolkataDrawer } from "../navigation/AskKolkataDrawer";
 import Footer from "../Footer";
@@ -169,6 +170,7 @@ export default function AIUnleashedAuth() {
   const [rememberSession, setRememberSession] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [authError, setAuthError] = useState("");
 
   const { navigate, loginUser } = useKWIStore();
 
@@ -176,47 +178,59 @@ export default function AIUnleashedAuth() {
     if (audioEngine) audioEngine.playUiChirp(920);
     setActiveTab(tab);
     setSuccessMessage("");
+    setAuthError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setIsSubmitting(true);
     if (audioEngine) audioEngine.playUiChirp(980);
 
-    setTimeout(() => {
+    // Derive a readable name from the email username when not typed explicitly.
+    const derivedName =
+      fullName.trim() ||
+      email
+        .split("@")[0]
+        .replace(".", " ")
+        .split(" ")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ") ||
+      "Officer";
+
+    try {
+      let result;
+      if (activeTab === "signin") {
+        result = await api.post("/auth/login", { email, password });
+      } else {
+        result = await api.post("/auth/signup", {
+          email,
+          password,
+          fullName: derivedName,
+        });
+      }
+
       if (audioEngine) audioEngine.playStationLock();
-      setIsSubmitting(false);
+      // Persist JWT + normalized user into the store (also cached to localStorage).
+      loginUser(result);
 
-      const resolvedName =
-        fullName.trim() ||
-        email
-          .split("@")[0]
-          .replace(".", " ")
-          .split(" ")
-          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-          .join(" ") ||
-        "Officer";
-
+      const signedInName = result?.user?.name || derivedName;
       setSuccessMessage(
         activeTab === "signin"
-          ? `Welcome back, ${resolvedName}`
-          : `Account created successfully for ${resolvedName}`
+          ? `Welcome back, ${signedInName}`
+          : `Account created successfully for ${signedInName}`
       );
-
-      loginUser({
-        name: resolvedName,
-        role: "Command Officer",
-        department: "Kolkata Water Intelligence",
-        badgeId: "KMC-DIR-7049",
-        clearance: "Level 4 // Command Access",
-        avatar: "👨‍✈️",
-        email: email,
-      });
 
       setTimeout(() => {
         navigate("/live-city");
       }, 650);
-    }, 700);
+    } catch (err) {
+      if (audioEngine) audioEngine.playUiChirp(420);
+      setSuccessMessage("");
+      // Surface backend validation / auth errors to the user as a failure alert.
+      setAuthError(err?.message || "Authentication failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDemoFill = (e) => {
@@ -227,7 +241,7 @@ export default function AIUnleashedAuth() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-[#181c2a] flex flex-col justify-between font-sans selection:bg-[#0284c7]/20 selection:text-[#0284c7] overflow-x-hidden relative">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0b1220] text-[#181c2a] dark:text-slate-100 flex flex-col justify-between font-sans selection:bg-[#0284c7]/20 selection:text-[#0284c7] overflow-x-hidden relative">
       {/* Global Navigation Bar */}
       <div className="relative z-30">
         <KWINavbar />
@@ -260,14 +274,14 @@ export default function AIUnleashedAuth() {
               className="px-2 mt-4 text-center lg:text-left max-w-[560px]"
             >
               <div className="flex items-center justify-center lg:justify-start gap-2.5">
-                <h1 className="text-2xl sm:text-[26px] font-bold tracking-tight text-[#181c2a] m-0">
+                <h1 className="text-2xl sm:text-[26px] font-bold tracking-tight text-[#181c2a] dark:text-white m-0">
                   Kolkata Water Intelligence
                 </h1>
-                <span className="text-[11px] text-[#0284c7] bg-cyan-50 border border-cyan-200/80 px-2 py-0.5 rounded-md font-semibold transition-colors duration-200">
+                <span className="text-[11px] text-[#0284c7] bg-cyan-50 border border-cyan-200/80 dark:bg-cyan-500/15 dark:border-cyan-500/30 px-2 py-0.5 rounded-md font-semibold transition-colors duration-200">
                   v3.4
                 </span>
               </div>
-              <p className="text-sm text-[#6b7488] leading-relaxed mt-2">
+              <p className="text-sm text-[#6b7488] dark:text-slate-400 leading-relaxed mt-2">
                 Real-time urban drainage telemetry, storm surge forecasting, and municipal command coordination for Kolkata Municipal Corporation.
               </p>
             </motion.div>
@@ -282,15 +296,15 @@ export default function AIUnleashedAuth() {
             transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="lg:col-span-5 flex flex-col justify-center"
           >
-            <div className="w-full bg-white border border-[#e6e9f2] rounded-[20px] p-6 sm:p-7 shadow-[0_20px_50px_rgba(40,40,90,0.08)] text-left transition-shadow duration-300">
+            <div className="w-full bg-white dark:bg-[#16213a] border border-[#e6e9f2] dark:border-slate-800 rounded-[20px] p-6 sm:p-7 shadow-[0_20px_50px_rgba(40,40,90,0.08)] text-left transition-shadow duration-300">
 
               {/* Tabs: Sign In / Create Account with Smooth Spring Slider */}
-              <div className="relative flex bg-[#f0f2f8] rounded-xl p-1 mb-5.5">
+              <div className="relative flex bg-[#f0f2f8] dark:bg-slate-800/80 rounded-xl p-1 mb-5.5">
                 <button
                   type="button"
                   onClick={() => handleTabChange("signin")}
                   className={`flex-1 text-center py-2.5 text-[13.5px] font-bold border-none bg-transparent cursor-pointer relative z-10 transition-colors duration-200 ${
-                    activeTab === "signin" ? "text-white" : "text-[#7b8398] hover:text-[#181c2a]"
+                    activeTab === "signin" ? "text-white" : "text-[#7b8398] dark:text-slate-400 hover:text-[#181c2a] dark:hover:text-slate-200"
                   }`}
                 >
                   Sign In
@@ -299,7 +313,7 @@ export default function AIUnleashedAuth() {
                   type="button"
                   onClick={() => handleTabChange("create")}
                   className={`flex-1 text-center py-2.5 text-[13.5px] font-bold border-none bg-transparent cursor-pointer relative z-10 transition-colors duration-200 ${
-                    activeTab === "create" ? "text-white" : "text-[#7b8398] hover:text-[#181c2a]"
+                    activeTab === "create" ? "text-white" : "text-[#7b8398] dark:text-slate-400 hover:text-[#181c2a] dark:hover:text-slate-200"
                   }`}
                 >
                   Create Account
@@ -354,7 +368,7 @@ export default function AIUnleashedAuth() {
                       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
                       className="overflow-hidden"
                     >
-                      <label className="block text-[12.5px] font-bold text-[#3d4356] mb-1.5">
+                      <label className="block text-[12.5px] font-bold text-[#3d4356] dark:text-slate-300 mb-1.5">
                         Full name
                       </label>
                       <div className="relative">
@@ -367,7 +381,7 @@ export default function AIUnleashedAuth() {
                           onChange={(e) => setFullName(e.target.value)}
                           placeholder="e.g. Officer Sourav Roy"
                           required={activeTab === "create"}
-                          className="w-full bg-[#f8f9fc] border border-[#e6e9f2] rounded-[11px] py-3 pl-10 pr-3.5 text-[#181c2a] text-[13.5px] focus:outline-none focus:border-[#0284c7] focus:bg-white focus:ring-3 focus:ring-[#0284c7]/15 transition-all duration-200"
+                          className="w-full bg-[#f8f9fc] dark:bg-slate-800/50 border border-[#e6e9f2] dark:border-slate-700 rounded-[11px] py-3 pl-10 pr-3.5 text-[#181c2a] dark:text-slate-100 text-[13.5px] focus:outline-none focus:border-[#0284c7] focus:bg-white dark:focus:bg-slate-800 focus:ring-3 focus:ring-[#0284c7]/15 transition-all duration-200"
                         />
                       </div>
                     </motion.div>
@@ -376,7 +390,7 @@ export default function AIUnleashedAuth() {
 
                 {/* Official Email */}
                 <div>
-                  <label className="block text-[12.5px] font-bold text-[#3d4356] mb-1.5">
+                  <label className="block text-[12.5px] font-bold text-[#3d4356] dark:text-slate-300 mb-1.5">
                     Official email
                   </label>
                   <div className="relative">
@@ -389,14 +403,14 @@ export default function AIUnleashedAuth() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="officer.roy@kolkata-water.gov.in"
                       required
-                      className="w-full bg-[#f8f9fc] border border-[#e6e9f2] rounded-[11px] py-3 pl-10 pr-3.5 text-[#181c2a] text-[13.5px] focus:outline-none focus:border-[#0284c7] focus:bg-white focus:ring-3 focus:ring-[#0284c7]/15 transition-all duration-200"
+                      className="w-full bg-[#f8f9fc] dark:bg-slate-800/50 border border-[#e6e9f2] dark:border-slate-700 rounded-[11px] py-3 pl-10 pr-3.5 text-[#181c2a] dark:text-slate-100 text-[13.5px] focus:outline-none focus:border-[#0284c7] focus:bg-white dark:focus:bg-slate-800 focus:ring-3 focus:ring-[#0284c7]/15 transition-all duration-200"
                     />
                   </div>
                 </div>
 
                 {/* Security Passcode */}
                 <div>
-                  <label className="block text-[12.5px] font-bold text-[#3d4356] mb-1.5">
+                  <label className="block text-[12.5px] font-bold text-[#3d4356] dark:text-slate-300 mb-1.5">
                     Security passcode
                   </label>
                   <div className="relative">
@@ -409,7 +423,7 @@ export default function AIUnleashedAuth() {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••••••"
                       required
-                      className="w-full bg-[#f8f9fc] border border-[#e6e9f2] rounded-[11px] py-3 pl-10 pr-10 text-[#181c2a] text-[13.5px] focus:outline-none focus:border-[#0284c7] focus:bg-white focus:ring-3 focus:ring-[#0284c7]/15 transition-all duration-200"
+                      className="w-full bg-[#f8f9fc] dark:bg-slate-800/50 border border-[#e6e9f2] dark:border-slate-700 rounded-[11px] py-3 pl-10 pr-10 text-[#181c2a] dark:text-slate-100 text-[13.5px] focus:outline-none focus:border-[#0284c7] focus:bg-white dark:focus:bg-slate-800 focus:ring-3 focus:ring-[#0284c7]/15 transition-all duration-200"
                     />
                     <button
                       type="button"
@@ -445,14 +459,29 @@ export default function AIUnleashedAuth() {
                 <AnimatePresence>
                   {successMessage && (
                     <motion.div
+                      key="auth-ok"
                       initial={{ opacity: 0, y: -6, scale: 0.98 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -6, scale: 0.98 }}
                       transition={{ duration: 0.25, ease: "easeOut" }}
-                      className="flex items-center gap-2 p-2.5 rounded-xl bg-[#22c55e]/10 border border-[#22c55e]/30 text-[#15803d] text-xs font-medium"
+                      className="flex items-center gap-2 p-2.5 rounded-xl bg-[#22c55e]/10 border border-[#22c55e]/30 text-[#15803d] dark:text-emerald-400 text-xs font-medium"
                     >
                       <CheckCircle2 className="w-4 h-4 shrink-0 text-[#22c55e]" />
                       <span>{successMessage}</span>
+                    </motion.div>
+                  )}
+
+                  {authError && (
+                    <motion.div
+                      key="auth-err"
+                      initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                      className="flex items-start gap-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-medium"
+                    >
+                      <Shield className="w-4 h-4 shrink-0 text-rose-500 mt-0.5" />
+                      <span>{authError}</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -495,7 +524,7 @@ export default function AIUnleashedAuth() {
                   transition={{ duration: 0.15 }}
                   type="button"
                   onClick={() => handleSubmit()}
-                  className="flex items-center justify-center gap-2 bg-white border border-[#e6e9f2] rounded-[11px] py-2.5 text-[#3d4356] text-[13px] font-semibold cursor-pointer hover:shadow-[0_4px_14px_rgba(30,40,80,0.08)] hover:border-[#cbd5e1] transition-all duration-200"
+                  className="flex items-center justify-center gap-2 bg-white dark:bg-slate-800/60 border border-[#e6e9f2] dark:border-slate-700 rounded-[11px] py-2.5 text-[#3d4356] dark:text-slate-200 text-[13px] font-semibold cursor-pointer hover:shadow-[0_4px_14px_rgba(30,40,80,0.08)] hover:border-[#cbd5e1] dark:hover:bg-slate-700/60 dark:hover:border-slate-600 transition-all duration-200"
                 >
                   <GoogleIcon />
                   <span>Google SSO</span>
@@ -507,7 +536,7 @@ export default function AIUnleashedAuth() {
                   transition={{ duration: 0.15 }}
                   type="button"
                   onClick={() => handleSubmit()}
-                  className="flex items-center justify-center gap-2 bg-white border border-[#e6e9f2] rounded-[11px] py-2.5 text-[#3d4356] text-[13px] font-semibold cursor-pointer hover:shadow-[0_4px_14px_rgba(30,40,80,0.08)] hover:border-[#cbd5e1] transition-all duration-200"
+                  className="flex items-center justify-center gap-2 bg-white dark:bg-slate-800/60 border border-[#e6e9f2] dark:border-slate-700 rounded-[11px] py-2.5 text-[#3d4356] dark:text-slate-200 text-[13px] font-semibold cursor-pointer hover:shadow-[0_4px_14px_rgba(30,40,80,0.08)] hover:border-[#cbd5e1] dark:hover:bg-slate-700/60 dark:hover:border-slate-600 transition-all duration-200"
                 >
                   <GovIdIcon />
                   <span>Gov ID token</span>
