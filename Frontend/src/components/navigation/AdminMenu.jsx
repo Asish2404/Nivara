@@ -2,7 +2,18 @@ import { useKWIStore } from '../../store/useKWIStore'
 import { ShieldCheck, CheckCircle2, RefreshCw } from 'lucide-react'
 
 export function AdminMenu() {
-  const { adminMenuOpen, setAdminMenuOpen, activePumps, totalPumps, hooghlyTideLevel } = useKWIStore()
+  const { adminMenuOpen, setAdminMenuOpen, activePumps, totalPumps, hooghlyTideLevel, currentUser } = useKWIStore()
+
+  const adminName = currentUser?.name || "Guest Operator"
+  const adminInitials = adminName
+    .replace(/[^a-zA-Z0-9]/g, " ")
+    .trim()
+    .split(/\s+/)
+    .map((n) => n[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase() || "GO"
 
   if (!adminMenuOpen) return null
 
@@ -24,11 +35,11 @@ export function AdminMenu() {
         {/* Operator Profile */}
         <div className="flex items-center gap-3 pb-3 border-b border-white/10">
           <div className="w-9 h-9 rounded-xl bg-cyan-950 border border-cyan-400/40 text-cyan-300 flex items-center justify-center font-mono text-xs font-bold shadow-[0_0_10px_rgba(0,240,255,0.2)]">
-            AS
+            {adminInitials}
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-white font-mono">ASISH SENGUPTA</span>
+              <span className="text-xs font-bold text-white font-mono">{adminName}</span>
               <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
             </div>
             <span className="text-[10px] font-mono text-slate-400 block">

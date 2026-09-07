@@ -78,6 +78,10 @@ class AuthService:
             initials=initials,
             wardAccess="All Boroughs (I - XVI)",
             ward_access="All Boroughs (I - XVI)",
+            avatar_url=user.avatar_url,
+            phone=user.phone,
+            location=user.location,
+            bio=user.bio,
             created_at=user.created_at,
         )
 
@@ -117,18 +121,18 @@ class AuthService:
             )
 
         user_id = f"USR-{uuid.uuid4().hex[:8].upper()}"
-        full_name = data.fullName or "Officer"
+        full_name = (data.fullName or "").strip() or "KWI Officer"
 
         new_user = User(
             id=user_id,
             email=email_clean,
             hashed_password=hash_password(data.password),
             full_name=full_name,
-            role=data.role or "Command Officer",
-            department=data.department or "KMC Sewerage & Drainage Directorate",
+            role=data.role or "Kolkata Water Intelligence Officer",
+            department=data.department or "Kolkata Water Intelligence",
             badge_id=data.badgeId or f"KMC-{uuid.uuid4().hex[:4].upper()}",
-            clearance=data.clearance or "Level 4 // Command Clearance",
-            avatar=data.avatar or "👨‍✈️",
+            clearance=data.clearance or "Verified User",
+            avatar=data.avatar or "🛡️",
             is_active=True,
             created_at=datetime.utcnow(),
         )

@@ -21,23 +21,24 @@ export function ProfileView() {
 
   /* ── User Data Model ── */
   const [profile, setProfile] = useState({
-    fullName: currentUser?.name || "ASISHBOSE313",
-    username: currentUser?.username || "asishbose313",
-    email: currentUser?.email || "asishbose313@gmail.com",
+    fullName: currentUser?.name || "",
+    username: currentUser?.username || "",
+    email: currentUser?.email || "",
     phone: currentUser?.phone || "",
-    location: currentUser?.location || "Kolkata, West Bengal",
+    location: currentUser?.location || "",
     institution: currentUser?.institution || "",
-    department: currentUser?.department || "Kolkata Water Intelligence",
-    bio: currentUser?.bio || "Computer Science student with a strong interest in technology, data-driven solutions, and building impactful applications. Currently contributing to the Kolkata Water Intelligence platform to help create a safer and smarter city.",
+    department: currentUser?.department || "",
+    bio: currentUser?.bio || "",
     profileImage: currentUser?.avatarUrl || null,
-    createdAt: currentUser?.createdAt || "2026-08-15",
+    createdAt: currentUser?.createdAt || null,
   });
 
   const [stats] = useState({
     reportsSubmitted: currentUser?.reportsSubmitted ?? 0,
     alertsReceived: currentUser?.alertsReceived ?? 0,
     daysActive: currentUser?.daysActive ?? (() => {
-      const created = new Date(currentUser?.createdAt || "2026-08-15");
+      if (!currentUser?.createdAt) return 0;
+      const created = new Date(currentUser.createdAt);
       const now = new Date();
       return Math.max(1, Math.ceil((now - created) / (1000 * 60 * 60 * 24)));
     })(),
@@ -53,7 +54,7 @@ export function ProfileView() {
 
   /* ── Preferences State ── */
   const [preferences, setPreferences] = useState({
-    theme: "light",
+    theme: theme || "system",
     alertNotifications: true,
     emailNotifications: false,
     mapStyle: "satellite",
@@ -73,8 +74,10 @@ export function ProfileView() {
   const [securitySuccess, setSecuritySuccess] = useState(false);
 
   /* ── Computed ── */
-  const userInitial = (profile.fullName || "A").replace(/[^a-zA-Z0-9]/g, " ").trim().charAt(0).toUpperCase() || "A";
-  const memberSince = new Date(profile.createdAt).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+  const userInitial = (profile.fullName || "Guest").replace(/[^a-zA-Z0-9]/g, " ").trim().charAt(0).toUpperCase() || "G";
+  const memberSince = profile.createdAt
+    ? new Date(profile.createdAt).toLocaleDateString("en-IN", { month: "long", year: "numeric" })
+    : "Not available";
 
   /* ── Handlers ── */
   const handleImageChange = useCallback((e) => {
@@ -658,7 +661,6 @@ const PROFILE_CSS = `
     position:absolute;inset:0;
     background:url('/assets/kolkata-profile-bg.jpg') center 62%/cover no-repeat;
     filter:saturate(1.12) contrast(1.03);
-    image-rendering:-webkit-optimize-contrast; image-rendering:crisp-edges;
     transform:scale(1.02) translateZ(0);
     backface-visibility:hidden; -webkit-backface-visibility:hidden;
     transform-origin:50% 50%;

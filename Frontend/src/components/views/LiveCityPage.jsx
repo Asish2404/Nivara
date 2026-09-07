@@ -437,7 +437,7 @@ export function LiveCityPage() {
                   }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${active
                     ? `${layer.color} border shadow-xs font-semibold`
-                    : "bg-slate-100 dark:bg-slate-800/40/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-100 border border-transparent"
+                    : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:text-white dark:hover:bg-slate-700/70 border border-transparent"
                     }`}
                 >
                   <span className="text-xs">{layer.icon}</span>
@@ -471,7 +471,7 @@ export function LiveCityPage() {
                 audioEngine.playUiChirp(1100);
                 triggerZoomIn();
               }}
-              className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800/40 hover:bg-slate-200 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
+              className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800/40 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
               title="Zoom In"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -482,7 +482,7 @@ export function LiveCityPage() {
                 audioEngine.playUiChirp(820);
                 triggerZoomOut();
               }}
-              className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800/40 hover:bg-slate-200 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
+              className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800/40 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
               title="Zoom Out"
             >
               <Minus className="w-3.5 h-3.5" />
@@ -493,7 +493,7 @@ export function LiveCityPage() {
                 audioEngine.playUiChirp(900);
                 triggerResetCamera();
               }}
-              className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800/40 hover:bg-slate-200 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
+              className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800/40 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
               title="Reset View"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -854,7 +854,7 @@ export function LiveCityPage() {
                 >
                   {/* Header with Icon */}
                   <div>
-                    <div className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-slate-800/60/90 border border-slate-100 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-2xs">
+                    <div className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-2xs">
                       {stat.icon}
                     </div>
                     <div className="flex items-baseline gap-1">

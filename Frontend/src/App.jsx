@@ -60,7 +60,12 @@ function EarthScene({ zoomStarted, earthRef, controlsRef, onZoomComplete }) {
 }
 
 function App() {
-  const { currentRoute, navigate, theme } = useKWIStore()
+  const { currentRoute, navigate, theme, initUser } = useKWIStore()
+
+  // On mount, refresh the logged-in user from the backend using the stored token.
+  useEffect(() => {
+    initUser()
+  }, [initUser])
 
   // Central theme application: resolve 'system' via prefers-color-scheme,
   // apply .dark class + color-scheme on <html>, and follow OS changes live.

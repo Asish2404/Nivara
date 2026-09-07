@@ -19,11 +19,11 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
   const { currentUser, updateUserProfile } = useKWIStore();
   const fileInputRef = useRef(null);
 
-  const [name, setName] = useState(currentUser?.name || "Asish Bose");
-  const [org, setOrg] = useState(currentUser?.department || "Kolkata Water Intelligence");
-  const [email, setEmail] = useState(currentUser?.email || "asishbose313@gmail.com");
-  const [phone, setPhone] = useState(currentUser?.phone || "+91 98301 24590");
-  const [location, setLocation] = useState(currentUser?.location || "Kolkata, Sector V / Central Command");
+  const [name, setName] = useState(currentUser?.name || "");
+  const [org, setOrg] = useState(currentUser?.department || "");
+  const [email, setEmail] = useState(currentUser?.email || "");
+  const [phone, setPhone] = useState(currentUser?.phone || "");
+  const [location, setLocation] = useState(currentUser?.location || "");
   const [avatarPreview, setAvatarPreview] = useState(currentUser?.avatarUrl || null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -51,11 +51,11 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
     e.preventDefault();
     if (updateUserProfile) {
       updateUserProfile({
-        name: name.trim() || "Asish Bose",
-        department: org.trim() || "Kolkata Water Intelligence",
-        email: email.trim() || "asishbose313@gmail.com",
-        phone: phone.trim() || "+91 98301 24590",
-        location: location.trim() || "Kolkata, Sector V / Central Command",
+        name: name.trim() || "",
+        department: org.trim() || "",
+        email: email.trim() || "",
+        phone: phone.trim() || "",
+        location: location.trim() || "",
         avatarUrl: avatarPreview,
       });
     }
@@ -67,11 +67,11 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
     }, 900);
   };
 
-  const userInitial = (name || "Asish Bose")
+  const userInitial = (name || "Guest")
     .replace(/[^a-zA-Z0-9]/g, " ")
     .trim()
     .charAt(0)
-    .toUpperCase() || "A";
+    .toUpperCase() || "G";
 
   return (
     <div
@@ -316,7 +316,7 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
               onClick={onClose}
               className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                 isDarkMode
-                  ? "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750"
+                  ? "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
                   : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
               }`}
             >

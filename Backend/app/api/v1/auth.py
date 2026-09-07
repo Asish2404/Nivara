@@ -10,6 +10,7 @@ from ...schemas.auth import (
     UserSignupRequest,
     UserLoginRequest,
     UserResponse,
+    UserUpdateRequest,
     TokenResponse,
 )
 from ...services.auth_service import AuthService
@@ -108,4 +109,33 @@ async def login(
 )
 async def get_my_profile(current_user: User = Depends(get_current_user)):
     """Protected endpoint: Reads token from Authorization header and returns user profile."""
+    return AuthService.to_user_response(current_user)
+
+
+@router.patch(
+    "/me",
+    response_model=UserResponse,
+    summary="Update profile fields of the currently logged-in user",
+)
+async def update_my_profile(
+    payload: UserUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update only the provided profile fields (full name, department, phone, location, bio, avatar)."""
+    if payload.full_name is not None:
+        current_user.full_name = payload.full_name.strip() or current_user.full_name
+    if payload.department is not None:
+        current_user.department = payload.department.strip() or current_user.department
+    if payload.phone is not None:
+        current_user.phone = payload.phone.strip() or None
+    if payload.location is not None:
+        current_user.location = payload.location.strip() or None
+    if payload.bio is not None:
+        current_user.bio = payload.bio.strip() or None
+    if payload.avatar_url is not None:
+        current_user.avatar_url = payload.avatar_url.strip() or None
+
+    await db.commit()
+    await db.refresh(current_user)
     return AuthService.to_user_response(current_user)

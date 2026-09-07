@@ -124,15 +124,15 @@ export function IncidentsView() {
             <BorderBeam size={300} duration={12} colorFrom="#00f0ff" colorTo="#3b82f6" />
             <div className="flex items-start justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
               <div>
-                <span className="text-[10px] font-mono font-bold text-slate-400 block uppercase">
+                <span className="text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 block uppercase">
                   INCIDENT {activeIncident.id} · {activeIncident.subdivision}
                 </span>
-                <h2 className="text-2xl font-bold text-slate-950 mt-1">
+                <h2 className="text-2xl font-bold text-slate-950 dark:text-white mt-1">
                   {activeIncident.location}
                 </h2>
-                <span className="text-xs text-slate-500 mt-1 block font-mono">
+                <span className="text-xs text-slate-500 dark:text-slate-400 mt-1 block font-mono">
                   Reported: {activeIncident.timestamp} · Status:{" "}
-                  <strong className="text-slate-800">{activeIncident.status}</strong>
+                  <strong className="text-slate-800 dark:text-slate-200">{activeIncident.status}</strong>
                 </span>
               </div>
 
@@ -140,8 +140,8 @@ export function IncidentsView() {
                 className={`text-xs font-bold font-mono px-3 py-1 rounded-full ${
                   activeIncident.severity === "HIGH" ||
                   activeIncident.severity === "CRITICAL"
-                    ? "bg-rose-50 text-rose-700 border border-rose-200"
-                    : "bg-amber-50 text-amber-700 border border-amber-200"
+                    ? "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30"
+                    : "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30"
                 }`}
               >
                 {activeIncident.severity}
@@ -150,70 +150,70 @@ export function IncidentsView() {
 
             {/* Metrics Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block font-mono">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700">
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 block font-mono">
                   Risk Score
                 </span>
-                <span className="text-lg font-bold text-slate-900 font-mono">
+                <span className="text-lg font-bold text-slate-900 dark:text-white font-mono">
                   {activeIncident.riskScore}
                 </span>
               </div>
-              <div className="p-3.5 rounded-xl bg-rose-50/60 border border-rose-100">
-                <span className="text-[10px] uppercase font-bold text-rose-600 block font-mono">
+              <div className="p-3.5 rounded-xl bg-rose-50/60 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/30">
+                <span className="text-[10px] uppercase font-bold text-rose-600 dark:text-rose-400 block font-mono">
                   Water Depth
                 </span>
-                <span className="text-lg font-bold text-rose-600 font-mono">
+                <span className="text-lg font-bold text-rose-600 dark:text-rose-400 font-mono">
                   {activeIncident.waterDepth}
                 </span>
               </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block font-mono">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700">
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 block font-mono">
                   Rainfall
                 </span>
-                <span className="text-lg font-bold text-slate-900 font-mono">
+                <span className="text-lg font-bold text-slate-900 dark:text-white font-mono">
                   {activeIncident.rainfall}
                 </span>
               </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block font-mono">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700">
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 block font-mono">
                   Citizen Reports
                 </span>
-                <span className="text-lg font-bold text-slate-900 font-mono">
+                <span className="text-lg font-bold text-slate-900 dark:text-white font-mono">
                   {activeIncident.verifiedReports} verified
                 </span>
               </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block font-mono">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700">
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 block font-mono">
                   Affected Area
                 </span>
-                <span className="text-lg font-bold text-slate-900 font-mono">
+                <span className="text-lg font-bold text-slate-900 dark:text-white font-mono">
                   {activeIncident.affectedArea}
                 </span>
               </div>
-              <div className="p-3.5 rounded-xl bg-cyan-50/60 border border-cyan-100">
-                <span className="text-[10px] uppercase font-bold text-cyan-700 block font-mono">
+              <div className="p-3.5 rounded-xl bg-cyan-50/60 dark:bg-cyan-500/10 border border-cyan-100 dark:border-cyan-500/30">
+                <span className="text-[10px] uppercase font-bold text-cyan-700 dark:text-cyan-400 block font-mono">
                   Nearest Pump
                 </span>
-                <span className="text-lg font-bold text-cyan-800 font-mono">
+                <span className="text-lg font-bold text-cyan-800 dark:text-cyan-400 font-mono">
                   {activeIncident.nearestPump}
                 </span>
               </div>
             </div>
 
             {/* Drainage Context */}
-            <div className="text-xs text-slate-600 space-y-2 pt-2 border-t border-slate-100">
+            <div className="text-xs text-slate-600 dark:text-slate-300 space-y-2 pt-2 border-t border-slate-100 dark:border-slate-700/60">
               <div>
-                <strong className="text-slate-900">Connected Drainage:</strong>{" "}
+                <strong className="text-slate-900 dark:text-white">Connected Drainage:</strong>{" "}
                 {activeIncident.connectedDrainage}
               </div>
               <div>
-                <strong className="text-slate-900">Probable Cause:</strong>{" "}
+                <strong className="text-slate-900 dark:text-white">Probable Cause:</strong>{" "}
                 {activeIncident.probableCause}
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t border-slate-100">
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/60">
               <button
                 type="button"
                 onClick={() => handleViewOnMap(activeIncident)}
@@ -225,7 +225,7 @@ export function IncidentsView() {
               <button
                 type="button"
                 onClick={handleCreateWorkOrder}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-medium text-xs transition-all active:scale-[0.98] cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-medium text-xs transition-all active:scale-[0.98] cursor-pointer"
               >
                 Track Work Order
               </button>
