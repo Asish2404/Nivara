@@ -19,37 +19,29 @@ import { audioEngine } from "../../utils/audioEngine";
 import { CommandProfileDropdown } from "./CommandProfileDropdown";
 
 export function KWINavbar() {
-  const { currentRoute, navigate, toggleAskKolkata, openLoginModal, currentUser, logoutUser } = useKWIStore();
+  const { currentRoute, navigate, toggleAskKolkata, openLoginModal, currentUser, logoutUser, theme, setTheme } = useKWIStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [systemPref, setSystemPref] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches
+  );
   const [activeDropdown, setActiveDropdown] = useState(null);
   const dropdownTimeoutRef = useRef(null);
 
-  // Initialize theme from document or localStorage
+  // Keep OS preference in sync so 'system' themes follow hardware live
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedTheme = localStorage.getItem("kwi_theme");
-      const initialDark =
-        savedTheme === "dark" ||
-        (!savedTheme && document.documentElement.classList.contains("dark"));
-      setIsDarkMode(Boolean(initialDark));
-      if (initialDark) {
-        document.documentElement.classList.add("dark");
-      }
-    }
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = (e) => setSystemPref(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
   }, []);
 
+  // Resolve current dark state from the store (light | dark | system)
+  const isDarkMode = theme === "dark" || (theme === "system" && systemPref);
+
   const toggleTheme = () => {
-    const nextDark = !isDarkMode;
-    setIsDarkMode(nextDark);
-    if (nextDark) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("kwi_theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("kwi_theme", "light");
-    }
-    audioEngine.playUiChirp(nextDark ? 740 : 960);
+    setTheme(isDarkMode ? "light" : "dark");
+    audioEngine.playUiChirp(isDarkMode ? 740 : 960);
   };
 
   const handleNavClick = (path) => {

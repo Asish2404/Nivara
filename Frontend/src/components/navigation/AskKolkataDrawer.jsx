@@ -33,21 +33,21 @@ export function AskKolkataDrawer() {
       role="dialog"
       aria-label="Ask Kolkata Query Utility"
     >
-      <div className="w-full max-w-md bg-white h-full shadow-2xl border-l border-slate-200 flex flex-col justify-between text-slate-900 font-sans">
+      <div className="w-full max-w-md bg-white dark:bg-[#111a2e] h-full shadow-2xl border-l border-slate-200 dark:border-slate-700 flex flex-col justify-between text-slate-900 dark:text-slate-100 font-sans">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-bold tracking-tight text-slate-950">
+            <h2 className="text-sm font-bold tracking-tight text-slate-950 dark:text-slate-100">
               Ask Kolkata
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Municipal drainage & operational water queries
             </p>
           </div>
           <button
             type="button"
             onClick={() => setAskKolkataOpen(false)}
-            className="p-1.5 rounded-md text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-1.5 rounded-md text-slate-400 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -66,12 +66,12 @@ export function AskKolkataDrawer() {
                 className={`max-w-[90%] rounded-xl p-3.5 leading-relaxed ${
                   msg.sender === "user"
                     ? "bg-blue-600 text-white"
-                    : "bg-slate-50 text-slate-800 border border-slate-200"
+                    : "bg-slate-50 text-slate-800 border border-slate-200 dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-700"
                 }`}
               >
                 <div className="flex items-center justify-between gap-4 mb-1 text-[10px]">
                   <span
-                    className={`font-semibold ${msg.sender === "user" ? "text-blue-100" : "text-slate-500"}`}
+                    className={`font-semibold ${msg.sender === "user" ? "text-blue-100" : "text-slate-500 dark:text-slate-400"}`}
                   >
                     {msg.sender === "user"
                       ? "You"
@@ -83,27 +83,27 @@ export function AskKolkataDrawer() {
 
                 {/* Example Structured Product Card in response */}
                 {msg.sender !== "user" && msg.text.includes("Sector V") && (
-                  <div className="mt-3 pt-3 border-t border-slate-200/80 space-y-2">
-                    <div className="font-bold text-slate-950 text-xs">
+                  <div className="mt-3 pt-3 border-t border-slate-200/80 dark:border-slate-700 space-y-2">
+                    <div className="font-bold text-slate-950 dark:text-slate-100 text-xs">
                       SECTOR V
                     </div>
                     <div className="grid grid-cols-2 gap-1.5 text-[11px]">
                       <div>
-                        <span className="text-slate-500">Risk:</span>{" "}
+                        <span className="text-slate-500 dark:text-slate-400">Risk:</span>{" "}
                         <strong className="text-rose-600">82 / 100</strong>
                       </div>
                       <div>
-                        <span className="text-slate-500">Rainfall:</span>{" "}
+                        <span className="text-slate-500 dark:text-slate-400">Rainfall:</span>{" "}
                         <strong>74 mm / 3 hr</strong>
                       </div>
                       <div className="col-span-2">
-                        <span className="text-slate-500">
+                        <span className="text-slate-500 dark:text-slate-400">
                           Primary constraint:
                         </span>{" "}
                         Drainage capacity
                       </div>
                       <div className="col-span-2">
-                        <span className="text-slate-500">Action:</span> Inspect
+                        <span className="text-slate-500 dark:text-slate-400">Action:</span> Inspect
                         PS-07 and clear main trunk
                       </div>
                     </div>
@@ -126,8 +126,8 @@ export function AskKolkataDrawer() {
         </div>
 
         {/* Quick Suggestion Chips */}
-        <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50">
-          <span className="text-[10px] uppercase font-bold text-slate-400 block mb-2">
+        <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/40">
+          <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 block mb-2">
             Suggested Queries
           </span>
           <div className="flex flex-col gap-1.5">
@@ -136,7 +136,7 @@ export function AskKolkataDrawer() {
                 key={i}
                 type="button"
                 onClick={() => sendCopilotMessage(prompt)}
-                className="text-left text-xs py-1 px-2 rounded hover:bg-white border border-transparent hover:border-slate-200 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+                className="text-left text-xs py-1 px-2 rounded hover:bg-white border border-transparent hover:border-slate-200 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-[#16213a] dark:hover:border-slate-700 dark:hover:text-slate-100 transition-colors cursor-pointer"
               >
                 {prompt}
               </button>
@@ -147,14 +147,14 @@ export function AskKolkataDrawer() {
         {/* Input Footer */}
         <form
           onSubmit={handleSubmit}
-          className="p-4 border-t border-slate-200 flex gap-2"
+          className="p-4 border-t border-slate-200 dark:border-slate-700 flex gap-2"
         >
           <input
             type="text"
             value={copilotQuery}
             onChange={(e) => setCopilotQuery(e.target.value)}
             placeholder="Ask about water conditions, pumps, canals..."
-            className="flex-1 px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white"
+            className="flex-1 px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white dark:bg-slate-800/60 dark:border-slate-700 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-[#16213a]"
           />
           <button
             type="submit"

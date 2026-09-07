@@ -205,6 +205,103 @@ class AudioEngine {
       osc2.stop(now + 0.28)
     } catch (_) {}
   }
+
+  // 5. Soft low-frequency arrival chime for platform touchdown (restrained, warm, elegant)
+  playArrivalChime() {
+    if (this.isMuted) return
+    const ctx = this.getAudioContext()
+    if (!ctx) return
+
+    try {
+      const now = ctx.currentTime
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      const filter = ctx.createBiquadFilter()
+
+      osc.type = 'sine'
+      // Warm C4/G4 subtle harmonic chime
+      osc.frequency.setValueAtTime(261.63, now) // C4
+      osc.frequency.exponentialRampToValueAtTime(392.00, now + 0.12) // G4
+
+      filter.type = 'lowpass'
+      filter.frequency.setValueAtTime(450, now)
+
+      gain.gain.setValueAtTime(0.001, now)
+      gain.gain.linearRampToValueAtTime(0.032, now + 0.04)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42)
+
+      osc.connect(filter)
+      filter.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc.start(now)
+      osc.stop(now + 0.44)
+    } catch (_) {}
+  }
+
+  // 6. Subtle data-processing calculation shimmer (whisper-quiet, high-frequency granular shimmer)
+  playDataShimmer() {
+    if (this.isMuted) return
+    const ctx = this.getAudioContext()
+    if (!ctx) return
+
+    try {
+      const now = ctx.currentTime
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      const filter = ctx.createBiquadFilter()
+
+      osc.type = 'triangle'
+      osc.frequency.setValueAtTime(1840, now)
+      osc.frequency.exponentialRampToValueAtTime(2450, now + 0.18)
+
+      filter.type = 'bandpass'
+      filter.frequency.setValueAtTime(2200, now)
+      filter.Q.setValueAtTime(4.0, now)
+
+      gain.gain.setValueAtTime(0.0001, now)
+      gain.gain.linearRampToValueAtTime(0.012, now + 0.03) // very quiet
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22)
+
+      osc.connect(filter)
+      filter.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc.start(now)
+      osc.stop(now + 0.24)
+    } catch (_) {}
+  }
+
+  // 7. Subtle mechanical footstep click for robotic walking locomotion
+  playMechanicalStep(freq = 420) {
+    if (this.isMuted) return
+    const ctx = this.getAudioContext()
+    if (!ctx) return
+
+    try {
+      const now = ctx.currentTime
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      const filter = ctx.createBiquadFilter()
+
+      osc.type = 'triangle'
+      osc.frequency.setValueAtTime(freq, now)
+      osc.frequency.exponentialRampToValueAtTime(140, now + 0.05)
+
+      filter.type = 'lowpass'
+      filter.frequency.setValueAtTime(600, now)
+
+      gain.gain.setValueAtTime(0.018, now)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06)
+
+      osc.connect(filter)
+      filter.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc.start(now)
+      osc.stop(now + 0.07)
+    } catch (_) {}
+  }
 }
 
 export const audioEngine = new AudioEngine()

@@ -15,6 +15,8 @@ const getInitialRoute = () => {
       p === '/my-reports' ||
       p === '/action-center' ||
       p === '/respond' ||
+      p === '/profile' ||
+      p === '/my-profile' ||
       p === '/login' ||
       p === '/auth'
     ) {
@@ -45,6 +47,9 @@ const routeToSection = (path) => {
     case '/action-center':
     case '/respond':
       return 'RESPOND'
+    case '/profile':
+    case '/my-profile':
+      return 'PROFILE'
     case '/login':
     case '/auth':
       return 'LOGIN'
@@ -54,6 +59,15 @@ const routeToSection = (path) => {
 }
 
 export const useKWIStore = create((set, get) => ({
+  // Theme preference: 'light' | 'dark' | 'system' (persisted)
+  theme: (typeof window !== 'undefined' && localStorage.getItem('kwi_theme')) || 'system',
+  setTheme: (t) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kwi_theme', t)
+    }
+    set({ theme: t })
+  },
+
   // Active Route & Section Navigation
   currentRoute: getInitialRoute(),
   activeSection: routeToSection(getInitialRoute()),
@@ -241,7 +255,18 @@ export const useKWIStore = create((set, get) => ({
 
   currentUser: typeof window !== 'undefined' && localStorage.getItem('kwi_user')
     ? JSON.parse(localStorage.getItem('kwi_user'))
-    : null,
+    : {
+        name: 'ASISHBOSE313',
+        username: 'asishbose313',
+        department: 'Kolkata Water Intelligence',
+        email: 'asish.bose@kolkata-water.gov.in',
+        avatarUrl: null,
+        phone: '',
+        location: 'Kolkata, West Bengal',
+        institution: '',
+        bio: 'Computer Science student with a strong interest in technology, data-driven solutions, and building impactful applications. Currently contributing to the Kolkata Water Intelligence platform to help create a safer and smarter city.',
+        createdAt: '2026-08-15',
+      },
 
   loginUser: (userData) => {
     if (typeof window !== 'undefined') {
@@ -250,12 +275,27 @@ export const useKWIStore = create((set, get) => ({
     set({ currentUser: userData, isLoginModalOpen: false })
   },
 
+  updateUserProfile: (profileData) => {
+    const updatedUser = {
+      ...(get().currentUser || {}),
+      ...profileData,
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kwi_user', JSON.stringify(updatedUser))
+    }
+    set({ currentUser: updatedUser })
+  },
+
   logoutUser: () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('kwi_user')
     }
     set({ currentUser: null })
   },
+
+  unreadNotificationsCount: 3,
+  setUnreadNotificationsCount: (count) => set({ unreadNotificationsCount: count }),
+  clearNotifications: () => set({ unreadNotificationsCount: 0 }),
 
   adminMenuOpen: false,
   setAdminMenuOpen: (open) => set({ adminMenuOpen: open }),

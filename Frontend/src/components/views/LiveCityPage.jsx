@@ -132,10 +132,10 @@ export function LiveCityPage() {
       color: "emerald",
       chart: (
         <div className="mt-4 space-y-1.5">
-          <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+          <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800/40 overflow-hidden">
             <div className="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full w-full" />
           </div>
-          <div className="flex justify-between text-[10px] font-mono text-slate-400">
+          <div className="flex justify-between text-[10px] font-mono text-slate-400 dark:text-slate-500">
             <span>41 / 41 Active</span>
             <span className="text-emerald-600 font-semibold">Optimal Flow</span>
           </div>
@@ -152,7 +152,7 @@ export function LiveCityPage() {
       chart: (
         <div className="flex items-center gap-2 mt-3 pt-1">
           <div className="flex -space-x-2 overflow-hidden">
-            <div className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-slate-200 text-[9px] font-bold flex items-center justify-center text-slate-600">
+            <div className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-slate-200 text-[9px] font-bold flex items-center justify-center text-slate-600 dark:text-slate-300">
               AK
             </div>
             <div className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-cyan-100 text-[9px] font-bold flex items-center justify-center text-cyan-700">
@@ -165,7 +165,7 @@ export function LiveCityPage() {
               RC
             </div>
           </div>
-          <span className="text-[11px] font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
+          <span className="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/40 px-2 py-0.5 rounded-full">
             +4.2M
           </span>
         </div>
@@ -198,7 +198,7 @@ export function LiveCityPage() {
   }));
 
   return (
-    <div className="relative min-h-screen bg-[#fafaf8] text-slate-900 font-sans flex flex-col selection:bg-cyan-100 selection:text-cyan-900 overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#fafaf8] dark:bg-[#0b1220] text-slate-900 dark:text-slate-100 font-sans flex flex-col selection:bg-cyan-100 selection:text-cyan-900 overflow-x-hidden">
       {/* 0. Subtle Organic Ambient Warmth & Waterlines */}
       <div
         className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1440px] h-[520px] pointer-events-none -z-10"
@@ -229,29 +229,29 @@ export function LiveCityPage() {
         {/* ========================================================================= */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-1">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/5 border border-slate-900/10 text-xs text-slate-700 font-mono mb-2 shadow-2xs">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/5 border border-slate-900/10 text-xs text-slate-700 dark:text-slate-300 font-mono mb-2 shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-cyan-500 animate-ping" />
               <span className="font-semibold tracking-wider">LIVE MUNICIPAL TELEMETRY</span>
               <span className="text-slate-300">|</span>
-              <span className="text-slate-500">41 HOOGHLY SLUICE GATES LINKED</span>
+              <span className="text-slate-500 dark:text-slate-400 dark:text-slate-500">41 HOOGHLY SLUICE GATES LINKED</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-950">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
               Kolkata{" "}
               <span className="bg-gradient-to-r from-cyan-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
                 Hydrological Command
               </span>{" "}
               Center
             </h1>
-            <p className="text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
+            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 max-w-2xl leading-relaxed">
               Real-time multi-spectral radar surveillance, runoff forecast isobars, and telemetry dispatch.
             </p>
           </div>
 
           {/* High-Tech System Heartbeat Badge */}
-          <div className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/80 backdrop-blur-xl border border-slate-200/80 shadow-[0_4px_20px_rgba(15,23,42,0.03)] font-mono text-xs text-slate-600">
+          <div className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/80 dark:bg-[#16213a]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-700/80 shadow-[0_4px_20px_rgba(15,23,42,0.03)] font-mono text-xs text-slate-600 dark:text-slate-300">
             <div className="flex items-center gap-1.5">
               <Radio className="w-3.5 h-3.5 text-cyan-600 animate-pulse" />
-              <span className="font-bold text-slate-900">RADAR 2.8 GHz</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">RADAR 2.8 GHz</span>
             </div>
             <span className="text-slate-200">|</span>
             <div className="flex items-center gap-1.5">
@@ -272,7 +272,7 @@ export function LiveCityPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0 }}
             onMouseEnter={() => audioEngine.playUiChirp(800)}
-            className="group relative p-5 rounded-[22px] bg-white/80 backdrop-blur-xl border border-slate-200/80 shadow-[0_4px_24px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_32px_rgba(15,23,42,0.06)] hover:border-slate-300 transition-all duration-300"
+            className="group relative p-5 rounded-[22px] bg-white/80 dark:bg-[#16213a]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-700/80 shadow-[0_4px_24px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_32px_rgba(15,23,42,0.06)] hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-300"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600 font-mono">
@@ -283,12 +283,12 @@ export function LiveCityPage() {
               </div>
             </div>
             <div className="flex items-baseline gap-1.5 mt-1">
-              <span className="text-2xl sm:text-3xl font-bold text-slate-950 font-mono tracking-tight">
+              <span className="text-2xl sm:text-3xl font-bold text-slate-950 dark:text-slate-100 font-mono tracking-tight">
                 <AnimatedNumber value={highRiskZonesCount} duration={1400} />
               </span>
-              <span className="text-xs font-semibold text-slate-400 tracking-wider font-mono">ZONES</span>
+              <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 tracking-wider font-mono">ZONES</span>
             </div>
-            <div className="text-[11px] text-slate-500 mt-2 flex items-center justify-between">
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-2 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
                 <span className="line-clamp-1">Sector V & Park Circus Basin</span>
@@ -307,7 +307,7 @@ export function LiveCityPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.12 }}
             onMouseEnter={() => audioEngine.playUiChirp(920)}
-            className="group relative p-5 rounded-[22px] bg-white/80 backdrop-blur-xl border border-slate-200/80 shadow-[0_4px_24px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_32px_rgba(15,23,42,0.06)] hover:border-slate-300 transition-all duration-300"
+            className="group relative p-5 rounded-[22px] bg-white/80 dark:bg-[#16213a]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-700/80 shadow-[0_4px_24px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_32px_rgba(15,23,42,0.06)] hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-300"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600 font-mono">
@@ -318,12 +318,12 @@ export function LiveCityPage() {
               </div>
             </div>
             <div className="flex items-baseline gap-1.5 mt-1">
-              <span className="text-2xl sm:text-3xl font-bold text-slate-950 font-mono tracking-tight">
+              <span className="text-2xl sm:text-3xl font-bold text-slate-950 dark:text-slate-100 font-mono tracking-tight">
                 <AnimatedNumber value={criticalIncidentsCount} duration={1400} />
               </span>
-              <span className="text-xs font-semibold text-slate-400 tracking-wider font-mono">REPORTS</span>
+              <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 tracking-wider font-mono">REPORTS</span>
             </div>
-            <div className="text-[11px] text-slate-500 mt-2 flex items-center justify-between">
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-2 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 <span>Citizen Mobile Ingestion Live</span>
@@ -342,7 +342,7 @@ export function LiveCityPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.24 }}
             onMouseEnter={() => audioEngine.playUiChirp(1040)}
-            className="group relative p-5 rounded-[22px] bg-white/80 backdrop-blur-xl border border-slate-200/80 shadow-[0_4px_24px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_32px_rgba(15,23,42,0.06)] hover:border-slate-300 transition-all duration-300"
+            className="group relative p-5 rounded-[22px] bg-white/80 dark:bg-[#16213a]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-700/80 shadow-[0_4px_24px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_32px_rgba(15,23,42,0.06)] hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-300"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-600 font-mono">
@@ -352,10 +352,10 @@ export function LiveCityPage() {
                 <Droplets className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-bold text-slate-950 font-mono tracking-tight mt-1">
+            <div className="text-2xl sm:text-3xl font-bold text-slate-950 dark:text-slate-100 font-mono tracking-tight mt-1">
               {rainfallDisplay}
             </div>
-            <div className="text-[11px] text-slate-500 mt-2 flex items-center justify-between">
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-2 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
                 <span>Alipore Doppler Reflectivity</span>
@@ -377,7 +377,7 @@ export function LiveCityPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.36 }}
             onMouseEnter={() => audioEngine.playUiChirp(1160)}
-            className="group relative p-5 rounded-[22px] bg-white/80 backdrop-blur-xl border border-slate-200/80 shadow-[0_4px_24px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_32px_rgba(15,23,42,0.06)] hover:border-slate-300 transition-all duration-300"
+            className="group relative p-5 rounded-[22px] bg-white/80 dark:bg-[#16213a]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-700/80 shadow-[0_4px_24px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_32px_rgba(15,23,42,0.06)] hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-300"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 font-mono">
@@ -388,12 +388,12 @@ export function LiveCityPage() {
               </div>
             </div>
             <div className="flex items-baseline gap-1.5 mt-1">
-              <span className="text-2xl sm:text-3xl font-bold text-slate-950 font-mono tracking-tight">
+              <span className="text-2xl sm:text-3xl font-bold text-slate-950 dark:text-slate-100 font-mono tracking-tight">
                 <AnimatedNumber value={pumpsAtCapacityCount} duration={1400} />
               </span>
-              <span className="text-xs font-semibold text-slate-400 tracking-wider font-mono">AT CAPACITY</span>
+              <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 tracking-wider font-mono">AT CAPACITY</span>
             </div>
-            <div className="text-[11px] text-slate-500 mt-2 flex items-center justify-between">
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-2 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 <span>85 Cusecs Outfall Discharge</span>
@@ -409,7 +409,7 @@ export function LiveCityPage() {
         {/* ========================================================================= */}
         {/* SECTION 3: REFINED MAP LAYER & CONTROL BAR                                */}
         {/* ========================================================================= */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-2 sm:p-2.5 rounded-2xl bg-white/90 backdrop-blur-xl border border-slate-200/90 text-slate-700 shadow-[0_4px_20px_rgba(15,23,42,0.04)]">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-2 sm:p-2.5 rounded-2xl bg-white/90 dark:bg-[#16213a]/90 backdrop-blur-xl border border-slate-200/90 dark:border-slate-700/90 text-slate-700 dark:text-slate-300 shadow-[0_4px_20px_rgba(15,23,42,0.04)]">
           {/* Layer Filter Buttons */}
           <div className="flex flex-wrap items-center gap-1.5">
             <div className="flex items-center gap-1.5 px-3 text-[11px] font-mono text-cyan-800 font-bold uppercase tracking-wider mr-1">
@@ -437,7 +437,7 @@ export function LiveCityPage() {
                   }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${active
                     ? `${layer.color} border shadow-xs font-semibold`
-                    : "bg-slate-100/80 text-slate-600 hover:bg-slate-200/70 hover:text-slate-900 border border-transparent"
+                    : "bg-slate-100 dark:bg-slate-800/40/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-100 border border-transparent"
                     }`}
                 >
                   <span className="text-xs">{layer.icon}</span>
@@ -471,7 +471,7 @@ export function LiveCityPage() {
                 audioEngine.playUiChirp(1100);
                 triggerZoomIn();
               }}
-              className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
+              className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800/40 hover:bg-slate-200 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
               title="Zoom In"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -482,7 +482,7 @@ export function LiveCityPage() {
                 audioEngine.playUiChirp(820);
                 triggerZoomOut();
               }}
-              className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
+              className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800/40 hover:bg-slate-200 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
               title="Zoom Out"
             >
               <Minus className="w-3.5 h-3.5" />
@@ -493,7 +493,7 @@ export function LiveCityPage() {
                 audioEngine.playUiChirp(900);
                 triggerResetCamera();
               }}
-              className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
+              className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800/40 hover:bg-slate-200 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
               title="Reset View"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -506,7 +506,7 @@ export function LiveCityPage() {
         {/* ========================================================================= */}
         <div
           id="gis-map-viewport"
-          className="relative w-full h-[640px] sm:h-[680px] rounded-[26px] border border-slate-200/90 bg-slate-950 overflow-hidden shadow-[0_20px_50px_rgba(15,23,42,0.08)] scroll-mt-24"
+          className="relative w-full h-[640px] sm:h-[680px] rounded-[26px] border border-slate-200/90 dark:border-slate-700/90 bg-slate-950 overflow-hidden shadow-[0_20px_50px_rgba(15,23,42,0.08)] scroll-mt-24"
         >
           <BorderBeam size={400} duration={14} colorFrom="#00f0ff" colorTo="#3b82f6" />
 
@@ -520,7 +520,7 @@ export function LiveCityPage() {
           <div className="absolute top-4 left-4 z-[400] flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-900/85 backdrop-blur-md border border-cyan-500/30 text-white font-mono text-[10px] shadow-lg">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
             <span className="text-cyan-300 font-bold">GRID: 22.5726° N, 88.3639° E</span>
-            <span className="text-slate-500">|</span>
+            <span className="text-slate-500 dark:text-slate-400 dark:text-slate-500">|</span>
             <span className="text-slate-300">WGS84 // EPSG:4326</span>
           </div>
 
@@ -530,7 +530,7 @@ export function LiveCityPage() {
               <span className="w-2 h-2 rounded-full bg-blue-400" />
               <span className="font-bold text-slate-200">Hooghly River (Live)</span>
             </div>
-            <span className="text-slate-600">|</span>
+            <span className="text-slate-600 dark:text-slate-300">|</span>
             <div className="flex items-center gap-1.5 text-cyan-300">
               <Waves className="w-3 h-3 text-cyan-400 animate-pulse" />
               <span>Tide +3.42 m (High)</span>
@@ -548,51 +548,51 @@ export function LiveCityPage() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="absolute top-4 right-4 z-20 w-full max-w-sm bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl p-5 shadow-2xl space-y-3 pointer-events-auto"
+                className="absolute top-4 right-4 z-20 w-full max-w-sm bg-white/95 dark:bg-[#16213a]/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-2xl space-y-3 pointer-events-auto"
               >
                 <div className="flex items-start justify-between pb-2 border-b border-slate-100">
                   <div>
                     <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider font-mono">
                       {selectedIncident.id} · {selectedIncident.subdivision}
                     </span>
-                    <h3 className="text-sm font-bold text-slate-900 mt-0.5">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                       {selectedIncident.location}
                     </h3>
                   </div>
                   <button
                     type="button"
                     onClick={clearSelections}
-                    className="p-1 text-slate-400 hover:text-slate-800 rounded-lg cursor-pointer transition-colors"
+                    className="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:text-slate-200 rounded-lg cursor-pointer transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 block">Risk Score</span>
-                    <span className="font-bold text-slate-900">{selectedIncident.riskScore}</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Risk Score</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{selectedIncident.riskScore}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 block">Water Depth</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Water Depth</span>
                     <span className="font-bold text-rose-600 font-mono">{selectedIncident.waterDepth}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 block">Rainfall</span>
-                    <span className="font-bold text-slate-900 font-mono">{selectedIncident.rainfall}</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Rainfall</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100 font-mono">{selectedIncident.rainfall}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 block">Citizen Reports</span>
-                    <span className="font-bold text-slate-900">{selectedIncident.verifiedReports} verified</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Citizen Reports</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{selectedIncident.verifiedReports} verified</span>
                   </div>
                 </div>
 
-                <div className="text-xs text-slate-600 space-y-1 pt-1 border-t border-slate-100">
+                <div className="text-xs text-slate-600 dark:text-slate-300 space-y-1 pt-1 border-t border-slate-100">
                   <div>
-                    <strong className="text-slate-800">Drainage:</strong> {selectedIncident.connectedDrainage}
+                    <strong className="text-slate-800 dark:text-slate-200">Drainage:</strong> {selectedIncident.connectedDrainage}
                   </div>
                   <div>
-                    <strong className="text-slate-800">Cause:</strong> {selectedIncident.probableCause}
+                    <strong className="text-slate-800 dark:text-slate-200">Cause:</strong> {selectedIncident.probableCause}
                   </div>
                 </div>
 
@@ -614,29 +614,29 @@ export function LiveCityPage() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="absolute top-4 right-4 z-20 w-full max-w-sm bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl p-5 shadow-2xl space-y-3 pointer-events-auto"
+                className="absolute top-4 right-4 z-20 w-full max-w-sm bg-white/95 dark:bg-[#16213a]/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-2xl space-y-3 pointer-events-auto"
               >
                 <div className="flex items-start justify-between pb-2 border-b border-slate-100">
                   <div>
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">
                       PUMPING STATION · {selectedPumpStation.ward}
                     </span>
-                    <h3 className="text-sm font-bold text-slate-900 mt-0.5">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                       {selectedPumpStation.name}
                     </h3>
                   </div>
                   <button
                     type="button"
                     onClick={clearSelections}
-                    className="p-1 text-slate-400 hover:text-slate-800 rounded-lg cursor-pointer transition-colors"
+                    className="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:text-slate-200 rounded-lg cursor-pointer transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 block">Operating Status</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Operating Status</span>
                     <span
                       className={`font-bold ${selectedPumpStation.isAtCapacity ? "text-rose-600" : "text-emerald-600"
                         }`}
@@ -644,22 +644,22 @@ export function LiveCityPage() {
                       {selectedPumpStation.status}
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 block">Operating Load</span>
-                    <span className="font-bold text-slate-900">{selectedPumpStation.capacity}</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Operating Load</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{selectedPumpStation.capacity}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 block">Pumps Running</span>
-                    <span className="font-bold text-slate-900">{selectedPumpStation.pumpsRunning}</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Pumps Running</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{selectedPumpStation.pumpsRunning}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 block">Discharge Rate</span>
-                    <span className="font-bold text-slate-900">{selectedPumpStation.dischargeRate}</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Discharge Rate</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{selectedPumpStation.dischargeRate}</span>
                   </div>
                 </div>
 
-                <div className="text-xs text-slate-600 pt-1 border-t border-slate-100">
-                  <strong className="text-slate-800">Connected Outfall:</strong>{" "}
+                <div className="text-xs text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-100">
+                  <strong className="text-slate-800 dark:text-slate-200">Connected Outfall:</strong>{" "}
                   {selectedPumpStation.connectedCanal}
                 </div>
 
@@ -681,38 +681,38 @@ export function LiveCityPage() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="absolute top-4 right-4 z-20 w-full max-w-sm bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl p-5 shadow-2xl space-y-3 pointer-events-auto"
+                className="absolute top-4 right-4 z-20 w-full max-w-sm bg-white/95 dark:bg-[#16213a]/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-2xl space-y-3 pointer-events-auto"
               >
                 <div className="flex items-start justify-between pb-2 border-b border-slate-100">
                   <div>
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">
                       CATCHMENT RISK BASIN
                     </span>
-                    <h3 className="text-sm font-bold text-slate-950 mt-0.5">
+                    <h3 className="text-sm font-bold text-slate-950 dark:text-slate-100 mt-0.5">
                       {selectedRiskZone.districtName}
                     </h3>
                   </div>
                   <button
                     type="button"
                     onClick={clearSelections}
-                    className="p-1 text-slate-400 hover:text-slate-800 rounded-lg cursor-pointer transition-colors"
+                    className="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:text-slate-200 rounded-lg cursor-pointer transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 block">Affected Area</span>
-                    <span className="font-bold text-slate-900">{selectedRiskZone.affectedArea}</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Affected Area</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{selectedRiskZone.affectedArea}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 block">Rainfall</span>
-                    <span className="font-bold text-slate-900">{selectedRiskZone.rainfall}</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Rainfall</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{selectedRiskZone.rainfall}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 block">Drainage Load</span>
-                    <span className="font-bold text-slate-900">{selectedRiskZone.drainageLoad}</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Drainage Load</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{selectedRiskZone.drainageLoad}</span>
                   </div>
                 </div>
 
@@ -741,7 +741,7 @@ export function LiveCityPage() {
             <div className="flex justify-center">
               <SplitText
                 text="Active Ground Inundation Hotspots"
-                className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight text-center"
+                className="text-2xl sm:text-3xl font-bold text-slate-950 dark:text-slate-100 tracking-tight text-center"
                 delay={50}
                 duration={1.25}
                 ease="power3.out"
@@ -756,7 +756,7 @@ export function LiveCityPage() {
                 showCallback
               />
             </div>
-            <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+            <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
               Live field data, citizen reports and sensor streams to identify and respond faster.
             </p>
             <div className="mt-3.5 flex items-center justify-center">
@@ -803,7 +803,7 @@ export function LiveCityPage() {
           <span className="inline-block text-[11px] font-mono font-bold text-cyan-800 tracking-[0.2em] uppercase mb-1">
             CITYWIDE CAPACITY & IMPACT
           </span>
-          <h3 className="text-xl sm:text-2xl font-bold text-slate-950 tracking-tight">
+          <h3 className="text-xl sm:text-2xl font-bold text-slate-950 dark:text-slate-100 tracking-tight">
             Hydrological Telemetry & Outfall Impact
           </h3>
         </div>
@@ -811,7 +811,7 @@ export function LiveCityPage() {
         {/* ========================================================================= */}
         {/* SECTION 8: FOUR FINAL IMPACT STATISTICS (MoltenMetal Background)          */}
         {/* ========================================================================= */}
-        <section className="relative rounded-[26px] overflow-hidden p-5 sm:p-7 border border-slate-200/80 shadow-[0_12px_40px_rgba(15,23,42,0.05)]">
+        <section className="relative rounded-[26px] overflow-hidden p-5 sm:p-7 border border-slate-200/80 dark:border-slate-700/80 shadow-[0_12px_40px_rgba(15,23,42,0.05)]">
           {/* MoltenMetal Animated Background Layer */}
           <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
             <MoltenMetal
@@ -850,24 +850,24 @@ export function LiveCityPage() {
                     ease: [0.16, 1, 0.3, 1],
                     delay: idx * 0.25,
                   }}
-                  className="group relative p-6 rounded-[22px] bg-white/85 backdrop-blur-xl border border-white/70 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.1)] hover:border-white transition-all duration-300 flex flex-col justify-between"
+                  className="group relative p-6 rounded-[22px] bg-white/85 dark:bg-[#16213a]/85 backdrop-blur-xl border border-white/70 dark:border-slate-700/70 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.1)] hover:border-white dark:border-slate-700 dark:hover:border-slate-600 transition-all duration-300 flex flex-col justify-between"
                 >
                   {/* Header with Icon */}
                   <div>
-                    <div className="w-8 h-8 rounded-xl bg-slate-50/90 border border-slate-100 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-2xs">
+                    <div className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-slate-800/60/90 border border-slate-100 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-2xs">
                       {stat.icon}
                     </div>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold text-slate-950 font-mono tracking-tight">
+                      <span className="text-3xl font-bold text-slate-950 dark:text-slate-100 font-mono tracking-tight">
                         {stat.value}
                       </span>
                       {stat.unit && (
-                        <span className="text-sm font-semibold text-slate-500 font-mono">
+                        <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500 font-mono">
                           {stat.unit}
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-slate-600 font-medium mt-1">
+                    <div className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-1">
                       {stat.label}
                     </div>
                   </div>

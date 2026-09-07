@@ -20,6 +20,7 @@ import { ForecastView } from './components/views/ForecastView'
 import { SimulateView } from './components/views/SimulateView'
 import { ReportsView } from './components/views/ReportsView'
 import { ActionsView } from './components/views/ActionsView'
+import { ProfileView } from './components/views/ProfileView'
 import AIUnleashedAuth from './components/auth/AIUnleashedAuth'
 import { useKWIStore } from './store/useKWIStore'
 import './App.css'
@@ -59,7 +60,25 @@ function EarthScene({ zoomStarted, earthRef, controlsRef, onZoomComplete }) {
 }
 
 function App() {
-  const { currentRoute, navigate } = useKWIStore()
+  const { currentRoute, navigate, theme } = useKWIStore()
+
+  // Central theme application: resolve 'system' via prefers-color-scheme,
+  // apply .dark class + color-scheme on <html>, and follow OS changes live.
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const applyTheme = (dark) => {
+      const root = document.documentElement
+      root.classList.toggle('dark', dark)
+      root.style.colorScheme = dark ? 'dark' : 'light'
+    }
+    const resolveAndApply = () => {
+      if (theme === 'system') applyTheme(mq.matches)
+      else applyTheme(theme === 'dark')
+    }
+    resolveAndApply()
+    if (theme === 'system') mq.addEventListener('change', resolveAndApply)
+    return () => mq.removeEventListener('change', resolveAndApply)
+  }, [theme])
 
   // Stages for Landing ('/'): 'orbit' (0-5s) -> 'zooming' -> 'black_screen' -> 'landing_page'
   const isDirectLanding = currentRoute === '/'
@@ -137,6 +156,14 @@ function App() {
       return (
         <SubpageLayout>
           <ReportsView />
+        </SubpageLayout>
+      )
+    }
+
+    if (currentRoute === '/profile' || currentRoute === '/my-profile') {
+      return (
+        <SubpageLayout>
+          <ProfileView />
         </SubpageLayout>
       )
     }

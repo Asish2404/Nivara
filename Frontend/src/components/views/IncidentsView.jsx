@@ -24,19 +24,19 @@ export function IncidentsView() {
   };
 
   return (
-    <div className="w-full font-sans text-slate-900 pb-16">
+    <div className="w-full font-sans text-slate-900 dark:text-slate-100 pb-16">
       {/* View Header */}
       <div className="max-w-3xl mb-8">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/5 border border-cyan-500/20 text-xs text-cyan-800 font-mono mb-2 shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
           <span className="font-semibold tracking-wider">REAL-TIME HOTSPOT SURVEILLANCE</span>
-          <span className="text-slate-300">|</span>
-          <span className="text-slate-500">11:24 AM IST</span>
+          <span className="text-slate-300 dark:text-slate-600">|</span>
+          <span className="text-slate-500 dark:text-slate-400">11:24 AM IST</span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-950">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-950 dark:text-white">
           Active Water <span className="bg-gradient-to-r from-cyan-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">Incidents & Hotspots</span>
         </h1>
-        <p className="text-sm sm:text-base text-slate-600 mt-2 leading-relaxed">
+        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
           Continuous ground intelligence correlating citizen mobile geotags, computer vision depth estimation, and drainage canal backflow risks.
         </p>
       </div>
@@ -62,8 +62,8 @@ export function IncidentsView() {
                 borderColor={isCrit ? "rgba(244, 63, 94, 0.45)" : "rgba(6, 182, 212, 0.45)"}
                 className={`p-5 cursor-pointer rounded-2xl ${
                   isSelected
-                    ? "border-cyan-500 bg-gradient-to-r from-cyan-50/50 to-white shadow-md ring-1 ring-cyan-400/40 -translate-y-0.5"
-                    : "border-slate-200/90 bg-white hover:border-slate-300 shadow-2xs"
+                    ? "border-cyan-500 bg-gradient-to-r from-cyan-50/50 to-white dark:to-[#16213a] shadow-md ring-1 ring-cyan-400/40 -translate-y-0.5"
+                    : "border-slate-200/90 bg-white dark:bg-[#16213a] dark:border-slate-700/90 hover:border-slate-300 dark:hover:border-slate-600 shadow-2xs"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-2">
@@ -73,7 +73,7 @@ export function IncidentsView() {
                         isCrit ? "bg-rose-600 animate-pulse" : "bg-amber-500"
                       }`}
                     />
-                    <span className="text-sm font-bold text-slate-950">
+                    <span className="text-sm font-bold text-slate-950 dark:text-white">
                       {inc.location}
                     </span>
                   </div>
@@ -88,17 +88,17 @@ export function IncidentsView() {
                   </span>
                 </div>
 
-                <div className="text-xs text-slate-500 font-mono mb-3">
+                <div className="text-xs text-slate-500 dark:text-slate-400 font-mono mb-3">
                   {inc.id} // {inc.subdivision}
                 </div>
 
                 {/* Depth Meter Bar */}
-                <div className="space-y-1 mb-3 bg-slate-50/80 p-2.5 rounded-xl border border-slate-100">
+                <div className="space-y-1 mb-3 bg-slate-50/80 dark:bg-slate-800/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-500">Inundation Depth:</span>
+                    <span className="text-slate-500 dark:text-slate-400">Inundation Depth:</span>
                     <span className="font-bold text-rose-600 font-mono">{inc.waterDepth}</span>
                   </div>
-                  <div className="w-full h-2 bg-slate-200/70 rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-slate-200/70 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-cyan-500 via-amber-500 to-rose-500 rounded-full"
                       style={{ width: `${depthPct}%` }}
@@ -106,7 +106,7 @@ export function IncidentsView() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1">
                   <span>{inc.verifiedReports} verified reports</span>
                   <span className="text-cyan-700 font-semibold font-mono text-[11px] flex items-center gap-1">
                     <span>Inspect</span>
@@ -120,9 +120,9 @@ export function IncidentsView() {
 
         {/* Right Column: Selected Incident Detailed Card with Border Beam */}
         {activeIncident && (
-          <div className="lg:col-span-6 rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xl space-y-6 relative overflow-hidden sticky top-24">
+          <div className="lg:col-span-6 rounded-3xl border border-slate-200/90 bg-white dark:bg-[#16213a] dark:border-slate-700/90 p-6 shadow-xl space-y-6 relative overflow-hidden sticky top-24">
             <BorderBeam size={300} duration={12} colorFrom="#00f0ff" colorTo="#3b82f6" />
-            <div className="flex items-start justify-between pb-4 border-b border-slate-100">
+            <div className="flex items-start justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
               <div>
                 <span className="text-[10px] font-mono font-bold text-slate-400 block uppercase">
                   INCIDENT {activeIncident.id} · {activeIncident.subdivision}

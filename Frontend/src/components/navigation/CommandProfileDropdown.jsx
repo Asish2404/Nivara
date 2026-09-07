@@ -2,63 +2,50 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
-  Sliders,
   Bell,
-  BarChart3,
-  KeyRound,
-  ShieldCheck,
+  Settings,
+  Shield,
   LogOut,
   ChevronRight,
   ChevronDown,
 } from "lucide-react";
 import { useKWIStore } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
+import { ProfileModal } from "../modals/ProfileModal";
 
-// Animation Variants for Container & Cascading Items
+// Clean, smooth motion variants (200–250ms duration, subtle downward translation & scale)
 const dropdownVariants = {
   closed: {
     opacity: 0,
-    scale: 0.94,
-    y: -8,
-    filter: "blur(4px)",
+    scale: 0.97,
+    y: -6,
     transition: {
-      duration: 0.16,
-      ease: [0.4, 0, 1, 1],
+      duration: 0.2,
+      ease: [0.2, 0, 0, 1],
     },
   },
   open: {
     opacity: 1,
     scale: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: {
-      type: "spring",
-      stiffness: 420,
-      damping: 28,
-      mass: 0.75,
-      staggerChildren: 0.03,
-      delayChildren: 0.02,
-    },
-  },
-};
-
-const itemVariants = {
-  closed: { opacity: 0, x: -6 },
-  open: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      type: "spring",
-      stiffness: 400,
-      damping: 30,
+      duration: 0.22,
+      ease: [0.16, 1, 0.3, 1],
     },
   },
 };
 
 export function CommandProfileDropdown({ isDarkMode }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const containerRef = useRef(null);
-  const { currentUser, logoutUser, navigate } = useKWIStore();
+
+  const {
+    currentUser,
+    logoutUser,
+    navigate,
+    unreadNotificationsCount = 3,
+  } = useKWIStore();
 
   // Close dropdown when clicking outside or pressing Escape
   useEffect(() => {
@@ -82,453 +69,342 @@ export function CommandProfileDropdown({ isDarkMode }) {
     };
   }, []);
 
-  // Compute initials from user name or fallback
-  const userName = currentUser?.name || "Asish Bose";
+  // Compute initials from real user name with fallback
+  const userName = currentUser?.name || "ASISHBOSE313";
+  const userOrg = currentUser?.department || "Kolkata Water Intelligence";
+  const avatarUrl = currentUser?.avatarUrl || null;
+
   const userInitials = userName
-    .split(" ")
+    .replace(/[^a-zA-Z0-9]/g, " ")
+    .trim()
+    .split(/\s+/)
     .map((n) => n[0])
     .filter(Boolean)
     .slice(0, 2)
     .join("")
     .toUpperCase() || "AB";
 
-  const userRole = currentUser?.role || "Command Officer";
-  const userOrg = currentUser?.department || "Kolkata Water Board";
-  const userEmail = currentUser?.email || "officer.roy@kolkata-water.gov.in";
-  const userClearance = currentUser?.clearance || "LEVEL 4 · COMMAND ACCESS";
-
   const handleToggle = () => {
     if (audioEngine) audioEngine.playUiChirp(isOpen ? 780 : 940);
     setIsOpen(!isOpen);
   };
 
-  const handleAction = (callback) => {
+  const handleMenuClick = (action) => {
     if (audioEngine) audioEngine.playUiChirp(920);
     setIsOpen(false);
-    if (callback) callback();
+    if (action) action();
+  };
+
+  const handleSignOut = () => {
+    if (audioEngine) audioEngine.playStationLock();
+    setIsOpen(false);
+    logoutUser();
+    navigate("/login");
   };
 
   return (
-    <div className="relative inline-block text-left" ref={containerRef}>
-      {/* ========================================================= */}
-      {/* TRIGGER BUTTON (Tactile Glass Pill with Spring Motion)     */}
-      {/* ========================================================= */}
-      <motion.button
-        type="button"
-        onClick={handleToggle}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.96 }}
-        transition={{ type: "spring", stiffness: 500, damping: 25 }}
-        aria-expanded={isOpen}
-        aria-haspopup="true"
-        className={`group relative flex items-center gap-2.5 px-3 py-1.5 rounded-full cursor-pointer select-none backdrop-blur-2xl ${
-          isDarkMode
-            ? "bg-[#0b1220]/95 hover:bg-[#111a2e] text-slate-100 border border-slate-700/80 hover:border-cyan-400/60 shadow-[0_4px_16px_rgba(0,0,0,0.6)]"
-            : "bg-white/95 hover:bg-white text-[#0f172a] border border-slate-300/80 hover:border-blue-500/50 shadow-[0_2px_8px_rgba(15,23,42,0.08),0_1px_2px_rgba(15,23,42,0.04)]"
-        }`}
-        style={{
-          boxShadow: isDarkMode
-            ? "inset 0 1px 1px rgba(255,255,255,0.15), 0 4px 14px rgba(0,0,0,0.5)"
-            : "inset 0 1px 1.5px rgba(255,255,255,1), 0 2px 8px rgba(15,23,42,0.08)",
-        }}
-      >
-        {/* Mini Avatar with Gradient & Online Pulse */}
-        <div className="relative w-[30px] h-[30px] rounded-full bg-gradient-to-br from-[#2563eb] via-[#1d4ed8] to-[#0891a8] flex items-center justify-center font-bold text-[11px] text-white shadow-xs shrink-0 tracking-tight">
-          {userInitials}
-          <span
-            className="absolute -bottom-0.5 -right-0.5 w-[9px] h-[9px] rounded-full bg-[#17a668] border-2 transition-all"
-            style={{
-              borderColor: isDarkMode ? "#0b1220" : "#ffffff",
-              boxShadow: "0 0 6px rgba(23, 166, 104, 0.7)",
-            }}
-          />
-        </div>
-
-        {/* Officer Name */}
-        <span className="text-[13.5px] font-semibold tracking-tight truncate max-w-[120px] sm:max-w-[150px]">
-          {userName}
-        </span>
-
-        {/* Smooth Animated Chevron */}
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ type: "spring", stiffness: 450, damping: 24 }}
-          className="flex items-center justify-center"
+    <>
+      <div className="relative inline-block text-left" ref={containerRef}>
+        {/* ========================================================= */}
+        {/* TRIGGER BUTTON (Subtle Frosted Pill)                      */}
+        {/* ========================================================= */}
+        <button
+          type="button"
+          onClick={handleToggle}
+          aria-expanded={isOpen}
+          aria-haspopup="true"
+          className={`group relative flex items-center gap-2.5 px-3 py-1.5 rounded-full cursor-pointer select-none transition-all duration-200 border ${
+            isDarkMode
+              ? "bg-[#0b1220]/95 hover:bg-[#121c32] text-slate-100 border-slate-700/80 shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
+              : "bg-white/95 hover:bg-slate-50 text-slate-900 border-slate-200/90 shadow-[0_1px_4px_rgba(15,23,42,0.06)]"
+          }`}
         >
-          <ChevronDown
-            className={`w-3.5 h-3.5 ${
-              isDarkMode ? "text-slate-400 group-hover:text-cyan-300" : "text-[#64748b] group-hover:text-[#2563eb]"
-            }`}
-          />
-        </motion.div>
-      </motion.button>
+          {/* Real Avatar or Initials Fallback */}
+          <div className="relative w-[30px] h-[30px] rounded-full overflow-hidden shrink-0">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={userName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-[#0284c7] via-[#2563eb] to-[#0891a8] flex items-center justify-center font-bold text-[11px] text-white">
+                {userInitials}
+              </div>
+            )}
+          </div>
 
-      {/* ========================================================= */}
-      {/* COMMAND PROFILE GLASS PANEL WITH STAGGERED SPRING REVEAL  */}
-      {/* ========================================================= */}
-      <AnimatePresence>
-        {isOpen && (
+          {/* User Name */}
+          <span className="text-[13px] font-semibold tracking-tight truncate max-w-[130px] sm:max-w-[160px] text-slate-900 dark:text-slate-100">
+            {userName}
+          </span>
+
+          {/* Smooth Chevron */}
           <motion.div
-            variants={dropdownVariants}
-            initial="closed"
-            animate="open"
-            exit="closed"
-            style={{
-              transformOrigin: "top right",
-              boxShadow: isDarkMode
-                ? "inset 0 1.5px 2px rgba(255, 255, 255, 0.12), 0 30px 60px -20px rgba(0, 0, 0, 0.85), 0 0 25px rgba(8, 145, 168, 0.15)"
-                : "inset 0 1.5px 2px rgba(255, 255, 255, 1), 0 30px 60px -24px rgba(15, 23, 42, 0.28), 0 4px 12px -4px rgba(15, 23, 42, 0.08)",
-            }}
-            className={`absolute right-0 top-full mt-2.5 w-[360px] sm:w-[390px] rounded-[20px] overflow-hidden z-50 pointer-events-auto backdrop-blur-3xl backdrop-saturate-[200%] ${
-              isDarkMode
-                ? "bg-[#0b1220]/98 border border-slate-700/80 text-[#f8fafc]"
-                : "bg-white/98 border border-slate-200/90 text-[#0f172a]"
-            }`}
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="flex items-center justify-center text-slate-400 group-hover:text-[#0284c7] transition-colors"
           >
-            {/* 1. ID BLOCK (HEADER) */}
+            <ChevronDown className="w-3.5 h-3.5" />
+          </motion.div>
+        </button>
+
+        {/* ========================================================= */}
+        {/* CLEAN PREMIUM USER PROFILE DROPDOWN MENU                  */}
+        {/* ========================================================= */}
+        <AnimatePresence>
+          {isOpen && (
             <motion.div
-              variants={itemVariants}
-              className={`px-5 pt-5 pb-4.5 flex items-start gap-3.5 border-b ${
+              variants={dropdownVariants}
+              initial="closed"
+              animate="open"
+              exit="closed"
+              style={{
+                transformOrigin: "top right",
+                boxShadow: isDarkMode
+                  ? "0 20px 45px -10px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08)"
+                  : "0 20px 45px -12px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.05)",
+              }}
+              className={`absolute right-0 top-full mt-2 w-[300px] sm:w-[320px] rounded-2xl overflow-hidden z-50 pointer-events-auto backdrop-blur-xl ${
                 isDarkMode
-                  ? "border-slate-800 bg-gradient-to-b from-[#111c33] to-[#0b1220]"
-                  : "border-slate-100 bg-gradient-to-b from-[#f8fafc] to-[#ffffff]"
+                  ? "bg-[#0b1220]/95 border border-slate-700/80 text-slate-100"
+                  : "bg-white/95 border border-slate-200/90 text-slate-900"
               }`}
             >
-              {/* Large Officer Avatar */}
+              {/* PROFILE HEADER (Real Avatar, Name, Org) */}
               <div
-                className="relative flex-none w-[52px] h-[52px] rounded-[16px] flex items-center justify-center font-bold text-[17px] text-white shadow-md"
-                style={{
-                  background: "linear-gradient(135deg, #2563eb 0%, #0891a8 100%)",
-                  boxShadow: "0 8px 16px -6px rgba(37, 99, 235, 0.45)",
-                }}
+                className={`p-5 flex flex-col items-center text-center border-b ${
+                  isDarkMode
+                    ? "border-slate-800 bg-slate-900/30"
+                    : "border-slate-100 bg-slate-50/50"
+                }`}
               >
-                <span>{userInitials}</span>
-                <span
-                  className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#17a668] border-[3px]"
-                  style={{
-                    borderColor: isDarkMode ? "#0b1220" : "#ffffff",
-                    boxShadow: "0 0 8px rgba(23, 166, 104, 0.8)",
-                  }}
-                />
-              </div>
+                {/* Profile Image with subtle border and edit hover */}
+                <button
+                  type="button"
+                  onClick={() => handleMenuClick(() => setIsProfileModalOpen(true))}
+                  className="relative group mb-3 cursor-pointer rounded-full focus:outline-none"
+                  title="Click to view or edit profile picture"
+                >
+                  <div className="w-[68px] h-[68px] rounded-full overflow-hidden border-2 border-[#0284c7]/30 group-hover:border-[#0284c7] transition-all duration-200 shadow-sm">
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt={userName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-[#0284c7] via-[#2563eb] to-[#0891a8] flex items-center justify-center font-bold text-[19px] text-white">
+                        {userInitials}
+                      </div>
+                    )}
+                  </div>
+                </button>
 
-              {/* ID Text */}
-              <div className="flex-1 min-w-0">
-                <h3 className="text-[16px] font-bold leading-snug tracking-tight m-0 mb-0.5 truncate text-[#0f172a] dark:text-white">
+                {/* User Name */}
+                <h3 className="text-[15px] font-bold text-slate-900 dark:text-white m-0 tracking-tight leading-snug">
                   {userName}
                 </h3>
-                <p className="font-mono text-[10.5px] font-semibold tracking-[0.06em] text-[#0891a8] dark:text-cyan-400 uppercase m-0 mb-1">
-                  {userRole}
-                </p>
-                <p className="text-[12.5px] text-[#64748b] dark:text-slate-400 m-0 mb-2.5 truncate">
+
+                {/* Organization */}
+                <p className="text-[12px] text-slate-500 dark:text-slate-400 m-0 mt-0.5 font-medium">
                   {userOrg}
                 </p>
-
-                {/* Level 4 Access Badge */}
-                <div
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-mono font-semibold tracking-[0.03em] border ${
-                    isDarkMode
-                      ? "bg-cyan-950/80 text-cyan-300 border-cyan-500/30"
-                      : "bg-[#e5f7fa] text-[#0891a8] border-[rgba(8,145,168,0.25)]"
-                  }`}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0891a8] dark:bg-cyan-400" />
-                  <span>{userClearance}</span>
-                </div>
               </div>
-            </motion.div>
 
-            {/* 2. MENU ITEMS WITH STAGGERED REVEAL */}
-            <div className="p-2.5 space-y-1">
-              {/* My Profile */}
-              <motion.button
-                variants={itemVariants}
-                type="button"
-                onClick={() =>
-                  handleAction(() => {
-                    navigate("/reports");
-                  })
-                }
-                whileHover={{ x: 3 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className={`w-full flex items-center gap-3 p-2.5 rounded-[12px] text-left cursor-pointer group ${
-                  isDarkMode
-                    ? "hover:bg-[#152238] active:bg-[#1a2a46]"
-                    : "hover:bg-[#f1f5f9] active:bg-[#e8eef5]"
-                }`}
-              >
-                <div
-                  className={`flex-none w-9 h-9 rounded-[10px] flex items-center justify-center border transition-all duration-150 ${
+              {/* MENU ITEMS */}
+              <div className="p-2 space-y-1">
+                {/* 1. My Profile */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleMenuClick(() => {
+                      navigate("/profile");
+                    })
+                  }
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${
                     isDarkMode
-                      ? "bg-white/5 border-slate-700/70 text-slate-300 group-hover:bg-[#2563eb]/20 group-hover:border-[#2563eb]/40 group-hover:text-cyan-300"
-                      : "bg-[#f1f5f9] border-slate-200/80 text-[#64748b] group-hover:bg-[#eaf1fd] group-hover:border-[rgba(37,99,235,0.25)] group-hover:text-[#2563eb]"
+                      ? "hover:bg-cyan-950/30 text-slate-200"
+                      : "hover:bg-blue-50/70 text-slate-800"
                   }`}
                 >
-                  <User className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13.5px] font-semibold leading-tight text-[#0f172a] dark:text-white">
-                    My Profile
+                  <div
+                    className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${
+                      isDarkMode
+                        ? "text-slate-400 group-hover:text-cyan-400"
+                        : "text-slate-500 group-hover:text-[#0284c7]"
+                    }`}
+                  >
+                    <User className="w-[17px] h-[17px]" strokeWidth={1.75} />
                   </div>
-                  <div className="text-[11.5px] text-[#64748b] dark:text-slate-400 truncate mt-0.5">
-                    View and manage operator information
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-white">
+                      My Profile
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                      Manage your account and profile
+                    </div>
                   </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-[#94a3b8] group-hover:translate-x-0.5 transition-transform" />
-              </motion.button>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#0284c7] group-hover:translate-x-0.5 transition-all duration-150" />
+                </button>
 
-              {/* Section Header: Municipal Officer Access */}
-              <motion.div variants={itemVariants} className="pt-2.5 pb-1 px-3">
-                <span className="font-mono text-[10px] font-semibold tracking-[0.09em] text-[#94a3b8] dark:text-slate-500 uppercase">
-                  Municipal Officer Access
-                </span>
-              </motion.div>
-
-              {/* Command Settings */}
-              <motion.button
-                variants={itemVariants}
-                type="button"
-                onClick={() =>
-                  handleAction(() => {
-                    navigate("/simulate");
-                  })
-                }
-                whileHover={{ x: 3 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className={`w-full flex items-center gap-3 p-2.5 rounded-[12px] text-left cursor-pointer group ${
-                  isDarkMode
-                    ? "hover:bg-[#152238] active:bg-[#1a2a46]"
-                    : "hover:bg-[#f1f5f9] active:bg-[#e8eef5]"
-                }`}
-              >
-                <div
-                  className={`flex-none w-9 h-9 rounded-[10px] flex items-center justify-center border transition-all duration-150 ${
+                {/* 2. Notifications */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleMenuClick(() => {
+                      navigate("/action-center");
+                    })
+                  }
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${
                     isDarkMode
-                      ? "bg-white/5 border-slate-700/70 text-slate-300 group-hover:bg-[#2563eb]/20 group-hover:border-[#2563eb]/40 group-hover:text-cyan-300"
-                      : "bg-[#f1f5f9] border-slate-200/80 text-[#64748b] group-hover:bg-[#eaf1fd] group-hover:border-[rgba(37,99,235,0.25)] group-hover:text-[#2563eb]"
+                      ? "hover:bg-cyan-950/30 text-slate-200"
+                      : "hover:bg-blue-50/70 text-slate-800"
                   }`}
                 >
-                  <Sliders className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13.5px] font-semibold leading-tight text-[#0f172a] dark:text-white">
-                    Command Settings
+                  <div
+                    className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${
+                      isDarkMode
+                        ? "text-slate-400 group-hover:text-cyan-400"
+                        : "text-slate-500 group-hover:text-[#0284c7]"
+                    }`}
+                  >
+                    <Bell className="w-[17px] h-[17px]" strokeWidth={1.75} />
                   </div>
-                  <div className="text-[11.5px] text-[#64748b] dark:text-slate-400 truncate mt-0.5">
-                    Authorization &amp; permission controls
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-white">
+                      Notifications
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                      Alerts and system updates
+                    </div>
                   </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-[#94a3b8] group-hover:translate-x-0.5 transition-transform" />
-              </motion.button>
+                  {/* Real Dynamic Unread Badge */}
+                  {unreadNotificationsCount > 0 && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-[#0284c7] bg-blue-50 dark:bg-cyan-950/60 dark:text-cyan-300 border border-blue-200/80 dark:border-cyan-500/30">
+                      {unreadNotificationsCount} NEW
+                    </span>
+                  )}
+                </button>
 
-              {/* Notifications */}
-              <motion.button
-                variants={itemVariants}
-                type="button"
-                onClick={() =>
-                  handleAction(() => {
-                    navigate("/action-center");
-                  })
-                }
-                whileHover={{ x: 3 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className={`w-full flex items-center gap-3 p-2.5 rounded-[12px] text-left cursor-pointer group ${
-                  isDarkMode
-                    ? "hover:bg-[#152238] active:bg-[#1a2a46]"
-                    : "hover:bg-[#f1f5f9] active:bg-[#e8eef5]"
-                }`}
-              >
-                <div
-                  className={`flex-none w-9 h-9 rounded-[10px] flex items-center justify-center border transition-all duration-150 ${
+                {/* 3. Settings */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleMenuClick(() => {
+                      navigate("/simulate");
+                    })
+                  }
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${
                     isDarkMode
-                      ? "bg-white/5 border-slate-700/70 text-slate-300 group-hover:bg-[#2563eb]/20 group-hover:border-[#2563eb]/40 group-hover:text-cyan-300"
-                      : "bg-[#f1f5f9] border-slate-200/80 text-[#64748b] group-hover:bg-[#eaf1fd] group-hover:border-[rgba(37,99,235,0.25)] group-hover:text-[#2563eb]"
+                      ? "hover:bg-cyan-950/30 text-slate-200"
+                      : "hover:bg-blue-50/70 text-slate-800"
                   }`}
                 >
-                  <Bell className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13.5px] font-semibold leading-tight text-[#0f172a] dark:text-white">
-                    Notifications
+                  <div
+                    className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${
+                      isDarkMode
+                        ? "text-slate-400 group-hover:text-cyan-400"
+                        : "text-slate-500 group-hover:text-[#0284c7]"
+                    }`}
+                  >
+                    <Settings className="w-[17px] h-[17px]" strokeWidth={1.75} />
                   </div>
-                  <div className="text-[11.5px] text-[#64748b] dark:text-slate-400 truncate mt-0.5">
-                    Municipal alerts and dispatch updates
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-white">
+                      Settings
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                      Manage dashboard preferences
+                    </div>
                   </div>
-                </div>
-                <span className="font-mono text-[9.5px] font-bold px-2 py-0.5 rounded-full text-white bg-gradient-to-r from-[#2563eb] to-[#0891a8] shadow-xs">
-                  3 NEW
-                </span>
-              </motion.button>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#0284c7] group-hover:translate-x-0.5 transition-all duration-150" />
+                </button>
 
-              {/* Activity & Reports */}
-              <motion.button
-                variants={itemVariants}
-                type="button"
-                onClick={() =>
-                  handleAction(() => {
-                    navigate("/my-reports");
-                  })
-                }
-                whileHover={{ x: 3 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className={`w-full flex items-center gap-3 p-2.5 rounded-[12px] text-left cursor-pointer group ${
-                  isDarkMode
-                    ? "hover:bg-[#152238] active:bg-[#1a2a46]"
-                    : "hover:bg-[#f1f5f9] active:bg-[#e8eef5]"
-                }`}
-              >
-                <div
-                  className={`flex-none w-9 h-9 rounded-[10px] flex items-center justify-center border transition-all duration-120 ${
+                {/* 4. Security & Privacy */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleMenuClick(() => {
+                      navigate("/action-center");
+                    })
+                  }
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${
                     isDarkMode
-                      ? "bg-white/5 border-slate-700/70 text-slate-300 group-hover:bg-[#2563eb]/20 group-hover:border-[#2563eb]/40 group-hover:text-cyan-300"
-                      : "bg-[#f1f5f9] border-slate-200/80 text-[#64748b] group-hover:bg-[#eaf1fd] group-hover:border-[rgba(37,99,235,0.25)] group-hover:text-[#2563eb]"
+                      ? "hover:bg-cyan-950/30 text-slate-200"
+                      : "hover:bg-blue-50/70 text-slate-800"
                   }`}
                 >
-                  <BarChart3 className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13.5px] font-semibold leading-tight text-[#0f172a] dark:text-white">
-                    Activity &amp; Reports
+                  <div
+                    className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${
+                      isDarkMode
+                        ? "text-slate-400 group-hover:text-cyan-400"
+                        : "text-slate-500 group-hover:text-[#0284c7]"
+                    }`}
+                  >
+                    <Shield className="w-[17px] h-[17px]" strokeWidth={1.75} />
                   </div>
-                  <div className="text-[11.5px] text-[#64748b] dark:text-slate-400 truncate mt-0.5">
-                    {userEmail}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-white">
+                      Security &amp; Privacy
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                      Security and account controls
+                    </div>
                   </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-[#94a3b8] group-hover:translate-x-0.5 transition-transform" />
-              </motion.button>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#0284c7] group-hover:translate-x-0.5 transition-all duration-150" />
+                </button>
+              </div>
 
-              {/* Divider */}
+              {/* SEPARATOR */}
               <div
-                className={`h-[1px] my-1 mx-2 ${
+                className={`h-px mx-2 ${
                   isDarkMode ? "bg-slate-800" : "bg-slate-100"
                 }`}
               />
 
-              {/* Section Header: Security */}
-              <motion.div variants={itemVariants} className="pt-1.5 pb-1 px-3">
-                <span className="font-mono text-[10px] font-semibold tracking-[0.09em] text-[#94a3b8] dark:text-slate-500 uppercase">
-                  Security
-                </span>
-              </motion.div>
-
-              {/* Switch Command Access */}
-              <motion.button
-                variants={itemVariants}
-                type="button"
-                onClick={() =>
-                  handleAction(() => {
-                    navigate("/signup");
-                  })
-                }
-                whileHover={{ x: 3 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className={`w-full flex items-center gap-3 p-2.5 rounded-[12px] text-left cursor-pointer group ${
-                  isDarkMode
-                    ? "hover:bg-[#152238] active:bg-[#1a2a46]"
-                    : "hover:bg-[#f1f5f9] active:bg-[#e8eef5]"
-                }`}
-              >
-                <div
-                  className={`flex-none w-9 h-9 rounded-[10px] flex items-center justify-center border transition-all duration-120 ${
+              {/* 5. SIGN OUT (Separated at bottom with subtle red accent) */}
+              <div className="p-2">
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${
                     isDarkMode
-                      ? "bg-white/5 border-slate-700/70 text-slate-300 group-hover:bg-[#2563eb]/20 group-hover:border-[#2563eb]/40 group-hover:text-cyan-300"
-                      : "bg-[#f1f5f9] border-slate-200/80 text-[#64748b] group-hover:bg-[#eaf1fd] group-hover:border-[rgba(37,99,235,0.25)] group-hover:text-[#2563eb]"
+                      ? "hover:bg-rose-950/20 text-rose-400"
+                      : "hover:bg-rose-50/80 text-rose-600"
                   }`}
                 >
-                  <KeyRound className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13.5px] font-semibold leading-tight text-[#0f172a] dark:text-white">
-                    Switch Command Access
+                  <div
+                    className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${
+                      isDarkMode
+                        ? "text-rose-400 group-hover:text-rose-300"
+                        : "text-rose-500 group-hover:text-rose-600"
+                    }`}
+                  >
+                    <LogOut className="w-[17px] h-[17px]" strokeWidth={1.75} />
                   </div>
-                  <div className="text-[11.5px] text-[#64748b] dark:text-slate-400 truncate mt-0.5">
-                    Update security passcode
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-semibold leading-tight text-rose-600 dark:text-rose-400">
+                      Sign Out
+                    </div>
+                    <div className="text-[11px] text-rose-500/70 dark:text-rose-400/70 truncate mt-0.5">
+                      End your current session
+                    </div>
                   </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-[#94a3b8] group-hover:translate-x-0.5 transition-transform" />
-              </motion.button>
-
-              {/* Privacy & Security */}
-              <motion.button
-                variants={itemVariants}
-                type="button"
-                onClick={() =>
-                  handleAction(() => {
-                    navigate("/action-center");
-                  })
-                }
-                whileHover={{ x: 3 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className={`w-full flex items-center gap-3 p-2.5 rounded-[12px] text-left cursor-pointer group ${
-                  isDarkMode
-                    ? "hover:bg-[#152238] active:bg-[#1a2a46]"
-                    : "hover:bg-[#f1f5f9] active:bg-[#e8eef5]"
-                }`}
-              >
-                <div
-                  className={`flex-none w-9 h-9 rounded-[10px] flex items-center justify-center border transition-all duration-120 ${
-                    isDarkMode
-                      ? "bg-white/5 border-slate-700/70 text-slate-300 group-hover:bg-[#2563eb]/20 group-hover:border-[#2563eb]/40 group-hover:text-cyan-300"
-                      : "bg-[#f1f5f9] border-slate-200/80 text-[#64748b] group-hover:bg-[#eaf1fd] group-hover:border-[rgba(37,99,235,0.25)] group-hover:text-[#2563eb]"
-                  }`}
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13.5px] font-semibold leading-tight text-[#0f172a] dark:text-white">
-                    Privacy &amp; Security
-                  </div>
-                  <div className="text-[11.5px] text-[#64748b] dark:text-slate-400 truncate mt-0.5">
-                    Data controls and active sessions
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-[#94a3b8] group-hover:translate-x-0.5 transition-transform" />
-              </motion.button>
-            </div>
-
-            {/* Divider */}
-            <div
-              className={`h-[1px] ${
-                isDarkMode ? "bg-slate-800" : "bg-slate-100"
-              }`}
-            />
-
-            {/* 3. SIGN OUT */}
-            <motion.button
-              variants={itemVariants}
-              type="button"
-              onClick={() =>
-                handleAction(() => {
-                  if (audioEngine) audioEngine.playStationLock();
-                  logoutUser();
-                })
-              }
-              whileHover={{ x: 3 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              className={`w-full flex items-center gap-3 px-5 py-3.5 text-left cursor-pointer transition-colors duration-120 text-[#dc4b3f] ${
-                isDarkMode
-                  ? "hover:bg-[#fdecea]/10"
-                  : "hover:bg-[#fdecea]"
-              }`}
-            >
-              <div
-                className="flex-none w-9 h-9 rounded-[10px] flex items-center justify-center border border-[rgba(220,75,63,0.2)] bg-[#fdecea] dark:bg-rose-950/40 text-[#dc4b3f]"
-              >
-                <LogOut className="w-4 h-4" />
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[13.5px] font-bold leading-tight text-[#dc4b3f]">
-                  Sign Out
-                </div>
-                <div className="text-[11.5px] text-[#dc4b3f]/70 truncate mt-0.5">
-                  End command session
-                </div>
-              </div>
-            </motion.button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Interactive Profile Modal to View / Change Photo & Account Info */}
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        isDarkMode={isDarkMode}
+      />
+    </>
   );
 }
 

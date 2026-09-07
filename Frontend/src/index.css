@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Enable class-strategy dark mode: `dark:` utilities activate when a `.dark`
+   ancestor (we put it on <html>) is present, instead of defaulting to the
+   prefers-color-scheme media query. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -35,6 +40,35 @@
     --status-critical-border: #fecaca;
   }
 
+  /* Dark theme — flips the semantic palette. Mirrors the App.css vars too. */
+  .dark {
+    --bg-main: #0b1220;
+    --bg-subtle: #0f172a;
+    --bg-card: #111a2e;
+    --bg-primary: #0b1220;
+    --bg-surface: #101a2e;
+    --border-subtle: #1e293b;
+    --border-hover: #334155;
+
+    --text-main: #e2e8f0;
+    --text-navy: #f1f5f9;
+    --text-slate: #cbd5e1;
+    --text-muted: #94a3b8;
+    --text-subtle: #64748b;
+
+    --status-safe: #22c55e;
+    --status-safe-bg: rgba(34, 197, 94, 0.12);
+    --status-safe-border: rgba(34, 197, 94, 0.35);
+
+    --status-warning: #f59e0b;
+    --status-warning-bg: rgba(245, 158, 11, 0.12);
+    --status-warning-border: rgba(245, 158, 11, 0.35);
+
+    --status-critical: #f87171;
+    --status-critical-bg: rgba(248, 113, 113, 0.12);
+    --status-critical-border: rgba(248, 113, 113, 0.35);
+  }
+
   * {
     box-sizing: border-box;
   }
@@ -53,6 +87,11 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  html.dark body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+  }
+
   input,
   button,
   select,
@@ -68,6 +107,45 @@
     font-family: var(--font-mono) !important;
     font-feature-settings: "tnum" on, "zero" on;
   }
+}
+
+/* Dark-mode scrollbar */
+html.dark ::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Dark overrides for the shared fixed navbar chrome */
+html.dark .kwi-navbar-card {
+  background: rgba(11, 18, 32, 0.94);
+  border-color: rgba(51, 65, 85, 0.6);
+}
+html.dark .kwi-signal-line {
+  background: #1e293b;
+}
+html.dark .kwi-nav-item-btn {
+  color: #94a3b8;
+  background: rgba(11, 18, 32, 0.95);
+}
+html.dark .kwi-nav-item-btn:hover {
+  color: #f1f5f9;
+  background: #1e293b;
+}
+html.dark .kwi-nav-item-btn.active {
+  color: #f1f5f9;
+  background: #16213a;
+  border-color: rgba(71, 85, 105, 0.6);
+}
+html.dark .kwi-admin-btn,
+html.dark .kwi-critical-btn {
+  background: #16213a;
+  border-color: #334155;
+  color: #cbd5e1;
 }
 
 /* Restrained Minimalist Scrollbar */

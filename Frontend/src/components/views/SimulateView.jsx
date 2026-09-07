@@ -41,19 +41,19 @@ export function SimulateView() {
   };
 
   return (
-    <div className="w-full font-sans text-slate-900 pb-16">
+    <div className="w-full font-sans text-slate-900 dark:text-slate-100 pb-16">
       {/* Header */}
       <div className="max-w-3xl mb-8">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/5 border border-cyan-500/20 text-xs text-cyan-800 font-mono mb-2 shadow-2xs">
           <Zap className="w-3.5 h-3.5 text-cyan-600 animate-pulse" />
           <span className="font-semibold tracking-wider">HYDRAULIC INTERVENTION MODELING</span>
-          <span className="text-slate-300">|</span>
-          <span className="text-slate-500">DIGITAL TWIN ENGINE</span>
+          <span className="text-slate-300 dark:text-slate-500">|</span>
+          <span className="text-slate-500 dark:text-slate-400">DIGITAL TWIN ENGINE</span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-950">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-950 dark:text-slate-50">
           Simulate <span className="bg-gradient-to-r from-cyan-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">Drainage Interventions</span>
         </h1>
-        <p className="text-sm sm:text-base text-slate-600 mt-2 leading-relaxed">
+        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
           Test pumping station boosts, inlet desilting crews, and mobile submersible units to predict flood reduction before dispatching field teams.
         </p>
       </div>
@@ -103,14 +103,14 @@ export function SimulateView() {
           soundFreq={920}
           spotlightColor="rgba(6, 182, 212, 0.12)"
           borderColor="rgba(6, 182, 212, 0.45)"
-          className="lg:col-span-5 rounded-3xl border border-slate-200/90 bg-white p-6 shadow-md space-y-6"
+          className="lg:col-span-5 rounded-3xl border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-[#16213a] p-6 shadow-md space-y-6"
         >
-          <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+          <div className="border-b border-slate-100 dark:border-slate-700 pb-3 flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-bold text-slate-950 uppercase tracking-wider font-mono">
+              <h2 className="text-sm font-bold text-slate-950 dark:text-slate-100 uppercase tracking-wider font-mono">
                 Intervention Parameters
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Target: Sector V Ring Road Basin
               </p>
             </div>
@@ -121,9 +121,9 @@ export function SimulateView() {
 
           <div className="space-y-5 text-xs">
             {/* Pump Station Capacity */}
-            <div className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100">
+            <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700">
               <div className="flex justify-between mb-2">
-                <span className="font-bold text-slate-800">
+                <span className="font-bold text-slate-800 dark:text-slate-200">
                   Station PS-07 Turbine Load
                 </span>
                 <span className="font-bold text-cyan-600 font-mono text-sm">
@@ -139,21 +139,21 @@ export function SimulateView() {
                   setPumpCapacity(Number(e.target.value));
                   audioEngine.playUiChirp(800 + Number(e.target.value) * 4);
                 }}
-                className="w-full accent-cyan-600 cursor-pointer h-2 bg-slate-200 rounded-lg"
+                className="w-full accent-cyan-600 cursor-pointer h-2 bg-slate-200 dark:bg-slate-700 rounded-lg"
               />
-              <div className="flex justify-between text-[10px] text-slate-400 mt-1 font-mono">
+              <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-mono">
                 <span>50% (42 cusecs)</span>
                 <span>100% (85 cusecs max)</span>
               </div>
             </div>
 
             {/* Drainage Crew Switch */}
-            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100">
+            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700">
               <div>
-                <span className="font-bold text-slate-900 block">
+                <span className="font-bold text-slate-900 dark:text-slate-100 block">
                   Inlet Desilting Mobile Unit
                 </span>
-                <span className="text-[11px] text-slate-500">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
                   Deploy Rapid Action Unit 04 to unblock surface grates
                 </span>
               </div>
@@ -169,12 +169,12 @@ export function SimulateView() {
             </div>
 
             {/* Additional Pump Unit Switch */}
-            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100">
+            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700">
               <div>
-                <span className="font-bold text-slate-900 block">
+                <span className="font-bold text-slate-900 dark:text-slate-100 block">
                   Mobile Submersible Pump
                 </span>
-                <span className="text-[11px] text-slate-500">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
                   Stage 20 HP Godwin high-head dewatering pump
                 </span>
               </div>
@@ -214,7 +214,7 @@ export function SimulateView() {
               <button
                 type="button"
                 onClick={handleReset}
-                className="p-3.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
+                className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors cursor-pointer"
                 title="Reset"
               >
                 <RotateCcw className="w-4 h-4" />

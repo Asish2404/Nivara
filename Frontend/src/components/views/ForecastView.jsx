@@ -65,19 +65,19 @@ export function ForecastView() {
   const current = FORECAST_DATA[timeOffset] || FORECAST_DATA["NOW"];
 
   return (
-    <div className="w-full font-sans text-slate-900 pb-16">
+    <div className="w-full font-sans text-slate-900 dark:text-slate-100 pb-16">
       {/* Header */}
       <div className="max-w-3xl mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/5 border border-cyan-500/20 text-xs text-cyan-800 font-mono mb-2 shadow-2xs">
-          <Sparkles className="w-3.5 h-3.5 text-cyan-600 animate-spin" />
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/5 dark:bg-cyan-950/30 border border-cyan-500/20 text-xs text-cyan-800 dark:text-cyan-300 font-mono mb-2 shadow-2xs">
+          <Sparkles className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 animate-spin" />
           <span className="font-semibold tracking-wider">PREDICTIVE STORM SURGE NOWCASTING</span>
-          <span className="text-slate-300">|</span>
-          <span className="text-slate-500">60-MIN TIME HORIZON</span>
+          <span className="text-slate-300 dark:text-slate-600">|</span>
+          <span className="text-slate-500 dark:text-slate-400">60-MIN TIME HORIZON</span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-950">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-950 dark:text-white">
           Hydro-AI <span className="bg-gradient-to-r from-cyan-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">Storm Surge Forecast</span>
         </h1>
-        <p className="text-sm sm:text-base text-slate-600 mt-2 leading-relaxed">
+        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
           Simulate rainfall inundation footprint progression and Hooghly tidal surge lockouts before floodwaters crest.
         </p>
       </div>
@@ -149,20 +149,20 @@ export function ForecastView() {
           soundFreq={940}
           spotlightColor="rgba(6, 182, 212, 0.12)"
           borderColor="rgba(6, 182, 212, 0.45)"
-          className="p-5 rounded-2xl bg-white/95 border-slate-200/90 shadow-sm"
+          className="p-5 rounded-2xl bg-white/95 dark:bg-[#16213a]/95 border-slate-200/90 dark:border-slate-700 shadow-sm"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] uppercase font-bold text-cyan-600 block font-mono">
+            <span className="text-[11px] uppercase font-bold text-cyan-600 dark:text-cyan-400 block font-mono">
               RAINFALL ACCUMULATION
             </span>
-            <div className="p-1.5 rounded-lg bg-cyan-50 text-cyan-600">
+            <div className="p-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400">
               <CloudRain className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-slate-950 font-mono">
+          <div className="text-2xl font-bold text-slate-950 dark:text-white font-mono">
             {current.rainMm}
           </div>
-          <div className="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+          <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
             <span>Doppler radar reflectivity band</span>
           </div>
@@ -172,20 +172,20 @@ export function ForecastView() {
           soundFreq={1040}
           spotlightColor="rgba(244, 63, 94, 0.12)"
           borderColor="rgba(244, 63, 94, 0.45)"
-          className="p-5 rounded-2xl bg-white/95 border-slate-200/90 shadow-sm"
+          className="p-5 rounded-2xl bg-white/95 dark:bg-[#16213a]/95 border-slate-200/90 dark:border-slate-700 shadow-sm"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] uppercase font-bold text-rose-600 block font-mono">
+            <span className="text-[11px] uppercase font-bold text-rose-600 dark:text-rose-400 block font-mono">
               PEAK WATER DEPTH
             </span>
-            <div className="p-1.5 rounded-lg bg-rose-50 text-rose-600">
+            <div className="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400">
               <ShieldAlert className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-rose-600 font-mono">
+          <div className="text-2xl font-bold text-rose-600 dark:text-rose-400 font-mono">
             {current.peakDepth}
           </div>
-          <div className="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+          <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
             <span>Critical curb low-gradient points</span>
           </div>
@@ -195,23 +195,23 @@ export function ForecastView() {
           soundFreq={1140}
           spotlightColor="rgba(245, 158, 11, 0.12)"
           borderColor="rgba(245, 158, 11, 0.45)"
-          className="p-5 rounded-2xl bg-white/95 border-slate-200/90 shadow-sm"
+          className="p-5 rounded-2xl bg-white/95 dark:bg-[#16213a]/95 border-slate-200/90 dark:border-slate-700 shadow-sm"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] uppercase font-bold text-amber-600 block font-mono">
+            <span className="text-[11px] uppercase font-bold text-amber-600 dark:text-amber-400 block font-mono">
               DYNAMIC RISK SCORE
             </span>
-            <div className="p-1.5 rounded-lg bg-amber-50 text-amber-600">
+            <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400">
               <Sparkles className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-2xl font-bold text-amber-600 font-mono">
+            <span className="text-2xl font-bold text-amber-600 dark:text-amber-400 font-mono">
               {current.riskScore}
             </span>
-            <span className="text-xs font-mono text-slate-400">/ 100</span>
+            <span className="text-xs font-mono text-slate-400 dark:text-slate-500">/ 100</span>
           </div>
-          <div className="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+          <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
             <span>{current.riskLabel}</span>
           </div>
@@ -221,20 +221,20 @@ export function ForecastView() {
           soundFreq={1240}
           spotlightColor="rgba(59, 130, 246, 0.12)"
           borderColor="rgba(59, 130, 246, 0.45)"
-          className="p-5 rounded-2xl bg-white/95 border-slate-200/90 shadow-sm"
+          className="p-5 rounded-2xl bg-white/95 dark:bg-[#16213a]/95 border-slate-200/90 dark:border-slate-700 shadow-sm"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] uppercase font-bold text-blue-600 block font-mono">
+            <span className="text-[11px] uppercase font-bold text-blue-600 dark:text-blue-400 block font-mono">
               HOOGHLY TIDAL SURGE
             </span>
-            <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600">
+            <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
               <Waves className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-blue-600 font-mono">
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 font-mono">
             {current.tideM}
           </div>
-          <div className="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+          <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
             <span>Princep & Bagbazar lock gauges</span>
           </div>
