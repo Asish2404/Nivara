@@ -5,6 +5,12 @@
 const BASE_URL =
   import.meta.env?.VITE_API_URL || "http://localhost:8000/api/v1";
 
+export function resolveApiAssetUrl(path) {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path) || path.startsWith("data:")) return path;
+  return new URL(path, `${BASE_URL}/`).toString();
+}
+
 async function request(path, { method = "GET", body, token } = {}) {
   const headers = { Accept: "application/json" };
   if (body !== undefined) headers["Content-Type"] = "application/json";
@@ -68,6 +74,7 @@ export const api = {
   post: (path, body, token) => request(path, { method: "POST", body, token }),
   postForm: (path, formData, token) => postForm(path, formData, token),
   patch: (path, body, token) => request(path, { method: "PATCH", body, token }),
+  resolveAssetUrl: resolveApiAssetUrl,
 };
 
 export default api;

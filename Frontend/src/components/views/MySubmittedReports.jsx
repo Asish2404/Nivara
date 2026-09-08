@@ -27,6 +27,7 @@ import {
   RotateCw,
 } from "lucide-react";
 import { useKWIStore } from "../../store/useKWIStore";
+import { api } from "../../utils/api";
 
 /* ================================================================ */
 /*  ACCENT / STATUS VISUAL TOKENS (kept from the premium design)    */
@@ -224,6 +225,21 @@ function ReportThumb({ src, onClick, alt }) {
   );
 }
 
+const getReportImageUrl = (report) => {
+  const path = report?.image_url;
+  if (!path) return "";
+  if (path.startsWith("/images/") || path.startsWith("/textures/")) return path;
+  return api.resolveAssetUrl(path);
+};
+
+const DEMO_REPORTS = [
+  { report_id: "KWI-2026-00123", image_url: "/images/kolkata_waterlog_sector_v.jpg", location: "Gariahat, Kolkata", issue_type: "Waterlogging", submitted_at: "2026-09-09T10:32:00+05:30", status: "Verified", ai_confidence: 92, dispatched_to: "", description: "Water accumulation across the main carriageway after heavy rainfall.", water_depth: 18, ai_verification_result: "Verified - High confidence waterlogging event", dispatch_status: "Awaiting municipal dispatch" },
+  { report_id: "KWI-2026-00110", image_url: "/images/hotspot_park_street.jpg", location: "Park Street, Kolkata", issue_type: "Drain Blockage", submitted_at: "2026-09-07T18:15:00+05:30", status: "Dispatched", ai_confidence: 88, dispatched_to: "KMC - Ward 70", description: "Blocked roadside drain causing water to collect near the crossing.", water_depth: 12, ai_verification_result: "Verified - Drainage obstruction identified", dispatch_status: "Field team en route" },
+  { report_id: "KWI-2026-00098", image_url: "/images/hotspot_thanthania.jpg", location: "Salt Lake, Kolkata", issue_type: "Waterlogging", submitted_at: "2026-09-05T13:48:00+05:30", status: "Under Review", ai_confidence: 76, dispatched_to: "", description: "Standing water visible along the service road and footpath.", water_depth: 10, ai_verification_result: "Pending Analysis", dispatch_status: "Unassigned" },
+  { report_id: "KWI-2026-00087", image_url: "/images/hotspot_kalighat.jpg", location: "Belgharia, Kolkata", issue_type: "Overflow", submitted_at: "2026-09-02T11:21:00+05:30", status: "Verified", ai_confidence: 90, dispatched_to: "", description: "Overflow observed beside the road after the afternoon downpour.", water_depth: 16, ai_verification_result: "Verified - Standing water identified", dispatch_status: "Awaiting municipal dispatch" },
+  { report_id: "KWI-2026-00071", image_url: "/images/hotspot_behala.jpg", location: "Tollygunge, Kolkata", issue_type: "Drain Blockage", submitted_at: "2026-08-28T16:09:00+05:30", status: "Resolved", ai_confidence: 95, dispatched_to: "KMC - Ward 108", description: "Waterlogging reported near the tram corridor and local market.", water_depth: 14, ai_verification_result: "Verified - Rainfall-linked overflow confirmed", dispatch_status: "Area returned to service" },
+];
+
 /* ================================================================ */
 /*  HELPERS                                                          */
 /* ================================================================ */
@@ -260,6 +276,7 @@ export function MySubmittedReports() {
   const [refreshing, setRefreshing] = useState(false);
 
   const isGuest = !currentUser;
+  const reports = reportsLoaded && myReports.length === 0 ? DEMO_REPORTS : myReports;
 
   // Load the current user's reports on mount + refresh on a light interval so
   // status progression ("last updated") stays live after submission.
@@ -274,21 +291,21 @@ export function MySubmittedReports() {
 
   // Live summary counts computed from the user's real reports.
   const summary = useMemo(() => {
-    const total = myReports.length;
-    const verified = myReports.filter((r) => r.status === "Verified").length;
-    const review = myReports.filter((r) => r.status === "Under Review").length;
-    const dispatched = myReports.filter((r) => r.status === "Dispatched").length;
+    const total = reports.length;
+    const verified = reports.filter((r) => r.status === "Verified").length;
+    const review = reports.filter((r) => r.status === "Under Review").length;
+    const dispatched = reports.filter((r) => r.status === "Dispatched").length;
     return [
       { key: "total", icon: FileText, value: total, label: "Total Reports", hint: "Reports submitted by you", accent: "blue" },
       { key: "verified", icon: ShieldCheck, value: verified, label: "Verified Reports", hint: "AI verification completed", accent: "emerald" },
       { key: "review", icon: Clock, value: review, label: "Under Review", hint: "Currently being analyzed", accent: "orange" },
       { key: "dispatched", icon: Send, value: dispatched, label: "Dispatched", hint: "Sent to municipal department", accent: "cyan" },
     ];
-  }, [myReports]);
+  }, [reports]);
 
   // Status tabs (counts computed live).
   const tabs = useMemo(() => {
-    const count = (key) => (key === "All Reports" ? myReports.length : myReports.filter((r) => r.status === key).length);
+    const count = (key) => (key === "All Reports" ? reports.length : reports.filter((r) => r.status === key).length);
     return [
       { key: "All Reports", count: count("All Reports") },
       { key: "Verified", count: count("Verified") },
@@ -296,7 +313,7 @@ export function MySubmittedReports() {
       { key: "Dispatched", count: count("Dispatched") },
       { key: "Resolved", count: count("Resolved") },
     ];
-  }, [myReports]);
+  }, [reports]);
 
   // Reference "now" captured once via a lazy initializer, so the date-range filter
 // stays pure during render. Refreshes align with the fetch interval.
@@ -308,7 +325,7 @@ export function MySubmittedReports() {
   // Apply search + status tab + date-range filter against the live reports.
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return myReports.filter((r) => {
+    return reports.filter((r) => {
       const tabOk = activeTab === "All Reports" || r.status === activeTab;
       const searchOk =
         !q ||
@@ -319,7 +336,7 @@ export function MySubmittedReports() {
       const dateOk = cutoffTs == null || !r.submitted_at || new Date(r.submitted_at).getTime() >= cutoffTs;
       return tabOk && searchOk && dateOk;
     });
-  }, [myReports, activeTab, search, cutoffTs]);
+  }, [reports, activeTab, search, cutoffTs]);
 
   const handleNewReport = () => navigate("/reports");
 
@@ -334,23 +351,19 @@ export function MySubmittedReports() {
     return <GuestState onSignIn={() => navigate("/login")} />;
   }
 
-  if (reportsLoaded && myReports.length === 0) {
-    return <EmptyState onNewReport={() => navigate("/reports")} />;
-  }
-
   return (
     <div className="relative w-full text-slate-900 dark:text-slate-100 font-sans selection:bg-cyan-100 selection:text-cyan-900 overflow-x-hidden">
       {/* ============================================================ */}
       {/* HERO / HEADER                                              */}
       {/* ============================================================ */}
-      <header className="relative w-full overflow-hidden bg-gradient-to-b from-[#081023] via-[#0c1c3c] to-[#12294f] isolate">
-        <div className="absolute -top-24 -left-20 w-[420px] h-[420px] rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.28),transparent_62%)] blur-3xl pointer-events-none" />
-        <div className="absolute -top-10 right-[-80px] w-[480px] h-[480px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.22),transparent_60%)] blur-3xl pointer-events-none" />
-        <div className="absolute top-24 left-1/2 -translate-x-1/2 w-[720px] h-[220px] bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.16),transparent_70%)] blur-2xl pointer-events-none" />
-
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:34px_34px] [mask-image:radial-gradient(ellipse_80%_70%_at_50%_0%,#000_55%,transparent_100%)] pointer-events-none" />
-
-        <KolkataSkyline />
+      <header className="relative min-h-[248px] w-full overflow-hidden bg-[#e9f3fa] isolate">
+        <div
+          className="absolute inset-0 bg-cover bg-[center_43%] opacity-95"
+          style={{ backgroundImage: "url('/textures/Footer_img2.png')" }}
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(246,251,255,0.98)_0%,rgba(246,251,255,0.92)_26%,rgba(246,251,255,0.30)_55%,rgba(5,24,54,0.40)_100%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(8,34,70,0.58),transparent_48%)] pointer-events-none" />
 
         <div className="absolute inset-0 pointer-events-none">
           {CONFETTI.map((c) => (
@@ -364,10 +377,9 @@ export function MySubmittedReports() {
           ))}
         </div>
 
-        <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24 sm:pb-28 text-center">
+        <div className="relative z-10 max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12 pt-6 pb-16 sm:pb-20 text-left">
           <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-400/10 text-cyan-200 px-3.5 py-1.5 text-[11px] font-bold tracking-[0.24em] uppercase font-mono backdrop-blur-sm mb-5">
-              <Activity className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center gap-2 text-[#315a93] text-[10px] font-bold tracking-[0.3em] uppercase font-mono mb-2">
               Citizen Reporting
             </div>
           </motion.div>
@@ -376,10 +388,10 @@ export function MySubmittedReports() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white leading-[1.05]"
+            className="max-w-[570px] text-4xl sm:text-5xl md:text-[52px] font-serif font-extrabold tracking-tight text-[#102458] leading-[0.98]"
           >
             My Submitted{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 via-sky-300 to-blue-400">
+            <span className="text-[#173b80]">
               Reports
             </span>
           </motion.h1>
@@ -388,7 +400,7 @@ export function MySubmittedReports() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="mt-5 max-w-2xl mx-auto text-slate-300 text-base sm:text-lg leading-relaxed"
+            className="mt-4 max-w-[390px] text-[#1c3563] text-sm sm:text-base font-semibold leading-relaxed"
           >
             Track your waterlogging reports, AI verification status, and municipal
             response updates in one place.
@@ -398,10 +410,10 @@ export function MySubmittedReports() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.34 }}
-            className="mt-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-sm text-cyan-100/90 backdrop-blur-md"
+            className="mt-5 inline-flex items-center gap-2 border-t-2 border-[#2d7ce0] pt-2 text-xs font-semibold text-[#24467d]"
           >
             <Waves className="w-4 h-4 text-cyan-300" />
-            <span className="font-medium italic">Every Report Makes Kolkata Better</span>
+            <span>Every Report Makes Kolkata Better</span>
           </motion.div>
         </div>
 
@@ -611,8 +623,8 @@ export function MySubmittedReports() {
                             </button>
                           </td>
                           <td className="px-3 py-3">
-                            {r.image_url ? (
-                              <ReportThumb src={r.image_url} onClick={() => setLightbox(r)} alt={r.location} />
+                            {getReportImageUrl(r) ? (
+                              <ReportThumb src={getReportImageUrl(r)} onClick={() => setLightbox(r)} alt={r.location} />
                             ) : (
                               <span className="inline-flex items-center justify-center w-[72px] h-[60px] rounded-xl bg-slate-100 dark:bg-white/10 text-slate-300 dark:text-slate-600">
                                 <Droplet className="w-5 h-5" />
@@ -701,7 +713,7 @@ export function MySubmittedReports() {
             )}
 
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100 dark:border-white/10 text-xs text-slate-400 dark:text-slate-500">
-              <span>Showing {filtered.length} of {myReports.length} reports</span>
+              <span>Showing {filtered.length} of {reports.length} reports</span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Live <span className="hidden sm:inline">municipal</span> feed synced
@@ -744,7 +756,7 @@ export function MySubmittedReports() {
       {/* ============================================================ */}
       <AnimatePresence>
         {selected && <DetailsModal report={selected} onClose={() => setSelected(null)} />}
-        {lightbox && <Lightbox src={lightbox.image_url} alt={lightbox.location} onClose={() => setLightbox(null)} />}
+        {lightbox && <Lightbox src={getReportImageUrl(lightbox)} alt={lightbox.location} onClose={() => setLightbox(null)} />}
       </AnimatePresence>
     </div>
   );
@@ -831,8 +843,8 @@ function DetailsModal({ report, onClose }) {
         </button>
 
         <div className="relative h-56 sm:h-72 w-full overflow-hidden bg-[#16263f]">
-          {report.image_url ? (
-            <img src={report.image_url} alt={report.location} className="w-full h-full object-cover" />
+          {getReportImageUrl(report) ? (
+            <img src={getReportImageUrl(report)} alt={report.location} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <Droplet className="w-14 h-14 text-slate-500" />

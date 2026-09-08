@@ -41,6 +41,7 @@ export function MobileReportForm({ onBackToStep1 }) {
   const {
     reportPhoto,
     setReportPhoto,
+    setReportPhotoName,
     reportDescription,
     setReportDescription,
     reportLocation,
@@ -287,6 +288,7 @@ export function MobileReportForm({ onBackToStep1 }) {
       const dataUrl = event.target?.result
       if (typeof dataUrl === 'string') {
         setReportPhoto(dataUrl)
+        setReportPhotoName(file.name)
         audioEngine.playUiChirp(1150)
       }
     }
@@ -611,6 +613,7 @@ export function MobileReportForm({ onBackToStep1 }) {
                     type="button"
                     onClick={() => {
                       setReportPhoto(null)
+                      setReportPhotoName(null)
                       audioEngine.playUiChirp(850)
                     }}
                     className="absolute top-2 right-2 w-7 h-7 rounded-full bg-slate-900/80 text-white flex items-center justify-center hover:bg-slate-950 transition-all cursor-pointer shadow-md"

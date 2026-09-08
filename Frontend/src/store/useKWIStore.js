@@ -86,6 +86,7 @@ export const useKWIStore = create((set, get) => ({
 
   // Shared Mobile Report & Verification State (Stores original user input)
   reportPhoto: null,
+  reportPhotoName: null,
   reportDescription: '',
   reportLocation: 'Salt Lake, Sector V, Kolkata',
   reportLocality: 'Salt Lake, Sector V',
@@ -98,6 +99,7 @@ export const useKWIStore = create((set, get) => ({
   isReportVerified: false,
 
   setReportPhoto: (photo) => set({ reportPhoto: photo }),
+  setReportPhotoName: (name) => set({ reportPhotoName: name }),
   setReportDescription: (desc) => set({ reportDescription: desc }),
   setReportLocation: (loc) => set({ reportLocation: loc }),
   setReportLocality: (loc) => set({ reportLocality: loc }),
@@ -165,7 +167,7 @@ export const useKWIStore = create((set, get) => ({
       fetch(s.reportPhoto)
         .then((r) => r.blob())
         .then((blob) => {
-          const file = new File([blob], 'waterlogging-report.jpg', {
+          const file = new File([blob], s.reportPhotoName || 'waterlogging-report.jpg', {
             type: blob.type || 'image/jpeg',
           })
           form.append('image', file, file.name)
@@ -207,6 +209,7 @@ export const useKWIStore = create((set, get) => ({
       reportVerificationStage: 0,
       isReportVerified: false,
       reportPhoto: null,
+      reportPhotoName: null,
       reportDescription: '',
     })
   },

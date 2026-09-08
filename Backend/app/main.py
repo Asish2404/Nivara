@@ -8,6 +8,7 @@ from .core.config import settings
 from .core.database import init_db, async_session
 from .api.v1.api import api_router
 from .services.auth_service import AuthService
+from .services.report_service import UPLOAD_DIR
 
 
 @asynccontextmanager
@@ -31,8 +32,8 @@ app = FastAPI(
 )
 
 # Matches the report upload directory (services/report_service.py)
-os.makedirs("uploads", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads", check_dir=False), name="uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR, check_dir=False), name="uploads")
 
 # Configure CORS Middleware
 app.add_middleware(

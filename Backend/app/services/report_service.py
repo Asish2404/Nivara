@@ -1,4 +1,5 @@
 import uuid
+import os
 from datetime import datetime, timedelta
 from typing import List, Optional
 from sqlalchemy import select
@@ -10,7 +11,7 @@ from ..models.user import User
 from ..schemas.report import ReportCreate
 
 # Directory where citizen-submitted report images are stored (relative to Backend/)
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "uploads"))
 
 # Status aging thresholds — a report advances through the verification pipeline
 # automatically as time passes, so "last updated" feels live without an admin UI.
@@ -47,8 +48,6 @@ class ReportService:
         Returns (safe_original_filename, image_url). The URL is served from the
         /uploads static mount (same FastAPI app).
         """
-        import os
-
         os.makedirs(UPLOAD_DIR, exist_ok=True)
 
         # Keep the original basename (sanitized) for the seed response, but store
