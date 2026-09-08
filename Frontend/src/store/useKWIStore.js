@@ -72,7 +72,7 @@ export const useKWIStore = create((set, get) => ({
   // Active Route & Section Navigation
   currentRoute: getInitialRoute(),
   activeSection: routeToSection(getInitialRoute()),
-  
+
   navigate: (path) => {
     if (typeof window !== 'undefined') {
       if (window.location.pathname !== path) {
@@ -375,7 +375,7 @@ export const useKWIStore = create((set, get) => ({
   lastUpdated: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
   hooghlyTideLevel: 3.42, // meters
   hooghlyTideTrend: 'RISING', // 'RISING' | 'FALLING' | 'STABLE'
-  
+
   // Real GIS Municipal Stats (as requested)
   highRiskZonesCount: 7,
   criticalIncidentsCount: 3,
@@ -655,10 +655,10 @@ export const useKWIStore = create((set, get) => ({
   sendCopilotMessage: (text) => {
     if (!text.trim()) return
     const userMsg = { sender: 'user', text, timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) }
-    
+
     let reply = "Processing municipal GIS query for Kolkata Metropolitan Area..."
     const lower = text.toLowerCase()
-    
+
     if (lower.includes('sector v') || lower.includes('sv-024') || lower.includes('ps-07')) {
       reply = "Sector V Incident #SV-024: 28cm water depth at College More. 74 mm/3 hr rainfall recorded. PS-07 booster station operating at 100% capacity discharging 85 cusecs into Bagjola Canal."
     } else if (lower.includes('critical') || lower.includes('incident') || lower.includes('waterlog')) {

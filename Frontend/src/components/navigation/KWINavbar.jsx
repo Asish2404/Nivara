@@ -342,37 +342,34 @@ export function KWINavbar() {
                     audioEngine.playUiChirp(960);
                     navigate('/signup');
                   }}
-                  className={`relative px-3.5 py-1.5 rounded-2xl flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${
-                    currentRoute === '/signup' || currentRoute === '/login' || currentRoute === '/auth'
+                  className={`relative px-3.5 py-1.5 rounded-2xl flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${currentRoute === '/signup' || currentRoute === '/login' || currentRoute === '/auth'
                       ? isDarkMode
                         ? "bg-gradient-to-b from-blue-950/80 to-indigo-950/70 border border-blue-500/40 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)] min-w-[62px]"
                         : "bg-gradient-to-b from-[#f0f6ff] to-[#e6f0ff] border border-blue-200/90 shadow-xs text-blue-600 min-w-[62px]"
                       : isDarkMode
                         ? "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent min-w-[56px] group"
                         : "text-slate-500 hover:text-slate-900 hover:bg-slate-50/90 border border-transparent min-w-[56px] group"
-                  }`}
+                    }`}
                 >
                   <User
-                    className={`w-4 h-4 mb-0.5 transition-colors ${
-                      currentRoute === '/signup' || currentRoute === '/login' || currentRoute === '/auth'
+                    className={`w-4 h-4 mb-0.5 transition-colors ${currentRoute === '/signup' || currentRoute === '/login' || currentRoute === '/auth'
                         ? isDarkMode
                           ? "text-cyan-400"
                           : "text-blue-600"
                         : isDarkMode
                           ? "text-slate-400 group-hover:text-white"
                           : "text-slate-500 group-hover:text-slate-800"
-                    }`}
+                      }`}
                   />
                   <span
-                    className={`text-[11px] leading-none transition-colors ${
-                      currentRoute === '/signup' || currentRoute === '/login' || currentRoute === '/auth'
+                    className={`text-[11px] leading-none transition-colors ${currentRoute === '/signup' || currentRoute === '/login' || currentRoute === '/auth'
                         ? isDarkMode
                           ? "font-semibold text-cyan-300"
                           : "font-semibold text-blue-700"
                         : isDarkMode
                           ? "font-medium text-slate-300 group-hover:text-white"
                           : "font-medium text-slate-600 group-hover:text-slate-900"
-                    }`}
+                      }`}
                   >
                     Sign Up
                   </span>

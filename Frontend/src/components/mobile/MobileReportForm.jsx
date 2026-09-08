@@ -971,7 +971,10 @@ export function MobileReportForm({ onBackToStep1 }) {
       {/* ===================================================================== */}
       {step === 3 && (
         <div className="flex flex-col h-full justify-between animate-in fade-in duration-200">
-          <div className="flex-1 overflow-y-auto pr-0.5 space-y-2">
+          <div
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            className="flex-1 overflow-y-auto no-scrollbar pr-0.5 space-y-2"
+          >
             {/* Back Header */}
             <div>
               <button
@@ -1089,7 +1092,10 @@ export function MobileReportForm({ onBackToStep1 }) {
 
                 {/* Search Results Dropdown / Suggestions */}
                 {searchResults.length > 0 && (
-                  <div className="max-h-[100px] overflow-y-auto space-y-1 pr-1 border-t border-slate-100 pt-1">
+                  <div
+                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                    className="max-h-[100px] overflow-y-auto no-scrollbar space-y-1 pr-1 border-t border-slate-100 pt-1"
+                  >
                     {searchResults.map((res, i) => (
                       <div
                         key={i}
@@ -1112,7 +1118,10 @@ export function MobileReportForm({ onBackToStep1 }) {
                   <span className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
                     Kolkata Neighborhoods (1-Tap):
                   </span>
-                  <div className="flex flex-wrap gap-1 max-h-[85px] overflow-y-auto pr-0.5">
+                  <div
+                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                    className="flex flex-wrap gap-1 max-h-[85px] overflow-y-auto no-scrollbar pr-0.5"
+                  >
                     {KOLKATA_PRESETS.map((preset) => {
                       const isSelected = reportLocality === preset.name
                       return (
