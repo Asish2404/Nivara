@@ -116,10 +116,11 @@ export function MobileReportPhone() {
           ref={phoneContainerRef}
           data-phone-mockup="true"
           initial={{ rotateY: 0, scale: 0.92 }}
-          animate={{
+          whileInView={{
             rotateY: 720,
             scale: [0.92, 0.92, 1.03, 1.0],
           }}
+          viewport={{ once: false, amount: 0.2 }}
           transition={{
             rotateY: {
               duration: 9.5,
@@ -131,6 +132,7 @@ export function MobileReportPhone() {
               ease: [0.22, 1, 0.36, 1], // Smooth cinematic forward zoom punch-in as rotation stops
             },
           }}
+          onAnimationStart={() => setIsRotating(true)}
           onAnimationComplete={() => setIsRotating(false)}
           className="relative w-[348px] sm:w-[370px] h-[716px] sm:h-[742px]"
           style={{

@@ -3,11 +3,6 @@ import {
   motion,
   AnimatePresence,
   useReducedMotion,
-  useMotionValue,
-  useSpring,
-  useTransform,
-  useMotionTemplate,
-  useScroll,
 } from "framer-motion";
 import {
   Wifi,
@@ -106,56 +101,6 @@ export function CitizenReportingSection() {
   // Expanded notification detail view (null = list view, number = notification id being viewed)
   const [expandedNotification, setExpandedNotification] = useState(null);
   const [islandExpanded, setIslandExpanded] = useState(false);
-
-  // Scroll-linked 3D Rolling Dynamics (Sunflower.me effect)
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  });
-
-  const scrollRollZ = useTransform(scrollYProgress, [0, 0.5, 1], [6, 0, -6]);
-  const scrollRollY = useTransform(scrollYProgress, [0, 0.5, 1], [-8, 0, 8]);
-  const scrollRollX = useTransform(scrollYProgress, [0, 0.5, 1], [4, 0, -4]);
-
-  // Interactive 3D Perspective Mouse Tilt & Sunflower.me Glare Tracking
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const springConfig = { damping: 26, stiffness: 200, mass: 0.7 };
-
-  const smoothMouseRotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [8, -8]), springConfig);
-  const smoothMouseRotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-9, 9]), springConfig);
-  const smoothMouseRotateZ = useSpring(useTransform(mouseX, [-0.5, 0.5], [-3.5, 3.5]), springConfig);
-
-  const smoothScrollRollZ = useSpring(scrollRollZ, springConfig);
-  const smoothScrollRollY = useSpring(scrollRollY, springConfig);
-  const smoothScrollRollX = useSpring(scrollRollX, springConfig);
-
-  // Combine interactive mouse tilt with scroll rolling
-  const combinedRotateX = useTransform([smoothMouseRotateX, smoothScrollRollX], ([mx, sx]) => mx + sx);
-  const combinedRotateY = useTransform([smoothMouseRotateY, smoothScrollRollY], ([my, sy]) => my + sy);
-  const combinedRotateZ = useTransform([smoothMouseRotateZ, smoothScrollRollZ], ([mz, sz]) => mz + sz);
-
-  // Dynamic Sunflower.me Specular Glare Follower
-  const glarePercentX = useSpring(useTransform(mouseX, [-0.5, 0.5], [20, 80]), springConfig);
-  const glarePercentY = useSpring(useTransform(mouseY, [-0.5, 0.5], [15, 85]), springConfig);
-  const dynamicGlare = useMotionTemplate`radial-gradient(circle 380px at ${glarePercentX}% ${glarePercentY}%, rgba(255, 255, 255, 0.16), transparent 75%)`;
-
-  const handlePointerMove = useCallback(
-    (e) => {
-      if (prefersReducedMotion || !phoneWrapperRef.current) return;
-      const rect = phoneWrapperRef.current.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width - 0.5;
-      const y = (e.clientY - rect.top) / rect.height - 0.5;
-      mouseX.set(x);
-      mouseY.set(y);
-    },
-    [mouseX, mouseY, prefersReducedMotion]
-  );
-
-  const handlePointerLeave = useCallback(() => {
-    mouseX.set(0);
-    mouseY.set(0);
-  }, [mouseX, mouseY]);
 
   // Auto-scroll and Cursor-Pulling (Drag to scroll) for Phone Notification Center
   const notifContainerRef = useRef(null);
@@ -689,7 +634,7 @@ export function CitizenReportingSection() {
             rotateY: 720,
             scale: [0.92, 0.92, 1.03, 1.0],
           }}
-          viewport={{ once: true, amount: 0.2 }}
+          viewport={{ once: false, amount: 0.2 }}
           transition={{
             rotateY: {
               duration: 9.5,
@@ -701,14 +646,12 @@ export function CitizenReportingSection() {
               ease: [0.22, 1, 0.36, 1], // Smooth cinematic forward zoom punch-in as rotation stops
             },
           }}
+          onAnimationStart={() => setIsRotating(true)}
           onAnimationComplete={() => setIsRotating(false)}
-          onPointerMove={!isRotating ? handlePointerMove : undefined}
-          onPointerLeave={!isRotating ? handlePointerLeave : undefined}
           style={{
             transformStyle: "preserve-3d",
             transformOrigin: "center center 0px",
-            rotateX: !isRotating ? combinedRotateX : 0,
-            rotateZ: !isRotating ? combinedRotateZ : 0,
+            transform: "rotateX(0deg) rotateZ(0deg)",
           }}
           className="relative z-10 w-[348px] sm:w-[380px] md:w-[392px] h-[736px] sm:h-[776px] md:h-[796px] will-change-transform"
         >
@@ -823,14 +766,6 @@ export function CitizenReportingSection() {
 
               {/* Ceramic Shield Diagonal Glass Glint */}
               <div className="absolute -top-32 -left-20 w-84 h-[460px] bg-gradient-to-br from-white/14 via-white/3 to-transparent rotate-[32deg] pointer-events-none z-40" />
-
-              {/* Sunflower.me Dynamic Specular Glare Follower Overlay */}
-              <motion.div
-                className="absolute inset-0 pointer-events-none z-40 rounded-[47px] sm:rounded-[50px]"
-                style={{
-                  background: dynamicGlare,
-                }}
-              />
 
               {/* Subtle Screen Perimeter Highlight */}
               <div className="absolute inset-0 rounded-[47px] sm:rounded-[50px] ring-1 ring-inset ring-white/10 pointer-events-none z-30" />
