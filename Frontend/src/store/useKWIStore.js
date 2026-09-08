@@ -105,6 +105,23 @@ export const useKWIStore = create((set, get) => ({
   setReportCoords: (coords) => set({ reportCoords: coords }),
   setReportDepth: (depth) => set({ reportDepth: depth }),
 
+  // ---- "My Submitted Reports" persistent, user-scoped history ----
+  myReports: [],
+  reportsLoaded: false,
+  reportsError: null,
+
+  // Fetch the current user's reports from the backend (server-side ownership enforced).
+  fetchMyReports: async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('kwi_token') : null
+    if (!token) return
+    try {
+      const reports = await api.get('/reports', token)
+      set({ myReports: reports || [], reportsLoaded: true, reportsError: null })
+    } catch (err) {
+      set({ reportsError: err?.message || 'Unable to load your reports.' })
+    }
+  },
+
   submitCitizenReport: () => {
     const now = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
     set({
@@ -125,6 +142,63 @@ export const useKWIStore = create((set, get) => ({
     setTimeout(() => {
       set({ reportVerificationStage: 5, isReportVerified: true })
     }, 2400)
+
+    // Persist to the backend so the report appears in "My Submitted Reports"
+    // with the exact original photo. Runs alongside the local animation; if the
+    // user isn't logged in, the report stays local-only (as before).
+    const token = typeof window !== 'undefined' ? localStorage.getItem('kwi_token') : null
+    if (!token) return
+
+    const s = get()
+    const form = new FormData()
+    form.append('location', s.reportLocation || '')
+    form.append('latitude', String(s.reportCoords?.lat ?? 0))
+    form.append('longitude', String(s.reportCoords?.lon ?? 0))
+    form.append('issueType', 'Waterlogging')
+    form.append('description', s.reportDescription || '')
+    // Convert the reportDepth display string "15–30 cm" into a numeric estimate.
+    const depthMatch = String(s.reportDepth || '').match(/(\d+(?:\.\d+)?)/)
+    form.append('waterDepth', String(depthMatch ? parseFloat(depthMatch[1]) : 0))
+
+    // Include the original photo (lossless data-URL → File) so the exact image is stored.
+    if (s.reportPhoto && typeof s.reportPhoto === 'string' && s.reportPhoto.startsWith('data:')) {
+      fetch(s.reportPhoto)
+        .then((r) => r.blob())
+        .then((blob) => {
+          const file = new File([blob], 'waterlogging-report.jpg', {
+            type: blob.type || 'image/jpeg',
+          })
+          form.append('image', file, file.name)
+          return api.postForm('/reports', form, token)
+        })
+        .then((report) => {
+          if (report) {
+            set((state) => ({
+              myReports: [report, ...state.myReports.filter((r) => r.report_id !== report.report_id)],
+              reportsLoaded: true,
+            }))
+          }
+        })
+        .catch(() => {
+          // Backend offline / auth failed — the local animation already succeeded;
+          // the report is simply not persisted to the user's history.
+        })
+    } else {
+      // No photo captured; submit the report metadata without an image.
+      api
+        .postForm('/reports', form, token)
+        .then((report) => {
+          if (report) {
+            set((state) => ({
+              myReports: [report, ...state.myReports.filter((r) => r.report_id !== report.report_id)],
+              reportsLoaded: true,
+            }))
+          }
+        })
+        .catch(() => {
+          // Best-effort; keep local behavior on failure.
+        })
+    }
   },
 
   resetCitizenReport: () => {
@@ -356,7 +430,7 @@ export const useKWIStore = create((set, get) => ({
       localStorage.removeItem('kwi_user')
       localStorage.removeItem('kwi_token')
     }
-    set({ currentUser: null })
+    set({ currentUser: null, myReports: [], reportsLoaded: false, reportsError: null })
   },
 
   unreadNotificationsCount: 3,
@@ -656,7 +730,7 @@ export const useKWIStore = create((set, get) => ({
     if (!text.trim()) return
     const userMsg = { sender: 'user', text, timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) }
 
-    let reply = "Processing municipal GIS query for Kolkata Metropolitan Area..."
+    let reply
     const lower = text.toLowerCase()
 
     if (lower.includes('sector v') || lower.includes('sv-024') || lower.includes('ps-07')) {

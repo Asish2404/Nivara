@@ -1,6 +1,8 @@
 from contextlib import asynccontextmanager
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from .core.config import settings
 from .core.database import init_db, async_session
@@ -27,6 +29,10 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     lifespan=lifespan,
 )
+
+# Matches the report upload directory (services/report_service.py)
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads", check_dir=False), name="uploads")
 
 # Configure CORS Middleware
 app.add_middleware(
