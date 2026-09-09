@@ -1,22 +1,90 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Play,
-  ArrowRight,
   CheckCircle2,
   RotateCcw,
   Loader2,
   Zap,
   Activity,
-  ShieldAlert,
-  Sparkles,
+  Cpu,
+  TrendingDown,
+  Droplets,
+  BarChart3,
+  Grid3X3,
+  AlertTriangle,
+  Info,
   Waves,
+  ArrowRight,
 } from "lucide-react";
 import { useKWIStore } from "../../store/useKWIStore";
-import { CardSpotlight } from "../ui/CardSpotlight";
-import { BorderBeam } from "../ui/BorderBeam";
 import { audioEngine } from "../../utils/audioEngine";
 
+/* ── Premium Custom Toggle with Cyan Glow ───────────────────────── */
+function Toggle({ checked, onChange }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative w-11 h-6 rounded-full transition-all duration-300 focus:outline-none shrink-0 cursor-pointer ${
+        checked
+          ? "bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_12px_rgba(6,182,212,0.45)]"
+          : "bg-slate-200"
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full shadow-sm transition-transform duration-300 ${
+          checked ? "translate-x-5 bg-white" : "translate-x-0 bg-white"
+        }`}
+      />
+    </button>
+  );
+}
+
+/* ── Premium Simulation Workflow Stepper ────────────────────────── */
+function TimelineStep({ num, label, sublabel, active, done, isSimulating }) {
+  return (
+    <div className="flex items-center gap-3 flex-1 min-w-0">
+      <div
+        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs border transition-all duration-300 shrink-0 ${
+          done
+            ? "bg-emerald-600 border-emerald-600 text-white font-medium shadow-xs"
+            : active
+              ? "bg-blue-50 border-blue-600 text-blue-700 font-semibold ring-2 ring-blue-100 shadow-xs"
+              : "bg-slate-50 border-slate-200 text-slate-500 font-medium"
+        }`}
+      >
+        {done ? (
+          <CheckCircle2 className="w-4 h-4 text-white stroke-[2.5]" />
+        ) : isSimulating && active ? (
+          <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+        ) : (
+          num
+        )}
+      </div>
+      <div className="min-w-0">
+        <div
+          className={`text-[12.5px] truncate ${
+            done
+              ? "text-emerald-700 font-semibold"
+              : active
+                ? "text-blue-700 font-semibold"
+                : "text-slate-700 font-medium"
+          }`}
+        >
+          {label}
+        </div>
+        <div className="text-[11px] text-slate-500 font-normal truncate">
+          {sublabel}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main Component ─────────────────────────────────────────────── */
 export function SimulateView() {
   const { navigate } = useKWIStore();
   const [pumpCapacity, setPumpCapacity] = useState(100);
@@ -40,91 +108,179 @@ export function SimulateView() {
     setSimState("CURRENT");
   };
 
+  const stagger = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.07 } },
+  };
+  const fadeUp = {
+    hidden: { opacity: 0, y: 14 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] },
+    },
+  };
+
   return (
-    <div className="w-full font-sans text-slate-900 dark:text-slate-100 pb-16">
-      {/* Header */}
-      <div className="max-w-3xl mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/5 border border-cyan-500/20 text-xs text-cyan-800 font-mono mb-2 shadow-2xs">
-          <Zap className="w-3.5 h-3.5 text-cyan-600 animate-pulse" />
-          <span className="font-semibold tracking-wider">HYDRAULIC INTERVENTION MODELING</span>
-          <span className="text-slate-300 dark:text-slate-500">|</span>
-          <span className="text-slate-500 dark:text-slate-400">DIGITAL TWIN ENGINE</span>
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-950 dark:text-slate-50">
-          Simulate <span className="bg-gradient-to-r from-cyan-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">Drainage Interventions</span>
-        </h1>
-        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
-          Test pumping station boosts, inlet desilting crews, and mobile submersible units to predict flood reduction before dispatching field teams.
-        </p>
-      </div>
+    /*
+     * SimulateView content area:
+     *   - Strictly placed between KWINavbar and Footer (never overlaps either)
+     *   - Shows panoramic Kolkata Digital Twin background edge-to-edge
+     */
+    <div
+      className="relative w-full overflow-hidden -mt-[104px]"
+      style={{
+        minHeight: "calc(100vh - 40px)",
+      }}
+    >
+      {/* ── 100% Full-Width Edge-to-Edge Panoramic Background Layer ── */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 pointer-events-none [background-size:cover] lg:[background-size:100%_100%]"
+        style={{
+          top: "-12px",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: "100%",
+          height: "calc(100% + 12px)",
+          backgroundColor: "#f4f9fd",
+          backgroundImage: "url('/assets/simulate-bg.jpg?v=10')",
+          backgroundPosition: "center top",
+          backgroundRepeat: "no-repeat",
+        }}
+      />
 
-      {/* Simulation Progression Timeline */}
-      <div className="mb-8 max-w-xl p-2 rounded-2xl bg-slate-900/90 backdrop-blur-xl border border-white/10 text-white shadow-lg">
-        <div className="flex items-center justify-between text-xs font-mono px-4 py-1.5">
-          <span
-            className={`flex items-center gap-1.5 ${simState === "CURRENT"
-                ? "text-cyan-400 font-bold"
-                : "text-slate-400"
-              }`}
-          >
-            <span className="w-2 h-2 rounded-full bg-cyan-400" />
-            1. BASELINE
-          </span>
-          <span className="text-slate-600">──────</span>
-          <span
-            className={`flex items-center gap-1.5 ${simState === "SIMULATING"
-                ? "text-cyan-400 font-bold animate-pulse"
-                : "text-slate-400"
-              }`}
-          >
-            <span className="w-2 h-2 rounded-full bg-blue-400" />
-            2. SOLVING PDE
-          </span>
-          <span className="text-slate-600">──────</span>
-          <span
-            className={`flex items-center gap-1.5 ${simState === "RESULT"
-                ? "text-emerald-400 font-bold"
-                : "text-slate-400"
-              }`}
-          >
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            3. VERIFIED RELIEF
-          </span>
-        </div>
-      </div>
+      {/* Soft atmospheric gradient buffer on left to ensure hero text readability without washing out scenery */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(to right, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.08) 24%, rgba(255,255,255,0) 45%)",
+        }}
+      />
+      {/* Soft bottom edge transition to footer */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 bottom-0 h-16 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.65) 100%)",
+        }}
+      />
 
-      {/* Two Column Layout: Left Controls / Right Before & After */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Intervention Controls */}
-        <CardSpotlight
-          soundFreq={920}
-          spotlightColor="rgba(6, 182, 212, 0.12)"
-          borderColor="rgba(6, 182, 212, 0.45)"
-          className="lg:col-span-5 rounded-3xl border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-[#16213a] p-6 shadow-md space-y-6"
-        >
-          <div className="border-b border-slate-100 dark:border-slate-700 pb-3 flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-bold text-slate-950 dark:text-slate-100 uppercase tracking-wider font-mono">
-                Intervention Parameters
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Target: Sector V Ring Road Basin
-              </p>
-            </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-50 text-cyan-700 font-bold">
-              PS-07 NODE
-            </span>
+      {/* Main Content Container */}
+      <motion.div
+        className="relative max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-[156px] pb-24 font-sans"
+        style={{ zIndex: 2 }}
+        variants={stagger}
+        initial="hidden"
+        animate="show"
+      >
+        {/* ── 1. Hero Section ────────────────────────────────────────── */}
+        <motion.div variants={fadeUp} className="mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/95 border border-slate-200/90 text-[12px] text-slate-700 mb-2.5 shadow-xs backdrop-blur-md">
+            <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+            <span className="font-semibold text-slate-900">Hydraulic Intervention Modeling</span>
+            <span className="text-slate-300">·</span>
+            <span className="text-slate-500 font-normal">Scenario Simulator</span>
           </div>
 
-          <div className="space-y-5 text-xs">
-            {/* Pump Station Capacity */}
-            <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700">
-              <div className="flex justify-between mb-2">
-                <span className="font-bold text-slate-800 dark:text-slate-200">
-                  Station PS-07 Turbine Load
-                </span>
-                <span className="font-bold text-cyan-600 font-mono text-sm">
-                  {pumpCapacity}% Load
+          <h1 className="text-3xl sm:text-[35px] font-bold tracking-[-0.025em] text-slate-950 mb-2 leading-tight">
+            Simulate Drainage Interventions
+          </h1>
+          <p className="text-[13.5px] text-slate-600 max-w-2xl leading-relaxed font-normal">
+            Test pumping station boosts, inlet desilting crews, and mobile
+            submersible units to predict flood reduction before dispatching
+            field teams.
+          </p>
+        </motion.div>
+
+        {/* ── 2. Redesigned 3-Step Progress Stepper ──────────────────── */}
+        <motion.div variants={fadeUp} className="mb-6 max-w-2xl">
+          <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+            <TimelineStep
+              num="1"
+              label="Baseline"
+              sublabel="Config & parameters"
+              active={simState === "CURRENT"}
+              done={simState === "SIMULATING" || simState === "RESULT"}
+              isSimulating={false}
+            />
+            <div
+              className={`h-[2px] w-8 sm:w-16 mx-2 rounded-full transition-all duration-500 ${
+                simState === "SIMULATING" || simState === "RESULT"
+                  ? "bg-blue-600"
+                  : "bg-slate-200"
+              }`}
+            />
+            <TimelineStep
+              num="2"
+              label="Solving PDE"
+              sublabel="Hydraulic computation"
+              active={simState === "SIMULATING"}
+              done={simState === "RESULT"}
+              isSimulating={simState === "SIMULATING"}
+            />
+            <div
+              className={`h-[2px] w-8 sm:w-16 mx-2 rounded-full transition-all duration-500 ${
+                simState === "RESULT"
+                  ? "bg-emerald-600"
+                  : "bg-slate-200"
+              }`}
+            />
+            <TimelineStep
+              num="3"
+              label="Verified"
+              sublabel="Relief confirmed"
+              active={false}
+              done={simState === "RESULT"}
+              isSimulating={false}
+            />
+          </div>
+        </motion.div>
+
+        {/* ── 3. Three Dashboard Cards Grid ─────────────────────────── */}
+        <motion.div
+          variants={fadeUp}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch"
+        >
+          {/* ── CARD 1: Intervention Parameters ────────────────────── */}
+          <div className="rounded-2xl bg-white/92 backdrop-blur-md border border-slate-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] p-6 flex flex-col justify-between gap-5 transition-shadow hover:shadow-[0_12px_36px_rgba(0,0,0,0.06)]">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-xs">
+                  <Cpu className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-[14px] font-semibold text-slate-900 tracking-[-0.01em]">
+                    Intervention Parameters
+                  </h2>
+                  <p className="text-[12px] text-slate-500 font-normal">
+                    Configure field interventions for simulation
+                  </p>
+                </div>
+              </div>
+              <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/80">
+                Station PS-07
+              </span>
+            </div>
+
+            {/* Turbine Load Section */}
+            <div className="rounded-xl bg-slate-50/80 border border-slate-100 p-4">
+              <div className="flex justify-between items-center mb-3">
+                <div>
+                  <span className="text-[13px] font-medium text-slate-900 block">
+                    Station PS-07 Turbine Load
+                  </span>
+                  <span className="text-[11.5px] text-slate-500 font-normal">
+                    Discharge pump control
+                  </span>
+                </div>
+                <span className="text-[26px] font-semibold tracking-tight text-blue-600 tabular-nums">
+                  {pumpCapacity}%
                 </span>
               </div>
               <input
@@ -136,239 +292,477 @@ export function SimulateView() {
                   setPumpCapacity(Number(e.target.value));
                   audioEngine.playUiChirp(800 + Number(e.target.value) * 4);
                 }}
-                className="w-full accent-cyan-600 cursor-pointer h-2 bg-slate-200 dark:bg-slate-700 rounded-lg"
+                className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, #2563eb 0%, #0ea5e9 ${
+                    ((pumpCapacity - 50) / 50) * 100
+                  }%, #e2e8f0 ${((pumpCapacity - 50) / 50) * 100}%, #e2e8f0 100%)`,
+                }}
               />
-              <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-mono">
+              <div className="flex justify-between text-[11px] text-slate-500 mt-1.5 font-normal">
                 <span>50% (42 cusecs)</span>
-                <span>100% (85 cusecs max)</span>
+                <span>100% (85 cusecs)</span>
               </div>
             </div>
 
-            {/* Drainage Crew Switch */}
-            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700">
-              <div>
-                <span className="font-bold text-slate-900 dark:text-slate-100 block">
-                  Inlet Desilting Mobile Unit
-                </span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Deploy Rapid Action Unit 04 to unblock surface grates
-                </span>
-              </div>
-              <input
-                type="checkbox"
-                checked={crewDispatched}
-                onChange={(e) => {
-                  setCrewDispatched(e.target.checked);
-                  audioEngine.playUiChirp(e.target.checked ? 1100 : 700);
-                }}
-                className="w-5 h-5 accent-cyan-600 rounded cursor-pointer"
-              />
-            </div>
-
-            {/* Additional Pump Unit Switch */}
-            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700">
-              <div>
-                <span className="font-bold text-slate-900 dark:text-slate-100 block">
-                  Mobile Submersible Pump
-                </span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Stage 20 HP Godwin high-head dewatering pump
-                </span>
-              </div>
-              <input
-                type="checkbox"
-                checked={extraPumpUnit}
-                onChange={(e) => {
-                  setExtraPumpUnit(e.target.checked);
-                  audioEngine.playUiChirp(e.target.checked ? 1200 : 750);
-                }}
-                className="w-5 h-5 accent-cyan-600 rounded cursor-pointer"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              type="button"
-              onClick={handleRunSimulation}
-              disabled={simState === "SIMULATING"}
-              className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-700 hover:from-cyan-500 hover:to-blue-600 text-white font-bold text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_16px_rgba(6,182,212,0.35)] disabled:opacity-50"
-            >
-              {simState === "SIMULATING" ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Solving Hydraulic PDE Grid…</span>
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 fill-current" />
-                  <span>Run Hydraulic Simulation →</span>
-                </>
-              )}
-            </button>
-
-            {simState === "RESULT" && (
-              <button
-                type="button"
-                onClick={handleReset}
-                className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors cursor-pointer"
-                title="Reset"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </CardSpotlight>
-
-        {/* Right Column: Before & After Visual Comparison */}
-        <div className="lg:col-span-7 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* BEFORE Card */}
-            <CardSpotlight
-              soundFreq={860}
-              spotlightColor="rgba(244, 63, 94, 0.12)"
-              borderColor="rgba(244, 63, 94, 0.45)"
-              className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#16213a] p-5 shadow-sm flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-bold font-mono text-rose-600 uppercase tracking-wider bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full dark:bg-rose-500/15 dark:border-rose-500/30 dark:text-rose-400">
-                    BASELINE RISK
-                  </span>
-                  <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">
-                    Pre-Intervention
-                  </span>
-                </div>
-
-                <div className="h-44 rounded-2xl bg-gradient-to-b from-rose-50/50 to-slate-50 border border-rose-100 dark:from-rose-950/30 dark:to-slate-900/40 dark:border-rose-900/40 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
-                  <div className="w-16 h-16 rounded-full bg-rose-100 border border-rose-200 dark:bg-rose-500/20 dark:border-rose-500/40 flex items-center justify-center mb-2 shadow-xs">
-                    <span className="text-xl font-bold font-mono text-rose-600 dark:text-rose-400">
-                      18 cm
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                    Severe Street Inundation
-                  </span>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    2 arterial lanes blocked at College More
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/60 text-xs text-slate-600 dark:text-slate-300 space-y-1.5 font-mono">
-                <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Drainage Load:</span>
-                  <strong className="text-slate-900 dark:text-white">62%</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Risk Score:</span>
-                  <strong className="text-rose-600 dark:text-rose-400">82 / 100</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Affected Area:</span>
-                  <strong className="text-slate-900 dark:text-white">12,400 m²</strong>
-                </div>
-              </div>
-            </CardSpotlight>
-
-            {/* AFTER Card */}
-            <CardSpotlight
-              soundFreq={1100}
-              spotlightColor="rgba(16, 185, 129, 0.12)"
-              borderColor="rgba(16, 185, 129, 0.45)"
-              className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#16213a] p-5 shadow-sm flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-bold font-mono text-emerald-700 uppercase tracking-wider bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full dark:bg-emerald-500/15 dark:border-emerald-500/30 dark:text-emerald-400">
-                    SIMULATED OUTCOME
-                  </span>
-                  <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">
-                    {simState === "RESULT" ? "Relief Verified" : "Awaiting Run"}
-                  </span>
-                </div>
-
-                <div className="h-44 rounded-2xl bg-gradient-to-b from-emerald-50/50 to-slate-50 border border-emerald-100 dark:from-emerald-950/30 dark:to-slate-900/40 dark:border-emerald-900/40 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
-                  <div
-                    className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 shadow-xs transition-all ${simState === "RESULT"
-                        ? "bg-emerald-100 border border-emerald-300 dark:bg-emerald-500/20 dark:border-emerald-500/40"
-                        : "bg-slate-200 dark:bg-slate-700"
-                      }`}
-                  >
-                    <span
-                      className={`text-xl font-bold font-mono ${simState === "RESULT"
-                          ? "text-emerald-700 dark:text-emerald-400"
-                          : "text-slate-400 dark:text-slate-500"
-                        }`}
-                    >
-                      {simState === "RESULT" ? "7 cm" : "—"}
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                    {simState === "RESULT"
-                      ? "Safe Vehicular Clearance"
-                      : "Trigger simulation to model relief"}
-                  </span>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    {simState === "RESULT"
-                      ? "61% water depth reduction achieved"
-                      : "Transient flow solver ready"}
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/60 text-xs text-slate-600 dark:text-slate-300 space-y-1.5 font-mono">
-                <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Drainage Load:</span>
-                  <strong className="text-slate-900 dark:text-white">
-                    {simState === "RESULT" ? "87%" : "—"}
-                  </strong>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Risk Score:</span>
-                  <strong className="text-emerald-700 dark:text-emerald-400">
-                    {simState === "RESULT" ? "54 / 100" : "—"}
-                  </strong>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Affected Area:</span>
-                  <strong className="text-slate-900 dark:text-white">
-                    {simState === "RESULT" ? "4,100 m²" : "—"}
-                  </strong>
-                </div>
-              </div>
-            </CardSpotlight>
-          </div>
-
-          {/* Outcome Summary & Direct Connection to Action Center with Border Beam */}
-          {simState === "RESULT" && (
-            <div className="relative overflow-hidden p-6 rounded-3xl bg-gradient-to-r from-emerald-50/90 via-teal-50/70 to-emerald-50/90 dark:from-emerald-950/50 dark:via-teal-950/40 dark:to-emerald-950/50 border border-emerald-300 dark:border-emerald-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg">
-              <BorderBeam size={280} duration={10} colorFrom="#10b981" colorTo="#06b6d4" />
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md">
-                  <CheckCircle2 className="w-6 h-6" />
+            {/* Desilting Mobile Unit Row */}
+            <div className="flex items-center justify-between rounded-xl bg-slate-50/80 border border-slate-100 p-3.5">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                  <Waves className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-sm font-bold text-slate-950 dark:text-white block">
+                  <span className="text-[13px] font-medium text-slate-900 block">
+                    Inlet Desilting Mobile Unit
+                  </span>
+                  <span className="text-[11.5px] text-slate-500 font-normal">
+                    Deploy Rapid Action Unit 04
+                  </span>
+                </div>
+              </div>
+              <Toggle
+                checked={crewDispatched}
+                onChange={(v) => {
+                  setCrewDispatched(v);
+                  audioEngine.playUiChirp(v ? 1100 : 700);
+                }}
+              />
+            </div>
+
+            {/* Mobile Submersible Pump Row */}
+            <div className="flex items-center justify-between rounded-xl bg-slate-50/80 border border-slate-100 p-3.5">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-cyan-50 border border-cyan-100 flex items-center justify-center text-cyan-600 shrink-0">
+                  <Zap className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-[13px] font-medium text-slate-900 block">
+                    Mobile Submersible Pump
+                  </span>
+                  <span className="text-[11.5px] text-slate-500 font-normal">
+                    20 HP Godwin high-head unit
+                  </span>
+                </div>
+              </div>
+              <Toggle
+                checked={extraPumpUnit}
+                onChange={(v) => {
+                  setExtraPumpUnit(v);
+                  audioEngine.playUiChirp(v ? 1200 : 750);
+                }}
+              />
+            </div>
+
+            {/* Run Hydraulic Simulation Button (Functionality 100% preserved) */}
+            <div className="flex items-center gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={handleRunSimulation}
+                disabled={simState === "SIMULATING"}
+                className="w-full relative overflow-hidden py-3 px-5 rounded-xl font-medium text-[13.5px] text-white transition-all duration-200 active:translate-y-0 hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed group shadow-[0_4px_16px_rgba(37,99,235,0.28)] hover:shadow-[0_6px_22px_rgba(37,99,235,0.38)]"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%)",
+                }}
+              >
+                {simState === "SIMULATING" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Solving Hydraulic PDE Grid…</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-3.5 h-3.5 fill-current" />
+                    <span>Run Hydraulic Simulation</span>
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                  </>
+                )}
+              </button>
+
+              {simState === "RESULT" && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  type="button"
+                  onClick={handleReset}
+                  className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all cursor-pointer shadow-xs shrink-0"
+                  title="Reset"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </motion.button>
+              )}
+            </div>
+          </div>
+
+          {/* ── CARD 2: Baseline Risk (Visual Focal Point) ─────────── */}
+          <div className="rounded-2xl bg-white/92 backdrop-blur-md border border-slate-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] p-6 flex flex-col justify-between gap-4 transition-shadow hover:shadow-[0_12px_36px_rgba(0,0,0,0.06)] ring-1 ring-rose-500/10">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shadow-xs">
+                  <Activity className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-[14px] font-semibold text-slate-900 tracking-[-0.01em]">
+                    Baseline Risk
+                  </h2>
+                  <p className="text-[12px] text-slate-500 font-normal">
+                    Pre-intervention state
+                  </p>
+                </div>
+              </div>
+              <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200">
+                Critical
+              </span>
+            </div>
+
+            {/* Main Risk Circular Gauge */}
+            <div className="rounded-2xl bg-gradient-to-b from-rose-50/70 via-rose-50/30 to-white/40 border border-rose-100/80 p-5 flex flex-col items-center justify-center text-center relative overflow-hidden">
+              {/* Circular Gauge Ring */}
+              <div className="relative w-24 h-24 flex items-center justify-center">
+                <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    stroke="#ffe4e6"
+                    strokeWidth="6"
+                    fill="none"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    stroke="url(#roseGradient)"
+                    strokeWidth="6"
+                    strokeDasharray="251.2"
+                    strokeDashoffset="62.8"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+                  <defs>
+                    <linearGradient id="roseGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#f43f5e" />
+                      <stop offset="100%" stopColor="#e11d48" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                {/* Center Value */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span className="text-[38px] font-semibold tracking-tight text-rose-600 leading-none tabular-nums">
+                    18
+                  </span>
+                  <span className="text-[11.5px] font-medium text-rose-500 mt-0.5">
+                    cm
+                  </span>
+                </div>
+              </div>
+
+              <div className="text-[13.5px] font-semibold text-slate-900 mt-2.5">
+                Severe Street Inundation
+              </div>
+              <div className="text-[11.5px] text-slate-600 mt-0.5 flex items-center gap-1.5 font-normal">
+                <span>2 arterial lanes blocked</span>
+                <span className="text-slate-300">·</span>
+                <span className="font-medium text-rose-700">College More</span>
+              </div>
+            </div>
+
+            {/* Key Indicators (3 rows) */}
+            <div className="space-y-3 pt-1">
+              {/* Row 1: Drainage Load */}
+              <div className="text-[12px]">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-slate-600 font-normal flex items-center gap-1.5">
+                    <Droplets className="w-3.5 h-3.5 text-amber-500" />
+                    Drainage Load
+                  </span>
+                  <span className="font-semibold text-slate-900 tabular-nums">
+                    62%
+                  </span>
+                </div>
+                <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <div className="h-full rounded-full bg-amber-400 w-[62%] transition-all duration-700" />
+                </div>
+              </div>
+
+              {/* Row 2: Risk Score */}
+              <div className="text-[12px]">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-slate-600 font-normal flex items-center gap-1.5">
+                    <BarChart3 className="w-3.5 h-3.5 text-rose-500" />
+                    Risk Score
+                  </span>
+                  <span className="font-semibold text-slate-900 tabular-nums">
+                    82 / 100
+                  </span>
+                </div>
+                <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <div className="h-full rounded-full bg-rose-500 w-[82%] transition-all duration-700" />
+                </div>
+              </div>
+
+              {/* Row 3: Affected Area */}
+              <div className="text-[12px]">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-slate-600 font-normal flex items-center gap-1.5">
+                    <Grid3X3 className="w-3.5 h-3.5 text-rose-400" />
+                    Affected Area
+                  </span>
+                  <span className="font-semibold text-slate-900 tabular-nums">
+                    12,400 m²
+                  </span>
+                </div>
+                <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <div className="h-full rounded-full bg-rose-400 w-[74%] transition-all duration-700" />
+                </div>
+              </div>
+            </div>
+
+            {/* Subtle Risk Warning Panel */}
+            <div className="rounded-xl bg-amber-50/90 border border-amber-200/80 px-3.5 py-2 text-[11.5px] text-amber-900 flex items-center gap-2 font-normal">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              <span>High risk of further inundation if no intervention is taken.</span>
+            </div>
+          </div>
+
+          {/* ── CARD 3: Simulated Outcome ──────────────────────────── */}
+          <div className="rounded-2xl bg-white/92 backdrop-blur-md border border-slate-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] p-6 flex flex-col justify-between gap-4 transition-shadow hover:shadow-[0_12px_36px_rgba(0,0,0,0.06)] relative overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all duration-300 shadow-xs ${
+                    simState === "RESULT"
+                      ? "bg-emerald-50 border-emerald-200 text-emerald-600"
+                      : "bg-blue-50 border-blue-100 text-blue-600"
+                  }`}
+                >
+                  <TrendingDown className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-[14px] font-semibold text-slate-900 tracking-[-0.01em]">
+                    Simulated Outcome
+                  </h2>
+                  <p className="text-[12px] text-slate-500 font-normal">
+                    {simState === "RESULT"
+                      ? "Relief verified"
+                      : "Awaiting simulation"}
+                  </p>
+                </div>
+              </div>
+              <span
+                className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border transition-all duration-300 ${
+                  simState === "RESULT"
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                    : "bg-slate-100 border-slate-200 text-slate-600"
+                }`}
+              >
+                {simState === "RESULT" ? "Verified" : "Pending"}
+              </span>
+            </div>
+
+            {/* Empty / Simulating / Result State Center Area */}
+            <div
+              className={`rounded-2xl border p-5 flex flex-col items-center justify-center text-center gap-2 transition-all duration-300 min-h-[175px] ${
+                simState === "RESULT"
+                  ? "bg-gradient-to-b from-emerald-50/70 via-emerald-50/30 to-white/40 border-emerald-200/80"
+                  : "bg-slate-50/70 border-slate-100"
+              }`}
+            >
+              <AnimatePresence mode="wait">
+                {simState === "SIMULATING" ? (
+                  <motion.div
+                    key="solving"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex flex-col items-center gap-2.5 py-3"
+                  >
+                    <div className="relative w-14 h-14 flex items-center justify-center">
+                      <div className="absolute inset-0 rounded-full border-2 border-blue-200 animate-ping opacity-30" />
+                      <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                    </div>
+                    <div className="text-[13px] font-semibold text-blue-700">
+                      Solving Hydraulic PDE Grid…
+                    </div>
+                    <div className="text-[11.5px] text-slate-500 font-normal">
+                      Running transient flow solver
+                    </div>
+                  </motion.div>
+                ) : simState === "RESULT" ? (
+                  <motion.div
+                    key="result"
+                    initial={{ opacity: 0, scale: 0.85 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center gap-2"
+                  >
+                    <div className="w-22 h-22 rounded-full bg-white border-2 border-emerald-400 shadow-sm flex flex-col items-center justify-center">
+                      <span className="text-[38px] font-semibold tracking-tight text-emerald-600 leading-none tabular-nums">
+                        7
+                      </span>
+                      <span className="text-[11.5px] font-medium text-emerald-500 mt-0.5">
+                        cm
+                      </span>
+                    </div>
+                    <div>
+                      <div className="text-[13.5px] font-semibold text-slate-900 mt-1">
+                        Safe Vehicular Clearance
+                      </div>
+                      <div className="text-[11.5px] text-emerald-700 font-medium mt-0.5">
+                        61% water depth reduction achieved
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="idle"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex flex-col items-center gap-2 py-1.5"
+                  >
+                    {/* Clean analytics visual */}
+                    <div className="relative w-14 h-14 rounded-full border border-slate-200 bg-white flex items-center justify-center shadow-xs">
+                      <TrendingDown className="w-5 h-5 text-slate-400" />
+                    </div>
+                    <div className="text-[13px] font-medium text-slate-900 mt-1">
+                      Trigger simulation to model relief
+                    </div>
+                    <div className="text-[11.5px] text-slate-500 max-w-[240px] leading-relaxed font-normal">
+                      Run the hydraulic model to see projected reduction in water levels and affected area.
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Projected Indicators (3 rows) */}
+            <div className="space-y-3 pt-1">
+              {/* Row 1: Projected Drainage Load */}
+              <div className="text-[12px]">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-slate-600 font-normal flex items-center gap-1.5">
+                    <Droplets className={`w-3.5 h-3.5 ${simState === "RESULT" ? "text-blue-500" : "text-slate-300"}`} />
+                    Drainage Load
+                  </span>
+                  <span
+                    className={`font-semibold tabular-nums ${
+                      simState === "RESULT" ? "text-blue-700" : "text-slate-400"
+                    }`}
+                  >
+                    {simState === "RESULT" ? "87%" : "—"}
+                  </span>
+                </div>
+                <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <motion.div
+                    className="h-full rounded-full bg-blue-600"
+                    initial={{ width: 0 }}
+                    animate={{ width: simState === "RESULT" ? "87%" : "0%" }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: Projected Risk Score */}
+              <div className="text-[12px]">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-slate-600 font-normal flex items-center gap-1.5">
+                    <BarChart3 className={`w-3.5 h-3.5 ${simState === "RESULT" ? "text-emerald-500" : "text-slate-300"}`} />
+                    Risk Score
+                  </span>
+                  <span
+                    className={`font-semibold tabular-nums ${
+                      simState === "RESULT" ? "text-emerald-700" : "text-slate-400"
+                    }`}
+                  >
+                    {simState === "RESULT" ? "54 / 100" : "—"}
+                  </span>
+                </div>
+                <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <motion.div
+                    className="h-full rounded-full bg-emerald-600"
+                    initial={{ width: 0 }}
+                    animate={{ width: simState === "RESULT" ? "54%" : "0%" }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Projected Affected Area */}
+              <div className="text-[12px]">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-slate-600 font-normal flex items-center gap-1.5">
+                    <Grid3X3 className={`w-3.5 h-3.5 ${simState === "RESULT" ? "text-teal-500" : "text-slate-300"}`} />
+                    Affected Area
+                  </span>
+                  <span
+                    className={`font-semibold tabular-nums ${
+                      simState === "RESULT" ? "text-teal-700" : "text-slate-400"
+                    }`}
+                  >
+                    {simState === "RESULT" ? "4,100 m²" : "—"}
+                  </span>
+                </div>
+                <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <motion.div
+                    className="h-full rounded-full bg-teal-500"
+                    initial={{ width: 0 }}
+                    animate={{ width: simState === "RESULT" ? "33%" : "0%" }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Message Strip */}
+            <div className="rounded-xl bg-slate-50 border border-slate-100 px-3.5 py-2 text-[11.5px] text-slate-500 flex items-center gap-1.5 font-normal">
+              <Info className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              <span>Results will appear after simulation is completed.</span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── Post-Simulation Verified Work Order Banner ────────────── */}
+        <AnimatePresence>
+          {simState === "RESULT" && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-6 relative overflow-hidden rounded-2xl bg-white/95 backdrop-blur-md border border-emerald-200 shadow-[0_4px_24px_rgba(16,185,129,0.12)] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0 shadow-xs">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <div className="text-[14px] font-semibold text-slate-900">
                     Intervention Verified · Ready for Immediate KMC Dispatch
-                  </span>
-                  <span className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 block">
-                    Staging Godwin pump + Unit 04 desilting restores traffic clearance 3.6 hours ahead of flood crest.
-                  </span>
+                  </div>
+                  <div className="text-[12px] text-slate-500 mt-0.5 font-normal">
+                    Staging Godwin pump + Unit 04 desilting restores traffic
+                    clearance 3.6 hours ahead of flood crest.
+                  </div>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={() => navigate("/action-center")}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs transition-all active:scale-[0.98] shrink-0 cursor-pointer shadow-md"
+                className="relative overflow-hidden px-5 py-2.5 rounded-xl font-medium text-[13px] text-white shrink-0 cursor-pointer transition-all active:scale-[0.98] group shadow-[0_2px_12px_rgba(5,150,105,0.25)] hover:shadow-[0_4px_16px_rgba(5,150,105,0.35)]"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #059669 0%, #0d9488 100%)",
+                }}
               >
+                <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-white/10" />
                 Create Work Order →
               </button>
-            </div>
+            </motion.div>
           )}
-        </div>
-      </div>
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }
