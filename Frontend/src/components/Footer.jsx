@@ -40,7 +40,6 @@ const NAV_COLUMNS = [
     links: [
       { label: 'City Intelligence', path: '/live-city' },
       { label: 'Incidents', path: '/incidents' },
-      { label: 'Forecast', path: '/forecast' },
       { label: 'Simulate', path: '/simulate' },
     ],
   },

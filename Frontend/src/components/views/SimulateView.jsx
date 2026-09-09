@@ -62,33 +62,30 @@ export function SimulateView() {
       <div className="mb-8 max-w-xl p-2 rounded-2xl bg-slate-900/90 backdrop-blur-xl border border-white/10 text-white shadow-lg">
         <div className="flex items-center justify-between text-xs font-mono px-4 py-1.5">
           <span
-            className={`flex items-center gap-1.5 ${
-              simState === "CURRENT"
+            className={`flex items-center gap-1.5 ${simState === "CURRENT"
                 ? "text-cyan-400 font-bold"
                 : "text-slate-400"
-            }`}
+              }`}
           >
             <span className="w-2 h-2 rounded-full bg-cyan-400" />
             1. BASELINE
           </span>
           <span className="text-slate-600">──────</span>
           <span
-            className={`flex items-center gap-1.5 ${
-              simState === "SIMULATING"
+            className={`flex items-center gap-1.5 ${simState === "SIMULATING"
                 ? "text-cyan-400 font-bold animate-pulse"
                 : "text-slate-400"
-            }`}
+              }`}
           >
             <span className="w-2 h-2 rounded-full bg-blue-400" />
             2. SOLVING PDE
           </span>
           <span className="text-slate-600">──────</span>
           <span
-            className={`flex items-center gap-1.5 ${
-              simState === "RESULT"
+            className={`flex items-center gap-1.5 ${simState === "RESULT"
                 ? "text-emerald-400 font-bold"
                 : "text-slate-400"
-            }`}
+              }`}
           >
             <span className="w-2 h-2 rounded-full bg-emerald-400" />
             3. VERIFIED RELIEF
@@ -293,18 +290,16 @@ export function SimulateView() {
 
                 <div className="h-44 rounded-2xl bg-gradient-to-b from-emerald-50/50 to-slate-50 border border-emerald-100 dark:from-emerald-950/30 dark:to-slate-900/40 dark:border-emerald-900/40 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
                   <div
-                    className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 shadow-xs transition-all ${
-                      simState === "RESULT"
+                    className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 shadow-xs transition-all ${simState === "RESULT"
                         ? "bg-emerald-100 border border-emerald-300 dark:bg-emerald-500/20 dark:border-emerald-500/40"
                         : "bg-slate-200 dark:bg-slate-700"
-                    }`}
+                      }`}
                   >
                     <span
-                      className={`text-xl font-bold font-mono ${
-                        simState === "RESULT"
+                      className={`text-xl font-bold font-mono ${simState === "RESULT"
                           ? "text-emerald-700 dark:text-emerald-400"
                           : "text-slate-400 dark:text-slate-500"
-                      }`}
+                        }`}
                     >
                       {simState === "RESULT" ? "7 cm" : "—"}
                     </span>

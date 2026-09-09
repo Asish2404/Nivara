@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Cpu,
   Database,
+  Droplets,
 } from "lucide-react";
 import { KWINavbar } from "../navigation/KWINavbar";
 import { AskKolkataDrawer } from "../navigation/AskKolkataDrawer";
@@ -21,6 +22,121 @@ import { audioEngine } from "../../utils/audioEngine";
 import { CitizenReportingSection } from "./CitizenReportingSection";
 import { KolkataDecorativeLayer } from "./KolkataDecorativeLayer";
 import { RobotPipelineStepping, KWI_PIPELINE_STAGES } from "./RobotPipelineStepping";
+import { ACTIVE_INCIDENTS } from "../gis/kolkataCartographicData";
+import AccordionGallery from "../views/AccordionGallery";
+import SplitText from "../views/SplitText";
+import MoltenMetal from "../views/MoltenMetal";
+
+// Hotspot locality photographs corresponding to real Kolkata intersections
+const HOTSPOT_PHOTOS = [
+  "/images/kolkata_waterlog_sector_v.jpg", // #SV-024: College More & Ring Road, Salt Lake Sector V
+  "/images/hotspot_behala.jpg",            // #BH-019: Behala Chowrasta / Diamond Harbour Rd
+  "/images/hotspot_park_street.jpg",       // #PS-032: Park Street & Chowringhee Intersection
+  "/images/hotspot_thanthania.jpg",        // #TK-089: Thanthania Kalibari
+  "/images/hotspot_hastings.jpg",          // #HS-001: Hastings
+  "/images/hotspot_kalighat.jpg",          // #KG-001: Kalighat
+];
+
+// 4 Final Impact Statistics (System Impact)
+const IMPACT_STATS = [
+  {
+    id: "stat-rain",
+    value: "743",
+    unit: "mm",
+    label: "Total Rainfall (Last 24h)",
+    icon: <Droplets className="w-4 h-4 text-cyan-500" />,
+    color: "cyan",
+    chart: (
+      <div className="flex items-end gap-1 h-8 mt-3">
+        {[25, 40, 30, 55, 70, 48, 82, 65, 95, 100].map((h, i) => (
+          <div
+            key={i}
+            style={{ height: `${h}%` }}
+            className={`w-1.5 rounded-t-sm transition-all duration-500 ${
+              i >= 8 ? "bg-cyan-500" : "bg-cyan-200/80"
+            }`}
+          />
+        ))}
+      </div>
+    ),
+  },
+  {
+    id: "stat-discharge",
+    value: "85",
+    unit: "",
+    label: "Cusecs Outfall Discharge",
+    icon: <Waves className="w-4 h-4 text-blue-500" />,
+    color: "blue",
+    chart: (
+      <div className="h-8 mt-3 flex items-center overflow-hidden">
+        <svg className="w-full h-6" viewBox="0 0 160 24" fill="none">
+          <path
+            d="M0 12 Q20 2 40 12 T80 12 T120 12 T160 12"
+            stroke="#3b82f6"
+            strokeWidth="2.5"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d="M0 16 Q20 8 40 16 T80 16 T120 16 T160 16"
+            stroke="#93c5fd"
+            strokeWidth="1.5"
+            fill="none"
+            strokeDasharray="4 3"
+          />
+        </svg>
+      </div>
+    ),
+  },
+  {
+    id: "stat-gates",
+    value: "100%",
+    unit: "",
+    label: "Critical Gates Monitored",
+    icon: <ShieldCheck className="w-4 h-4 text-emerald-500" />,
+    color: "emerald",
+    chart: (
+      <div className="mt-4 space-y-1.5">
+        <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800/40 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full w-full" />
+        </div>
+        <div className="flex justify-between text-[10px] font-mono text-slate-400 dark:text-slate-500">
+          <span>41 / 41 Active</span>
+          <span className="text-emerald-600 font-semibold">Optimal Flow</span>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "stat-people",
+    value: "4.2M",
+    unit: "",
+    label: "People Protected",
+    icon: <CheckCircle2 className="w-4 h-4 text-blue-600" />,
+    color: "indigo",
+    chart: (
+      <div className="flex items-center gap-2 mt-3 pt-1">
+        <div className="flex -space-x-2 overflow-hidden">
+          <div className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-slate-200 text-[9px] font-bold flex items-center justify-center text-slate-600 dark:text-slate-300">
+            AK
+          </div>
+          <div className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-cyan-100 text-[9px] font-bold flex items-center justify-center text-cyan-700">
+            SM
+          </div>
+          <div className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-blue-100 text-[9px] font-bold flex items-center justify-center text-blue-700">
+            DB
+          </div>
+          <div className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-amber-100 text-[9px] font-bold flex items-center justify-center text-amber-700">
+            RC
+          </div>
+        </div>
+        <span className="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/40 px-2 py-0.5 rounded-full">
+          +4.2M
+        </span>
+      </div>
+    ),
+  },
+];
 
 function Sparkline({ data = [20, 24, 30, 28, 35, 42], color = "#0284c7" }) {
   const points = data
@@ -109,11 +225,44 @@ const STEP_TELEMETRY = [
 ];
 
 export function LandingPage() {
-  const { navigate, rainfallDisplay, incidents, activePumps, totalPumps } =
-    useKWIStore();
+  const {
+    navigate,
+    rainfallDisplay,
+    incidents,
+    activePumps,
+    totalPumps,
+    setSelectedIncident,
+  } = useKWIStore();
   const [isSectionVisible, setIsSectionVisible] = useState(false);
   const [simActive, setSimActive] = useState(false);
   const howItWorksRef = useRef(null);
+
+  // Hotspot Accordion Gallery Items preserving exact incident data & functionality
+  const hotspotGalleryItems = ACTIVE_INCIDENTS.map((inc, index) => ({
+    id: inc.id,
+    name: inc.name,
+    label: inc.location,
+    location: inc.location,
+    subdivision: inc.subdivision,
+    severity: inc.severity,
+    waterDepth: inc.waterDepth,
+    rainfall: inc.rainfall,
+    verifiedReports: inc.verifiedReports,
+    timestamp: inc.timestamp,
+    image: inc.image || HOTSPOT_PHOTOS[index] || HOTSPOT_PHOTOS[0],
+    incident: inc,
+    onViewOnMap: () => {
+      audioEngine.playUiChirp(1040);
+      setSelectedIncident(inc);
+      navigate("/live-city");
+      setTimeout(() => {
+        const mapElem = document.getElementById("gis-map-viewport");
+        if (mapElem) {
+          mapElem.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 100);
+    },
+  }));
 
   // IntersectionObserver to start animation only when section enters viewport
   useEffect(() => {
@@ -541,137 +690,171 @@ export function LandingPage() {
       {/* ======================================================== */}
       <CitizenReportingSection />
 
-      {/* ======================================================== */}
-      {/* SECTION: SIMULATION & ACTION PREVIEW                    */}
-      {/* ======================================================== */}
-      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 max-w-[1280px] mx-auto border-t border-slate-100">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left: Simulation Before & After */}
-          <div>
-            <span className="text-[11px] font-semibold tracking-[0.2em] uppercase text-blue-600">
-              HYDRAULIC INTERVENTION SIMULATION
+      {/* ========================================================================= */}
+      {/* SECTION: FIELD SENSOR STREAM & CENTERED HOTSPOT HEADING                    */}
+      {/* ========================================================================= */}
+      <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-[1360px] mx-auto border-t border-slate-100 flex flex-col gap-10">
+        <div>
+          {/* Centered Hotspot Section Heading */}
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <span className="inline-block text-[11px] font-mono font-bold text-cyan-700 tracking-[0.2em] uppercase mb-2">
+              FIELD SENSOR STREAM
             </span>
-            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-slate-950 mt-2">
-              What happens if we act?
-            </h2>
-            <p className="text-slate-600 mt-3 text-sm leading-relaxed">
-              Before deploying equipment, municipal engineers model pump
-              relocations, sluice adjustments, and dredging interventions to
-              quantify relief before trucks leave the depot.
+            <div className="flex justify-center">
+              <SplitText
+                text="Active Ground Inundation Hotspots"
+                className="text-2xl sm:text-3xl font-bold text-slate-950 dark:text-slate-100 tracking-tight text-center"
+                delay={50}
+                duration={1.25}
+                ease="power3.out"
+                splitType="chars"
+                from={{ opacity: 0, y: 40 }}
+                to={{ opacity: 1, y: 0 }}
+                threshold={0.1}
+                rootMargin="-100px"
+                textAlign="center"
+                tag="h2"
+                onLetterAnimationComplete={() => {}}
+                showCallback
+              />
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
+              Live field data, citizen reports and sensor streams to identify and respond faster.
             </p>
-
-            <div className="mt-8 p-6 rounded-2xl border border-slate-200 bg-slate-50 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-700">
-                  Simulate Mobile Pump Unit Deployment
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSimActive(!simActive)}
-                  className="px-3 py-1.5 rounded-md bg-blue-600 text-white font-medium text-xs hover:bg-blue-700 transition-all active:scale-[0.98] flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Play className="w-3 h-3 fill-current" />
-                  <span>
-                    {simActive ? "Reset Simulation" : "Run Simulation"}
-                  </span>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-center">
-                <div className="p-4 rounded-xl bg-white border border-slate-200">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
-                    Before Intervention
-                  </span>
-                  <span className="text-2xl font-bold text-rose-600">
-                    18 cm
-                  </span>
-                  <span className="text-xs text-slate-500 block mt-1">
-                    Water depth at curb
-                  </span>
-                </div>
-                <div className="p-4 rounded-xl bg-white border border-slate-200">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
-                    After Intervention
-                  </span>
-                  <span className="text-2xl font-bold text-emerald-600 transition-all">
-                    {simActive ? "7 cm" : "â€”"}
-                  </span>
-                  <span className="text-xs text-slate-500 block mt-1">
-                    {simActive ? "61% reduction in 45m" : "Run to compute"}
-                  </span>
-                </div>
-              </div>
+            <div className="mt-3.5 flex items-center justify-center">
+              <button
+                type="button"
+                onClick={() => navigate("/incidents")}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-700 hover:text-cyan-800 transition-colors cursor-pointer group"
+              >
+                <span>Explore All Incidents</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </button>
             </div>
           </div>
 
-          {/* Right: Municipal Work Order */}
-          <div>
-            <span className="text-[11px] font-semibold tracking-[0.2em] uppercase text-blue-600">
-              ACTION & WORK ORDER
+          {/* Hotspot Cards -> Accordion Gallery */}
+          <AccordionGallery
+            items={hotspotGalleryItems}
+            defaultIndex={2}
+            expandRatio={0.52}
+            trigger="hover"
+            accentColor="#ffffff"
+            overlayColor="#060010"
+            textColor="#ffffff"
+            grayscale
+            showLabels
+            duration={0.6}
+            ease="power3.out"
+            parallax={0.5}
+            tilt={8}
+            stagger={0.06}
+            height={460}
+            gap={10}
+            radius={15}
+            orientation="horizontal"
+          />
+        </div>
+
+        {/* ========================================================================= */}
+        {/* SECTION: CITYWIDE CAPACITY & IMPACT                                       */}
+        {/* ========================================================================= */}
+        <div className="pt-4">
+          <div className="text-center max-w-xl mx-auto pb-4">
+            <span className="inline-block text-[11px] font-mono font-bold text-cyan-800 tracking-[0.2em] uppercase mb-1">
+              CITYWIDE CAPACITY & IMPACT
             </span>
-            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-slate-950 mt-2">
-              From insight to dispatch.
-            </h2>
-            <p className="text-slate-600 mt-3 text-sm leading-relaxed">
-              Municipal response workflows track progress from automated
-              recommendation through crew dispatch, staging, and drainage
-              restoration.
-            </p>
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-950 dark:text-slate-100 tracking-tight">
+              Hydrological Telemetry & Outfall Impact
+            </h3>
+          </div>
 
-            <div className="mt-8 p-6 rounded-2xl border border-slate-200 bg-white shadow-xs space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div>
-                  <span className="text-[10px] font-mono text-slate-400 block">
-                    WORK ORDER
-                  </span>
-                  <span className="text-xs font-bold text-slate-900 font-mono">
-                    WO-2026-0323-0041
-                  </span>
-                </div>
-                <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
-                  DISPATCHED
-                </span>
+          {/* Four Final Impact Statistics (MoltenMetal Background) */}
+          <div className="relative rounded-[26px] overflow-hidden p-5 sm:p-7 border border-slate-200/80 dark:border-slate-700/80 shadow-[0_12px_40px_rgba(15,23,42,0.05)]">
+            {/* MoltenMetal Animated Background Layer */}
+            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+              <MoltenMetal
+                color1="#061bc4"
+                color2="#d0c5cf"
+                color3="#FFFFFF"
+                speed={0.35}
+                scale={4}
+                detail={3}
+                glow={1.6}
+                coreSize={0.1}
+                swirl={1}
+                fold={-0.2}
+                blackPoint={0.05}
+                brightness={1.3}
+                colorMode="molten"
+                grain
+                grainIntensity={0.05}
+                mouseInteraction
+                mouseStrength={0.3}
+                opacity={1}
+              />
+            </div>
+
+            {/* Impact Content Layer */}
+            <div className="relative z-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 relative">
+                {IMPACT_STATS.map((stat, idx) => (
+                  <motion.div
+                    key={stat.id}
+                    initial={{ opacity: 0, y: 30, scale: 0.97 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{
+                      duration: 0.6,
+                      ease: [0.16, 1, 0.3, 1],
+                      delay: idx * 0.25,
+                    }}
+                    className="group relative p-6 rounded-[22px] bg-white/85 dark:bg-[#16213a]/85 backdrop-blur-xl border border-white/70 dark:border-slate-700/70 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.1)] hover:border-white dark:border-slate-700 dark:hover:border-slate-600 transition-all duration-300 flex flex-col justify-between"
+                  >
+                    {/* Header with Icon */}
+                    <div>
+                      <div className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-2xs">
+                        {stat.icon}
+                      </div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-bold text-slate-950 dark:text-slate-100 font-mono tracking-tight">
+                          {stat.value}
+                        </span>
+                        {stat.unit && (
+                          <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500 font-mono">
+                            {stat.unit}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-1">
+                        {stat.label}
+                      </div>
+                    </div>
+
+                    {/* Individual Impact Chart Graphic */}
+                    <div>{stat.chart}</div>
+
+                    {/* Sequential Data Signal Connector (Visible on Large Screens between items) */}
+                    {idx < IMPACT_STATS.length - 1 && (
+                      <div className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                        <div className="w-6 h-[2px] bg-cyan-200/80 relative overflow-hidden rounded-full">
+                          <motion.div
+                            initial={{ x: "-100%" }}
+                            animate={{ x: "100%" }}
+                            transition={{
+                              repeat: Infinity,
+                              duration: 1.8,
+                              ease: "linear",
+                              delay: idx * 0.4,
+                            }}
+                            className="w-3 h-full bg-cyan-600 rounded-full"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
               </div>
-
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">
-                  Pump Deployment / Inlet Desilting
-                </h3>
-                <p className="text-xs text-slate-600 mt-1">
-                  Salt Lake Sector V, Ring Road near College More.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="p-2 rounded bg-slate-50 border border-slate-100">
-                  <span className="text-[10px] text-slate-500 block">
-                    Priority
-                  </span>
-                  <span className="font-semibold text-rose-600">High</span>
-                </div>
-                <div className="p-2 rounded bg-slate-50 border border-slate-100">
-                  <span className="text-[10px] text-slate-500 block">
-                    Risk Score
-                  </span>
-                  <span className="font-semibold text-slate-900">82 / 100</span>
-                </div>
-                <div className="p-2 rounded bg-slate-50 border border-slate-100">
-                  <span className="text-[10px] text-slate-500 block">
-                    Impact
-                  </span>
-                  <span className="font-semibold text-emerald-600">
-                    -65% Area
-                  </span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => navigate("/action-center")}
-                className="w-full py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-all active:scale-[0.98] cursor-pointer"
-              >
-                Track Work Order
-              </button>
             </div>
           </div>
         </div>

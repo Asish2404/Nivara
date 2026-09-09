@@ -109,13 +109,6 @@ export function KWINavbar() {
       ],
     },
     {
-      key: "PREDICT",
-      label: "Predict",
-      icon: TrendingUp,
-      path: "/forecast",
-      isActive: currentRoute.startsWith("/forecast"),
-    },
-    {
       key: "SIMULATE",
       label: "Simulate",
       icon: SlidersHorizontal,
