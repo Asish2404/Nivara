@@ -45,6 +45,7 @@ export function CommandProfileDropdown({ isDarkMode }) {
     logoutUser,
     navigate,
     unreadNotificationsCount = 3,
+    setProfileActiveTab,
   } = useKWIStore();
 
   // Close dropdown when clicking outside or pressing Escape
@@ -113,11 +114,10 @@ export function CommandProfileDropdown({ isDarkMode }) {
           onClick={handleToggle}
           aria-expanded={isOpen}
           aria-haspopup="true"
-          className={`group relative flex items-center gap-2.5 px-3 py-1.5 rounded-full cursor-pointer select-none transition-all duration-200 border ${
-            isDarkMode
-              ? "bg-[#0b1220]/95 hover:bg-[#121c32] text-slate-100 border-slate-700/80 shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
-              : "bg-white/95 hover:bg-slate-50 text-slate-900 border-slate-200/90 shadow-[0_1px_4px_rgba(15,23,42,0.06)]"
-          }`}
+          className={`group relative flex items-center gap-2.5 px-3 py-1.5 rounded-full cursor-pointer select-none transition-all duration-200 border ${isDarkMode
+            ? "bg-[#0b1220]/95 hover:bg-[#121c32] text-slate-100 border-slate-700/80 shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
+            : "bg-white/95 hover:bg-slate-50 text-slate-900 border-slate-200/90 shadow-[0_1px_4px_rgba(15,23,42,0.06)]"
+            }`}
         >
           {/* Real Avatar or Initials Fallback */}
           <div className="relative w-[30px] h-[30px] rounded-full overflow-hidden shrink-0">
@@ -165,19 +165,17 @@ export function CommandProfileDropdown({ isDarkMode }) {
                   ? "0 20px 45px -10px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08)"
                   : "0 20px 45px -12px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.05)",
               }}
-              className={`absolute right-0 top-full mt-2 w-[300px] sm:w-[320px] rounded-2xl overflow-hidden z-50 pointer-events-auto backdrop-blur-xl ${
-                isDarkMode
-                  ? "bg-[#0b1220]/95 border border-slate-700/80 text-slate-100"
-                  : "bg-white/95 border border-slate-200/90 text-slate-900"
-              }`}
+              className={`absolute right-0 top-full mt-2 w-[300px] sm:w-[320px] rounded-2xl overflow-hidden z-50 pointer-events-auto backdrop-blur-xl ${isDarkMode
+                ? "bg-[#0b1220]/95 border border-slate-700/80 text-slate-100"
+                : "bg-white/95 border border-slate-200/90 text-slate-900"
+                }`}
             >
               {/* PROFILE HEADER (Real Avatar, Name, Org) */}
               <div
-                className={`p-5 flex flex-col items-center text-center border-b ${
-                  isDarkMode
-                    ? "border-slate-800 bg-slate-900/30"
-                    : "border-slate-100 bg-slate-50/50"
-                }`}
+                className={`p-5 flex flex-col items-center text-center border-b ${isDarkMode
+                  ? "border-slate-800 bg-slate-900/30"
+                  : "border-slate-100 bg-slate-50/50"
+                  }`}
               >
                 {/* Profile Image with subtle border and edit hover */}
                 <button
@@ -219,21 +217,20 @@ export function CommandProfileDropdown({ isDarkMode }) {
                   type="button"
                   onClick={() =>
                     handleMenuClick(() => {
+                      if (setProfileActiveTab) setProfileActiveTab("overview");
                       navigate("/profile");
                     })
                   }
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${
-                    isDarkMode
-                      ? "hover:bg-cyan-950/30 text-slate-200"
-                      : "hover:bg-blue-50/70 text-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${isDarkMode
+                    ? "hover:bg-cyan-950/30 text-slate-200"
+                    : "hover:bg-blue-50/70 text-slate-800"
+                    }`}
                 >
                   <div
-                    className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${
-                      isDarkMode
-                        ? "text-slate-400 group-hover:text-cyan-400"
-                        : "text-slate-500 group-hover:text-[#0284c7]"
-                    }`}
+                    className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${isDarkMode
+                      ? "text-slate-400 group-hover:text-cyan-400"
+                      : "text-slate-500 group-hover:text-[#0284c7]"
+                      }`}
                   >
                     <User className="w-[17px] h-[17px]" strokeWidth={1.75} />
                   </div>
@@ -256,18 +253,16 @@ export function CommandProfileDropdown({ isDarkMode }) {
                       navigate("/action-center");
                     })
                   }
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${
-                    isDarkMode
-                      ? "hover:bg-cyan-950/30 text-slate-200"
-                      : "hover:bg-blue-50/70 text-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${isDarkMode
+                    ? "hover:bg-cyan-950/30 text-slate-200"
+                    : "hover:bg-blue-50/70 text-slate-800"
+                    }`}
                 >
                   <div
-                    className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${
-                      isDarkMode
-                        ? "text-slate-400 group-hover:text-cyan-400"
-                        : "text-slate-500 group-hover:text-[#0284c7]"
-                    }`}
+                    className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${isDarkMode
+                      ? "text-slate-400 group-hover:text-cyan-400"
+                      : "text-slate-500 group-hover:text-[#0284c7]"
+                      }`}
                   >
                     <Bell className="w-[17px] h-[17px]" strokeWidth={1.75} />
                   </div>
@@ -292,21 +287,20 @@ export function CommandProfileDropdown({ isDarkMode }) {
                   type="button"
                   onClick={() =>
                     handleMenuClick(() => {
-                      navigate("/simulate");
+                      if (setProfileActiveTab) setProfileActiveTab("preferences");
+                      navigate("/profile");
                     })
                   }
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${
-                    isDarkMode
-                      ? "hover:bg-cyan-950/30 text-slate-200"
-                      : "hover:bg-blue-50/70 text-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${isDarkMode
+                    ? "hover:bg-cyan-950/30 text-slate-200"
+                    : "hover:bg-blue-50/70 text-slate-800"
+                    }`}
                 >
                   <div
-                    className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${
-                      isDarkMode
-                        ? "text-slate-400 group-hover:text-cyan-400"
-                        : "text-slate-500 group-hover:text-[#0284c7]"
-                    }`}
+                    className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${isDarkMode
+                      ? "text-slate-400 group-hover:text-cyan-400"
+                      : "text-slate-500 group-hover:text-[#0284c7]"
+                      }`}
                   >
                     <Settings className="w-[17px] h-[17px]" strokeWidth={1.75} />
                   </div>
@@ -326,21 +320,20 @@ export function CommandProfileDropdown({ isDarkMode }) {
                   type="button"
                   onClick={() =>
                     handleMenuClick(() => {
-                      navigate("/action-center");
+                      if (setProfileActiveTab) setProfileActiveTab("security");
+                      navigate("/profile");
                     })
                   }
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${
-                    isDarkMode
-                      ? "hover:bg-cyan-950/30 text-slate-200"
-                      : "hover:bg-blue-50/70 text-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${isDarkMode
+                    ? "hover:bg-cyan-950/30 text-slate-200"
+                    : "hover:bg-blue-50/70 text-slate-800"
+                    }`}
                 >
                   <div
-                    className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${
-                      isDarkMode
-                        ? "text-slate-400 group-hover:text-cyan-400"
-                        : "text-slate-500 group-hover:text-[#0284c7]"
-                    }`}
+                    className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${isDarkMode
+                      ? "text-slate-400 group-hover:text-cyan-400"
+                      : "text-slate-500 group-hover:text-[#0284c7]"
+                      }`}
                   >
                     <Shield className="w-[17px] h-[17px]" strokeWidth={1.75} />
                   </div>
@@ -358,9 +351,8 @@ export function CommandProfileDropdown({ isDarkMode }) {
 
               {/* SEPARATOR */}
               <div
-                className={`h-px mx-2 ${
-                  isDarkMode ? "bg-slate-800" : "bg-slate-100"
-                }`}
+                className={`h-px mx-2 ${isDarkMode ? "bg-slate-800" : "bg-slate-100"
+                  }`}
               />
 
               {/* 5. SIGN OUT (Separated at bottom with subtle red accent) */}
@@ -368,18 +360,16 @@ export function CommandProfileDropdown({ isDarkMode }) {
                 <button
                   type="button"
                   onClick={handleSignOut}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${
-                    isDarkMode
-                      ? "hover:bg-rose-950/20 text-rose-400"
-                      : "hover:bg-rose-50/80 text-rose-600"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${isDarkMode
+                    ? "hover:bg-rose-950/20 text-rose-400"
+                    : "hover:bg-rose-50/80 text-rose-600"
+                    }`}
                 >
                   <div
-                    className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${
-                      isDarkMode
-                        ? "text-rose-400 group-hover:text-rose-300"
-                        : "text-rose-500 group-hover:text-rose-600"
-                    }`}
+                    className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${isDarkMode
+                      ? "text-rose-400 group-hover:text-rose-300"
+                      : "text-rose-500 group-hover:text-rose-600"
+                      }`}
                   >
                     <LogOut className="w-[17px] h-[17px]" strokeWidth={1.75} />
                   </div>

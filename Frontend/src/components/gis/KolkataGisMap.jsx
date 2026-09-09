@@ -86,64 +86,6 @@ const MAP_STYLES = {
       ],
     },
   },
-  street: {
-    id: "street",
-    name: "Street",
-    icon: "🗺️",
-    description: "Real Kolkata road network & neighborhood geometry",
-    spec: {
-      version: 8,
-      sources: {
-        "carto-street": {
-          type: "raster",
-          tiles: [
-            "https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-          ],
-          tileSize: 256,
-          attribution: "© CARTO, © OpenStreetMap",
-          maxzoom: 19,
-        },
-      },
-      layers: [
-        {
-          id: "street-layer",
-          type: "raster",
-          source: "carto-street",
-          minzoom: 0,
-          maxzoom: 19,
-        },
-      ],
-    },
-  },
-  intelligence: {
-    id: "intelligence",
-    name: "Intelligence",
-    icon: "🌙",
-    description: "Tactical dark contrast for water management telemetry",
-    spec: {
-      version: 8,
-      sources: {
-        "carto-dark": {
-          type: "raster",
-          tiles: [
-            "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-          ],
-          tileSize: 256,
-          attribution: "© CARTO, © OpenStreetMap",
-          maxzoom: 19,
-        },
-      },
-      layers: [
-        {
-          id: "dark-layer",
-          type: "raster",
-          source: "carto-dark",
-          minzoom: 0,
-          maxzoom: 19,
-        },
-      ],
-    },
-  },
 };
 
 export const KolkataGisMap = React.memo(function KolkataGisMap({
@@ -1121,31 +1063,6 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       {/* Top Right: Map Styles & WebGL Camera Control Ribbon */}
       {/* ------------------------------------------------------------- */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2 pointer-events-auto">
-        {/* Style Selector Pill */}
-        <div className="flex items-center p-1 rounded-xl bg-slate-900/90 backdrop-blur-md border border-white/15 shadow-xl text-xs">
-          {Object.values(MAP_STYLES).map((style) => {
-            const isSelected = activeStyleKey === style.id;
-            return (
-              <button
-                key={style.id}
-                type="button"
-                onClick={() => {
-                  setActiveStyleKey(style.id);
-                  audioEngine.playUiChirp(isSelected ? 900 : 1100);
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${isSelected
-                    ? "bg-cyan-500 text-slate-950 font-bold shadow-xs"
-                    : "text-slate-300 hover:text-white hover:bg-white/10"
-                  }`}
-                title={style.description}
-              >
-                <span>{style.icon}</span>
-                <span className="hidden sm:inline">{style.name}</span>
-              </button>
-            );
-          })}
-        </div>
-
         {/* 3D Tilt Toggle */}
         <button
           type="button"

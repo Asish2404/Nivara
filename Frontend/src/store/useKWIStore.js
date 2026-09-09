@@ -72,6 +72,8 @@ export const useKWIStore = create((set, get) => ({
   // Active Route & Section Navigation
   currentRoute: getInitialRoute(),
   activeSection: routeToSection(getInitialRoute()),
+  profileActiveTab: 'overview',
+  setProfileActiveTab: (tab) => set({ profileActiveTab: tab }),
 
   navigate: (path) => {
     if (typeof window !== 'undefined') {

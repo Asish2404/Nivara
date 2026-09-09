@@ -26,6 +26,8 @@ export function ProfileView() {
     unreadNotificationsCount = 3,
     theme,
     setTheme,
+    profileActiveTab,
+    setProfileActiveTab,
   } = useKWIStore();
 
   const fileInputRef = useRef(null);
@@ -78,7 +80,14 @@ export function ProfileView() {
   }, [currentUser, profile.createdAt]);
 
   /* ── UI Navigation & Tab State ── */
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(profileActiveTab || "overview");
+
+  // Keep activeTab in sync with store's profileActiveTab
+  useEffect(() => {
+    if (profileActiveTab && ["overview", "personal", "preferences", "security"].includes(profileActiveTab)) {
+      setActiveTab(profileActiveTab);
+    }
+  }, [profileActiveTab]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editDraft, setEditDraft] = useState({});
   const [isSaving, setIsSaving] = useState(false);
@@ -395,6 +404,7 @@ export function ProfileView() {
                 type="button"
                 onClick={() => {
                   setActiveTab(tab.id);
+                  if (setProfileActiveTab) setProfileActiveTab(tab.id);
                   audioEngine?.playUiChirp(840);
                 }}
                 className={`kwi-tab-button ${isActive ? "active" : ""}`}
@@ -805,6 +815,7 @@ export function ProfileView() {
                         type="button"
                         onClick={() => {
                           setActiveTab("security");
+                          if (setProfileActiveTab) setProfileActiveTab("security");
                           audioEngine?.playUiChirp(860);
                         }}
                         className="w-full flex items-center gap-3.5 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors text-left group cursor-pointer"
@@ -828,6 +839,7 @@ export function ProfileView() {
                         type="button"
                         onClick={() => {
                           setActiveTab("preferences");
+                          if (setProfileActiveTab) setProfileActiveTab("preferences");
                           audioEngine?.playUiChirp(860);
                         }}
                         className="w-full flex items-center gap-3.5 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors text-left group cursor-pointer"
