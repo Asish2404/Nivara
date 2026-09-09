@@ -5,9 +5,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
-from ..models.user import User
-from ..schemas.auth import UserSignupRequest, UserResponse
-from ..core.security import hash_password, verify_password
+from app.models.user import User
+from app.schemas.auth import UserSignupRequest, UserResponse
+from app.core.security import hash_password, verify_password
 
 
 # Default official KMC personas pre-seeded for demoing
@@ -87,13 +87,14 @@ class AuthService:
 
     @classmethod
     async def seed_default_users(cls, db: AsyncSession) -> None:
-        """Seed the 3 official demo personas if users table is empty."""
-        result = await db.execute(select(User))
-        if not result.scalars().first():
-            for persona in DEFAULT_PERSONAS:
+        """Ensure the official demo personas exist in the database without overwriting existing users."""
+        for persona in DEFAULT_PERSONAS:
+            email_clean = persona["email"].lower().strip()
+            res = await db.execute(select(User).where(User.email == email_clean))
+            if not res.scalars().first():
                 db_user = User(
                     id=persona["id"],
-                    email=persona["email"].lower().strip(),
+                    email=email_clean,
                     hashed_password=hash_password(persona["password"]),
                     full_name=persona["full_name"],
                     role=persona["role"],
@@ -104,7 +105,7 @@ class AuthService:
                     is_active=True,
                 )
                 db.add(db_user)
-            await db.commit()
+        await db.commit()
 
     @classmethod
     async def register_user(cls, db: AsyncSession, data: UserSignupRequest) -> User:

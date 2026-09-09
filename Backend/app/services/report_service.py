@@ -9,6 +9,8 @@ from fastapi import UploadFile, HTTPException, status
 from ..models.report import Report
 from ..models.user import User
 from ..schemas.report import ReportCreate
+from .geocoding_service import GeocodingService
+from .jurisdiction_service import JurisdictionService
 
 # Directory where citizen-submitted report images are stored (relative to Backend/)
 UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "uploads"))
@@ -96,7 +98,63 @@ class ReportService:
     async def create_report(
         cls, db: AsyncSession, user: User, data: ReportCreate, file: Optional[UploadFile]
     ) -> Report:
-        """Create a report owned by the given user, storing the original image."""
+        """Create a report owned by the given user, with automatic spatial jurisdiction assignment."""
+        # 1. Determine Coordinates & Location Source
+        has_gps_coords = (
+            data.latitude is not None
+            and data.longitude is not None
+            and not (float(data.latitude) == 0.0 and float(data.longitude) == 0.0)
+        )
+
+        if has_gps_coords:
+            # Case 1: Frontend sent valid GPS coordinates directly
+            try:
+                JurisdictionService.validate_coordinates(data.latitude, data.longitude)
+            except ValueError as err:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid coordinates: {err}",
+                )
+            lat = float(data.latitude)
+            lon = float(data.longitude)
+            loc_text = data.location.strip() if data.location and data.location.strip() else f"{lat:.6f}, {lon:.6f}"
+            location_source = "gps"
+
+        elif data.location and data.location.strip():
+            # Case 2: Frontend sent manual location/address text -> Forward Geocode
+            loc_text = data.location.strip()
+            geocoded = GeocodingService.forward_geocode(loc_text)
+            if not geocoded:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Geocoding failed: Could not determine coordinates for address: '{loc_text}'. Please provide valid coordinates or a more specific address.",
+                )
+            lat = float(geocoded["latitude"])
+            lon = float(geocoded["longitude"])
+            location_source = "geocoded"
+
+        else:
+            # Case 3: Missing location information
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing location information: Please provide either GPS coordinates (latitude and longitude) or a manual address/location.",
+            )
+
+        # 2. Point-in-Polygon Jurisdiction Detection
+        try:
+            jurisdiction = JurisdictionService.find_jurisdiction(lat, lon)
+        except ValueError as err:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid coordinates: {err}",
+            )
+
+        if not jurisdiction.get("found"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Location outside supported jurisdiction: Coordinates ({lat}, {lon}) do not fall within any supported Municipality or Corporation in West Bengal.",
+            )
+
         report_id = f"KWI-{datetime.now().year}-{uuid.uuid4().hex[:5].upper()}"
         original_image = ""
         image_url = ""
@@ -112,9 +170,14 @@ class ReportService:
             user_email=user.email,
             original_image=original_image,
             image_url=image_url,
-            location=data.location or "",
-            latitude=data.latitude or 0.0,
-            longitude=data.longitude or 0.0,
+            location=loc_text,
+            latitude=lat,
+            longitude=lon,
+            location_source=location_source,
+            assigned_ulb_id=jurisdiction.get("ulb_id", ""),
+            assigned_ulb_name=jurisdiction.get("ulb_name", ""),
+            jurisdiction_type=jurisdiction.get("jurisdiction_type", ""),
+            ward=jurisdiction.get("ward", ""),
             issue_type=data.issue_type or "Waterlogging",
             water_depth=data.water_depth or 0.0,
             description=data.description or "",

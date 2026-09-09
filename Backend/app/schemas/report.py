@@ -6,9 +6,9 @@ from pydantic import BaseModel, Field
 class ReportCreate(BaseModel):
     """Multipart form fields accepted by POST /reports. Aligned to the frontend form."""
 
-    location: str = Field(..., description="Street / locality address")
-    latitude: float = Field(0.0, description="GPS latitude")
-    longitude: float = Field(0.0, description="GPS longitude")
+    location: Optional[str] = Field(default="", description="Street / locality address")
+    latitude: Optional[float] = Field(default=None, description="GPS latitude")
+    longitude: Optional[float] = Field(default=None, description="GPS longitude")
     issue_type: str = Field(default="Waterlogging", alias="issueType")
     description: str = Field(default="", description="Citizen description of the waterlogging")
     water_depth: float = Field(0.0, alias="waterDepth", description="Estimated water depth in cm")
@@ -28,6 +28,11 @@ class ReportResponse(BaseModel):
     location: str
     latitude: float
     longitude: float
+    location_source: Optional[str] = "coordinates"
+    assigned_ulb_id: Optional[str] = ""
+    assigned_ulb_name: Optional[str] = ""
+    jurisdiction_type: Optional[str] = ""
+    ward: Optional[str] = ""
     issue_type: str
     water_depth: float
     description: str

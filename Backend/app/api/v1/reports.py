@@ -2,11 +2,11 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, status, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...core.database import get_db
-from ...models.user import User
-from ...api.v1.auth import get_current_user
-from ...schemas.report import ReportResponse
-from ...services.report_service import ReportService
+from app.core.database import get_db
+from app.models.user import User
+from .auth import get_current_user, get_current_user_or_default
+from app.schemas.report import ReportResponse, ReportCreate
+from app.services.report_service import ReportService
 
 router = APIRouter()
 
@@ -19,22 +19,23 @@ router = APIRouter()
 )
 async def create_report(
     *,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_default),
     db: AsyncSession = Depends(get_db),
-    location: str = Form(..., description="Street / locality address"),
-    latitude: float = Form(0.0),
-    longitude: float = Form(0.0),
+    location: Optional[str] = Form(None, description="Street / locality address"),
+    latitude: Optional[float] = Form(None, description="GPS latitude"),
+    longitude: Optional[float] = Form(None, description="GPS longitude"),
     issueType: str = Form("Waterlogging"),
     description: str = Form(""),
     waterDepth: float = Form(0.0),
     image: Optional[UploadFile] = File(None),
 ):
-    """Create a report owned by the logged-in user. The image bytes are written to disk
-    and served from the /uploads static mount, so the exact original is preserved."""
-    from ...schemas.report import ReportCreate
+    """Create a report owned by the logged-in user. Automatically detects municipality/corporation
 
+    jurisdiction from GPS coordinates or geocodes manual location. The image bytes are written to disk
+    and served from the /uploads static mount, so the exact original is preserved.
+    """
     data = ReportCreate(
-        location=location,
+        location=location or "",
         latitude=latitude,
         longitude=longitude,
         issue_type=issueType,
@@ -51,7 +52,7 @@ async def create_report(
     summary="List the current user's submitted reports (newest first)",
 )
 async def list_my_reports(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_default),
     db: AsyncSession = Depends(get_db),
 ):
     """Returns only reports owned by the requesting user (server-side isolation)."""

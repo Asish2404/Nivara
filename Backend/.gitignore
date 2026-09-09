@@ -1,0 +1,20 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Uploads directory contents (preserve folder)
+uploads/*
+!uploads/.gitkeep
+
+# SQLite database files (runtime generated)
+# *.db
+
+# IDE settings
+.vscode/
+.idea/

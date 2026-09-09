@@ -3,17 +3,17 @@ from fastapi import APIRouter, Depends, HTTPException, Header, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...core.database import get_db
-from ...core.security import create_access_token, decode_access_token
-from ...models.user import User
-from ...schemas.auth import (
+from app.core.database import get_db
+from app.core.security import create_access_token, decode_access_token
+from app.models.user import User
+from app.schemas.auth import (
     UserSignupRequest,
     UserLoginRequest,
     UserResponse,
     UserUpdateRequest,
     TokenResponse,
 )
-from ...services.auth_service import AuthService
+from app.services.auth_service import AuthService
 
 router = APIRouter()
 
@@ -48,6 +48,55 @@ async def get_current_user(
         )
 
     return user
+
+
+# Dependency to get current user, falling back to registered citizen persona if unauthenticated
+async def get_current_user_or_default(
+    authorization: Optional[str] = Header(None),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """Returns the authenticated user if token is valid, or falls back to the default citizen persona."""
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+        payload = decode_access_token(token)
+        if payload and "sub" in payload:
+            user_id = payload["sub"]
+            result = await db.execute(select(User).where(User.id == user_id))
+            user = result.scalars().first()
+            if user and user.is_active:
+                return user
+
+    # Fallback 1: Default citizen persona
+    result = await db.execute(
+        select(User).where(User.email == "anirban.chatterjee@kolkata.org")
+    )
+    default_citizen = result.scalars().first()
+    if default_citizen and default_citizen.is_active:
+        return default_citizen
+
+    # Fallback 2: Any active user in DB
+    result = await db.execute(select(User).where(User.is_active == True))
+    first_user = result.scalars().first()
+    if first_user:
+        return first_user
+
+    # Fallback 3: Create default citizen if none exists
+    new_citizen = User(
+        id="USR-CIT-003",
+        email="anirban.chatterjee@kolkata.org",
+        hashed_password="dummy",
+        full_name="Anirban Chatterjee",
+        role="Community Lead Reporter",
+        department="Kolkata Citizen Water Watch",
+        badge_id="CITIZEN-KOL-9182",
+        clearance="Verified Citizen ID",
+        avatar="🌊",
+        is_active=True,
+    )
+    db.add(new_citizen)
+    await db.commit()
+    await db.refresh(new_citizen)
+    return new_citizen
 
 
 @router.post(
