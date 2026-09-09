@@ -446,10 +446,10 @@ export function LandingPage() {
             <div className="mt-3.5 flex items-center justify-center">
               <button
                 type="button"
-                onClick={() => navigate("/incidents")}
+                onClick={() => navigate("/live-city")}
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-700 hover:text-cyan-800 transition-colors cursor-pointer group"
               >
-                <span>Explore All Incidents</span>
+                <span>Explore Live City Surveillance</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>

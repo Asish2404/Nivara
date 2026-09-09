@@ -13,20 +13,16 @@ import {
   Zap,
   Layers,
   Radio,
-  ShieldCheck,
-  MapPin,
-  TrendingUp,
-  CheckCircle2,
 } from "lucide-react";
 import { useKWIStore } from "../../store/useKWIStore";
 import { KolkataGisMap } from "../gis/KolkataGisMap";
-import { ACTIVE_INCIDENTS } from "../gis/kolkataCartographicData";
 import { KWINavbar } from "../navigation/KWINavbar";
 import { AskKolkataDrawer } from "../navigation/AskKolkataDrawer";
 import { BorderBeam } from "../ui/BorderBeam";
 import { AnimatedNumber } from "../ui/AnimatedNumber";
 import { audioEngine } from "../../utils/audioEngine";
 import { slideInRight } from "../../utils/motionVariants";
+import { LiveIncidentIntelligenceSection } from "../landing/LiveIncidentIntelligenceSection";
 import Footer from "../Footer";
 
 export function LiveCityPage() {
@@ -40,7 +36,6 @@ export function LiveCityPage() {
     selectedIncident,
     selectedRiskZone,
     selectedPumpStation,
-    setSelectedIncident,
     clearSelections,
     navigate,
     highRiskZonesCount,
@@ -86,7 +81,7 @@ export function LiveCityPage() {
       <AskKolkataDrawer />
 
       {/* 3. Main Operational Workspace */}
-      <main className="flex-1 max-w-[1360px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-16 flex flex-col gap-8">
+      <main className="flex-1 max-w-[1360px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-8 flex flex-col gap-6 sm:gap-8">
         {/* ========================================================================= */}
         {/* SECTION 1: COMPACT LIVE MAP HEADER                                        */}
         {/* ========================================================================= */}
@@ -96,7 +91,7 @@ export function LiveCityPage() {
               <span className="w-2 h-2 rounded-full bg-cyan-500 animate-ping" />
               <span className="font-semibold tracking-wider">LIVE MUNICIPAL TELEMETRY</span>
               <span className="text-slate-300">|</span>
-              <span className="text-slate-500 dark:text-slate-400 dark:text-slate-500">41 HOOGHLY SLUICE GATES LINKED</span>
+              <span className="text-slate-500 dark:text-slate-400">41 HOOGHLY SLUICE GATES LINKED</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
               Kolkata{" "}
@@ -151,7 +146,7 @@ export function LiveCityPage() {
               </span>
               <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 tracking-wider font-mono">ZONES</span>
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-2 flex items-center justify-between">
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
                 <span className="line-clamp-1">Sector V & Park Circus Basin</span>
@@ -186,7 +181,7 @@ export function LiveCityPage() {
               </span>
               <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 tracking-wider font-mono">REPORTS</span>
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-2 flex items-center justify-between">
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 <span>Citizen Mobile Ingestion Live</span>
@@ -218,7 +213,7 @@ export function LiveCityPage() {
             <div className="text-2xl sm:text-3xl font-bold text-slate-950 dark:text-slate-100 font-mono tracking-tight mt-1">
               {rainfallDisplay}
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-2 flex items-center justify-between">
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
                 <span>Alipore Doppler Reflectivity</span>
@@ -256,7 +251,7 @@ export function LiveCityPage() {
               </span>
               <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 tracking-wider font-mono">AT CAPACITY</span>
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-2 flex items-center justify-between">
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 <span>85 Cusecs Outfall Discharge</span>
@@ -275,7 +270,7 @@ export function LiveCityPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 p-2 sm:p-2.5 rounded-2xl bg-white/90 dark:bg-[#16213a]/90 backdrop-blur-xl border border-slate-200/90 dark:border-slate-700/90 text-slate-700 dark:text-slate-300 shadow-[0_4px_20px_rgba(15,23,42,0.04)]">
           {/* Layer Filter Buttons */}
           <div className="flex flex-wrap items-center gap-1.5">
-            <div className="flex items-center gap-1.5 px-3 text-[11px] font-mono text-cyan-800 font-bold uppercase tracking-wider mr-1">
+            <div className="flex items-center gap-1.5 px-3 text-[11px] font-mono text-cyan-800 dark:text-cyan-400 font-bold uppercase tracking-wider mr-1">
               <Layers className="w-3.5 h-3.5 text-cyan-600" />
               <span>LAYERS:</span>
             </div>
@@ -318,7 +313,7 @@ export function LiveCityPage() {
               }}
               className={`ml-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${traceWaterFlow
                 ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_2px_12px_rgba(6,182,212,0.35)]"
-                : "bg-cyan-50 text-cyan-700 hover:bg-cyan-100 border border-cyan-300/80"
+                : "bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/50 border border-cyan-300/80 dark:border-cyan-700/80"
                 }`}
             >
               <Waves className="w-3.5 h-3.5" />
@@ -383,7 +378,7 @@ export function LiveCityPage() {
           <div className="absolute top-4 left-4 z-[400] flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-900/85 backdrop-blur-md border border-cyan-500/30 text-white font-mono text-[10px] shadow-lg">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
             <span className="text-cyan-300 font-bold">GRID: 22.5726° N, 88.3639° E</span>
-            <span className="text-slate-500 dark:text-slate-400 dark:text-slate-500">|</span>
+            <span className="text-slate-500 dark:text-slate-400">|</span>
             <span className="text-slate-300">WGS84 // EPSG:4326</span>
           </div>
 
@@ -413,7 +408,7 @@ export function LiveCityPage() {
                 exit="exit"
                 className="absolute top-4 right-4 z-20 w-full max-w-sm bg-white/95 dark:bg-[#16213a]/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-2xl space-y-3 pointer-events-auto"
               >
-                <div className="flex items-start justify-between pb-2 border-b border-slate-100">
+                <div className="flex items-start justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                   <div>
                     <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider font-mono">
                       {selectedIncident.id} · {selectedIncident.subdivision}
@@ -432,25 +427,25 @@ export function LiveCityPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Risk Score</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Risk Score</span>
                     <span className="font-bold text-slate-900 dark:text-slate-100">{selectedIncident.riskScore}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Water Depth</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Water Depth</span>
                     <span className="font-bold text-rose-600 font-mono">{selectedIncident.waterDepth}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Rainfall</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Rainfall</span>
                     <span className="font-bold text-slate-900 dark:text-slate-100 font-mono">{selectedIncident.rainfall}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Citizen Reports</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Citizen Reports</span>
                     <span className="font-bold text-slate-900 dark:text-slate-100">{selectedIncident.verifiedReports} verified</span>
                   </div>
                 </div>
 
-                <div className="text-xs text-slate-600 dark:text-slate-300 space-y-1 pt-1 border-t border-slate-100">
+                <div className="text-xs text-slate-600 dark:text-slate-300 space-y-1 pt-1 border-t border-slate-100 dark:border-slate-800">
                   <div>
                     <strong className="text-slate-800 dark:text-slate-200">Drainage:</strong> {selectedIncident.connectedDrainage}
                   </div>
@@ -461,10 +456,10 @@ export function LiveCityPage() {
 
                 <button
                   type="button"
-                  onClick={() => navigate("/incidents")}
+                  onClick={() => navigate("/action-center")}
                   className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                 >
-                  <span>View on Incidents Page</span>
+                  <span>Dispatch Action Team</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </motion.div>
@@ -479,9 +474,9 @@ export function LiveCityPage() {
                 exit="exit"
                 className="absolute top-4 right-4 z-20 w-full max-w-sm bg-white/95 dark:bg-[#16213a]/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-2xl space-y-3 pointer-events-auto"
               >
-                <div className="flex items-start justify-between pb-2 border-b border-slate-100">
+                <div className="flex items-start justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                   <div>
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider font-mono">
                       PUMPING STATION · {selectedPumpStation.ward}
                     </span>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">
@@ -498,8 +493,8 @@ export function LiveCityPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Operating Status</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Operating Status</span>
                     <span
                       className={`font-bold ${selectedPumpStation.isAtCapacity ? "text-rose-600" : "text-emerald-600"
                         }`}
@@ -507,21 +502,21 @@ export function LiveCityPage() {
                       {selectedPumpStation.status}
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Operating Load</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Operating Load</span>
                     <span className="font-bold text-slate-900 dark:text-slate-100">{selectedPumpStation.capacity}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Pumps Running</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Pumps Running</span>
                     <span className="font-bold text-slate-900 dark:text-slate-100">{selectedPumpStation.pumpsRunning}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Discharge Rate</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Discharge Rate</span>
                     <span className="font-bold text-slate-900 dark:text-slate-100">{selectedPumpStation.dischargeRate}</span>
                   </div>
                 </div>
 
-                <div className="text-xs text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-100">
+                <div className="text-xs text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-100 dark:border-slate-800">
                   <strong className="text-slate-800 dark:text-slate-200">Connected Outfall:</strong>{" "}
                   {selectedPumpStation.connectedCanal}
                 </div>
@@ -546,9 +541,9 @@ export function LiveCityPage() {
                 exit="exit"
                 className="absolute top-4 right-4 z-20 w-full max-w-sm bg-white/95 dark:bg-[#16213a]/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-2xl space-y-3 pointer-events-auto"
               >
-                <div className="flex items-start justify-between pb-2 border-b border-slate-100">
+                <div className="flex items-start justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                   <div>
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider font-mono">
                       CATCHMENT RISK BASIN
                     </span>
                     <h3 className="text-sm font-bold text-slate-950 dark:text-slate-100 mt-0.5">
@@ -565,32 +560,45 @@ export function LiveCityPage() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Affected Area</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Affected Area</span>
                     <span className="font-bold text-slate-900 dark:text-slate-100">{selectedRiskZone.affectedArea}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Rainfall</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Rainfall</span>
                     <span className="font-bold text-slate-900 dark:text-slate-100">{selectedRiskZone.rainfall}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500 block">Drainage Load</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Drainage Load</span>
                     <span className="font-bold text-slate-900 dark:text-slate-100">{selectedRiskZone.drainageLoad}</span>
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => navigate("/incidents")}
+                  onClick={() => navigate("/action-center")}
                   className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                 >
-                  <span>View Incident Details</span>
+                  <span>Review Action Plan</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
+
+        {/* ========================================================================= */}
+        {/* ATMOSPHERIC WATER CONNECTOR TRANSITION (Map Data -> Incident Intel)       */}
+        {/* ========================================================================= */}
+        <div className="relative w-full -mt-2 -mb-2 pointer-events-none flex flex-col items-center">
+          <div className="w-full h-8 bg-gradient-to-b from-transparent via-cyan-500/[0.04] dark:via-cyan-400/[0.05] to-transparent" />
+          <div className="w-80 sm:w-[480px] h-6 rounded-full bg-cyan-500/[0.06] dark:bg-cyan-400/[0.08] blur-xl -mt-5" />
+        </div>
+
+        {/* ========================================================================= */}
+        {/* SECTION 5: LIVE INCIDENT INTELLIGENCE (Compact Real-time Incident Feed)    */}
+        {/* ========================================================================= */}
+        <LiveIncidentIntelligenceSection />
       </main>
 
       {/* ========================================================================= */}

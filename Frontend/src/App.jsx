@@ -15,8 +15,6 @@ import { LandingPage } from './components/landing/LandingPage'
 
 import { LiveCityPage } from './components/views/LiveCityPage'
 import { SubpageLayout } from './components/views/SubpageLayout'
-import { IncidentsView } from './components/views/IncidentsView'
-import { ForecastView } from './components/views/ForecastView'
 import { SimulateView } from './components/views/SimulateView'
 import { ReportsView } from './components/views/ReportsView'
 import { ActionsView } from './components/views/ActionsView'
@@ -129,24 +127,8 @@ function App() {
   }, [])
 
   const renderContent = () => {
-    if (currentRoute === '/live-city') {
+    if (currentRoute === '/live-city' || currentRoute === '/incidents' || currentRoute === '/forecast') {
       return <LiveCityPage />
-    }
-
-    if (currentRoute === '/incidents') {
-      return (
-        <SubpageLayout>
-          <IncidentsView />
-        </SubpageLayout>
-      )
-    }
-
-    if (currentRoute === '/forecast') {
-      return (
-        <SubpageLayout>
-          <ForecastView />
-        </SubpageLayout>
-      )
     }
 
     if (currentRoute === '/simulate') {

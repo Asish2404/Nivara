@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useKWIStore } from "../../store/useKWIStore";
 import { ArrowRight, CheckCircle2, ShieldAlert } from "lucide-react";
@@ -8,8 +8,16 @@ import { ACTIVE_INCIDENTS } from "../gis/kolkataCartographicData";
 
 
 export function IncidentsView() {
-  const { setSelectedIncident, navigate } = useKWIStore();
-  const [selectedId, setSelectedId] = useState(ACTIVE_INCIDENTS[0].id);
+  const { selectedIncident, setSelectedIncident, navigate } = useKWIStore();
+  const [selectedId, setSelectedId] = useState(
+    selectedIncident?.id || ACTIVE_INCIDENTS[0].id
+  );
+
+  useEffect(() => {
+    if (selectedIncident?.id) {
+      setSelectedId(selectedIncident.id);
+    }
+  }, [selectedIncident]);
 
   const activeIncident =
     ACTIVE_INCIDENTS.find((i) => i.id === selectedId) || ACTIVE_INCIDENTS[0];

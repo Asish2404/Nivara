@@ -99,6 +99,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
+  const incidentMarkerMapRef = useRef({});
   const wrapperRef = useRef(null);
 
   // Active Map Mode & Controls State
@@ -474,6 +475,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       // Remove previous markers
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
+      incidentMarkerMapRef.current = {};
 
       // 1. ACTIVE WATERLOGGING INCIDENTS
       if (activeLayers.incidents) {
@@ -482,21 +484,22 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
           const isCritical = inc.severity === "CRITICAL" || inc.severity === "HIGH";
 
           const el = document.createElement("div");
-          el.className = "cursor-pointer group relative flex items-center justify-center";
+          el.className = "cursor-pointer group relative flex items-center justify-center transition-transform duration-300 kwi-incident-marker";
           el.setAttribute("data-cursor", "incident");
+          el.setAttribute("data-incident-id", inc.id);
           el.setAttribute("title", `${inc.name}: ${inc.waterDepth}`);
           el.innerHTML = `
-            <div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">
+            <div class="kwi-incident-marker-body" style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
               <!-- Outer radar pulse ripple -->
-              <span style="position: absolute; inset: 0; border-radius: 9999px; background-color: ${isCritical ? "rgba(244, 63, 94, 0.75)" : "rgba(245, 158, 11, 0.7)"
+              <span class="kwi-incident-ripple" style="position: absolute; inset: 0; border-radius: 9999px; background-color: ${isCritical ? "rgba(244, 63, 94, 0.75)" : "rgba(245, 158, 11, 0.7)"
             }; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
               
               <!-- Center solid badge -->
-              <span style="position: relative; width: 15px; height: 15px; border-radius: 9999px; background-color: ${isCritical ? "#e11d48" : "#d97706"
-            }; border: 2.5px solid #ffffff; box-shadow: 0 0 12px rgba(0,0,0,0.6);"></span>
+              <span class="kwi-incident-dot" style="position: relative; width: 15px; height: 15px; border-radius: 9999px; background-color: ${isCritical ? "#e11d48" : "#d97706"
+            }; border: 2.5px solid #ffffff; box-shadow: 0 0 12px rgba(0,0,0,0.6); transition: all 0.3s ease;"></span>
               
               <!-- Floating Depth Tag -->
-              <div style="position: absolute; top: -20px; background: rgba(15,23,42,0.92); color: #ffffff; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 5px; white-space: nowrap; border: 1px solid rgba(255,255,255,0.25); font-family: monospace; letter-spacing: -0.02em; pointer-events: none; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
+              <div class="kwi-incident-tag" style="position: absolute; top: -20px; background: rgba(15,23,42,0.92); color: #ffffff; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 5px; white-space: nowrap; border: 1px solid rgba(255,255,255,0.25); font-family: monospace; letter-spacing: -0.02em; pointer-events: none; box-shadow: 0 2px 6px rgba(0,0,0,0.3); transition: all 0.25s ease;">
                 ${inc.waterDepth}
               </div>
             </div>
@@ -519,6 +522,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
             .addTo(map);
 
           markersRef.current.push(marker);
+          incidentMarkerMapRef.current[inc.id] = { marker, el, inc };
         });
       }
 
@@ -909,6 +913,23 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       }
     }
   }, [selectedIncident, selectedPumpStation, selectedRiskZone, selectedDistrict, is3DMode]);
+
+  // Synchronize Live Incident Intelligence Card Hover Highlight on Map Hotspot
+  useEffect(() => {
+    const hoveredId = store.hoveredIncidentId;
+    const mapObj = incidentMarkerMapRef.current;
+    if (!mapObj) return;
+
+    Object.entries(mapObj).forEach(([id, item]) => {
+      if (!item || !item.el) return;
+      const isHovered = hoveredId === id;
+      if (isHovered) {
+        item.el.classList.add("kwi-hotspot-hovered-active");
+      } else {
+        item.el.classList.remove("kwi-hotspot-hovered-active");
+      }
+    });
+  }, [store.hoveredIncidentId]);
 
   // Handle Zoom In / Out from Store or Controls
   const lastZoomTrigger = useRef(store.zoomTrigger);

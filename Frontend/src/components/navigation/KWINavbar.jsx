@@ -4,7 +4,6 @@ import {
   Home,
   Map,
   FileBarChart2,
-  Brain,
   TrendingUp,
   SlidersHorizontal,
   ShieldCheck,
@@ -94,18 +93,6 @@ export function KWINavbar() {
       dropdownItems: [
         { label: "Citizen Field Report", path: "/reports" },
         { label: "My Submitted Reports", path: "/my-reports" },
-      ],
-    },
-    {
-      key: "INTELLIGENCE",
-      label: "Intelligence",
-      icon: Brain,
-      path: "/incidents",
-      hasDropdown: true,
-      isActive: currentRoute.startsWith("/incidents"),
-      dropdownItems: [
-        { label: "Incident Response Grid", path: "/incidents" },
-        { label: "Live City Surveillance", path: "/live-city" },
       ],
     },
     {

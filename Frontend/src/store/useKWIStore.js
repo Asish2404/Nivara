@@ -8,8 +8,6 @@ const getInitialRoute = () => {
     const p = window.location.pathname
     if (
       p === '/live-city' ||
-      p === '/incidents' ||
-      p === '/forecast' ||
       p === '/simulate' ||
       p === '/reports' ||
       p === '/report' ||
@@ -33,16 +31,14 @@ const routeToSection = (path) => {
     case '/':
       return 'HOME'
     case '/live-city':
+    case '/incidents':
+    case '/forecast':
       return 'LIVE_MAP'
     case '/reports':
     case '/report':
       return 'REPORT'
     case '/my-reports':
       return 'MY_REPORTS'
-    case '/incidents':
-      return 'INTELLIGENCE'
-    case '/forecast':
-      return 'PREDICT'
     case '/simulate':
       return 'SIMULATE'
     case '/action-center':
@@ -222,15 +218,15 @@ export const useKWIStore = create((set, get) => ({
       LIVE_MAP: '/live-city',
       REPORT: '/reports',
       MY_REPORTS: '/my-reports',
-      INTELLIGENCE: '/incidents',
-      PREDICT: '/forecast',
       SIMULATE: '/simulate',
       RESPOND: '/action-center',
       LOGIN: '/login',
       // backward compatibility aliases
       CITY: '/live-city',
-      INCIDENTS: '/incidents',
-      FORECAST: '/forecast',
+      INCIDENTS: '/live-city',
+      FORECAST: '/live-city',
+      INTELLIGENCE: '/live-city',
+      PREDICT: '/live-city',
       REPORTS: '/reports',
       ACTIONS: '/action-center',
       AUTH: '/login',
@@ -287,6 +283,9 @@ export const useKWIStore = create((set, get) => ({
     })),
 
   // Interactive Selection State (Synchronized across application)
+  hoveredIncidentId: null,
+  setHoveredIncidentId: (id) => set({ hoveredIncidentId: id }),
+
   selectedIncident: null,
   setSelectedIncident: (incident) =>
     set({
