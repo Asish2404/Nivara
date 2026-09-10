@@ -35,6 +35,7 @@ import {
 import { useKWIStore } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
 import { MobileReportForm } from "../mobile/MobileReportForm";
+import SplitText from "../views/SplitText";
 
 // Ambient Floating Monsoon Water Droplets (Soft, Subtle, Organic)
 const CHASSIS_SLICES = Array.from({ length: 29 }, (_, i) => i - 14);
@@ -607,9 +608,20 @@ export function CitizenReportingSection() {
         <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-blue-600 font-mono block mb-2">
           CITIZEN REPORTING & AI VERIFICATION
         </span>
-        <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-950 tracking-tight leading-tight">
-          Report waterlogging in real time with instant AI verification and municipal dispatch.
-        </h2>
+        <SplitText
+          text="Report waterlogging in real time with instant AI verification and municipal dispatch."
+          className="text-2xl sm:text-4xl font-extrabold text-slate-950 tracking-tight leading-tight"
+          delay={50}
+          duration={1.25}
+          ease="power3.out"
+          splitType="words"
+          from={{ opacity: 0, y: 40 }}
+          to={{ opacity: 1, y: 0 }}
+          threshold={0.1}
+          rootMargin="-100px"
+          textAlign="center"
+          tag="h2"
+        />
       </div>
 
       {/* ================================================================ */}

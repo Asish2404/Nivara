@@ -86,10 +86,10 @@ export function MobileReportForm({ onBackToStep1 }) {
 
   // Detect whether coordinates fall outside Greater Kolkata basin
   const isOutsideKolkata =
-    reportCoords.lat < 22.2 ||
-    reportCoords.lat > 22.9 ||
-    reportCoords.lon < 88.1 ||
-    reportCoords.lon > 88.7
+    reportCoords.lat < 21.4833 ||
+    reportCoords.lat > 23.2506 ||
+    reportCoords.lon < 87.8333 ||
+    reportCoords.lon > 89.0833
 
   const handleSearchLocation = async (query) => {
     setLocationSearchQuery(query)
@@ -742,11 +742,10 @@ export function MobileReportForm({ onBackToStep1 }) {
                         setReportDepth(card.depth)
                         audioEngine.playUiChirp(1000)
                       }}
-                      className={`w-full py-2 px-3.5 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-                        isSelected
-                          ? 'border-[#1d63a8] bg-[#f0f6fc] text-slate-900 shadow-2xs font-semibold'
-                          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                      }`}
+                      className={`w-full py-2 px-3.5 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${isSelected
+                        ? 'border-[#1d63a8] bg-[#f0f6fc] text-slate-900 shadow-2xs font-semibold'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                        }`}
                     >
                       <span className="text-[12px] font-bold text-slate-900">
                         {card.depth}
@@ -864,13 +863,12 @@ export function MobileReportForm({ onBackToStep1 }) {
                       startVoiceRecording()
                     }
                   }}
-                  className={`w-18 h-18 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg active:scale-95 relative z-10 ${
-                    isListening
-                      ? 'bg-rose-600 text-white ring-4 ring-rose-300/60 shadow-rose-500/30'
-                      : hasVoiceRecorded
+                  className={`w-18 h-18 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg active:scale-95 relative z-10 ${isListening
+                    ? 'bg-rose-600 text-white ring-4 ring-rose-300/60 shadow-rose-500/30'
+                    : hasVoiceRecorded
                       ? 'bg-[#1d63a8] text-white hover:bg-[#155696] ring-4 ring-blue-200/60 shadow-blue-500/30'
                       : 'bg-[#1d63a8] text-white hover:bg-[#155696] shadow-blue-500/30'
-                  }`}
+                    }`}
                   title={isListening ? 'Tap to Stop' : 'Tap to Record'}
                 >
                   {isListening ? (
@@ -891,19 +889,18 @@ export function MobileReportForm({ onBackToStep1 }) {
                   (h, i) => (
                     <span
                       key={i}
-                      className={`w-1 rounded-full transition-all duration-150 ${
-                        isListening
-                          ? 'bg-rose-500 animate-pulse'
-                          : hasVoiceRecorded
+                      className={`w-1 rounded-full transition-all duration-150 ${isListening
+                        ? 'bg-rose-500 animate-pulse'
+                        : hasVoiceRecorded
                           ? 'bg-[#1d63a8]'
                           : 'bg-slate-300'
-                      }`}
+                        }`}
                       style={{
                         height: isListening
                           ? `${Math.max(6, (h * (0.4 + (i % 5) * 0.15)))}px`
                           : hasVoiceRecorded
-                          ? `${Math.max(6, h * 0.35)}px`
-                          : '4px',
+                            ? `${Math.max(6, h * 0.35)}px`
+                            : '4px',
                       }}
                     />
                   )
@@ -941,11 +938,10 @@ export function MobileReportForm({ onBackToStep1 }) {
                 audioEngine.playUiChirp(1200)
                 setStep(3) // Advance directly to Confirm Location
               }}
-              className={`w-full h-11 rounded-2xl font-bold text-[13px] transition-all shadow-xs cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98] ${
-                reportDescription
-                  ? 'bg-[#1d63a8] hover:bg-[#155696] text-white'
-                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-              }`}
+              className={`w-full h-11 rounded-2xl font-bold text-[13px] transition-all shadow-xs cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98] ${reportDescription
+                ? 'bg-[#1d63a8] hover:bg-[#155696] text-white'
+                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                }`}
             >
               <span>Use This Voice Note & Proceed</span>
               <ArrowRight className="w-4 h-4" />
@@ -1132,11 +1128,10 @@ export function MobileReportForm({ onBackToStep1 }) {
                           key={preset.name}
                           type="button"
                           onClick={() => handleSelectPreset(preset)}
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-medium transition-all cursor-pointer ${
-                            isSelected
-                              ? 'bg-[#1d63a8] text-white font-bold shadow-2xs'
-                              : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                          }`}
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-medium transition-all cursor-pointer ${isSelected
+                            ? 'bg-[#1d63a8] text-white font-bold shadow-2xs'
+                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                            }`}
                         >
                           {preset.name}
                         </button>
