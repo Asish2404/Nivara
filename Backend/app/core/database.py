@@ -40,8 +40,8 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 # 5. Startup table initializer with safe schema migration for SQLite
 async def init_db() -> None:
-    # Import models so Base.metadata knows about users, admin, and reports
-    from ..models import User, Admin, Report  # noqa: F401
+    # Import models so Base.metadata knows about users, admin, reports, and waterlogging predictions
+    from app.models import User, Admin, Report, WaterloggingPrediction  # noqa: F401
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

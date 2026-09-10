@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from contextlib import asynccontextmanager
 import os
 from fastapi import FastAPI
@@ -9,17 +11,49 @@ from .core.database import init_db, async_session
 from .api.v1.api import api_router
 from .services.auth_service import AuthService
 from .services.report_service import UPLOAD_DIR
+from .services.waterlogging_service import WaterloggingService
+
+logger = logging.getLogger("app.main")
+
+
+async def run_periodic_prediction_scheduler(interval_hours: int = 8):
+    """Background task executing the waterlogging prediction cycle periodically every 8 hours."""
+    # Brief initial pause to let the server finish startup before first run
+    try:
+        await asyncio.sleep(2.0)
+        async with async_session() as db:
+            await WaterloggingService.run_prediction_cycle(db=db, force_weather_refresh=False)
+    except asyncio.CancelledError:
+        return
+    except Exception as exc:
+        logger.warning("Initial background waterlogging cycle notice: %s", exc)
+
+    while True:
+        try:
+            await asyncio.sleep(interval_hours * 3600)
+            async with async_session() as db:
+                await WaterloggingService.run_prediction_cycle(db=db, force_weather_refresh=True)
+        except asyncio.CancelledError:
+            break
+        except Exception as exc:
+            logger.error("Periodic waterlogging prediction error: %s", exc)
+            await asyncio.sleep(60)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Create tables
     await init_db()
-    # Auto-seeding disabled to respect clean tables
-    # async with async_session() as db:
-    #     await AuthService.seed_default_users(db)
+
+    # Start 8-hour background prediction scheduler
+    scheduler_task = asyncio.create_task(run_periodic_prediction_scheduler(interval_hours=8))
     yield
-    # Shutdown logic (if any)
+    # Shutdown logic: cancel background task cleanly
+    scheduler_task.cancel()
+    try:
+        await scheduler_task
+    except asyncio.CancelledError:
+        pass
 
 
 app = FastAPI(
@@ -67,5 +101,10 @@ async def root():
             "login": f"{settings.API_V1_STR}/auth/login",
             "signup": f"{settings.API_V1_STR}/auth/signup",
             "profile": f"{settings.API_V1_STR}/auth/me",
+        },
+        "waterlogging_endpoints": {
+            "predictions": f"{settings.API_V1_STR}/waterlogging/predictions",
+            "summary": f"{settings.API_V1_STR}/waterlogging/summary",
+            "refresh": f"{settings.API_V1_STR}/waterlogging/refresh",
         },
     }
