@@ -502,24 +502,24 @@ export function LandingPage() {
             {/* MoltenMetal Animated Background Layer */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
               <MoltenMetal
-                color1="#061bc4"
-                color2="#d0c5cf"
-                color3="#FFFFFF"
-                speed={0.35}
-                scale={4}
-                detail={3}
-                glow={1.6}
-                coreSize={0.1}
-                swirl={1}
-                fold={-0.2}
-                blackPoint={0.05}
-                brightness={1.3}
+                color1="#071ee0"
+                color2="#a9a0a9"
+                color3="#e6e2eb"
+                speed={1.15}
+                scale={4.4}
+                detail={4}
+                glow={1.8}
+                coreSize={0.12}
+                swirl={1.05}
+                fold={-0.21}
+                blackPoint={0.04}
+                brightness={1.5}
                 colorMode="molten"
                 grain
-                grainIntensity={0.05}
+                grainIntensity={0.03}
                 mouseInteraction
-                mouseStrength={0.3}
-                opacity={1}
+                mouseStrength={0.25}
+                opacity={0.6}
               />
             </div>
 
@@ -561,25 +561,6 @@ export function LandingPage() {
 
                     {/* Individual Impact Chart Graphic */}
                     <div>{stat.chart}</div>
-
-                    {/* Sequential Data Signal Connector (Visible on Large Screens between items) */}
-                    {idx < IMPACT_STATS.length - 1 && (
-                      <div className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
-                        <div className="w-6 h-[2px] bg-cyan-200/80 relative overflow-hidden rounded-full">
-                          <motion.div
-                            initial={{ x: "-100%" }}
-                            animate={{ x: "100%" }}
-                            transition={{
-                              repeat: Infinity,
-                              duration: 1.8,
-                              ease: "linear",
-                              delay: idx * 0.4,
-                            }}
-                            className="w-3 h-full bg-cyan-600 rounded-full"
-                          />
-                        </div>
-                      </div>
-                    )}
                   </motion.div>
                 ))}
               </div>

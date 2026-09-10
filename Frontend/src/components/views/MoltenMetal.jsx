@@ -1,13 +1,13 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Renderer, Program, Mesh, Triangle } from 'ogl';
 
-const hexToRgb = (hex) => {
+const hexToRgb = hex => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) return [1, 1, 1];
   return [parseInt(result[1], 16) / 255, parseInt(result[2], 16) / 255, parseInt(result[3], 16) / 255];
 };
 
-const colorModeToFloat = (mode) => (mode === 'ember' ? 1 : mode === 'frost' ? 2 : 0);
+const colorModeToFloat = mode => (mode === 'ember' ? 1 : mode === 'frost' ? 2 : 0);
 
 const vertex = `#version 300 es
 in vec2 position;
@@ -120,9 +120,9 @@ void main() {
 
 const ctxMap = new WeakMap();
 
-export function MoltenMetal({
-  color1 = '#061bc4',
-  color2 = '#d0c5cf',
+const MoltenMetal = ({
+  color1 = '#5227FF',
+  color2 = '#FF9FFC',
   color3 = '#FFFFFF',
   speed = 0.35,
   scale = 4,
@@ -142,26 +142,20 @@ export function MoltenMetal({
   backgroundColor = '#FFFFFF',
   lightMode = false,
   className = ''
-}) {
+}) => {
   const containerRef = useRef(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    let renderer;
-    try {
-      renderer = new Renderer({
-        webgl: 2,
-        alpha: true,
-        premultipliedAlpha: true,
-        antialias: false,
-        dpr: Math.min(window.devicePixelRatio || 1, 2)
-      });
-    } catch (e) {
-      console.warn("WebGL2 renderer failed for MoltenMetal", e);
-      return;
-    }
+    const renderer = new Renderer({
+      webgl: 2,
+      alpha: true,
+      premultipliedAlpha: true,
+      antialias: false,
+      dpr: Math.min(window.devicePixelRatio || 1, 2)
+    });
 
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 0);
@@ -223,7 +217,7 @@ export function MoltenMetal({
     const targetMouse = [0.5, 0.5];
     const currentMouse = [0.5, 0.5];
 
-    const handleMouseMove = (e) => {
+    const handleMouseMove = e => {
       const rect = canvas.getBoundingClientRect();
       targetMouse[0] = (e.clientX - rect.left) / rect.width;
       targetMouse[1] = 1.0 - (e.clientY - rect.top) / rect.height;
@@ -240,13 +234,12 @@ export function MoltenMetal({
     let isPageVisible = !document.hidden;
     const t0 = performance.now();
 
-    const loop = (t) => {
+    const loop = t => {
       program.uniforms.iTime.value = (t - t0) * 0.001;
       currentMouse[0] += 0.05 * (targetMouse[0] - currentMouse[0]);
       currentMouse[1] += 0.05 * (targetMouse[1] - currentMouse[1]);
-      const m = program.uniforms.uMouse.value;
-      m[0] = currentMouse[0];
-      m[1] = currentMouse[1];
+      program.uniforms.uMouse.value[0] = currentMouse[0];
+      program.uniforms.uMouse.value[1] = currentMouse[1];
       renderer.render({ scene: mesh });
       raf = requestAnimationFrame(loop);
     };
@@ -313,6 +306,7 @@ export function MoltenMetal({
     u.uOpacity.value = opacity;
     u.uMouseStrength.value = mouseStrength;
     u.uEnableMouse.value = mouseInteraction;
+    u.uLightMode.value = lightMode;
     const c1 = hexToRgb(color1);
     const c2 = hexToRgb(color2);
     const c3 = hexToRgb(color3);
@@ -356,6 +350,6 @@ export function MoltenMetal({
   ]);
 
   return <div ref={containerRef} className={`relative h-full w-full overflow-hidden ${className}`.trim()} />;
-}
+};
 
 export default MoltenMetal;
