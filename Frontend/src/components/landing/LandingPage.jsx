@@ -14,7 +14,7 @@ import { KolkataGisMap } from "../gis/KolkataGisMap";
 import { BorderBeam } from "../ui/BorderBeam";
 import { CardSpotlight } from "../ui/CardSpotlight";
 import Footer from "../Footer";
-import { useKWIStore } from "../../store/useKWIStore";
+import { useKWIStore, isUserAdmin } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
 import { CitizenReportingSection } from "./CitizenReportingSection";
 import { KolkataDecorativeLayer } from "./KolkataDecorativeLayer";
@@ -200,8 +200,11 @@ const STEP_TELEMETRY = [
 export function LandingPage() {
   const {
     navigate,
+    currentUser,
     setSelectedIncident,
   } = useKWIStore();
+  const isAdmin = isUserAdmin(currentUser);
+  const isCitizenUser = Boolean(currentUser && !isAdmin);
   const [isSectionVisible, setIsSectionVisible] = useState(false);
   const [simActive, setSimActive] = useState(false);
   const howItWorksRef = useRef(null);
@@ -351,11 +354,15 @@ export function LandingPage() {
               type="button"
               onClick={() => {
                 audioEngine.playUiChirp(1100);
-                navigate("/live-city");
+                if (isCitizenUser) {
+                  navigate("/reports");
+                } else {
+                  navigate("/live-city");
+                }
               }}
               className="px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-700 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold text-sm shadow-[0_4px_20px_rgba(6,182,212,0.36)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2"
             >
-              <span>Explore Live City</span>
+              <span>{isCitizenUser ? "Report an Issue" : "Explore Live City"}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <button

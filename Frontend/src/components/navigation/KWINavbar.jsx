@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
   Map,
-  FileBarChart2,
+  FileText,
+  ClipboardList,
   TrendingUp,
   SlidersHorizontal,
   ShieldCheck,
-  ChevronDown,
   Sparkles,
   Menu,
   X,
@@ -23,8 +23,6 @@ export function KWINavbar() {
   const [systemPref, setSystemPref] = useState(() =>
     typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches
   );
-  const [activeDropdown, setActiveDropdown] = useState(null);
-  const dropdownTimeoutRef = useRef(null);
 
   // Keep OS preference in sync so 'system' themes follow hardware live
   useEffect(() => {
@@ -46,7 +44,6 @@ export function KWINavbar() {
   const handleNavClick = (path) => {
     audioEngine.playUiChirp(920);
     setMobileMenuOpen(false);
-    setActiveDropdown(null);
 
     if (!currentUser && path !== "/") {
       navigate("/signup");
@@ -59,23 +56,10 @@ export function KWINavbar() {
     }
   };
 
-  const handleMouseEnter = (key) => {
-    if (dropdownTimeoutRef.current) {
-      clearTimeout(dropdownTimeoutRef.current);
-    }
-    setActiveDropdown(key);
-  };
-
-  const handleMouseLeave = () => {
-    dropdownTimeoutRef.current = setTimeout(() => {
-      setActiveDropdown(null);
-    }, 200);
-  };
-
   const isAdmin = isUserAdmin(currentUser);
 
   // Configure navigation items strictly according to authenticated role:
-  // - User: Home, Reports, Profile
+  // - User: Home, Field Report, My Reports
   // - Admin: Home, Live Map, Simulate, Respond (+ Profile section on right)
   // - Not logged in: Home + preview items (redirects unauthenticated clicks to signup)
   let NAV_ITEMS = [];
@@ -113,7 +97,7 @@ export function KWINavbar() {
         },
       ];
     } else {
-      // Regular User (Citizen): Home, Reports, Profile
+      // Regular User (Citizen): Home, Field Report, My Reports
       NAV_ITEMS = [
         {
           key: "HOME",
@@ -123,23 +107,25 @@ export function KWINavbar() {
           isActive: currentRoute === "/",
         },
         {
-          key: "REPORTS",
-          label: "Reports",
-          icon: FileBarChart2,
+          key: "FIELD_REPORT",
+          label: "Field Report",
+          icon: FileText,
           path: "/reports",
-          hasDropdown: true,
           isActive:
-            currentRoute.startsWith("/reports") ||
-            currentRoute.startsWith("/my-reports"),
-          dropdownItems: [
-            { label: "Citizen Field Report", path: "/reports" },
-            { label: "My Submitted Reports", path: "/my-reports" },
-          ],
+            currentRoute === "/reports" ||
+            currentRoute === "/report",
+        },
+        {
+          key: "MY_REPORTS",
+          label: "My Reports",
+          icon: ClipboardList,
+          path: "/my-reports",
+          isActive: currentRoute.startsWith("/my-reports"),
         },
       ];
     }
   } else {
-    // Visitor (Not logged in)
+    // Visitor (Not logged in) - Clean overview without user-only reporting buttons
     NAV_ITEMS = [
       {
         key: "HOME",
@@ -154,20 +140,6 @@ export function KWINavbar() {
         icon: Map,
         path: "/live-city",
         isActive: currentRoute.startsWith("/live-city"),
-      },
-      {
-        key: "REPORTS",
-        label: "Reports",
-        icon: FileBarChart2,
-        path: "/reports",
-        hasDropdown: true,
-        isActive:
-          currentRoute.startsWith("/reports") ||
-          currentRoute.startsWith("/my-reports"),
-        dropdownItems: [
-          { label: "Citizen Field Report", path: "/reports" },
-          { label: "My Submitted Reports", path: "/my-reports" },
-        ],
       },
       {
         key: "SIMULATE",
@@ -275,110 +247,60 @@ export function KWINavbar() {
             </div>
 
             {/* ================================================= */}
-            {/* CENTER NAVIGATION (Stacked Liquid Glass Tabs)     */}
+            {/* CENTER NAVIGATION (Spacious Glass Tabs)           */}
             {/* ================================================= */}
-            <nav className="hidden lg:flex items-center gap-1.5 xl:gap-2">
+            <nav className={`hidden lg:flex items-center ${!isAdmin && currentUser
+              ? "gap-7 xl:gap-11 2xl:gap-14"
+              : "gap-3.5 xl:gap-5 2xl:gap-7"
+              }`}>
               {NAV_ITEMS.map((item) => {
                 const isItemActive = item.isActive;
+                const isUserLayout = !isAdmin && currentUser;
                 return (
-                  <div
+                  <button
                     key={item.key}
-                    className="relative"
-                    onMouseEnter={() =>
-                      item.hasDropdown && handleMouseEnter(item.key)
-                    }
-                    onMouseLeave={() =>
-                      item.hasDropdown && handleMouseLeave()
-                    }
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleNavClick(item.path)}
-                      className={`relative px-3.5 py-1.5 rounded-2xl flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${isItemActive
+                    type="button"
+                    onClick={() => handleNavClick(item.path)}
+                    className={`relative rounded-2xl flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${isUserLayout
+                      ? "px-5 py-2 xl:px-6 xl:py-2.5 min-w-[76px] xl:min-w-[88px]"
+                      : "px-4 py-1.5 xl:px-4.5 xl:py-2 min-w-[68px] xl:min-w-[74px]"
+                      } ${isItemActive
                         ? isDarkMode
-                          ? "bg-gradient-to-b from-blue-950/80 to-indigo-950/70 border border-blue-500/40 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)] min-w-[62px]"
-                          : "bg-gradient-to-b from-[#f0f6ff] to-[#e6f0ff] border border-blue-200/90 shadow-xs text-blue-600 min-w-[62px]"
+                          ? "bg-gradient-to-b from-blue-950/80 to-indigo-950/70 border border-blue-500/40 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                          : "bg-gradient-to-b from-[#f0f6ff] to-[#e6f0ff] border border-blue-200/90 shadow-xs text-blue-600"
                         : isDarkMode
-                          ? "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent min-w-[56px] group"
-                          : "text-slate-500 hover:text-slate-900 hover:bg-slate-50/90 border border-transparent min-w-[56px] group"
+                          ? "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent group"
+                          : "text-slate-500 hover:text-slate-900 hover:bg-slate-50/90 border border-transparent group"
+                      }`}
+                  >
+                    <item.icon
+                      className={`w-4 h-4 mb-0.5 transition-colors ${isItemActive
+                        ? isDarkMode
+                          ? "text-cyan-400"
+                          : "text-blue-600"
+                        : isDarkMode
+                          ? "text-slate-400 group-hover:text-white"
+                          : "text-slate-500 group-hover:text-slate-800"
+                        }`}
+                    />
+                    <span
+                      className={`text-[11.5px] xl:text-[12px] leading-none whitespace-nowrap transition-colors ${isItemActive
+                        ? isDarkMode
+                          ? "font-semibold text-cyan-300"
+                          : "font-semibold text-blue-700"
+                        : isDarkMode
+                          ? "font-medium text-slate-300 group-hover:text-white"
+                          : "font-medium text-slate-600 group-hover:text-slate-900"
                         }`}
                     >
-                      <item.icon
-                        className={`w-4 h-4 mb-0.5 transition-colors ${isItemActive
-                          ? isDarkMode
-                            ? "text-cyan-400"
-                            : "text-blue-600"
-                          : isDarkMode
-                            ? "text-slate-400 group-hover:text-white"
-                            : "text-slate-500 group-hover:text-slate-800"
-                          }`}
-                      />
-                      <div className="flex items-center gap-0.5">
-                        <span
-                          className={`text-[11px] leading-none transition-colors ${isItemActive
-                            ? isDarkMode
-                              ? "font-semibold text-cyan-300"
-                              : "font-semibold text-blue-700"
-                            : isDarkMode
-                              ? "font-medium text-slate-300 group-hover:text-white"
-                              : "font-medium text-slate-600 group-hover:text-slate-900"
-                            }`}
-                        >
-                          {item.label}
-                        </span>
-                        {item.hasDropdown && (
-                          <ChevronDown
-                            className={`w-3 h-3 transition-colors ${isItemActive
-                              ? isDarkMode
-                                ? "text-cyan-400"
-                                : "text-blue-500"
-                              : isDarkMode
-                                ? "text-slate-500 group-hover:text-slate-300"
-                                : "text-slate-400 group-hover:text-slate-600"
-                              }`}
-                          />
-                        )}
-                      </div>
+                      {item.label}
+                    </span>
 
-                      {/* Glowing Indicator Dot on Active Tab */}
-                      {isItemActive && (
-                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
-                      )}
-                    </button>
-
-                    {/* Dropdown Menu for Reports and Intelligence */}
-                    {item.hasDropdown && activeDropdown === item.key && (
-                      <AnimatePresence>
-                        <motion.div
-                          initial={{ opacity: 0, y: 6, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 4, scale: 0.95 }}
-                          transition={{ duration: 0.15 }}
-                          className={`absolute top-full mt-2 left-1/2 -translate-x-1/2 min-w-[190px] rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.18)] p-1.5 z-50 flex flex-col gap-0.5 backdrop-blur-2xl pointer-events-auto ${isDarkMode
-                            ? "bg-slate-900/95 border border-white/10 text-slate-200"
-                            : "bg-white/95 border border-slate-100 text-slate-700"
-                            }`}
-                        >
-                          {item.dropdownItems.map((drop) => (
-                            <button
-                              key={drop.path}
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleNavClick(drop.path);
-                              }}
-                              className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer ${isDarkMode
-                                ? "hover:text-cyan-400 hover:bg-white/5"
-                                : "hover:text-blue-600 hover:bg-blue-50/80"
-                                }`}
-                            >
-                              {drop.label}
-                            </button>
-                          ))}
-                        </motion.div>
-                      </AnimatePresence>
+                    {/* Glowing Indicator Dot on Active Tab */}
+                    {isItemActive && (
+                      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
                     )}
-                  </div>
+                  </button>
                 );
               })}
             </nav>
