@@ -23,10 +23,10 @@ import AIUnleashedAuth from './components/auth/AIUnleashedAuth'
 import { useKWIStore } from './store/useKWIStore'
 import './App.css'
 
-function EarthScene({ zoomStarted, earthRef, controlsRef, onZoomComplete }) {
+function EarthScene({ zoomStarted, earthRef, controlsRef, onCloudEntry, onVideoReveal, onZoomComplete }) {
   return (
     <Canvas
-      camera={{ position: [0, 0.05, 6.6], fov: 35 }}
+      camera={{ position: [0, 0.05, 7.8], fov: 35 }}
       dpr={[1, 2]}
       gl={{ antialias: true, powerPreference: 'high-performance' }}
       onCreated={({ gl }) => {
@@ -50,6 +50,8 @@ function EarthScene({ zoomStarted, earthRef, controlsRef, onZoomComplete }) {
         active={zoomStarted}
         controls={controlsRef}
         earth={earthRef}
+        onCloudEntry={onCloudEntry}
+        onVideoReveal={onVideoReveal}
         onComplete={onZoomComplete}
       />
       <EarthCamera controlsRef={controlsRef} explored={zoomStarted} />
@@ -83,13 +85,47 @@ function App() {
     return () => mq.removeEventListener('change', resolveAndApply)
   }, [theme])
 
-  // Stages for Landing ('/'): 'orbit' (0-5s) -> 'zooming' -> 'black_screen' -> 'landing_page'
+  // Stages for Landing ('/'): 'orbit' -> 'zooming' -> 'video_active' -> 'landing_page'
   const isDirectLanding = currentRoute === '/'
   const [stage, setStage] = useState(isDirectLanding ? 'orbit' : 'landing_page')
+  const [cloudsClass, setCloudsClass] = useState('')
+  const [videoClass, setVideoClass] = useState('')
   const [blackOverlay, setBlackOverlay] = useState(false)
 
   const earthRef = useRef()
   const controlsRef = useRef()
+  const videoRef = useRef(null)
+
+  // Guarantee video element starts playing immediately and silently
+  useEffect(() => {
+    const video = videoRef.current
+    if (video) {
+      video.muted = true
+      video.defaultMuted = true
+      video.playsInline = true
+      const startPlayback = () => {
+        video.play().catch(() => { })
+      }
+      startPlayback()
+      video.addEventListener('loadeddata', startPlayback)
+      video.addEventListener('canplay', startPlayback)
+
+      const handleUserTouch = () => {
+        video.play().catch(() => { })
+        window.removeEventListener('click', handleUserTouch)
+        window.removeEventListener('touchstart', handleUserTouch)
+      }
+      window.addEventListener('click', handleUserTouch)
+      window.addEventListener('touchstart', handleUserTouch)
+
+      return () => {
+        video.removeEventListener('loadeddata', startPlayback)
+        video.removeEventListener('canplay', startPlayback)
+        window.removeEventListener('click', handleUserTouch)
+        window.removeEventListener('touchstart', handleUserTouch)
+      }
+    }
+  }, [])
 
   // Handle browser back/forward navigation
   useEffect(() => {
@@ -109,19 +145,74 @@ function App() {
     }
   }, [currentRoute])
 
-  // 1. 0s to 5s of clean Earth rotation, then zoom to India (only on initial landing route '/')
+  // 1. Initial Earth rotation phase (0-4.5s), then initiate continuous forward zoom
   useEffect(() => {
     if (currentRoute !== '/' || stage !== 'orbit') return
 
     const timer = setTimeout(() => {
       setStage('zooming')
-    }, 5000)
+    }, 4500)
 
     return () => clearTimeout(timer)
   }, [stage, currentRoute])
 
-  // 2. When zoom into India completes, trigger -> Kolkata
+  // 2. Atmospheric clouds envelope Earth: cue and start video from second 0
+  const handleCloudEntry = useCallback(() => {
+    setCloudsClass('active')
+    const video = videoRef.current
+    if (video) {
+      video.muted = true
+      video.currentTime = 0
+      video.play().catch(() => { })
+    }
+  }, [])
+
+  // 3. Kolkata cloudy video reveals seamlessly beneath clouds
+  const handleVideoReveal = useCallback(() => {
+    setVideoClass('active')
+    setCloudsClass('fading')
+    const video = videoRef.current
+    if (video) {
+      if (video.paused) {
+        video.currentTime = 0
+        video.play().catch(() => { })
+      }
+    }
+  }, [])
+
+  // 4. When 3D camera reaches cloud canopy, video is fully active
   const handleZoomComplete = useCallback(() => {
+    setStage('video_active')
+    setVideoClass('active')
+    setCloudsClass('fading')
+    const video = videoRef.current
+    if (video && video.paused) {
+      video.play().catch(() => { })
+    }
+  }, [])
+
+  // 5. In 'video_active' stage, let Kolkata footage play before transitioning to Landing Page
+  useEffect(() => {
+    if (stage !== 'video_active') return
+
+    const video = videoRef.current
+    if (video && video.paused) {
+      video.play().catch(() => { })
+    }
+
+    const timer = setTimeout(() => {
+      setBlackOverlay(true)
+      setTimeout(() => {
+        setStage('landing_page')
+        setBlackOverlay(false)
+      }, 450)
+    }, 4000)
+
+    return () => clearTimeout(timer)
+  }, [stage])
+
+  // 6. Direct skip / access handler
+  const handleSkipToLanding = useCallback(() => {
     setStage('landing_page')
     setBlackOverlay(false)
   }, [])
@@ -176,20 +267,45 @@ function App() {
           aria-hidden="true"
         />
 
-        {/* Intro Phase (0-10s): 3D Earth in Space with Edolus-style HUD */}
+        {/* Intro Loading Sequence (3D Earth -> Continuous Zoom -> Cloudy Kolkata Video) */}
         {stage !== 'landing_page' && (
           <>
+            {/* 1. 3D Earth in Space */}
             <main className="earth-experiment" aria-label="3D Earth Intro">
               <EarthScene
-                zoomStarted={stage === 'zooming' || stage === 'black_screen'}
+                zoomStarted={stage === 'zooming' || stage === 'video_active'}
                 earthRef={earthRef}
                 controlsRef={controlsRef}
+                onCloudEntry={handleCloudEntry}
+                onVideoReveal={handleVideoReveal}
                 onZoomComplete={handleZoomComplete}
               />
             </main>
+
+            {/* 2. Atmospheric Clouds & Haze Transition Overlay */}
+            <div className={`atmospheric-haze-layer ${cloudsClass}`} aria-hidden="true">
+              <div className="atmospheric-glow-radial" />
+              <div className="atmospheric-cloud-drift" />
+            </div>
+
+            {/* 3. Existing Kolkata Cloudy Video Layer (loadingvid.mp4) */}
+            <div className="kolkata-video-layer" aria-hidden="true">
+              <video
+                ref={videoRef}
+                src="/assets/loadingvid.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                className={`kolkata-loading-video ${videoClass}`}
+              />
+            </div>
+
+            {/* 4. Tactical HUD Telemetry */}
             <TacticalHudOverlay
               stage={stage}
-              onSkip={handleZoomComplete}
+              onSkip={handleSkipToLanding}
             />
           </>
         )}
@@ -212,3 +328,4 @@ function App() {
 }
 
 export default App
+

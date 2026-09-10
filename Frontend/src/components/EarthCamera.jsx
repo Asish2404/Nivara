@@ -12,8 +12,9 @@ export function EarthCamera({ controlsRef, explored }) {
       autoRotateSpeed={0.21}
       rotateSpeed={0.32}
       zoomSpeed={0.55}
-      minDistance={3.25}
-      maxDistance={10}
+      minDistance={2.0}
+      maxDistance={14}
+      enabled={!explored}
     />
   )
 }

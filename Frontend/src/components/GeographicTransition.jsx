@@ -1,119 +1,126 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import { EARTH_RADIUS, INDIA_TARGET, latitudeLongitudeToVector3 } from './geoCoordinates'
+import { EARTH_RADIUS, KOLKATA_TARGET, latitudeLongitudeToVector3 } from './geoCoordinates'
 
-// Smooth cinematic easing: slow start, controlled middle, gentle end
-function smoothCinematicEase(t) {
-  // Smooth step function: 3t^2 - 2t^3 (smoother than cubic)
-  if (t < 0.5) {
-    // First half: ease-in-out quad
-    return 2 * t * t
-  } else {
-    // Second half: ease-in-out quad reversed
-    return 1 - 2 * (1 - t) * (1 - t)
-  }
-}
+const TRANSITION_DURATION = 4.8 // seconds
+const INITIAL_DISTANCE = 7.8 // Starting camera distance
+const FINAL_SURFACE_DISTANCE = EARTH_RADIUS + 0.42 // ~2.47 (cloud canopy level above Kolkata)
 
-const TRANSITION_DURATION = 5.0 // seconds
-const INITIAL_DISTANCE = 6.6 // Starting camera distance (approximately)
-const TARGET_DISTANCE = EARTH_RADIUS + 1.15 // Camera distance when viewing India (closer than Earth view)
-const EARTH_AUTO_ROTATE_SPEED = 0.21 // Match EarthCamera autoRotateSpeed
-
-export function GeographicTransition({ active, controls, earth, onComplete }) {
+export function GeographicTransition({ active, controls, earth, onCloudEntry, onVideoReveal, onComplete }) {
   const { camera } = useThree()
   const transitionState = useRef({
     isActive: false,
     startTime: 0,
     duration: TRANSITION_DURATION,
     initialCameraPosition: new THREE.Vector3(),
-    initialCameraTarget: new THREE.Vector3(),
-    initialEarthQuaternion: new THREE.Quaternion(),
-    indiaSurfacePosition: new THREE.Vector3(),
-    indiaCameraPosition: new THREE.Vector3(),
+    kolkataDirection: new THREE.Vector3(),
+    startDirection: new THREE.Vector3(),
+    initialDistance: INITIAL_DISTANCE,
+    rotAxis: new THREE.Vector3(),
+    totalAngle: 0,
+    triggeredClouds: false,
+    triggeredVideo: false,
   })
 
-  // Initialize transition on first frame when active becomes true
+  // Initialize transition when active becomes true
   useEffect(() => {
     if (!active || transitionState.current.isActive) return
-    if (!earth.current || !controls.current) return
+    if (!earth.current) return
 
     const state = transitionState.current
     state.isActive = true
-    state.startTime = performance.now() / 1000 // Convert to seconds
+    state.startTime = performance.now() / 1000
+    state.triggeredClouds = false
+    state.triggeredVideo = false
 
-    // Store initial state
+    // Capture initial camera and distance
     state.initialCameraPosition.copy(camera.position)
-    state.initialCameraTarget.copy(controls.current.target)
-    state.initialEarthQuaternion.copy(earth.current.quaternion)
+    state.initialDistance = camera.position.length() || INITIAL_DISTANCE
 
-    // Calculate India's surface position in world space
-    const indiaLocal = latitudeLongitudeToVector3(INDIA_TARGET)
-    state.indiaSurfacePosition.copy(indiaLocal).applyQuaternion(earth.current.quaternion)
+    // Calculate Kolkata surface position in world space
+    const kolkataLocal = latitudeLongitudeToVector3(KOLKATA_TARGET, EARTH_RADIUS)
+    const kolkataWorld = kolkataLocal.clone().applyQuaternion(earth.current.quaternion)
 
-    // Calculate camera position for India view
-    // Camera should be positioned along the direction toward India, at the target distance
-    state.indiaCameraPosition
-      .copy(state.indiaSurfacePosition)
-      .normalize()
-      .multiplyScalar(TARGET_DISTANCE)
+    // Compute spherical geodesic rotation arc
+    state.startDirection.copy(state.initialCameraPosition).normalize()
+    state.kolkataDirection.copy(kolkataWorld).normalize()
 
-    // Disable normal camera controls
-    controls.current.enabled = false
+    state.rotAxis.crossVectors(state.startDirection, state.kolkataDirection)
+    if (state.rotAxis.lengthSq() > 0.00001) {
+      state.rotAxis.normalize()
+      state.totalAngle = state.startDirection.angleTo(state.kolkataDirection)
+    } else {
+      state.rotAxis.set(0, 1, 0)
+      state.totalAngle = 0
+    }
+
+    // Disable OrbitControls completely
+    if (controls.current) {
+      controls.current.enabled = false
+      if (controls.current.autoRotate !== undefined) {
+        controls.current.autoRotate = false
+      }
+    }
   }, [active, camera, controls, earth])
 
   useFrame(() => {
     if (!active || !transitionState.current.isActive) return
-    if (!earth.current || !controls.current) return
+    if (!earth.current) return
 
     const state = transitionState.current
     const now = performance.now() / 1000
     const elapsed = now - state.startTime
     const progress = Math.min(elapsed / state.duration, 1.0)
 
-    // Use smooth cinematic easing
-    const eased = smoothCinematicEase(progress)
+    // 1. Angular / Direction curve:
+    // Earth smoothly rotates to center Kolkata over the first ~55% of the transition
+    const dirFactor = THREE.MathUtils.clamp(progress / 0.55, 0, 1)
+    const dirEased = dirFactor * dirFactor * (3 - 2 * dirFactor)
 
-    // Smoothly interpolate camera position using spherical interpolation
-    // for more natural approach along a curved path
-    const currentDistance = THREE.MathUtils.lerp(INITIAL_DISTANCE, TARGET_DISTANCE, eased)
+    let blendedDirection = state.startDirection
+    if (state.totalAngle > 0.0001) {
+      const q = new THREE.Quaternion().setFromAxisAngle(state.rotAxis, state.totalAngle * dirEased)
+      blendedDirection = state.startDirection.clone().applyQuaternion(q).normalize()
+    }
 
-    // Calculate direction from Earth center to initial position
-    const initialDirection = state.initialCameraPosition.clone().normalize()
-
-    // Gradually blend from initial direction to India direction
-    const indiaDirection = state.indiaSurfacePosition.clone().normalize()
-    const blendedDirection = new THREE.Vector3()
-      .addVectors(
-        initialDirection.clone().multiplyScalar(1 - eased),
-        indiaDirection.clone().multiplyScalar(eased)
-      )
-      .normalize()
-
-    // Set camera position along blended direction at current distance
-    camera.position.copy(blendedDirection).multiplyScalar(currentDistance)
-
-    // Smoothly interpolate camera look-at target
-    const cameraTarget = new THREE.Vector3().lerpVectors(
-      state.initialCameraTarget,
-      state.indiaSurfacePosition,
-      eased
+    // 2. CONTINUOUS FORWARD ZOOM (Continuous forward velocity):
+    // Smooth monotonic acceleration without zero-velocity pauses
+    const distProgress = Math.pow(progress, 1.25)
+    const currentDistance = THREE.MathUtils.lerp(
+      state.initialDistance,
+      FINAL_SURFACE_DISTANCE,
+      distProgress
     )
 
+    // Position camera along blended direction vector
+    camera.position.copy(blendedDirection).multiplyScalar(currentDistance)
+
+    // 3. Stable Look-At: Looking directly toward Earth center [0, 0, 0]
+    // Because Kolkata is along the ray from [0,0,0], looking at [0,0,0] perfectly centers Kolkata
+    // without ANY near-target singularity, noise amplification, or gimbal vibration!
     camera.up.set(0, 1, 0)
-    camera.lookAt(cameraTarget)
+    camera.lookAt(0, 0, 0)
 
-    // Update controls target
-    controls.current.target.copy(cameraTarget)
-    controls.current.update()
+    // Trigger atmospheric clouds stage
+    if (progress >= 0.52 && !state.triggeredClouds) {
+      state.triggeredClouds = true
+      onCloudEntry?.()
+    }
 
-    // Transition complete
+    // Trigger video reveal stage
+    if (progress >= 0.68 && !state.triggeredVideo) {
+      state.triggeredVideo = true
+      onVideoReveal?.()
+    }
+
+    // When progress reaches 1.0, hand off to video stage
     if (progress >= 1.0) {
       transitionState.current.isActive = false
-      controls.current.enabled = true
-      onComplete()
+      onComplete?.()
     }
   })
 
   return null
 }
+

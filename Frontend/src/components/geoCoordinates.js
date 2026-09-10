@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 
 export const INDIA_TARGET = Object.freeze({ latitude: 22.5, longitude: 79.0 })
+export const KOLKATA_TARGET = Object.freeze({ latitude: 22.5726, longitude: 88.3639 })
 export const EARTH_RADIUS = 2.05
 
 export function latitudeLongitudeToVector3({ latitude, longitude }, radius = EARTH_RADIUS) {

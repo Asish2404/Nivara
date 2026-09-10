@@ -7,37 +7,44 @@ export function TacticalHudOverlay({ stage, onSkip }) {
   const [altitude, setAltitude] = useState(35786)
   const [soundActive, setSoundActive] = useState(false)
   const isZooming = stage === 'zooming'
+  const isVideoActive = stage === 'video_active'
 
   // Sync with audio engine mute state
   useEffect(() => {
     return audioEngine.subscribe((isActive) => setSoundActive(isActive))
   }, [])
 
-  // Trigger warp sweep and countdown on zooming
+  // Manage altitude display cleanly based on stage
   useEffect(() => {
-    if (!isZooming) {
+    if (stage === 'orbit') {
       setAltitude(35786)
       return
     }
 
-    // Play cinematic atmospheric entry sweep if sound is enabled
-    audioEngine.playWarpSweep()
+    if (isVideoActive) {
+      setAltitude(12)
+      return
+    }
 
-    const startTime = performance.now()
-    const duration = 4800 // ~5 seconds transition
+    if (isZooming) {
+      audioEngine.playWarpSweep()
+      const startTime = performance.now()
+      const duration = 4800
 
-    const interval = setInterval(() => {
-      const elapsed = performance.now() - startTime
-      const progress = Math.min(elapsed / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      const currentAlt = Math.round(35786 - eased * (35786 - 420))
-      setAltitude(currentAlt)
+      const interval = setInterval(() => {
+        const elapsed = performance.now() - startTime
+        const progress = Math.min(elapsed / duration, 1)
+        // Atmospheric exponential descent curve
+        const pNorm = Math.pow(progress, 2.2)
+        const currentAlt = Math.max(12, Math.round(35786 - pNorm * (35786 - 12)))
+        setAltitude(currentAlt)
 
-      if (progress >= 1) clearInterval(interval)
-    }, 40)
+        if (progress >= 1) clearInterval(interval)
+      }, 50)
 
-    return () => clearInterval(interval)
-  }, [isZooming])
+      return () => clearInterval(interval)
+    }
+  }, [stage, isZooming, isVideoActive])
 
   const handleAudioToggle = () => {
     audioEngine.toggleMute()
@@ -140,7 +147,13 @@ export function TacticalHudOverlay({ stage, onSkip }) {
         >
           <div className="flex items-center gap-2 text-xs text-cyan-300 font-bold tracking-wider">
             <Compass className="w-3.5 h-3.5 text-cyan-400" />
-            <span>{isZooming ? 'TARGET LOCKED // APPROACHING VECTOR' : 'SEARCHING GLOBAL BASIN'}</span>
+            <span>
+              {isVideoActive
+                ? 'LOCAL GRID SYNCHRONIZED // LIVE OPTICAL FEED'
+                : isZooming
+                  ? 'TARGET LOCKED // CONTINUOUS APPROACH'
+                  : 'SEARCHING GLOBAL BASIN'}
+            </span>
           </div>
           <div className="text-[11px] text-cyan-400/80">
             TARGET: <span className="text-white font-semibold">KOLKATA [22.5726° N, 88.3639° E]</span>
@@ -160,7 +173,7 @@ export function TacticalHudOverlay({ stage, onSkip }) {
           <div className="flex items-center gap-2">
             <span className="text-slate-400">ALTITUDE:</span>
             <span className="text-white font-bold tracking-wider text-sm sm:text-base">
-              {altitude.toLocaleString()} KM
+              {altitude.toLocaleString()} {altitude > 100 ? 'KM' : 'M'}
             </span>
           </div>
           <div className="flex items-center gap-2 text-[11px] text-cyan-400/80">
