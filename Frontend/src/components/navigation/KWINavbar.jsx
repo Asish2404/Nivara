@@ -13,7 +13,7 @@ import {
   X,
   User,
 } from "lucide-react";
-import { useKWIStore } from "../../store/useKWIStore";
+import { useKWIStore, isUserAdmin } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
 import { CommandProfileDropdown } from "./CommandProfileDropdown";
 
@@ -45,9 +45,15 @@ export function KWINavbar() {
 
   const handleNavClick = (path) => {
     audioEngine.playUiChirp(920);
-    navigate(path);
     setMobileMenuOpen(false);
     setActiveDropdown(null);
+
+    if (!currentUser && path !== "/") {
+      navigate("/signup");
+      return;
+    }
+
+    navigate(path);
     if (typeof window !== "undefined" && currentRoute === path) {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -66,50 +72,119 @@ export function KWINavbar() {
     }, 200);
   };
 
-  const NAV_ITEMS = [
-    {
-      key: "HOME",
-      label: "Home",
-      icon: Home,
-      path: "/",
-      isActive: currentRoute === "/",
-    },
-    {
-      key: "LIVE_MAP",
-      label: "Live Map",
-      icon: Map,
-      path: "/live-city",
-      isActive: currentRoute.startsWith("/live-city"),
-    },
-    {
-      key: "REPORTS",
-      label: "Reports",
-      icon: FileBarChart2,
-      path: "/reports",
-      hasDropdown: true,
-      isActive:
-        currentRoute.startsWith("/reports") ||
-        currentRoute.startsWith("/my-reports"),
-      dropdownItems: [
-        { label: "Citizen Field Report", path: "/reports" },
-        { label: "My Submitted Reports", path: "/my-reports" },
-      ],
-    },
-    {
-      key: "SIMULATE",
-      label: "Simulate",
-      icon: SlidersHorizontal,
-      path: "/simulate",
-      isActive: currentRoute.startsWith("/simulate"),
-    },
-    {
-      key: "RESPOND",
-      label: "Respond",
-      icon: ShieldCheck,
-      path: "/action-center",
-      isActive: currentRoute.startsWith("/action-center"),
-    },
-  ];
+  const isAdmin = isUserAdmin(currentUser);
+
+  // Configure navigation items strictly according to authenticated role:
+  // - User: Home, Reports, Profile
+  // - Admin: Home, Live Map, Simulate, Respond (+ Profile section on right)
+  // - Not logged in: Home + preview items (redirects unauthenticated clicks to signup)
+  let NAV_ITEMS = [];
+
+  if (currentUser) {
+    if (isAdmin) {
+      NAV_ITEMS = [
+        {
+          key: "HOME",
+          label: "Home",
+          icon: Home,
+          path: "/",
+          isActive: currentRoute === "/",
+        },
+        {
+          key: "LIVE_MAP",
+          label: "Live Map",
+          icon: Map,
+          path: "/live-city",
+          isActive: currentRoute.startsWith("/live-city"),
+        },
+        {
+          key: "SIMULATE",
+          label: "Simulate",
+          icon: SlidersHorizontal,
+          path: "/simulate",
+          isActive: currentRoute.startsWith("/simulate"),
+        },
+        {
+          key: "RESPOND",
+          label: "Respond",
+          icon: ShieldCheck,
+          path: "/action-center",
+          isActive: currentRoute.startsWith("/action-center"),
+        },
+      ];
+    } else {
+      // Regular User (Citizen): Home, Reports, Profile
+      NAV_ITEMS = [
+        {
+          key: "HOME",
+          label: "Home",
+          icon: Home,
+          path: "/",
+          isActive: currentRoute === "/",
+        },
+        {
+          key: "REPORTS",
+          label: "Reports",
+          icon: FileBarChart2,
+          path: "/reports",
+          hasDropdown: true,
+          isActive:
+            currentRoute.startsWith("/reports") ||
+            currentRoute.startsWith("/my-reports"),
+          dropdownItems: [
+            { label: "Citizen Field Report", path: "/reports" },
+            { label: "My Submitted Reports", path: "/my-reports" },
+          ],
+        },
+      ];
+    }
+  } else {
+    // Visitor (Not logged in)
+    NAV_ITEMS = [
+      {
+        key: "HOME",
+        label: "Home",
+        icon: Home,
+        path: "/",
+        isActive: currentRoute === "/",
+      },
+      {
+        key: "LIVE_MAP",
+        label: "Live Map",
+        icon: Map,
+        path: "/live-city",
+        isActive: currentRoute.startsWith("/live-city"),
+      },
+      {
+        key: "REPORTS",
+        label: "Reports",
+        icon: FileBarChart2,
+        path: "/reports",
+        hasDropdown: true,
+        isActive:
+          currentRoute.startsWith("/reports") ||
+          currentRoute.startsWith("/my-reports"),
+        dropdownItems: [
+          { label: "Citizen Field Report", path: "/reports" },
+          { label: "My Submitted Reports", path: "/my-reports" },
+        ],
+      },
+      {
+        key: "SIMULATE",
+        label: "Simulate",
+        icon: SlidersHorizontal,
+        path: "/simulate",
+        isActive: currentRoute.startsWith("/simulate"),
+      },
+      {
+        key: "RESPOND",
+        label: "Respond",
+        icon: ShieldCheck,
+        path: "/action-center",
+        isActive: currentRoute.startsWith("/action-center"),
+      },
+    ];
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full pt-3.5 pb-2 px-3 sm:px-6 pointer-events-none select-none transition-all">
@@ -323,32 +398,32 @@ export function KWINavbar() {
                     navigate('/signup');
                   }}
                   className={`relative px-3.5 py-1.5 rounded-2xl flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${currentRoute === '/signup' || currentRoute === '/login' || currentRoute === '/auth'
-                      ? isDarkMode
-                        ? "bg-gradient-to-b from-blue-950/80 to-indigo-950/70 border border-blue-500/40 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)] min-w-[62px]"
-                        : "bg-gradient-to-b from-[#f0f6ff] to-[#e6f0ff] border border-blue-200/90 shadow-xs text-blue-600 min-w-[62px]"
-                      : isDarkMode
-                        ? "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent min-w-[56px] group"
-                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-50/90 border border-transparent min-w-[56px] group"
+                    ? isDarkMode
+                      ? "bg-gradient-to-b from-blue-950/80 to-indigo-950/70 border border-blue-500/40 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)] min-w-[62px]"
+                      : "bg-gradient-to-b from-[#f0f6ff] to-[#e6f0ff] border border-blue-200/90 shadow-xs text-blue-600 min-w-[62px]"
+                    : isDarkMode
+                      ? "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent min-w-[56px] group"
+                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-50/90 border border-transparent min-w-[56px] group"
                     }`}
                 >
                   <User
                     className={`w-4 h-4 mb-0.5 transition-colors ${currentRoute === '/signup' || currentRoute === '/login' || currentRoute === '/auth'
-                        ? isDarkMode
-                          ? "text-cyan-400"
-                          : "text-blue-600"
-                        : isDarkMode
-                          ? "text-slate-400 group-hover:text-white"
-                          : "text-slate-500 group-hover:text-slate-800"
+                      ? isDarkMode
+                        ? "text-cyan-400"
+                        : "text-blue-600"
+                      : isDarkMode
+                        ? "text-slate-400 group-hover:text-white"
+                        : "text-slate-500 group-hover:text-slate-800"
                       }`}
                   />
                   <span
                     className={`text-[11px] leading-none transition-colors ${currentRoute === '/signup' || currentRoute === '/login' || currentRoute === '/auth'
-                        ? isDarkMode
-                          ? "font-semibold text-cyan-300"
-                          : "font-semibold text-blue-700"
-                        : isDarkMode
-                          ? "font-medium text-slate-300 group-hover:text-white"
-                          : "font-medium text-slate-600 group-hover:text-slate-900"
+                      ? isDarkMode
+                        ? "font-semibold text-cyan-300"
+                        : "font-semibold text-blue-700"
+                      : isDarkMode
+                        ? "font-medium text-slate-300 group-hover:text-white"
+                        : "font-medium text-slate-600 group-hover:text-slate-900"
                       }`}
                   >
                     Sign Up

@@ -13,10 +13,11 @@ from .services.report_service import UPLOAD_DIR
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Create tables & seed default official demo personas
+    # Startup: Create tables
     await init_db()
-    async with async_session() as db:
-        await AuthService.seed_default_users(db)
+    # Auto-seeding disabled to respect clean tables
+    # async with async_session() as db:
+    #     await AuthService.seed_default_users(db)
     yield
     # Shutdown logic (if any)
 

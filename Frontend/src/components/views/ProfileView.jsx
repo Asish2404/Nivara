@@ -11,6 +11,11 @@ import {
 } from "lucide-react";
 import { useKWIStore } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
+import {
+  formatDate,
+  formatTime12Hour,
+  formatDateTime12Hour,
+} from "../../utils/dateTimeUtils";
 
 /* ═══════════════════════════════════════════════════════════════
    KOLKATA WATER INTELLIGENCE — PROFILE & DASHBOARD
@@ -131,14 +136,17 @@ export function ProfileView() {
 
   const memberSince = useMemo(() => {
     try {
-      if (!profile.createdAt) return "August 2026";
-      return new Date(profile.createdAt).toLocaleDateString("en-IN", {
-        month: "long",
-        year: "numeric",
-      });
+      if (!profile.createdAt) return "September 2026";
+      const dateStr = formatDate(profile.createdAt);
+      const timeStr = formatTime12Hour(profile.createdAt);
+      return timeStr ? `${dateStr} • ${timeStr}` : dateStr;
     } catch {
-      return "August 2026";
+      return "September 2026";
     }
+  }, [profile.createdAt]);
+
+  const accountCreatedAtFormatted = useMemo(() => {
+    return formatDateTime12Hour(profile.createdAt);
   }, [profile.createdAt]);
 
   const timeGreeting = useMemo(() => {
@@ -359,7 +367,7 @@ export function ProfileView() {
               </span>
               <span className="flex items-center gap-1.5 text-[#334155]">
                 <Clock size={13} className="text-[#1677ff]" />
-                Member since {memberSince}
+                Registered: {accountCreatedAtFormatted}
               </span>
             </div>
           </div>
@@ -924,7 +932,7 @@ export function ProfileView() {
                       { label: "LOCATION / JURISDICTION", val: profile.location, icon: <MapPin size={15} className="text-[#d97706]" /> },
                       { label: "INSTITUTION / ORGANIZATION", val: profile.institution || "Not added", icon: <Building2 size={15} className="text-[#7c3aed]" /> },
                       { label: "DEPARTMENT", val: profile.department, icon: <BookOpen size={15} className="text-[#1677ff]" /> },
-                      { label: "ACCOUNT CREATED", val: memberSince, icon: <Clock size={15} className="text-[#52627A]" /> },
+                      { label: "ACCOUNT CREATED", val: accountCreatedAtFormatted, icon: <Clock size={15} className="text-[#52627A]" /> },
                     ].map((item, idx) => {
                       const isNotAdded = item.val === "Not added";
                       return (

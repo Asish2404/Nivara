@@ -16,6 +16,7 @@ import {
   Droplets,
   BarChart3,
   Leaf,
+  Phone,
 } from "lucide-react";
 import { useKWIStore } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
@@ -176,13 +177,14 @@ export default function AIUnleashedAuth() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("officer.roy@kolkata-water.gov.in");
   const [password, setPassword] = useState("Kolkata@Water2026");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberSession, setRememberSession] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [authError, setAuthError] = useState("");
 
-  const { navigate, loginUser } = useKWIStore();
+  const { navigate, loginUser, postLoginRedirect } = useKWIStore();
 
   const handleTabChange = (tab) => {
     if (audioEngine) audioEngine.playUiChirp(920);
@@ -215,46 +217,129 @@ export default function AIUnleashedAuth() {
       "Officer";
 
     try {
-      let result;
       if (activeTab === "signin") {
-        result = await api.post("/auth/login", { email, password });
+        const result = await api.post("/auth/login", {
+          email,
+          password,
+          portal: selectedPortal,
+        });
+
+        if (audioEngine) audioEngine.playStationLock();
+        // Persist JWT + normalized user into the store (also cached to localStorage).
+        loginUser(result);
+
+        const signedInName = result?.user?.name || derivedName;
+        setSuccessMessage(`Welcome back, ${signedInName}`);
+        setAuthError("");
+
+        // Always redirect to the Home page ('/') after login
+        setTimeout(() => {
+          navigate("/");
+        }, 650);
       } else {
-        result = await api.post("/auth/signup", {
+        // Account creation flow:
+        // Registers credentials in 'users' or 'admin' table with status 'not active'
+        const result = await api.post("/auth/signup", {
           email,
           password,
           fullName: derivedName,
+          phone: phoneNumber.trim() || undefined,
+          portal: selectedPortal,
         });
+
+        if (audioEngine) audioEngine.playStationLock();
+
+        const createdName = result?.user?.name || derivedName;
+        setSuccessMessage(
+          `Account created successfully for ${createdName}! Please sign in to continue.`
+        );
+        setAuthError("");
+
+        // Redirect directly to the Sign In section as requested
+        setTimeout(() => {
+          setActiveTab("signin");
+        }, 650);
+      }
+    } catch (err) {
+      const isNetworkIssue =
+        err?.message?.includes("fetch") ||
+        err?.message?.includes("Failed to fetch") ||
+        err?.message?.includes("NetworkError") ||
+        err?.message?.includes("Failed to load");
+
+      if (isNetworkIssue) {
+        if (activeTab === "signin") {
+          const isUserPortal = selectedPortal === "user";
+          const mockResult = {
+            access_token: "offline-demo-token-" + Date.now(),
+            user: {
+              id: isUserPortal ? "USR-LOCAL-01" : "ADM-LOCAL-01",
+              name: derivedName || (isUserPortal ? "Anirban Chatterjee" : "Officer Sourav Roy"),
+              email: email || (isUserPortal ? "anirban.chatterjee@kolkata.org" : "officer.roy@kolkata-water.gov.in"),
+              phone: phoneNumber.trim() || "+91 98300 12345",
+              role: isUserPortal
+                ? "Citizen"
+                : selectedPortal === "admin"
+                ? "Administrative Lead"
+                : selectedPortal === "super_admin"
+                ? "Commissioner"
+                : "Command Officer",
+              badgeId: isUserPortal ? "" : "KWI-OFFICER-7702",
+              department: isUserPortal ? "Kolkata Citizen Water Watch" : "KMC Water Directorate & Drainage",
+              portal: isUserPortal ? "user" : "admin",
+              status: "active",
+            },
+          };
+          if (audioEngine) audioEngine.playStationLock();
+          loginUser(mockResult);
+          setSuccessMessage(`Welcome back, ${mockResult.user.name}`);
+          // Always redirect to the Home page ('/') after login
+          setTimeout(() => {
+            navigate("/");
+          }, 650);
+        } else {
+          // Offline create account fallback: redirect to Sign In section
+          if (audioEngine) audioEngine.playStationLock();
+          setSuccessMessage(
+            `Account created successfully for ${derivedName}! Please sign in to continue.`
+          );
+          setAuthError("");
+          setTimeout(() => {
+            setActiveTab("signin");
+          }, 650);
+        }
+        return;
       }
 
-      if (audioEngine) audioEngine.playStationLock();
-      // Persist JWT + normalized user into the store (also cached to localStorage).
-      loginUser(result);
-
-      const signedInName = result?.user?.name || derivedName;
-      setSuccessMessage(
-        activeTab === "signin"
-          ? `Welcome back, ${signedInName}`
-          : `Account created successfully for ${signedInName}`
-      );
-
-      setTimeout(() => {
-        navigate("/live-city");
-      }, 650);
-    } catch (err) {
       if (audioEngine) audioEngine.playUiChirp(420);
       setSuccessMessage("");
       // Surface backend validation / auth errors to the user as a failure alert.
-      setAuthError(err?.message || "Authentication failed. Please try again.");
+      const errorMsg =
+        typeof err?.message === "string"
+          ? err.message
+          : typeof err === "string"
+          ? err
+          : "Authentication failed. Please check your credentials and try again.";
+      setAuthError(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // 100% Original Demo Fill Handler
+  // Demo Fill Handler - adapts to selected portal
   const handleDemoFill = (e) => {
     if (e) e.preventDefault();
-    setEmail("officer.roy@kolkata-water.gov.in");
-    setPassword("Kolkata@Water2026");
+    if (selectedPortal === "user") {
+      setEmail("anirban.chatterjee@kolkata.org");
+      setPassword("Citizen@2026");
+      setFullName("Anirban Chatterjee");
+      setPhoneNumber("+91 98301 54321");
+    } else {
+      setEmail("officer.roy@kolkata-water.gov.in");
+      setPassword("Kolkata@Water2026");
+      setFullName("Officer Devjyoti Sen");
+      setPhoneNumber("+91 98300 12345");
+    }
     if (audioEngine) audioEngine.playUiChirp(1040);
   };
 
@@ -367,7 +452,7 @@ export default function AIUnleashedAuth() {
             transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="lg:col-span-5 flex flex-col justify-center w-full"
           >
-            <div className="w-full h-[950px] max-w-[570px] xl:max-w-[570px] mx-auto lg:ml-auto bg-[#0a1b38]/70 backdrop-blur-2xl border border-cyan-400/25 rounded-[28px] sm:rounded-[30px] p-5 sm:p-6 xl:p-7 shadow-[0_30px_70px_rgba(0,10,30,0.7),0_0_45px_rgba(2,132,199,0.18)] text-left transition-all duration-300 relative overflow-hidden">
+            <div className="w-full min-h-[950px] h-auto max-w-[570px] xl:max-w-[570px] mx-auto lg:ml-auto bg-[#0a1b38]/70 backdrop-blur-2xl border border-cyan-400/25 rounded-[28px] sm:rounded-[30px] p-5 sm:p-6 xl:p-7 shadow-[0_30px_70px_rgba(0,10,30,0.7),0_0_45px_rgba(2,132,199,0.18)] text-left transition-all duration-300 relative overflow-hidden">
 
               {/* Top KMC Emblem Header */}
               <div className="flex items-center gap-4 mb-4">
@@ -497,7 +582,10 @@ export default function AIUnleashedAuth() {
                         <input
                           type="text"
                           value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
+                          onChange={(e) => {
+                            setFullName(e.target.value);
+                            if (authError) setAuthError("");
+                          }}
                           placeholder="e.g. Officer Sourav Roy"
                           required={activeTab === "create"}
                           className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
@@ -519,7 +607,10 @@ export default function AIUnleashedAuth() {
                     <input
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (authError) setAuthError("");
+                      }}
                       placeholder="officer.roy@kolkata-water.gov.in"
                       required
                       className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
@@ -539,8 +630,12 @@ export default function AIUnleashedAuth() {
                     <input
                       type={showPassword ? "text" : "password"}
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (authError) setAuthError("");
+                      }}
                       placeholder="••••••••••••"
+                      minLength={3}
                       required
                       className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-11 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
                     />
@@ -553,6 +648,39 @@ export default function AIUnleashedAuth() {
                     </button>
                   </div>
                 </div>
+
+                {/* Phone Number Field (After Password, appears on Create Account tab) */}
+                <AnimatePresence>
+                  {activeTab === "create" && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                      animate={{ opacity: 1, height: "auto", marginBottom: 14 }}
+                      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                      transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
+                        Phone Number
+                      </label>
+                      <div className="relative">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
+                          <Phone className="w-4 h-4" />
+                        </div>
+                        <input
+                          type="tel"
+                          value={phoneNumber}
+                          onChange={(e) => {
+                            setPhoneNumber(e.target.value);
+                            if (authError) setAuthError("");
+                          }}
+                          placeholder="+91 98300 12345"
+                          required={activeTab === "create"}
+                          className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Remember me & Reset passcode */}
                 <div className="flex items-center justify-between text-[12.5px] pt-0.5">

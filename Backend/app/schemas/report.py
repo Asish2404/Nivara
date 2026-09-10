@@ -1,6 +1,7 @@
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
+from app.core.datetime_utils import ensure_kolkata_tz
 
 
 class ReportCreate(BaseModel):
@@ -43,6 +44,30 @@ class ReportResponse(BaseModel):
     dispatch_status: str
     dispatched_to: str
     updated_at: Optional[datetime] = None
+
+    @computed_field
+    @property
+    def submitted_time_12hr(self) -> str:
+        dt = ensure_kolkata_tz(self.submitted_at)
+        return dt.strftime("%I:%M %p") if dt else ""
+
+    @computed_field
+    @property
+    def updated_time_12hr(self) -> str:
+        dt = ensure_kolkata_tz(self.updated_at)
+        return dt.strftime("%I:%M %p") if dt else ""
+
+    @computed_field
+    @property
+    def submitted_at_formatted(self) -> str:
+        dt = ensure_kolkata_tz(self.submitted_at)
+        return dt.strftime("%b %d, %Y at %I:%M %p") if dt else ""
+
+    @computed_field
+    @property
+    def updated_at_formatted(self) -> str:
+        dt = ensure_kolkata_tz(self.updated_at)
+        return dt.strftime("%b %d, %Y at %I:%M %p") if dt else ""
 
     class Config:
         from_attributes = True

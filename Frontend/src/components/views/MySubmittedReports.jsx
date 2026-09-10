@@ -32,6 +32,11 @@ import {
 } from "lucide-react";
 import { useKWIStore } from "../../store/useKWIStore";
 import { resolveApiAssetUrl } from "../../utils/api";
+import {
+  formatDate,
+  formatTime12Hour as formatTime,
+  formatDateTime12Hour,
+} from "../../utils/dateTimeUtils";
 
 const HERO_TWILIGHT_BG = "/textures/kolkata_howrah_sunset_4k.jpg";
 
@@ -218,19 +223,6 @@ function resolveReportImage(report) {
   return resolveApiAssetUrl(url);
 }
 
-function formatDate(iso) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return String(iso);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
-function formatTime(iso) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
-}
 
 /* ================================================================ */
 /*  MAIN COMPONENT                                                  */
@@ -939,9 +931,16 @@ export function MySubmittedReports() {
                             <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                               {formatDate(report.submitted_at || report.submittedAt)}
                             </div>
-                            <div className="text-[11px] text-slate-400 dark:text-slate-500">
+                            <div className="text-[11px] text-blue-600 dark:text-cyan-400 font-semibold mt-0.5">
                               {formatTime(report.submitted_at || report.submittedAt)}
                             </div>
+                            {(report.updated_at || report.updatedAt) &&
+                              (report.updated_at || report.updatedAt) !== (report.submitted_at || report.submittedAt) && (
+                                <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5 flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                  <span>Updated {formatTime(report.updated_at || report.updatedAt)}</span>
+                                </div>
+                              )}
                           </td>
 
                           {/* Status */}
@@ -1177,9 +1176,21 @@ function ReportDetailsModal({ report, onClose, onEnlarge }) {
           {/* Metadata Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="rounded-xl p-3 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-              <div className="text-[10px] uppercase font-bold text-slate-400">Submitted On</div>
+              <div className="text-[10px] uppercase font-bold text-slate-400">Submit Time</div>
               <div className="text-xs font-bold text-slate-800 dark:text-slate-100 mt-1">
                 {formatDate(report.submitted_at || report.submittedAt)}
+              </div>
+              <div className="text-[11px] text-blue-600 dark:text-cyan-400 font-semibold mt-0.5">
+                {formatTime(report.submitted_at || report.submittedAt)}
+              </div>
+            </div>
+            <div className="rounded-xl p-3 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+              <div className="text-[10px] uppercase font-bold text-slate-400">Update Time</div>
+              <div className="text-xs font-bold text-slate-800 dark:text-slate-100 mt-1">
+                {formatDate(report.updated_at || report.submitted_at || report.submittedAt)}
+              </div>
+              <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
+                {formatTime(report.updated_at || report.submitted_at || report.submittedAt)}
               </div>
             </div>
             <div className="rounded-xl p-3 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
@@ -1192,12 +1203,6 @@ function ReportDetailsModal({ report, onClose, onEnlarge }) {
               <div className="text-[10px] uppercase font-bold text-slate-400">Water Depth</div>
               <div className="text-xs font-bold text-slate-800 dark:text-slate-100 mt-1">
                 {report.water_depth ? `${report.water_depth} cm` : "15–30 cm"}
-              </div>
-            </div>
-            <div className="rounded-xl p-3 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-              <div className="text-[10px] uppercase font-bold text-slate-400">Assigned To</div>
-              <div className="text-xs font-bold text-slate-800 dark:text-slate-100 mt-1 truncate">
-                {report.dispatched_to || report.dispatchedTo || "KMC Central"}
               </div>
             </div>
           </div>
@@ -1233,8 +1238,16 @@ function ReportDetailsModal({ report, onClose, onEnlarge }) {
 
           {/* Verification Pipeline Timeline */}
           <div>
-            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-              Verification Pipeline
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Verification Pipeline
+              </div>
+              {(report.updated_at || report.updatedAt) && (
+                <div className="text-[11px] font-mono text-cyan-600 dark:text-cyan-400 font-semibold flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+                  <span>Last Update: {formatTime(report.updated_at || report.updatedAt)}</span>
+                </div>
+              )}
             </div>
             <div className="flex items-center justify-between relative">
               {PIPELINE.map((stage, i) => {
