@@ -16,6 +16,7 @@ class UserSignupRequest(BaseModel):
     wardAccess: Optional[str] = Field(default="Kolkata Metropolitan Area", alias="ward_access")
     portal: Optional[str] = "user"
     location: Optional[str] = None
+    otp: Optional[str] = Field(default=None, description="2FA OTP code for administrative registration")
 
     class Config:
         populate_by_name = True
@@ -25,6 +26,26 @@ class UserLoginRequest(BaseModel):
     email: str
     password: str
     portal: Optional[str] = "user"
+    otp: Optional[str] = Field(default=None, description="2FA OTP code for administrative login")
+
+
+class GenerateOtpRequest(BaseModel):
+    email: str = Field(..., description="Target email for OTP dispatch")
+    phone: Optional[str] = Field(default=None, description="Optional phone number")
+    purpose: str = Field(default="login", description="'login' or 'signup'")
+
+
+class VerifyOtpRequest(BaseModel):
+    email: str = Field(..., description="Target email")
+    otp: str = Field(..., min_length=4, max_length=8, description="Verification OTP code")
+    purpose: str = Field(default="login", description="'login' or 'signup'")
+
+
+class OtpResponse(BaseModel):
+    status: str = "ok"
+    message: str
+    otp: Optional[str] = None
+    expires_in: int = 300
 
 
 class UserResponse(BaseModel):
