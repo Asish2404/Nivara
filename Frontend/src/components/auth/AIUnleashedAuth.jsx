@@ -244,6 +244,7 @@ export default function AIUnleashedAuth() {
   const [otpTargetPhone, setOtpTargetPhone] = useState("");
   const [otpCountdown, setOtpCountdown] = useState(0);
   const [isGeneratingOtp, setIsGeneratingOtp] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
   const otpInputRefs = useRef([]);
   const nativeOtpInputRef = useRef(null);
 
@@ -259,6 +260,25 @@ export default function AIUnleashedAuth() {
     }
     return () => clearInterval(timer);
   }, [otpCountdown]);
+
+  // Auto-focus input when entering OTP step
+  useEffect(() => {
+    if (isOtpStep) {
+      const timer = setTimeout(() => {
+        nativeOtpInputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOtpStep]);
+
+  // Auto-verify once all 6 digits are entered (exact Pinterest video interaction)
+  useEffect(() => {
+    if (!isOtpStep) return;
+    const code = otpDigits.join("").trim();
+    if (code.length === 6 && !isSubmitting) {
+      handleOtpVerifySubmit();
+    }
+  }, [otpDigits, isOtpStep]);
 
   // Tab switcher
   const handleTabChange = (tab) => {
@@ -643,12 +663,21 @@ export default function AIUnleashedAuth() {
           access_token: "offline-admin-token-" + Date.now(),
           user: {
             id: selectedPortal === "admin" ? "ADM-LOCAL-01" : "USR-LOCAL-01",
-            name: derivedName || (selectedPortal === "admin" ? "Administrator" : "User"),
-            email: email || (selectedPortal === "admin" ? "admin@kolkata-water.gov.in" : "user@kolkata-water.gov.in"),
+            name:
+              derivedName ||
+              (selectedPortal === "admin" ? "Administrator" : "User"),
+            email:
+              email ||
+              (selectedPortal === "admin"
+                ? "admin@kolkata-water.gov.in"
+                : "user@kolkata-water.gov.in"),
             phone: phoneNumber.trim() || "+91 98300 12345",
             role: selectedPortal === "admin" ? "Admin" : "User",
             badgeId: selectedPortal === "admin" ? "KWI-ADMIN-01" : "",
-            department: selectedPortal === "admin" ? "KMC Water & Drainage Administration" : "Citizen Water Watch",
+            department:
+              selectedPortal === "admin"
+                ? "KMC Water & Drainage Administration"
+                : "Citizen Water Watch",
             portal: selectedPortal,
             status: "active",
           },
@@ -667,9 +696,11 @@ export default function AIUnleashedAuth() {
       }
 
       if (audioEngine) audioEngine.playUiChirp(420);
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
       setAuthError(
         err?.message ||
-          "Invalid or expired verification code. Please check your SMS and try again.",
+          "Invalid or expired verification code. Please check your code and try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -808,155 +839,201 @@ export default function AIUnleashedAuth() {
             transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="lg:col-span-5 flex flex-col justify-center w-full"
           >
-            <div className="w-full min-h-[950px] h-auto max-w-[570px] xl:max-w-[570px] mx-auto lg:ml-auto bg-[#0a1b38]/70 backdrop-blur-2xl border border-cyan-400/25 rounded-[28px] sm:rounded-[30px] p-5 sm:p-6 xl:p-7 shadow-[0_30px_70px_rgba(0,10,30,0.7),0_0_45px_rgba(2,132,199,0.18)] text-left transition-all duration-300 relative overflow-hidden">
-              {/* Top KMC Emblem Header */}
-              <div className="flex items-center gap-4 mb-4">
-                <KMCEmblem />
-                <div>
-                  <h2 className="text-[19px] sm:text-[20px] font-bold text-white tracking-tight leading-tight m-0">
-                    Kolkata
-                  </h2>
-                  <div className="text-[14px] sm:text-[15px] font-semibold text-slate-200 leading-tight mt-0.5">
-                    Municipal Corporation
+            <div
+              className={`w-full mx-auto lg:ml-auto bg-[#0a1936]/85 backdrop-blur-2xl border border-cyan-400/25 rounded-[32px] text-left transition-all duration-300 relative overflow-hidden shadow-[0_30px_70px_rgba(0,10,30,0.7),0_0_45px_rgba(2,132,199,0.18)] ${
+                isOtpStep
+                  ? "max-w-[460px] p-6 sm:p-8 min-h-0"
+                  : "max-w-[570px] xl:max-w-[570px] min-h-[950px] p-5 sm:p-6 xl:p-7"
+              }`}
+            >
+              {/* Top KMC Emblem Header (Only on credentials step) */}
+              {!isOtpStep && (
+                <>
+                  <div className="flex items-center gap-4 mb-4">
+                    <KMCEmblem />
+                    <div>
+                      <h2 className="text-[19px] sm:text-[20px] font-bold text-white tracking-tight leading-tight m-0">
+                        Kolkata
+                      </h2>
+                      <div className="text-[14px] sm:text-[15px] font-semibold text-slate-200 leading-tight mt-0.5">
+                        Municipal Corporation
+                      </div>
+                      <div className="text-[11.5px] font-medium text-cyan-400 tracking-wide mt-1">
+                        Cleaner City · Safer Tomorrow
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-[11.5px] font-medium text-cyan-400 tracking-wide mt-1">
-                    Cleaner City · Safer Tomorrow
-                  </div>
-                </div>
-              </div>
-
-              {/* Subtle divider under header */}
-              <div className="w-full h-px bg-white/10 mb-4" />
+                  <div className="w-full h-px bg-white/10 mb-4" />
+                </>
+              )}
 
               <AnimatePresence mode="wait">
                 {isOtpStep ? (
                   /* ========================================================= */
-                  /* DEDICATED 2-FACTOR OTP VALIDATION PAGE                    */
+                  /* DEDICATED 2-FACTOR OTP VALIDATION (MODERN SaaS REDESIGN)   */
+                  /* Inspired by Pinterest interaction (pin.it/2u4MNJFiQ)       */
                   /* ========================================================= */
                   <motion.div
                     key="otp-step-panel"
-                    initial={{ opacity: 0, x: 24 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -24 }}
+                    initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -16, scale: 0.98 }}
                     transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
                     className="flex flex-col"
                   >
-                    {/* Back to credentials button */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsOtpStep(false);
-                        setAuthError("");
-                        setSuccessMessage("");
-                      }}
-                      className="inline-flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 text-[12.5px] font-semibold mb-4 transition-colors cursor-pointer w-fit"
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      <span>Back to credentials</span>
-                    </button>
+                    {/* Top Grab Handle Pill */}
+                    <div className="w-9 h-1 bg-white/20 rounded-full mx-auto mb-5" />
 
-                    {/* Verification Header */}
+                    {/* Top Row: Back link & Clearance badge */}
+                    <div className="flex items-center justify-between mb-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsOtpStep(false);
+                          setAuthError("");
+                          setSuccessMessage("");
+                        }}
+                        className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-white text-xs font-medium transition-colors cursor-pointer"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <span>Back</span>
+                      </button>
+
+                      <span className="text-[11px] font-semibold tracking-wider uppercase text-cyan-400/90 bg-cyan-950/60 border border-cyan-500/20 px-2.5 py-0.5 rounded-full">
+                        {selectedPortal === "admin" ? "Admin Clearance" : "User Verification"}
+                      </span>
+                    </div>
+
+                    {/* Verification Header & Phrasing from Pinterest video */}
                     <div className="text-center mb-6">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-600/30 to-blue-600/20 border border-cyan-400/40 flex items-center justify-center mx-auto mb-3 shadow-[0_0_24px_rgba(6,182,212,0.3)]">
-                        <Mail className="w-7 h-7 text-cyan-400 animate-pulse" />
-                      </div>
-                      <h3 className="text-[19px] sm:text-[20px] font-bold text-white tracking-tight leading-tight">
-                        Two-Factor Security Verification
+                      <h3 className="text-2xl sm:text-[26px] font-bold text-white tracking-tight leading-snug">
+                        Let's verify your {email ? "email" : "number"}
                       </h3>
-                      <p className="text-slate-300/90 text-[12px] mt-1.5 max-w-sm mx-auto leading-relaxed">
-                        For administrator clearance, a confidential 6-digit security
-                        OTP has been sent to the admin email address.
+                      <p className="text-zinc-400 text-[13.5px] sm:text-[14px] mt-2 max-w-[310px] mx-auto leading-relaxed">
+                        We've sent a 6-digit code to your {email ? "email" : "phone"}.<br />
+                        <span className="text-zinc-300 font-medium">It'll auto-verify once entered.</span>
                       </p>
 
-                      {/* Dispatched to Email indicator */}
-                      <div className="inline-flex items-center gap-2 mt-3 px-3.5 py-1.5 rounded-full bg-cyan-950/70 border border-cyan-400/40 text-cyan-300 text-[12px] font-mono shadow-inner">
-                        <Mail className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                        <span>
-                          Sent to Admin Mail:{" "}
-                          <strong className="text-white font-semibold">
+                      {/* Destination Email / Phone Chip */}
+                      <div className="flex justify-center mt-3.5">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs text-zinc-300 font-mono shadow-inner">
+                          <Mail className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <span className="text-zinc-200 font-medium truncate max-w-[210px]">
                             {email || otpTargetPhone}
-                          </strong>
-                        </span>
-                      </div>
-
-                      {/* Important Delivery Notice */}
-                      <div className="mt-2.5 text-[11.5px] text-amber-300/90 bg-amber-950/40 border border-amber-500/30 rounded-lg px-3 py-1.5 max-w-sm mx-auto flex items-center justify-center gap-1.5 leading-tight">
-                        <span>📬 Check your <strong>Inbox & Spam / Junk</strong> folder (Gmail may filter new sender codes).</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsOtpStep(false);
+                              setAuthError("");
+                            }}
+                            className="text-cyan-400 hover:text-cyan-300 ml-0.5 underline cursor-pointer text-[11px] font-sans"
+                          >
+                            Change
+                          </button>
+                        </div>
                       </div>
                     </div>
 
                     {/* Dedicated 6-Digit OTP Form */}
                     <form
                       onSubmit={handleOtpVerifySubmit}
-                      className="space-y-5"
+                      className="space-y-4"
                     >
-                      <div>
-                        <div className="text-center text-slate-300 text-[11px] font-bold uppercase tracking-wider mb-3">
-                          Enter 6-Digit Verification Code
-                        </div>
-                        {/* 6 Digit Input Keypad with Smooth Transparent Overlay */}
-                        <div className="relative flex justify-center items-center gap-2 sm:gap-2.5">
-                          <input
-                            ref={nativeOtpInputRef}
-                            type="text"
-                            inputMode="numeric"
-                            autoComplete="one-time-code"
-                            pattern="[0-9]*"
-                            maxLength={6}
-                            value={otpDigits.join("")}
-                            onChange={(e) => {
-                              const val = e.target.value.replace(/\D/g, "").slice(0, 6);
-                              const newArr = ["", "", "", "", "", ""];
-                              for (let i = 0; i < val.length; i++) newArr[i] = val[i];
-                              setOtpDigits(newArr);
-                              if (authError) setAuthError("");
-                            }}
-                            className="absolute inset-0 opacity-0 z-30 cursor-text w-full h-full"
-                            autoFocus
-                          />
+                      {/* 6 Digit Input Keypad with Shake Animation & Glowing Active Slot */}
+                      <motion.div
+                        animate={isShaking ? { x: [-12, 12, -8, 8, -4, 4, 0] } : { x: 0 }}
+                        transition={{ duration: 0.4 }}
+                        className="relative my-4"
+                      >
+                        {/* Hidden Native Input to catch clicks & keyboard input seamlessly */}
+                        <input
+                          ref={nativeOtpInputRef}
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          pattern="[0-9]*"
+                          maxLength={6}
+                          value={otpDigits.join("")}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                            const newArr = ["", "", "", "", "", ""];
+                            for (let i = 0; i < val.length; i++) newArr[i] = val[i];
+                            setOtpDigits(newArr);
+                            if (audioEngine) audioEngine.playUiChirp(1040 + val.length * 35);
+                            if (authError) setAuthError("");
+                          }}
+                          className="absolute inset-0 opacity-0 z-30 cursor-text w-full h-full"
+                          autoFocus
+                        />
+
+                        {/* 6 Squircle Visual Slots with Neon Focused Outline from Pinterest */}
+                        <div className="flex justify-center items-center gap-2.5 sm:gap-3 select-none">
                           {otpDigits.map((digit, idx) => {
                             const firstEmptyIdx = otpDigits.findIndex((d) => d === "");
-                            const isFocused = (firstEmptyIdx === -1 && idx === 5) || firstEmptyIdx === idx;
+                            const isFilled = Boolean(digit);
+                            const isFocused = !isFilled && ((firstEmptyIdx === -1 && idx === 5) || firstEmptyIdx === idx);
+
                             return (
-                              <div
+                              <motion.div
                                 key={idx}
-                                className={`w-11 h-13 sm:w-12 sm:h-14 flex items-center justify-center text-xl sm:text-2xl font-mono font-bold rounded-xl transition-all duration-200 shadow-[0_4px_16px_rgba(0,0,0,0.3)] select-none ${
-                                  digit
-                                    ? "text-cyan-300 bg-[#11274d] border-2 border-cyan-400 ring-2 ring-cyan-400/20"
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className={`w-11 h-14 sm:w-13 sm:h-16 flex items-center justify-center text-2xl sm:text-3xl font-mono font-bold rounded-2xl transition-all duration-200 ${
+                                  isFilled
+                                    ? "bg-[#151a24] border-2 border-white/25 text-white shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
                                     : isFocused
-                                    ? "text-white bg-[#0e203f] border-2 border-cyan-400/80 ring-2 ring-cyan-400/30 animate-pulse"
-                                    : "text-white bg-[#0e203f]/90 border-2 border-cyan-400/30"
+                                    ? "bg-[#121826] border-2 border-[#00f0ff] shadow-[0_0_22px_rgba(0,240,255,0.45)] ring-2 ring-cyan-400/25"
+                                    : "bg-[#0d121c]/80 border-2 border-white/10 text-transparent"
                                 }`}
                               >
-                                {digit}
-                              </div>
+                                {isFilled ? (
+                                  <motion.span
+                                    key={`digit-${digit}-${idx}`}
+                                    initial={{ scale: 0.5, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                                  >
+                                    {digit}
+                                  </motion.span>
+                                ) : isFocused ? (
+                                  <motion.span
+                                    animate={{ opacity: [1, 0, 1] }}
+                                    transition={{ repeat: Infinity, duration: 0.8 }}
+                                    className="w-0.5 h-6 bg-cyan-400 rounded-full"
+                                  />
+                                ) : null}
+                              </motion.div>
                             );
                           })}
                         </div>
-                      </div>
+                      </motion.div>
 
-                      {/* Resend & Status */}
-                      <div className="flex items-center justify-between text-[12px] text-slate-300 px-1 pt-1">
-                        <span>Didn't receive email code?</span>
+                      {/* Resend Code Row (Exact text from Pinterest video: "Didn't receive the code? Resend") */}
+                      <div className="text-center text-[13.5px] text-zinc-400">
+                        <span>Didn't receive the code? </span>
                         {otpCountdown > 0 ? (
-                          <span className="text-cyan-400 font-mono font-semibold">
-                            Resend in {otpCountdown}s
+                          <span className="text-zinc-300 font-medium">
+                            Resend in <strong className="text-cyan-400 font-mono">{otpCountdown}s</strong>
                           </span>
                         ) : (
                           <button
                             type="button"
                             onClick={handleResendOtp}
                             disabled={isGeneratingOtp}
-                            className="text-cyan-400 hover:text-cyan-300 font-bold underline cursor-pointer disabled:opacity-50 transition-colors"
+                            className="text-white font-semibold hover:text-cyan-400 underline underline-offset-4 cursor-pointer disabled:opacity-50 transition-colors"
                           >
-                            {isGeneratingOtp
-                              ? "Sending Email..."
-                              : "Resend Email Code"}
+                            {isGeneratingOtp ? "Sending..." : "Resend"}
                           </button>
                         )}
                       </div>
 
-                      {/* Alerts */}
+                      {/* Delivery Guidance Notice */}
+                      <div className="text-center text-[11.5px] text-zinc-500 leading-tight">
+                        📬 Check your <strong>Inbox & Spam / Junk</strong> folder (Gmail may filter security codes).
+                      </div>
+
+                      {/* Alerts (Smooth animated appearance) */}
                       <AnimatePresence>
                         {successMessage && (
                           <motion.div
@@ -984,19 +1061,19 @@ export default function AIUnleashedAuth() {
                         )}
                       </AnimatePresence>
 
-                      {/* Action Submit */}
+                      {/* Action Submit Button */}
                       <motion.button
                         whileHover={{ scale: 1.012 }}
                         whileTap={{ scale: 0.985 }}
                         transition={{ duration: 0.15, ease: "easeInOut" }}
                         type="submit"
                         disabled={isSubmitting || otpDigits.join("").length < 6}
-                        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#0070f3] via-[#0080ff] to-[#0099ff] hover:from-[#0060df] hover:to-[#0088ee] text-white font-bold text-[15px] flex items-center justify-center gap-2 cursor-pointer shadow-[0_6px_28px_rgba(0,112,243,0.5)] hover:shadow-[0_8px_32px_rgba(0,112,243,0.6)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-[15px] flex items-center justify-center gap-2 cursor-pointer shadow-[0_8px_25px_rgba(6,182,212,0.4)] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed mt-2"
                       >
                         {isSubmitting ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin text-white" />
-                            <span>Verifying Administrator Clearance...</span>
+                            <span>Verifying code...</span>
                           </>
                         ) : (
                           <>
@@ -1410,24 +1487,30 @@ export default function AIUnleashedAuth() {
                         className="text-center text-[12.5px] text-cyan-400 hover:text-cyan-300 font-semibold cursor-pointer inline-flex items-center gap-1.5 transition-colors duration-150"
                       >
                         <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                        <span>Fill demo {selectedPortal === "admin" ? "admin" : "user"} credentials</span>
+                        <span>
+                          Fill demo{" "}
+                          {selectedPortal === "admin" ? "admin" : "user"}{" "}
+                          credentials
+                        </span>
                       </button>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Bottom Kolkata Skyline Vector Art & Typography */}
-              <div className="pt-3 border-t border-white/10 text-center">
-                <KolkataSkylineArt />
-                <div className="text-cyan-300/90 text-[11.5px] font-bold tracking-[0.32em] uppercase mt-2.5">
-                  K O L K A T A
+              {/* Bottom Kolkata Skyline Vector Art & Typography (Only on credentials step) */}
+              {!isOtpStep && (
+                <div className="pt-3 border-t border-white/10 text-center">
+                  <KolkataSkylineArt />
+                  <div className="text-cyan-300/90 text-[11.5px] font-bold tracking-[0.32em] uppercase mt-2.5">
+                    K O L K A T A
+                  </div>
+                  <div className="text-slate-400 text-[10px] font-medium tracking-wider uppercase mt-0.5">
+                    Cleaner City · Safer Tomorrow
+                  </div>
+                  <div className="w-14 h-1 bg-cyan-400/70 rounded-full mx-auto mt-2.5 shadow-[0_0_10px_rgba(6,182,212,0.6)]" />
                 </div>
-                <div className="text-slate-400 text-[10px] font-medium tracking-wider uppercase mt-0.5">
-                  Cleaner City · Safer Tomorrow
-                </div>
-                <div className="w-14 h-1 bg-cyan-400/70 rounded-full mx-auto mt-2.5 shadow-[0_0_10px_rgba(6,182,212,0.6)]" />
-              </div>
+              )}
             </div>
           </motion.div>
         </div>
