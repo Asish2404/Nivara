@@ -244,8 +244,8 @@ export default function AIUnleashedAuth() {
   const [otpTargetPhone, setOtpTargetPhone] = useState("");
   const [otpCountdown, setOtpCountdown] = useState(0);
   const [isGeneratingOtp, setIsGeneratingOtp] = useState(false);
-  const [smsToast, setSmsToast] = useState(null);
   const otpInputRefs = useRef([]);
+  const nativeOtpInputRef = useRef(null);
 
   const { navigate, loginUser } = useKWIStore();
 
@@ -259,15 +259,6 @@ export default function AIUnleashedAuth() {
     }
     return () => clearInterval(timer);
   }, [otpCountdown]);
-
-  // Auto-dismiss simulated SMS toast after 14 seconds
-  useEffect(() => {
-    if (!smsToast) return;
-    const timer = setTimeout(() => {
-      setSmsToast(null);
-    }, 14000);
-    return () => clearTimeout(timer);
-  }, [smsToast]);
 
   // Tab switcher
   const handleTabChange = (tab) => {
@@ -339,7 +330,10 @@ export default function AIUnleashedAuth() {
 
   const handleOtpPaste = (e) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
     if (!pasted) return;
     const newDigits = [...otpDigits];
     for (let i = 0; i < 6; i++) {
@@ -354,11 +348,13 @@ export default function AIUnleashedAuth() {
   const resolveTargetCredentials = () => {
     const cleanEmail = email.trim();
     const cleanPhone = phoneNumber.trim();
-    const isPhoneLike = !cleanEmail.includes("@") && cleanEmail.replace(/[\s+-]/g, "").length >= 7;
+    const isPhoneLike =
+      !cleanEmail.includes("@") &&
+      cleanEmail.replace(/[\s+-]/g, "").length >= 7;
 
     return {
-      email: isPhoneLike ? undefined : (cleanEmail || undefined),
-      phone: isPhoneLike ? cleanEmail : (cleanPhone || undefined),
+      email: isPhoneLike ? undefined : cleanEmail || undefined,
+      phone: isPhoneLike ? cleanEmail : cleanPhone || undefined,
     };
   };
 
@@ -371,19 +367,17 @@ export default function AIUnleashedAuth() {
     try {
       const targets = resolveTargetCredentials();
       const res = await api.post("/auth/admin/generate-otp", {
+        name: fullName.trim() || undefined,
         email: targets.email,
         phone: targets.phone,
         purpose: activeTab,
+        portal: selectedPortal,
+        password: password || undefined,
       });
       setOtpCountdown(60);
-      setSuccessMessage(res?.message || "New 6-digit security code dispatched via SMS.");
-      if (res?.otp) {
-        setSmsToast({
-          code: res.otp,
-          phone: res?.phone || targets.phone || phoneNumber || email || "Registered Phone",
-          message: res.sms_preview,
-        });
-      }
+      setSuccessMessage(
+        res?.message || "New 6-digit security code dispatched.",
+      );
       if (audioEngine) audioEngine.playUiChirp(1040);
     } catch (err) {
       setAuthError(err?.message || "Failed to resend OTP. Please try again.");
@@ -428,8 +422,13 @@ export default function AIUnleashedAuth() {
           portal: "user",
         });
         if (audioEngine) audioEngine.playStationLock();
-        setSuccessMessage(`Account created successfully for ${result?.user?.name || derivedName}! Please sign in to continue.`);
-        setActiveTab("signin");
+        loginUser(result);
+        setSuccessMessage(
+          `Welcome to Kolkata Water Intelligence, ${result?.user?.name || derivedName}!`,
+        );
+        setTimeout(() => {
+          navigate("/");
+        }, 650);
       }
     } catch (err) {
       const isNetworkIssue =
@@ -438,35 +437,31 @@ export default function AIUnleashedAuth() {
         err?.message?.includes("NetworkError");
 
       if (isNetworkIssue) {
-        if (activeTab === "signin") {
-          const mockResult = {
-            access_token: "offline-user-token-" + Date.now(),
-            user: {
-              id: "USR-LOCAL-01",
-              name: derivedName || "Anirban Chatterjee",
-              email: email || "anirban.chatterjee@kolkata.org",
-              phone: phoneNumber.trim() || "+91 98301 54321",
-              role: "Citizen",
-              badgeId: "",
-              department: "Kolkata Citizen Water Watch",
-              portal: "user",
-              status: "active",
-            },
-          };
-          if (audioEngine) audioEngine.playStationLock();
-          loginUser(mockResult);
-          setSuccessMessage(`Welcome back, ${mockResult.user.name}`);
-          setTimeout(() => {
-            navigate("/");
-          }, 650);
-        } else {
-          if (audioEngine) audioEngine.playStationLock();
-          setSuccessMessage(`Account created successfully for ${derivedName}! Please sign in to continue.`);
-          setActiveTab("signin");
-        }
+        const mockResult = {
+          access_token: "offline-user-token-" + Date.now(),
+          user: {
+            id: "USR-LOCAL-01",
+            name: derivedName || "Anirban Chatterjee",
+            email: email || "anirban.chatterjee@kolkata.org",
+            phone: phoneNumber.trim() || "+91 98301 54321",
+            role: "Citizen",
+            badgeId: "",
+            department: "Kolkata Citizen Water Watch",
+            portal: "user",
+            status: "active",
+          },
+        };
+        if (audioEngine) audioEngine.playStationLock();
+        loginUser(mockResult);
+        setSuccessMessage(`Welcome back, ${mockResult.user.name}`);
+        setTimeout(() => {
+          navigate("/");
+        }, 650);
         return;
       }
-      setAuthError(err?.message || "Authentication failed. Please check your credentials.");
+      setAuthError(
+        err?.message || "Authentication failed. Please check your credentials.",
+      );
       if (audioEngine) audioEngine.playUiChirp(420);
     } finally {
       setIsSubmitting(false);
@@ -499,12 +494,16 @@ export default function AIUnleashedAuth() {
         return;
       }
       if (!phoneNumber.trim()) {
-        setAuthError("Please enter your mobile phone number to receive the security OTP.");
+        setAuthError(
+          "Please enter your mobile phone number to receive the security OTP.",
+        );
         return;
       }
     } else {
       if (!email.trim() && !phoneNumber.trim()) {
-        setAuthError("Please enter your official email or registered mobile number.");
+        setAuthError(
+          "Please enter your official email or registered mobile number.",
+        );
         return;
       }
       if (!password) {
@@ -519,9 +518,12 @@ export default function AIUnleashedAuth() {
     try {
       const targets = resolveTargetCredentials();
       const res = await api.post("/auth/admin/generate-otp", {
+        name: fullName.trim() || undefined,
         email: targets.email,
         phone: targets.phone,
         purpose: activeTab,
+        portal: selectedPortal,
+        password: password || undefined,
       });
 
       const target = res?.phone || phoneNumber.trim() || email.trim();
@@ -529,16 +531,10 @@ export default function AIUnleashedAuth() {
       setIsOtpStep(true);
       setOtpCountdown(60);
       setOtpDigits(["", "", "", "", "", ""]);
-      setSuccessMessage(res?.message || "6-digit security code dispatched via SMS.");
-      if (res?.otp) {
-        setSmsToast({
-          code: res.otp,
-          phone: target,
-          message: res.sms_preview,
-        });
-      }
+      setSuccessMessage(res?.message || "6-digit security code dispatched.");
       if (audioEngine) audioEngine.playStationLock();
       setTimeout(() => {
+        nativeOtpInputRef.current?.focus();
         otpInputRefs.current[0]?.focus();
       }, 150);
     } catch (err) {
@@ -549,32 +545,32 @@ export default function AIUnleashedAuth() {
 
       if (isNetworkIssue) {
         const target = phoneNumber.trim() || email.trim() || "+91 6289143592";
-        const offlineCode = "582914";
         setOtpTargetPhone(target);
         setIsOtpStep(true);
         setOtpCountdown(60);
         setOtpDigits(["", "", "", "", "", ""]);
-        setSuccessMessage(`Offline simulation: 6-digit code dispatched to ${target}.`);
-        setSmsToast({
-          code: offlineCode,
-          phone: target,
-          message: `KMC-SECURE: Your 2-Factor Officer Clearance OTP is ${offlineCode}. Valid for 5 minutes.`,
-        });
+        setSuccessMessage(
+          `Offline simulation: 6-digit code dispatched to ${target}.`,
+        );
         if (audioEngine) audioEngine.playStationLock();
         setTimeout(() => {
+          nativeOtpInputRef.current?.focus();
           otpInputRefs.current[0]?.focus();
         }, 150);
         return;
       }
 
-      setAuthError(err?.message || "Failed to dispatch verification code. Please check your credentials.");
+      setAuthError(
+        err?.message ||
+          "Failed to dispatch verification code. Please check your credentials.",
+      );
       if (audioEngine) audioEngine.playUiChirp(420);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Step 2 Submit: Validate OTP on dedicated page and complete authentication
+  // Step 2 Submit: Validate OTP on dedicated page and complete authentication in ONE single step
   const handleOtpVerifySubmit = async (e) => {
     if (e) e.preventDefault();
     const code = otpDigits.join("").trim();
@@ -595,24 +591,15 @@ export default function AIUnleashedAuth() {
         .split(" ")
         .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
         .join(" ") ||
-      "Officer";
+      (selectedPortal === "admin" ? "Admin" : "User");
 
     try {
-      // 1. Validate OTP with backend
-      const targets = resolveTargetCredentials();
-      await api.post("/auth/admin/verify-otp", {
-        otp: code,
-        email: targets.email,
-        phone: targets.phone,
-        purpose: activeTab,
-      });
-
-      // 2. Complete registration or login
+      // Single OTP verification & authentication step (No duplicate calls)
       if (activeTab === "signin") {
         const result = await api.post("/auth/login", {
           email: email.trim(),
           password,
-          portal: "admin",
+          portal: selectedPortal,
           otp: code,
         });
 
@@ -629,16 +616,21 @@ export default function AIUnleashedAuth() {
           password,
           fullName: derivedName,
           phone: phoneNumber.trim(),
-          portal: "admin",
+          portal: selectedPortal,
           otp: code,
         });
 
         if (audioEngine) audioEngine.playStationLock();
+        loginUser(result);
         const createdName = result?.user?.name || derivedName;
-        setSuccessMessage(`Administrative clearance verified and account created for ${createdName}! Please sign in to continue.`);
-        setIsOtpStep(false);
-        setActiveTab("signin");
-        setOtpDigits(["", "", "", "", "", ""]);
+        setSuccessMessage(
+          selectedPortal === "admin"
+            ? `Administrative clearance verified! Welcome, ${createdName}`
+            : `Welcome to Kolkata Water Intelligence, ${createdName}`,
+        );
+        setTimeout(() => {
+          navigate("/");
+        }, 650);
       }
     } catch (err) {
       const isNetworkIssue =
@@ -647,39 +639,38 @@ export default function AIUnleashedAuth() {
         err?.message?.includes("NetworkError");
 
       if (isNetworkIssue) {
-        if (activeTab === "signin") {
-          const mockResult = {
-            access_token: "offline-admin-token-" + Date.now(),
-            user: {
-              id: "ADM-LOCAL-01",
-              name: derivedName || "Officer Devjyoti Sen",
-              email: email || "officer.roy@kolkata-water.gov.in",
-              phone: phoneNumber.trim() || "+91 98300 12345",
-              role: "Command Officer",
-              badgeId: "KWI-OFFICER-7702",
-              department: "KMC Water Directorate & Drainage",
-              portal: "admin",
-              status: "active",
-            },
-          };
-          if (audioEngine) audioEngine.playStationLock();
-          loginUser(mockResult);
-          setSuccessMessage(`Welcome back, ${mockResult.user.name}`);
-          setTimeout(() => {
-            navigate("/");
-          }, 650);
-        } else {
-          if (audioEngine) audioEngine.playStationLock();
-          setSuccessMessage(`Administrative account created successfully for ${derivedName}! Please sign in to continue.`);
-          setIsOtpStep(false);
-          setActiveTab("signin");
-          setOtpDigits(["", "", "", "", "", ""]);
-        }
+        const mockResult = {
+          access_token: "offline-admin-token-" + Date.now(),
+          user: {
+            id: selectedPortal === "admin" ? "ADM-LOCAL-01" : "USR-LOCAL-01",
+            name: derivedName || (selectedPortal === "admin" ? "Administrator" : "User"),
+            email: email || (selectedPortal === "admin" ? "admin@kolkata-water.gov.in" : "user@kolkata-water.gov.in"),
+            phone: phoneNumber.trim() || "+91 98300 12345",
+            role: selectedPortal === "admin" ? "Admin" : "User",
+            badgeId: selectedPortal === "admin" ? "KWI-ADMIN-01" : "",
+            department: selectedPortal === "admin" ? "KMC Water & Drainage Administration" : "Citizen Water Watch",
+            portal: selectedPortal,
+            status: "active",
+          },
+        };
+        if (audioEngine) audioEngine.playStationLock();
+        loginUser(mockResult);
+        setSuccessMessage(
+          activeTab === "signin"
+            ? `Welcome back, ${mockResult.user.name}`
+            : `Account verified! Welcome, ${mockResult.user.name}`,
+        );
+        setTimeout(() => {
+          navigate("/");
+        }, 650);
         return;
       }
 
       if (audioEngine) audioEngine.playUiChirp(420);
-      setAuthError(err?.message || "Invalid or expired verification code. Please check your SMS and try again.");
+      setAuthError(
+        err?.message ||
+          "Invalid or expired verification code. Please check your SMS and try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -694,9 +685,9 @@ export default function AIUnleashedAuth() {
       setFullName("Anirban Chatterjee");
       setPhoneNumber("+91 98301 54321");
     } else {
-      setEmail("officer.roy@kolkata-water.gov.in");
+      setEmail("admin@kolkata-water.gov.in");
       setPassword("Kolkata@Water2026");
-      setFullName("Officer Devjyoti Sen");
+      setFullName("Administrator");
       setPhoneNumber("9830012345");
     }
     setIsOtpStep(false);
@@ -706,62 +697,6 @@ export default function AIUnleashedAuth() {
 
   return (
     <div className="min-h-screen w-full bg-[#070e1c] text-white flex flex-col justify-between font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden relative">
-      {/* 100% Free In-App Simulated Mobile SMS Push Notification Toast */}
-      <AnimatePresence>
-        {smsToast && (
-          <motion.div
-            initial={{ opacity: 0, y: -70, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -50, scale: 0.94 }}
-            transition={{ type: "spring", stiffness: 450, damping: 28 }}
-            className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md p-4 rounded-2xl bg-[#08152b]/95 backdrop-blur-2xl border border-cyan-400/50 shadow-[0_20px_50px_rgba(0,10,30,0.85),0_0_35px_rgba(6,182,212,0.3)] text-left"
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center shrink-0 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.4)]">
-                <Smartphone className="w-5 h-5 animate-pulse" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between text-[11px] font-bold text-cyan-300 uppercase tracking-wider mb-0.5">
-                  <span>MESSAGES · KMC GATEWAY</span>
-                  <span className="text-slate-400 font-normal">Just now</span>
-                </div>
-                <div className="text-[13px] text-white font-medium leading-snug">
-                  KMC 2FA Security Code:{" "}
-                  <span className="font-mono font-extrabold text-cyan-300 bg-cyan-950/90 px-2 py-0.5 rounded-lg border border-cyan-400/50 text-[14px] tracking-widest shadow-inner">
-                    {smsToast.code}
-                  </span>
-                </div>
-                <div className="text-[11px] text-slate-300/80 mt-1">
-                  Simulated SMS to <strong>{smsToast.phone}</strong> (100% Free Demo Mode)
-                </div>
-                <div className="flex items-center gap-2 mt-2.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const digits = smsToast.code.split("").slice(0, 6);
-                      setOtpDigits(digits);
-                      setSmsToast(null);
-                      if (audioEngine) audioEngine.playStationLock();
-                    }}
-                    className="px-3 py-1 rounded-lg bg-cyan-500/25 hover:bg-cyan-500/40 border border-cyan-400/60 text-cyan-200 text-xs font-bold cursor-pointer transition-all duration-150 flex items-center gap-1 shadow-[0_0_12px_rgba(6,182,212,0.3)]"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>Fill Code</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSmsToast(null)}
-                    className="px-2.5 py-1 text-xs text-slate-400 hover:text-white cursor-pointer transition-colors"
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* ========================================================= */}
       {/* 1. EXACT FULL-SCREEN BACKGROUND: LoginPage_bg.png         */}
       {/* ========================================================= */}
@@ -929,47 +864,84 @@ export default function AIUnleashedAuth() {
                         Two-Factor Security Verification
                       </h3>
                       <p className="text-slate-300/90 text-[12px] mt-1.5 max-w-sm mx-auto leading-relaxed">
-                        For officer clearance, a 6-digit security OTP has been dispatched to your official email and mobile.
+                        For administrator clearance, a confidential 6-digit security
+                        OTP has been sent to the admin email address.
                       </p>
 
-                      {/* Dispatched to Email / Phone indicator */}
+                      {/* Dispatched to Email indicator */}
                       <div className="inline-flex items-center gap-2 mt-3 px-3.5 py-1.5 rounded-full bg-cyan-950/70 border border-cyan-400/40 text-cyan-300 text-[12px] font-mono shadow-inner">
                         <Mail className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                        <span>Dispatched to: <strong className="text-white font-semibold">{email || otpTargetPhone || phoneNumber}</strong></span>
+                        <span>
+                          Sent to Admin Mail:{" "}
+                          <strong className="text-white font-semibold">
+                            {email || otpTargetPhone}
+                          </strong>
+                        </span>
+                      </div>
+
+                      {/* Important Delivery Notice */}
+                      <div className="mt-2.5 text-[11.5px] text-amber-300/90 bg-amber-950/40 border border-amber-500/30 rounded-lg px-3 py-1.5 max-w-sm mx-auto flex items-center justify-center gap-1.5 leading-tight">
+                        <span>📬 Check your <strong>Inbox & Spam / Junk</strong> folder (Gmail may filter new sender codes).</span>
                       </div>
                     </div>
 
                     {/* Dedicated 6-Digit OTP Form */}
-                    <form onSubmit={handleOtpVerifySubmit} className="space-y-5">
+                    <form
+                      onSubmit={handleOtpVerifySubmit}
+                      className="space-y-5"
+                    >
                       <div>
                         <div className="text-center text-slate-300 text-[11px] font-bold uppercase tracking-wider mb-3">
                           Enter 6-Digit Verification Code
                         </div>
-                        {/* 6 Digit Input Keypad */}
-                        <div className="flex justify-center items-center gap-2 sm:gap-2.5">
-                          {otpDigits.map((digit, idx) => (
-                            <input
-                              key={idx}
-                              ref={(el) => (otpInputRefs.current[idx] = el)}
-                              type="text"
-                              inputMode="numeric"
-                              pattern="[0-9]*"
-                              maxLength={1}
-                              value={digit}
-                              onChange={(e) => handleDigitChange(idx, e.target.value)}
-                              onKeyDown={(e) => handleDigitKeyDown(idx, e)}
-                              onPaste={handleOtpPaste}
-                              className="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl sm:text-2xl font-mono font-bold text-white bg-[#0e203f]/90 border-2 border-cyan-400/30 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-4 focus:ring-cyan-400/25 rounded-xl outline-none transition-all duration-200 shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
-                            />
-                          ))}
+                        {/* 6 Digit Input Keypad with Smooth Transparent Overlay */}
+                        <div className="relative flex justify-center items-center gap-2 sm:gap-2.5">
+                          <input
+                            ref={nativeOtpInputRef}
+                            type="text"
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            pattern="[0-9]*"
+                            maxLength={6}
+                            value={otpDigits.join("")}
+                            onChange={(e) => {
+                              const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                              const newArr = ["", "", "", "", "", ""];
+                              for (let i = 0; i < val.length; i++) newArr[i] = val[i];
+                              setOtpDigits(newArr);
+                              if (authError) setAuthError("");
+                            }}
+                            className="absolute inset-0 opacity-0 z-30 cursor-text w-full h-full"
+                            autoFocus
+                          />
+                          {otpDigits.map((digit, idx) => {
+                            const firstEmptyIdx = otpDigits.findIndex((d) => d === "");
+                            const isFocused = (firstEmptyIdx === -1 && idx === 5) || firstEmptyIdx === idx;
+                            return (
+                              <div
+                                key={idx}
+                                className={`w-11 h-13 sm:w-12 sm:h-14 flex items-center justify-center text-xl sm:text-2xl font-mono font-bold rounded-xl transition-all duration-200 shadow-[0_4px_16px_rgba(0,0,0,0.3)] select-none ${
+                                  digit
+                                    ? "text-cyan-300 bg-[#11274d] border-2 border-cyan-400 ring-2 ring-cyan-400/20"
+                                    : isFocused
+                                    ? "text-white bg-[#0e203f] border-2 border-cyan-400/80 ring-2 ring-cyan-400/30 animate-pulse"
+                                    : "text-white bg-[#0e203f]/90 border-2 border-cyan-400/30"
+                                }`}
+                              >
+                                {digit}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
 
                       {/* Resend & Status */}
                       <div className="flex items-center justify-between text-[12px] text-slate-300 px-1 pt-1">
-                        <span>Didn't receive SMS code?</span>
+                        <span>Didn't receive email code?</span>
                         {otpCountdown > 0 ? (
-                          <span className="text-cyan-400 font-mono font-semibold">Resend in {otpCountdown}s</span>
+                          <span className="text-cyan-400 font-mono font-semibold">
+                            Resend in {otpCountdown}s
+                          </span>
                         ) : (
                           <button
                             type="button"
@@ -977,7 +949,9 @@ export default function AIUnleashedAuth() {
                             disabled={isGeneratingOtp}
                             className="text-cyan-400 hover:text-cyan-300 font-bold underline cursor-pointer disabled:opacity-50 transition-colors"
                           >
-                            {isGeneratingOtp ? "Sending SMS..." : "Resend SMS Code"}
+                            {isGeneratingOtp
+                              ? "Sending Email..."
+                              : "Resend Email Code"}
                           </button>
                         )}
                       </div>
@@ -1022,12 +996,14 @@ export default function AIUnleashedAuth() {
                         {isSubmitting ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin text-white" />
-                            <span>Verifying Officer Clearance...</span>
+                            <span>Verifying Administrator Clearance...</span>
                           </>
                         ) : (
                           <>
                             <span>
-                              {activeTab === "signin" ? "Verify & Sign In" : "Verify & Complete Registration"}
+                              {activeTab === "signin"
+                                ? "Verify & Sign In"
+                                : "Verify & Complete Registration"}
                             </span>
                             <ArrowRight className="w-4 h-4" />
                           </>
@@ -1076,9 +1052,14 @@ export default function AIUnleashedAuth() {
                         layoutId="authTabSlider"
                         className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] rounded-xl bg-gradient-to-r from-[#0284c7] to-[#2563eb] shadow-[0_2px_12px_rgba(2,132,199,0.4)]"
                         style={{
-                          left: activeTab === "signin" ? "6px" : "calc(50% + 0px)",
+                          left:
+                            activeTab === "signin" ? "6px" : "calc(50% + 0px)",
                         }}
-                        transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 38,
+                        }}
                       />
                     </div>
 
@@ -1122,7 +1103,7 @@ export default function AIUnleashedAuth() {
                             Admin
                           </span>
                           <span className="text-[10px] opacity-80 leading-tight mt-1">
-                            2FA SMS Clearance
+                            2FA Security Clearance
                           </span>
                         </button>
                       </div>
@@ -1140,15 +1121,25 @@ export default function AIUnleashedAuth() {
                     </div>
 
                     {/* Form Fields */}
-                    <form onSubmit={handleCredentialSubmit} className="space-y-3.5">
+                    <form
+                      onSubmit={handleCredentialSubmit}
+                      className="space-y-3.5"
+                    >
                       {/* Full Name Field (Appears smoothly on Create Account tab) */}
                       <AnimatePresence>
                         {activeTab === "create" && (
                           <motion.div
                             initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                            animate={{ opacity: 1, height: "auto", marginBottom: 14 }}
+                            animate={{
+                              opacity: 1,
+                              height: "auto",
+                              marginBottom: 14,
+                            }}
                             exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                            transition={{
+                              duration: 0.28,
+                              ease: [0.16, 1, 0.3, 1],
+                            }}
                             className="overflow-hidden"
                           >
                             <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
@@ -1165,7 +1156,11 @@ export default function AIUnleashedAuth() {
                                   setFullName(e.target.value);
                                   if (authError) setAuthError("");
                                 }}
-                                placeholder="e.g. Officer Sourav Roy"
+                                placeholder={
+                                  selectedPortal === "admin"
+                                    ? "e.g. Administrator"
+                                    : "e.g. Sourav Roy"
+                                }
                                 required={activeTab === "create"}
                                 className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
                               />
@@ -1194,8 +1189,8 @@ export default function AIUnleashedAuth() {
                             }}
                             placeholder={
                               selectedPortal === "admin"
-                                ? "officer.roy@kolkata-water.gov.in or 6289143592"
-                                : "citizen.roy@kolkata-water.gov.in"
+                                ? "admin@kolkata-water.gov.in or 6289143592"
+                                : "user@kolkata-water.gov.in"
                             }
                             required
                             className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
@@ -1243,13 +1238,21 @@ export default function AIUnleashedAuth() {
                         {activeTab === "create" && (
                           <motion.div
                             initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                            animate={{ opacity: 1, height: "auto", marginBottom: 14 }}
+                            animate={{
+                              opacity: 1,
+                              height: "auto",
+                              marginBottom: 14,
+                            }}
                             exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                            transition={{
+                              duration: 0.28,
+                              ease: [0.16, 1, 0.3, 1],
+                            }}
                             className="overflow-hidden"
                           >
                             <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
-                              Mobile Phone Number {selectedPortal === "admin" && "(for SMS OTP)"}
+                              Mobile Phone Number{" "}
+                              {selectedPortal === "admin" && "(for SMS OTP)"}
                             </label>
                             <div className="relative">
                               <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
@@ -1263,7 +1266,10 @@ export default function AIUnleashedAuth() {
                                   if (authError) setAuthError("");
                                 }}
                                 placeholder="6289143592 or +91 98300 12345"
-                                required={activeTab === "create" && selectedPortal === "admin"}
+                                required={
+                                  activeTab === "create" &&
+                                  selectedPortal === "admin"
+                                }
                                 className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
                               />
                             </div>
@@ -1277,14 +1283,20 @@ export default function AIUnleashedAuth() {
                           <input
                             type="checkbox"
                             checked={rememberSession}
-                            onChange={(e) => setRememberSession(e.target.checked)}
+                            onChange={(e) =>
+                              setRememberSession(e.target.checked)
+                            }
                             className="rounded accent-cyan-500 cursor-pointer"
                           />
                           <span>Remember me</span>
                         </label>
                         <button
                           type="button"
-                          onClick={() => alert(`Password reset instructions sent to: ${email || "your registered email"}`)}
+                          onClick={() =>
+                            alert(
+                              `Password reset instructions sent to: ${email || "your registered email"}`,
+                            )
+                          }
                           className="text-cyan-400 hover:text-cyan-300 hover:underline font-semibold cursor-pointer transition-colors duration-150"
                         >
                           Forgot password?
@@ -1344,10 +1356,12 @@ export default function AIUnleashedAuth() {
                           <>
                             <span>
                               {selectedPortal === "admin"
-                                ? (activeTab === "signin"
-                                    ? "Continue with 2FA Verification"
-                                    : "Generate OTP & Continue")
-                                : (activeTab === "signin" ? "Login" : "Create Account")}
+                                ? activeTab === "signin"
+                                  ? "Continue with 2FA Verification"
+                                  : "Generate OTP & Continue"
+                                : activeTab === "signin"
+                                  ? "Login"
+                                  : "Create Account"}
                             </span>
                             <ArrowRight className="w-4 h-4" />
                           </>
@@ -1396,7 +1410,7 @@ export default function AIUnleashedAuth() {
                         className="text-center text-[12.5px] text-cyan-400 hover:text-cyan-300 font-semibold cursor-pointer inline-flex items-center gap-1.5 transition-colors duration-150"
                       >
                         <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                        <span>Fill demo officer credentials</span>
+                        <span>Fill demo {selectedPortal === "admin" ? "admin" : "user"} credentials</span>
                       </button>
                     </div>
                   </motion.div>

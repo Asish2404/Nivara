@@ -39,9 +39,9 @@ export function ProfileView() {
 
   /* ── User Data Model (Preserves Store & Defaults) ── */
   const [profile, setProfile] = useState({
-    fullName: currentUser?.name || "Officer Roy",
-    username: currentUser?.username || "officer.roy",
-    email: currentUser?.email || "officer.roy@kolkata-water.gov.in",
+    fullName: currentUser?.name || "KWI User",
+    username: currentUser?.username || "kwi.user",
+    email: currentUser?.email || "user@kolkata-water.gov.in",
     phone: currentUser?.phone || "",
     location: currentUser?.location || "Kolkata, West Bengal",
     institution: currentUser?.institution || "",
@@ -124,12 +124,12 @@ export function ProfileView() {
 
   /* ── Computed Values ── */
   const userInitials = useMemo(() => {
-    const clean = (profile.fullName || currentUser?.name || "Officer Roy").replace(/[^a-zA-Z0-9]/g, " ").trim();
+    const clean = (profile.fullName || currentUser?.name || "KWI User").replace(/[^a-zA-Z0-9]/g, " ").trim();
     const parts = clean.split(/\s+/).filter(Boolean);
     if (parts.length >= 2) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }
-    return clean.slice(0, 2).toUpperCase() || "OR";
+    return clean.slice(0, 2).toUpperCase() || "KU";
   }, [profile.fullName, currentUser?.name]);
 
   const userInitial = userInitials;
@@ -561,7 +561,7 @@ export function ProfileView() {
                               Email
                             </div>
                             <div className="kwi-field-val-text truncate">
-                              {profile.email || "officer.roy@kolkata-water.gov.in"}
+                              {profile.email || "user@kolkata-water.gov.in"}
                             </div>
                           </div>
                         </div>

@@ -10,14 +10,14 @@ export const isPublicRoute = (path) => {
   return clean === '/' || clean === '/signup' || clean === '/login' || clean === '/auth'
 }
 
-// Helper to check if a user belongs to admin portal / officer tier
+// Helper to check if a user belongs to admin portal
 export const isUserAdmin = (user) => {
   if (!user) return false
   // Explicit citizen ID prefix or portal
   if (user.id && String(user.id).startsWith('USR-')) return false
   if (user.portal === 'user') return false
 
-  if (user.portal === 'admin' || user.portal === 'super_admin') return true
+  if (user.portal === 'admin') return true
   if (user.badgeId || user.badge_id) return true
   if (user.id && String(user.id).startsWith('ADM-')) return true
 
@@ -445,7 +445,7 @@ export const useKWIStore = create((set, get) => ({
       department: be.department || cached.department || '',
       bio: be.bio ?? cached.bio ?? '',
       avatarUrl: be.avatar_url ?? cached.avatarUrl ?? null,
-      role: be.role || cached.role || 'Command Officer',
+      role: be.role || cached.role || (be.portal === 'admin' ? 'Admin' : 'User'),
       badgeId: be.badgeId || be.badge_id || cached.badgeId || '',
       clearance: be.clearance || cached.clearance || '',
       createdAt: be.created_at || cached.createdAt || null,

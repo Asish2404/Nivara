@@ -67,13 +67,14 @@ class OtpService:
         if norm_phone:
             cls._store[f"phone:{norm_phone}:{canon_purpose}"] = entry
 
-        # Prominently log to terminal so developer/tester can see the simulated SMS
+        # Prominently log to terminal for local developer testing
         target_display = phone or email or "officer"
-        print(f"\n=======================================================", flush=True)
-        print(f" [KMC SMS GATEWAY] Dispatching 2FA OTP to Mobile: {target_display}", flush=True)
+        print(f"\n=====================================================================================", flush=True)
+        print(f" [AUTH 2FA SYSTEM] Generated Security OTP for: {target_display}", flush=True)
         print(f" OTP CODE: {otp} (Valid for 5 minutes)", flush=True)
         print(f" Purpose: {canon_purpose}", flush=True)
-        print(f"=======================================================\n", flush=True)
+        print(f" Note: Sent to recipient's email via Gmail SMTP. Check Inbox & Spam/Junk folder.", flush=True)
+        print(f"=====================================================================================\n", flush=True)
 
         return otp
 
@@ -149,76 +150,26 @@ class OtpService:
         return False
 
     @classmethod
-    async def dispatch_email_otp(cls, to_email: Optional[str], otp: str, purpose: str = "login") -> bool:
+    async def dispatch_email_otp(
+        cls,
+        to_email: Optional[str],
+        otp: str,
+        purpose: str = "login",
+        user_name: Optional[str] = None,
+    ) -> bool:
         """
-        Dispatches a 100% free official HTML 2FA email using Gmail SMTP.
-        If no credentials are in .env, prints a notice to console.
+        Dispatches official HTML 2FA email using Gmail SMTP via centralized EmailService.
         """
         if not to_email or "@" not in to_email:
             return False
 
-        smtp_user = getattr(settings, "SMTP_USER", "") or os.getenv("SMTP_USER", "")
-        smtp_pass = getattr(settings, "SMTP_PASSWORD", "") or os.getenv("SMTP_PASSWORD", "")
-        smtp_host = getattr(settings, "SMTP_HOST", "smtp.gmail.com")
-        smtp_port = int(getattr(settings, "SMTP_PORT", 587))
-
-        if not smtp_user or not smtp_pass:
-            print(
-                f"\n=======================================================\n"
-                f" [FREE EMAIL OTP] Dispatched to: {to_email}\n"
-                f" CODE: [{otp}] (Valid for 5 minutes)\n"
-                f" Set SMTP_USER and SMTP_PASSWORD in Backend/.env\n"
-                f" to receive it directly in your real Gmail inbox for free!\n"
-                f"=======================================================\n",
-                flush=True,
-            )
-            return False
-
-        subject = f"KMC Security 2FA Clearance Code: {otp}"
-        action_name = "account registration" if purpose == "signup" else "administrative sign in"
-
-        html_body = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-        </head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #070e1c; color: #ffffff; padding: 24px;">
-          <div style="max-width: 500px; margin: 0 auto; background: #0c1c38; border: 1px solid rgba(6,182,212,0.3); border-radius: 16px; padding: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-            <div style="display: inline-block; background: #0284c7; color: #ffffff; font-size: 11px; font-weight: bold; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 1px;">KMC Official Clearance</div>
-            <h2 style="font-size: 20px; font-weight: bold; margin: 16px 0 8px 0; color: #ffffff;">Two-Factor Authentication Passcode</h2>
-            <p style="font-size: 13.5px; color: #94a3b8; line-height: 1.6;">You have requested administrative access for {action_name} on the Kolkata Water Intelligence Platform.</p>
-            <div style="background: #061126; border: 2px solid #06b6d4; border-radius: 12px; padding: 18px; text-align: center; margin: 24px 0; font-size: 34px; font-family: monospace; font-weight: 800; letter-spacing: 8px; color: #22d3ee;">{otp}</div>
-            <p style="font-size: 12.5px; color: #94a3b8; line-height: 1.5;">This passcode is confidential and expires in <strong>5 minutes</strong>. If you did not initiate this request, contact the municipal cyber cell immediately.</p>
-            <div style="font-size: 11px; color: #64748b; margin-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; text-align: center;">
-              Kolkata Municipal Corporation · Water Directorate & Drainage Wing<br>
-              Cleaner City · Safer Tomorrow
-            </div>
-          </div>
-        </body>
-        </html>
-        """
-
-        def _send_sync():
-            msg = MIMEMultipart("alternative")
-            msg["Subject"] = subject
-            msg["From"] = f"Kolkata Municipal Corporation <{smtp_user}>"
-            msg["To"] = to_email
-            msg.attach(MIMEText(html_body, "html"))
-
-            with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
-                server.starttls()
-                server.login(smtp_user, smtp_pass)
-                server.sendmail(smtp_user, [to_email], msg.as_string())
-
-        try:
-            await asyncio.to_thread(_send_sync)
-            print(f"\n>>> [REAL EMAIL DISPATCH SUCCESS] 2FA OTP sent to {to_email} via Gmail SMTP!\n", flush=True)
-            return True
-        except Exception as e:
-            logger.error(f"Failed to dispatch email OTP via SMTP: {e}")
-            print(f"\n>>> [EMAIL SMTP ERROR] Could not dispatch to {to_email}: {e}\n", flush=True)
-            return False
+        from app.services.email_service import EmailService
+        return await EmailService.send_signup_otp_email(
+            to_email=to_email,
+            otp=otp,
+            user_name=user_name,
+            purpose=purpose,
+        )
 
     @classmethod
     def verify_otp(

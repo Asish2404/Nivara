@@ -30,9 +30,12 @@ class UserLoginRequest(BaseModel):
 
 
 class GenerateOtpRequest(BaseModel):
+    name: Optional[str] = Field(default=None, description="User or admin full name for personalized messaging")
     email: Optional[str] = Field(default=None, description="Target email for OTP dispatch")
     phone: Optional[str] = Field(default=None, description="Target mobile phone number for SMS OTP dispatch")
     purpose: str = Field(default="login", description="'login' or 'signup'")
+    portal: Optional[str] = Field(default="user", description="Login portal: 'user' or 'admin'")
+    password: Optional[str] = Field(default=None, description="Optional password for credential verification")
 
 
 class VerifyOtpRequest(BaseModel):

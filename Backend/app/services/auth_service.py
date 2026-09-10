@@ -18,28 +18,15 @@ DEFAULT_PERSONAS = [
     {
         "id": "USR-KMC-001",
         "portal": "admin",
-        "email": "officer.roy@kolkata-water.gov.in",
+        "email": "admin@kolkata-water.gov.in",
         "password": "Kolkata@Water2026",
-        "name": "Officer Devjyoti Sen",
-        "role": "Chief Drainage Officer",
-        "department": "KMC Sewerage & Drainage Directorate",
-        "badge_id": "KMC-DIR-7049",
-        "clearance": "Level 4 // Command Clearance",
+        "name": "Administrator",
+        "role": "Admin",
+        "department": "KMC Water & Drainage Administration",
+        "badge_id": "KMC-ADM-7049",
+        "clearance": "Admin Clearance",
         "phone": "+91 98300 12345",
         "location": "Salt Lake, Kolkata",
-    },
-    {
-        "id": "USR-ENG-002",
-        "portal": "admin",
-        "email": "priyanka.mukherjee@kwi.gov.in",
-        "password": "Telemetry@2026",
-        "name": "Priyanka Mukherjee",
-        "role": "Lead Sensor Systems Engineer",
-        "department": "KWI Real-time Telemetry Wing",
-        "badge_id": "ENG-TELEMETRY-284",
-        "clearance": "Level 3 // Systems Ops",
-        "phone": "+91 98300 67890",
-        "location": "Alipore, Kolkata",
     },
     {
         "id": "USR-CIT-003",
@@ -47,8 +34,8 @@ DEFAULT_PERSONAS = [
         "email": "anirban.chatterjee@kolkata.org",
         "password": "Citizen@2026",
         "name": "Anirban Chatterjee",
-        "role": "Community Lead Reporter",
-        "clearance": "Verified Citizen ID",
+        "role": "User",
+        "clearance": "User Access",
         "phone": "+91 98301 54321",
         "location": "Ballygunge, Kolkata",
     },
@@ -58,8 +45,8 @@ DEFAULT_PERSONAS = [
         "email": "abhishekb@gmail.com",
         "password": "Citizen@2026",
         "name": "Abhishek Bose",
-        "role": "Community Lead Reporter",
-        "clearance": "Verified Citizen ID",
+        "role": "User",
+        "clearance": "User Access",
         "phone": "+91 98301 54321",
         "location": "Ballygunge, Kolkata",
     },
@@ -152,14 +139,13 @@ class AuthService:
 
     @classmethod
     async def register_user(cls, db: AsyncSession, data: UserSignupRequest) -> Union[User, Admin]:
-        """Register account into 'users' or 'admin' table based on selected portal."""
+        """Register account into 'users' or 'admin' table based on selected portal ('user' or 'admin')."""
         email_clean = data.email.lower().strip()
         portal = (data.portal or "user").lower().strip()
-        name = (data.fullName or "").strip() or ("Officer" if portal in ["admin", "super_admin"] else "Citizen")
         phone = (data.phone or "").strip() or None
         location = (data.location or "").strip() or "Kolkata, West Bengal"
 
-        if portal in ["admin", "super_admin"]:
+        if portal in ["admin", "super_admin", "officer"]:
             # Check if admin email already exists
             result = await db.execute(select(Admin).where(Admin.email == email_clean))
             if result.scalars().first():
@@ -170,9 +156,10 @@ class AuthService:
 
             admin_id = f"ADM-{uuid.uuid4().hex[:8].upper()}"
             badge_id = (data.badgeId or "").strip() or f"KMC-{uuid.uuid4().hex[:4].upper()}"
-            role = data.role or ("Super Admin" if portal == "super_admin" else "Command Officer")
-            department = data.department or "KMC Sewerage & Drainage Directorate"
-            clearance = data.clearance or ("Level 4 // Command Clearance" if portal == "super_admin" else "Level 3 // Admin Clearance")
+            name = (data.fullName or "").strip() or "Admin"
+            role = "Admin"
+            department = data.department or "KMC Water & Drainage Administration"
+            clearance = data.clearance or "Admin Clearance"
 
             new_admin = Admin(
                 id=admin_id,
@@ -203,8 +190,9 @@ class AuthService:
                 )
 
             user_id = f"USR-{uuid.uuid4().hex[:8].upper()}"
-            role = data.role or "Citizen"
-            clearance = data.clearance or "Citizen Access"
+            name = (data.fullName or "").strip() or "User"
+            role = "User"
+            clearance = data.clearance or "User Access"
 
             new_user = User(
                 id=user_id,
@@ -223,55 +211,104 @@ class AuthService:
             await db.refresh(new_user)
             return new_user
 
+    @staticmethod
+    def get_canonical_role_category(role_str: str) -> str:
+        """
+        Normalizes a role string into one of two canonical categories:
+        'USER' or 'ADMIN'.
+        """
+        r = (role_str or "").strip().lower().replace("-", " ").replace("_", " ")
+        if any(k in r for k in ["admin", "super", "officer", "engineer", "directorate", "command"]):
+            return "ADMIN"
+        return "USER"
+
+    @staticmethod
+    def get_canonical_portal_category(portal_str: str) -> str:
+        """
+        Normalizes a portal string into one of two canonical categories:
+        'USER' or 'ADMIN'.
+        """
+        p = (portal_str or "user").strip().lower().replace("-", " ").replace("_", " ")
+        if any(k in p for k in ["admin", "super", "officer"]):
+            return "ADMIN"
+        return "USER"
+
+    @classmethod
+    def validate_role_for_portal(cls, account_role: str, requested_portal: str) -> tuple[bool, str]:
+        """
+        Validates that the account's registered role matches the requested login portal.
+        Only two portals exist: 'user' and 'admin'.
+        Returns (is_valid, error_message).
+        """
+        canon_role = cls.get_canonical_role_category(account_role)
+        canon_portal = cls.get_canonical_portal_category(requested_portal)
+
+        # If portal is user, only USER role is permitted
+        if canon_portal == "USER":
+            if canon_role == "USER":
+                return True, ""
+            return False, "This account is registered as an Administrator. Please use the Admin Login portal."
+
+        # If portal is admin, only ADMIN role is permitted
+        if canon_portal == "ADMIN":
+            if canon_role == "ADMIN":
+                return True, ""
+            return False, "This account is registered as a User. Please use the User Login portal."
+
+        return True, ""
+
+    @classmethod
+    async def find_account_by_identifier(
+        cls, db: AsyncSession, identifier: str
+    ) -> Optional[Union[User, Admin]]:
+        """Finds account across admin and users table by email or phone."""
+        clean = (identifier or "").lower().strip()
+        raw_digits = re.sub(r"\D", "", identifier or "")
+
+        # Check Admin table
+        admin_conds = [Admin.email == clean]
+        if len(raw_digits) >= 7:
+            admin_conds.append(Admin.phone == identifier.strip())
+            admin_conds.append(Admin.phone.like(f"%{raw_digits[-10:]}"))
+        res_adm = await db.execute(select(Admin).where(or_(*admin_conds)))
+        adm = res_adm.scalars().first()
+        if adm:
+            return adm
+
+        # Check Users table
+        user_conds = [User.email == clean]
+        if len(raw_digits) >= 7:
+            user_conds.append(User.phone == identifier.strip())
+            user_conds.append(User.phone.like(f"%{raw_digits[-10:]}"))
+        res_usr = await db.execute(select(User).where(or_(*user_conds)))
+        usr = res_usr.scalars().first()
+        return usr
+
     @classmethod
     async def authenticate_user(
         cls, db: AsyncSession, email: str, password: str, portal: str = "user"
-    ) -> Optional[Union[User, Admin]]:
-        """Authenticate user against target table and set status to 'active' on success."""
-        email_clean = email.lower().strip()
-        raw_digits = re.sub(r"\D", "", email.strip())
-        target_portal = (portal or "user").lower().strip()
-
-        # Build conditions for matching either email or phone
-        def admin_conds():
-            conds = [Admin.email == email_clean]
-            if len(raw_digits) >= 7:
-                conds.append(Admin.phone == email.strip())
-                conds.append(Admin.phone.like(f"%{raw_digits[-10:]}"))
-            return or_(*conds)
-
-        def user_conds():
-            conds = [User.email == email_clean]
-            if len(raw_digits) >= 7:
-                conds.append(User.phone == email.strip())
-                conds.append(User.phone.like(f"%{raw_digits[-10:]}"))
-            return or_(*conds)
-
-        entity = None
-        if target_portal in ["admin", "super_admin"]:
-            res = await db.execute(select(Admin).where(admin_conds()))
-            entity = res.scalars().first()
-            if not entity:
-                res_user = await db.execute(select(User).where(user_conds()))
-                entity = res_user.scalars().first()
-        else:
-            res = await db.execute(select(User).where(user_conds()))
-            entity = res.scalars().first()
-            if not entity:
-                res_admin = await db.execute(select(Admin).where(admin_conds()))
-                entity = res_admin.scalars().first()
-
+    ) -> tuple[Optional[Union[User, Admin]], str]:
+        """
+        Authenticate user credentials against target table with strict role-based portal validation.
+        Returns (entity, error_detail).
+        """
+        entity = await cls.find_account_by_identifier(db, email)
         if not entity:
-            return None
+            return None, "No account found with these credentials. Please check your email or phone."
+
+        # Validate role matches requested portal
+        is_valid_role, role_error = cls.validate_role_for_portal(entity.role, portal)
+        if not is_valid_role:
+            return None, role_error
 
         if not verify_password(password, entity.hashed_password):
-            return None
+            return None, "Invalid email/phone or password."
 
         # Successfully authenticated -> update status to 'active'
         entity.status = "active"
         await db.commit()
         await db.refresh(entity)
-        return entity
+        return entity, ""
 
     @classmethod
     async def logout_user(cls, db: AsyncSession, user_id: str) -> None:
