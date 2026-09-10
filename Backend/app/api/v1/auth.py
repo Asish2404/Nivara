@@ -1,6 +1,7 @@
+import re
 from typing import Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, Header, status
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -123,41 +124,100 @@ async def generate_admin_otp(
     payload: GenerateOtpRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    """Generate and return 6-digit OTP for admin login or signup."""
-    email_clean = payload.email.lower().strip()
+    """Generate and dispatch 6-digit OTP to mobile phone / email for admin login or signup."""
+    email_raw = (payload.email or "").strip() or None
+    phone_raw = (payload.phone or "").strip() or None
     purpose = (payload.purpose or "login").lower().strip()
 
-    if purpose == "login":
-        res = await db.execute(select(Admin).where(Admin.email == email_clean))
+    # If email_raw is formatted like a phone number (e.g. 6289143592) and no phone was supplied, treat as phone
+    if email_raw and not phone_raw and "@" not in email_raw:
+        phone_raw = email_raw
+        email_raw = None
+
+    email_clean = email_raw.lower() if email_raw else None
+    phone_clean = phone_raw
+
+    if not email_clean and not phone_clean:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Either a phone number or email address is required to dispatch security OTP.",
+        )
+
+    # Normalize canonical purpose
+    canon_purpose = "signup" if purpose in ["signup", "create", "register"] else "login"
+
+    target_phone = phone_clean
+    if canon_purpose == "login":
+        # Look up admin by email or phone
+        phone_digits = re.sub(r"\D", "", phone_clean or "")
+        last10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
+
+        conditions = []
+        if email_clean:
+            conditions.append(Admin.email == email_clean)
+        if phone_clean:
+            conditions.append(Admin.phone == phone_clean)
+            if len(phone_digits) >= 7:
+                conditions.append(Admin.phone.like(f"%{last10}"))
+
+        res = await db.execute(select(Admin).where(or_(*conditions)))
         admin = res.scalars().first()
         if not admin:
-            res_user = await db.execute(select(User).where(User.email == email_clean))
-            if not res_user.scalars().first():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No administrative officer account found with these credentials. Please check your phone or email.",
+            )
+        target_phone = phone_clean or admin.phone
+        email_clean = email_clean or admin.email
+
+    elif canon_purpose == "signup":
+        # Check if already registered
+        phone_digits = re.sub(r"\D", "", phone_clean or "")
+        last10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
+
+        conditions = []
+        if email_clean:
+            conditions.append(Admin.email == email_clean)
+        if phone_clean:
+            conditions.append(Admin.phone == phone_clean)
+            if len(phone_digits) >= 7:
+                conditions.append(Admin.phone.like(f"%{last10}"))
+
+        if conditions:
+            res = await db.execute(select(Admin).where(or_(*conditions)))
+            if res.scalars().first():
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"No administrative officer account registered with email '{email_clean}'.",
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="An admin account with this email or phone number already exists. Please sign in instead.",
                 )
 
-    elif purpose == "signup":
-        res = await db.execute(select(Admin).where(Admin.email == email_clean))
-        if res.scalars().first():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"An admin account with email '{email_clean}' already exists. Please sign in.",
-            )
+    # Dispatch OTP and trigger gateways (Free Email + SMS)
+    otp = OtpService.generate_otp(email=email_clean, phone=target_phone, purpose=canon_purpose)
+    if email_clean and "@" in email_clean:
+        await OtpService.dispatch_email_otp(to_email=email_clean, otp=otp, purpose=canon_purpose)
+    if target_phone:
+        await OtpService.dispatch_real_sms(phone=target_phone, otp=otp)
 
-    otp = OtpService.generate_otp(email_clean, purpose, payload.phone)
-    masked_target = email_clean
-    if "@" in masked_target:
-        name_part, domain = masked_target.split("@", 1)
-        masked_name = name_part[:2] + ("*" * max(1, len(name_part) - 2))
-        masked_target = f"{masked_name}@{domain}"
+    # Format human-friendly message
+    if email_clean and "@" in email_clean:
+        name_part, domain = email_clean.split("@", 1)
+        masked_email = name_part[:2] + ("*" * max(1, len(name_part) - 2)) + f"@{domain}"
+        display_msg = f"6-digit security code dispatched to {masked_email}."
+    elif target_phone:
+        digits = re.sub(r"\D", "", target_phone)
+        masked = f"+91 ******{digits[-4:]}" if len(digits) >= 4 else target_phone
+        display_msg = f"6-digit security code dispatched to {masked}."
+    else:
+        display_msg = "6-digit security code dispatched successfully."
 
     return OtpResponse(
         status="ok",
-        message=f"Security OTP dispatched to {masked_target} for administrative clearance.",
-        otp=otp,
+        message=display_msg,
+        phone=target_phone,
+        email=email_clean,
         expires_in=OtpService.DEFAULT_EXPIRY_SECONDS,
+        sms_preview=f"KMC-SECURE: Your 2-Factor Officer Clearance OTP is {otp}. Valid for 5 minutes.",
+        otp=otp,
     )
 
 
@@ -169,20 +229,33 @@ async def generate_admin_otp(
 )
 async def verify_admin_otp(payload: VerifyOtpRequest):
     """Verify 6-digit OTP code before proceeding with administrative login or signup."""
-    email_clean = payload.email.lower().strip()
+    email_raw = (payload.email or "").strip() or None
+    phone_raw = (payload.phone or "").strip() or None
+    if email_raw and not phone_raw and "@" not in email_raw:
+        phone_raw = email_raw
+        email_raw = None
+
+    email_clean = email_raw.lower() if email_raw else None
+    phone_clean = phone_raw
     purpose = (payload.purpose or "login").lower().strip()
 
-    is_valid = OtpService.verify_otp(email_clean, payload.otp, purpose)
+    is_valid = OtpService.verify_otp(
+        otp=payload.otp,
+        email=email_clean,
+        phone=phone_clean,
+        purpose=purpose,
+    )
     if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid or expired OTP code. Please check the code or generate a new one.",
+            detail="Invalid or expired OTP code. Please check your SMS or request a new code.",
         )
 
     return OtpResponse(
         status="ok",
-        message="Administrative 2FA OTP verified successfully.",
-        otp=payload.otp,
+        message="Administrative 2FA clearance verified successfully.",
+        phone=phone_clean,
+        email=email_clean,
         expires_in=OtpService.DEFAULT_EXPIRY_SECONDS,
     )
 
@@ -201,18 +274,12 @@ async def signup(
     portal = (payload.portal or "user").lower().strip()
     if portal in ["admin", "super_admin"]:
         email_clean = payload.email.lower().strip()
-        if payload.otp:
-            if not OtpService.consume_otp(email_clean, payload.otp, "signup"):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid or expired security OTP code for Admin registration.",
-                )
-        else:
-            if not OtpService.is_verified(email_clean, "signup"):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Admin registration requires 2-factor OTP verification. Please generate and verify your OTP.",
-                )
+        phone_clean = (payload.phone or "").strip() or None
+        if not OtpService.consume_otp(otp=payload.otp, email=email_clean, phone=phone_clean, purpose="signup"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Admin registration requires verified 2-factor OTP. Please verify the code sent to your phone.",
+            )
 
     entity = await AuthService.register_user(db, payload)
     entity_portal = "admin" if isinstance(entity, Admin) else "user"
@@ -239,29 +306,31 @@ async def login(
 ):
     """Authenticate email & password. If portal is admin, requires OTP verification."""
     portal = (payload.portal or "user").lower().strip()
-    if portal in ["admin", "super_admin"]:
-        email_clean = payload.email.lower().strip()
-        if payload.otp:
-            if not OtpService.consume_otp(email_clean, payload.otp, "login"):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid or expired security OTP code for Admin login.",
-                )
-        else:
-            if not OtpService.is_verified(email_clean, "login"):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Admin login requires 2-factor OTP verification. Please generate and verify your OTP.",
-                )
 
+    # 1. Authenticate user credentials first (supports email OR phone)
     entity = await AuthService.authenticate_user(
         db, payload.email, payload.password, payload.portal or "user"
     )
     if not entity:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password.",
+            detail="Invalid email/phone or password.",
         )
+
+    # 2. If admin portal, verify and consume OTP
+    if portal in ["admin", "super_admin"]:
+        admin_email = getattr(entity, "email", payload.email)
+        admin_phone = getattr(entity, "phone", None) or payload.email
+        if not OtpService.consume_otp(
+            otp=payload.otp,
+            email=admin_email,
+            phone=admin_phone,
+            purpose="login",
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Admin access requires verified 2-factor OTP. Please verify the code sent to your mobile number.",
+            )
 
     entity_portal = "admin" if isinstance(entity, Admin) else "user"
     access_token = create_access_token(

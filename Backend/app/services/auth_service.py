@@ -1,7 +1,8 @@
 import uuid
+import re
 from datetime import datetime
 from typing import Optional, Union, List
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
@@ -228,20 +229,36 @@ class AuthService:
     ) -> Optional[Union[User, Admin]]:
         """Authenticate user against target table and set status to 'active' on success."""
         email_clean = email.lower().strip()
+        raw_digits = re.sub(r"\D", "", email.strip())
         target_portal = (portal or "user").lower().strip()
+
+        # Build conditions for matching either email or phone
+        def admin_conds():
+            conds = [Admin.email == email_clean]
+            if len(raw_digits) >= 7:
+                conds.append(Admin.phone == email.strip())
+                conds.append(Admin.phone.like(f"%{raw_digits[-10:]}"))
+            return or_(*conds)
+
+        def user_conds():
+            conds = [User.email == email_clean]
+            if len(raw_digits) >= 7:
+                conds.append(User.phone == email.strip())
+                conds.append(User.phone.like(f"%{raw_digits[-10:]}"))
+            return or_(*conds)
 
         entity = None
         if target_portal in ["admin", "super_admin"]:
-            res = await db.execute(select(Admin).where(Admin.email == email_clean))
+            res = await db.execute(select(Admin).where(admin_conds()))
             entity = res.scalars().first()
             if not entity:
-                res_user = await db.execute(select(User).where(User.email == email_clean))
+                res_user = await db.execute(select(User).where(user_conds()))
                 entity = res_user.scalars().first()
         else:
-            res = await db.execute(select(User).where(User.email == email_clean))
+            res = await db.execute(select(User).where(user_conds()))
             entity = res.scalars().first()
             if not entity:
-                res_admin = await db.execute(select(Admin).where(Admin.email == email_clean))
+                res_admin = await db.execute(select(Admin).where(admin_conds()))
                 entity = res_admin.scalars().first()
 
         if not entity:
