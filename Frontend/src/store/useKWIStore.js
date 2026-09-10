@@ -1,27 +1,110 @@
 
 import { create } from 'zustand'
-import { api } from '../utils/api'
+import { api } from '../utils/api.js'
+import { formatTime12Hour } from '../utils/dateTimeUtils.js'
+
+// Helper to check public routes
+export const isPublicRoute = (path) => {
+  if (!path) return true
+  const clean = path.split('?')[0].split('#')[0]
+  return clean === '/' || clean === '/signup' || clean === '/login' || clean === '/auth'
+}
+
+// Helper to check if a user belongs to admin portal / officer tier
+export const isUserAdmin = (user) => {
+  if (!user) return false
+  // Explicit citizen ID prefix or portal
+  if (user.id && String(user.id).startsWith('USR-')) return false
+  if (user.portal === 'user') return false
+
+  if (user.portal === 'admin' || user.portal === 'super_admin') return true
+  if (user.badgeId || user.badge_id) return true
+  if (user.id && String(user.id).startsWith('ADM-')) return true
+
+  const role = (user.role || '').toLowerCase()
+  if (
+    role.includes('admin') ||
+    role.includes('officer') ||
+    role.includes('commander') ||
+    role.includes('director') ||
+    role.includes('commissioner')
+  ) {
+    return true
+  }
+  return false
+}
+
+// Role-based route permission checker:
+// - User: Home ('/'), Reports ('/reports', '/my-reports'), Profile ('/profile'), Auth ('/login', '/signup')
+// - Admin: Home ('/'), Live Map ('/live-city'), Simulate ('/simulate'), Respond ('/action-center'), Profile ('/profile'), Auth
+// - Unauthenticated: Home ('/'), Auth ('/signup', '/login')
+export const isRouteAllowedForUser = (path, user) => {
+  const cleanPath = (path || '/').split('?')[0].split('#')[0]
+
+  if (isPublicRoute(cleanPath)) return true
+  if (!user) return false
+
+  const admin = isUserAdmin(user)
+  const isReportRoute =
+    cleanPath === '/reports' ||
+    cleanPath === '/report' ||
+    cleanPath === '/my-reports' ||
+    cleanPath.startsWith('/reports/') ||
+    cleanPath.startsWith('/my-reports/')
+
+  const isAdminOnlyRoute =
+    cleanPath === '/live-city' ||
+    cleanPath === '/incidents' ||
+    cleanPath === '/forecast' ||
+    cleanPath === '/simulate' ||
+    cleanPath === '/action-center' ||
+    cleanPath === '/respond' ||
+    cleanPath.startsWith('/live-city/') ||
+    cleanPath.startsWith('/simulate/') ||
+    cleanPath.startsWith('/action-center/')
+
+  const isProfileRoute =
+    cleanPath === '/profile' ||
+    cleanPath === '/my-profile' ||
+    cleanPath.startsWith('/profile/')
+
+  if (isProfileRoute) return true
+
+  if (admin) {
+    // Admin can see home, live map, simulate, respond, profile; Report page is restricted from admin
+    return !isReportRoute
+  } else {
+    // User can see home, report page, profile; all other pages are restricted for user
+    return !isAdminOnlyRoute
+  }
+}
 
 // Helper to determine initial route safely
 const getInitialRoute = () => {
   if (typeof window !== 'undefined') {
     const p = window.location.pathname
-    if (
-      p === '/live-city' ||
-      p === '/simulate' ||
-      p === '/reports' ||
-      p === '/report' ||
-      p === '/my-reports' ||
-      p === '/action-center' ||
-      p === '/respond' ||
-      p === '/profile' ||
-      p === '/my-profile' ||
-      p === '/login' ||
-      p === '/auth'
-    ) {
-      return p
+    const hasToken = !!localStorage.getItem('kwi_token')
+    let cachedUser = null
+    try {
+      const raw = localStorage.getItem('kwi_user')
+      if (raw && hasToken) cachedUser = JSON.parse(raw)
+    } catch {}
+
+    if (!cachedUser && !isPublicRoute(p)) {
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, '', '/signup')
+      }
+      return '/signup'
     }
-    return '/'
+
+    if (cachedUser && !isRouteAllowedForUser(p, cachedUser)) {
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, '', '/')
+      }
+      return '/'
+    }
+
+    return p
   }
   return '/'
 }
@@ -47,6 +130,7 @@ const routeToSection = (path) => {
     case '/profile':
     case '/my-profile':
       return 'PROFILE'
+    case '/signup':
     case '/login':
     case '/auth':
       return 'LOGIN'
@@ -71,15 +155,28 @@ export const useKWIStore = create((set, get) => ({
   profileActiveTab: 'overview',
   setProfileActiveTab: (tab) => set({ profileActiveTab: tab }),
 
+  // Pending redirect after sign-in for guarded navigation
+  postLoginRedirect: null,
+  setPostLoginRedirect: (path) => set({ postLoginRedirect: path }),
+
   navigate: (path) => {
+    const { currentUser } = get()
+    let target = path
+    if (!currentUser && !isPublicRoute(path)) {
+      set({ postLoginRedirect: path })
+      target = '/signup'
+    } else if (currentUser && !isRouteAllowedForUser(path, currentUser)) {
+      target = '/'
+    }
+
     if (typeof window !== 'undefined') {
-      if (window.location.pathname !== path) {
-        window.history.pushState({}, '', path)
+      if (window.location.pathname !== target) {
+        window.history.pushState({}, '', target)
       }
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
     }
-    const section = routeToSection(path)
-    set({ currentRoute: path, activeSection: section })
+    const section = routeToSection(target)
+    set({ currentRoute: target, activeSection: section })
   },
 
   // Shared Mobile Report & Verification State (Stores original user input)
@@ -123,7 +220,7 @@ export const useKWIStore = create((set, get) => ({
   },
 
   submitCitizenReport: () => {
-    const now = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+    const now = formatTime12Hour(new Date())
     set({
       isReportSubmitted: true,
       reportVerificationStage: 1,
@@ -326,8 +423,8 @@ export const useKWIStore = create((set, get) => ({
   closeLoginModal: () => set({ isLoginModalOpen: false }),
   toggleLoginModal: () => set((state) => ({ isLoginModalOpen: !state.isLoginModalOpen })),
 
-  // Real user identity — hydrated from localStorage cache and refreshed from the backend.
-  currentUser: typeof window !== 'undefined' && localStorage.getItem('kwi_user')
+  // Real user identity — hydrated from localStorage cache only if a token also exists
+  currentUser: typeof window !== 'undefined' && localStorage.getItem('kwi_token') && localStorage.getItem('kwi_user')
     ? JSON.parse(localStorage.getItem('kwi_user'))
     : null,
 
@@ -352,36 +449,31 @@ export const useKWIStore = create((set, get) => ({
       badgeId: be.badgeId || be.badge_id || cached.badgeId || '',
       clearance: be.clearance || cached.clearance || '',
       createdAt: be.created_at || cached.createdAt || null,
+      portal: be.portal || (be.badgeId || be.badge_id || String(be.id || '').startsWith('ADM-') ? 'admin' : (cached.portal || 'user')),
+      status: be.status || cached.status || 'active',
     }
   },
 
   // Persist a hydrated/authenticated user.
   setCurrentUser: (userData) => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('kwi_user', JSON.stringify(userData))
+      if (userData) {
+        localStorage.setItem('kwi_user', JSON.stringify(userData))
+      } else {
+        localStorage.removeItem('kwi_user')
+      }
     }
     set({ currentUser: userData })
   },
 
-  // On app mount: refresh the profile from the backend using the stored JWT.
+  // On app mount: refresh the profile from the backend ONLY if a stored JWT exists.
   initUser: async () => {
     if (typeof window === 'undefined') return
-    let token = localStorage.getItem('kwi_token')
+    const token = localStorage.getItem('kwi_token')
     if (!token) {
-      try {
-        const loginRes = await api.post('/auth/login', {
-          email: 'officer.roy@kolkata-water.gov.in',
-          password: 'Kolkata@Water2026',
-        })
-        if (loginRes?.access_token) {
-          get().loginUser(loginRes)
-          token = loginRes.access_token
-        }
-      } catch {
-        /* ignore offline fallback */
-      }
+      set({ currentUser: null })
+      return
     }
-    if (!token) return
     try {
       const me = await api.get('/auth/me', token)
       get().setCurrentUser(get().mapBackendUser(me))
@@ -438,11 +530,16 @@ export const useKWIStore = create((set, get) => ({
   },
 
   logoutUser: () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('kwi_token') : null
+    if (token) {
+      api.post('/auth/logout', {}, token).catch(() => { })
+    }
     if (typeof window !== 'undefined') {
       localStorage.removeItem('kwi_user')
       localStorage.removeItem('kwi_token')
     }
-    set({ currentUser: null, myReports: [], reportsLoaded: false, reportsError: null })
+    set({ currentUser: null, myReports: [], reportsLoaded: false, reportsError: null, postLoginRedirect: null })
+    get().navigate('/')
   },
 
   unreadNotificationsCount: 3,
@@ -458,7 +555,7 @@ export const useKWIStore = create((set, get) => ({
 
   // Live City Telemetry & Municipal Metrics
   isLiveCityConnected: true,
-  lastUpdated: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+  lastUpdated: formatTime12Hour(new Date()),
   hooghlyTideLevel: 3.42, // meters
   hooghlyTideTrend: 'RISING', // 'RISING' | 'FALLING' | 'STABLE'
 
@@ -735,12 +832,12 @@ export const useKWIStore = create((set, get) => ({
     {
       sender: 'system',
       text: 'Kolkata Water Intelligence Copilot online. Telemetry synchronized with KMC Drainage Department, Hooghly River Sluice Grid, and 84 municipal pumping stations.',
-      timestamp: '13:00',
+      timestamp: '01:00 PM',
     },
   ],
   sendCopilotMessage: (text) => {
     if (!text.trim()) return
-    const userMsg = { sender: 'user', text, timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) }
+    const userMsg = { sender: 'user', text, timestamp: formatTime12Hour(new Date()) }
 
     let reply
     const lower = text.toLowerCase()
@@ -759,7 +856,7 @@ export const useKWIStore = create((set, get) => ({
       reply = `Telemetry check for "${text}": All sensor networks in Boroughs I through XVI are transmitting valid hydraulic pressure and depth data.`
     }
 
-    const botMsg = { sender: 'bot', text: reply, timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) }
+    const botMsg = { sender: 'bot', text: reply, timestamp: formatTime12Hour(new Date()) }
 
     set((state) => ({
       chatMessages: [...state.chatMessages, userMsg, botMsg],

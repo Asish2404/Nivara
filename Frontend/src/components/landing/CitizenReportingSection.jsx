@@ -134,13 +134,15 @@ export function CitizenReportingSection() {
     setIsPulling(false);
   };
 
-  // 1. Live Lockscreen Real-Time Clock & Date
+  // 1. Live Lockscreen Real-Time Clock & Date (12-hour AM/PM)
   const [currentTime, setCurrentTime] = useState(() => {
     const now = new Date();
     const hours = now.getHours() % 12 || 12;
     const minutes = now.getMinutes().toString().padStart(2, "0");
     return `${hours}:${minutes}`;
   });
+
+  const [ampm, setAmpm] = useState(() => (new Date().getHours() >= 12 ? "PM" : "AM"));
 
   const [currentDate, setCurrentDate] = useState(() => {
     const now = new Date();
@@ -157,6 +159,7 @@ export function CitizenReportingSection() {
       const hours = now.getHours() % 12 || 12;
       const minutes = now.getMinutes().toString().padStart(2, "0");
       setCurrentTime(`${hours}:${minutes}`);
+      setAmpm(now.getHours() >= 12 ? "PM" : "AM");
       setCurrentDate(
         now.toLocaleDateString("en-US", {
           weekday: "long",
@@ -1123,14 +1126,19 @@ export function CitizenReportingSection() {
                         <p className="text-[12.5px] font-medium text-white/95 tracking-tight font-sans drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]">
                           {currentDate}
                         </p>
-                        <h1
-                          className={`font-bold text-white tracking-tight font-sans leading-none drop-shadow-[0_2px_14px_rgba(0,0,0,0.5)] my-0.5 select-none ${isReportSubmitted && visibleNotifications.length > 1
-                            ? "text-[54px] sm:text-[58px]"
-                            : "text-[66px] sm:text-[72px]"
-                            }`}
-                        >
-                          {currentTime}
-                        </h1>
+                        <div className="flex items-baseline justify-center gap-1.5 my-0.5 select-none">
+                          <h1
+                            className={`font-bold text-white tracking-tight font-sans leading-none drop-shadow-[0_2px_14px_rgba(0,0,0,0.5)] ${isReportSubmitted && visibleNotifications.length > 1
+                              ? "text-[54px] sm:text-[58px]"
+                              : "text-[66px] sm:text-[72px]"
+                              }`}
+                          >
+                            {currentTime}
+                          </h1>
+                          <span className="text-sm sm:text-base font-bold text-white/90 drop-shadow-md uppercase tracking-wider font-mono">
+                            {ampm}
+                          </span>
+                        </div>
                       </div>
 
                       {/* LOCK SCREEN NOTIFICATIONS AREA */}

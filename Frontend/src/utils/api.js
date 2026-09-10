@@ -11,6 +11,30 @@ export function resolveApiAssetUrl(path) {
   return new URL(path, `${BASE_URL}/`).toString();
 }
 
+function formatApiErrorMessage(detail, fallback) {
+  if (!detail) return fallback || "Request failed";
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => {
+        if (!item) return "";
+        if (typeof item === "string") return item;
+        const field = item.loc ? item.loc[item.loc.length - 1] : "";
+        const fieldName =
+          field && field !== "body"
+            ? `${field.charAt(0).toUpperCase() + field.slice(1)}: `
+            : "";
+        return `${fieldName}${item.msg || "Invalid value"}`;
+      })
+      .filter(Boolean)
+      .join(". ");
+  }
+  if (typeof detail === "object") {
+    return detail.msg || detail.message || JSON.stringify(detail);
+  }
+  return String(detail);
+}
+
 async function request(path, { method = "GET", body, token } = {}) {
   const headers = { Accept: "application/json" };
   if (body !== undefined) headers["Content-Type"] = "application/json";
@@ -30,7 +54,7 @@ async function request(path, { method = "GET", body, token } = {}) {
     } catch {
       /* ignore parse failures */
     }
-    throw new Error(detail);
+    throw new Error(formatApiErrorMessage(detail, res.statusText));
   }
 
   const contentType = res.headers.get("content-type") || "";
@@ -61,7 +85,7 @@ async function postForm(path, formData, token) {
     } catch {
       /* ignore parse failures */
     }
-    throw new Error(detail);
+    throw new Error(formatApiErrorMessage(detail, res.statusText));
   }
 
   const contentType = res.headers.get("content-type") || "";

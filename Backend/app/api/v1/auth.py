@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, Header, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.security import create_access_token, decode_access_token
 from app.models.user import User
+from app.models.admin import Admin
 from app.schemas.auth import (
     UserSignupRequest,
     UserLoginRequest,
@@ -18,11 +19,11 @@ from app.services.auth_service import AuthService
 router = APIRouter()
 
 
-# Dependency to get current authenticated user from Bearer token
+# Dependency to get current authenticated user/admin from Bearer token
 async def get_current_user(
     authorization: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_db),
-) -> User:
+) -> Union[User, Admin]:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -38,60 +39,69 @@ async def get_current_user(
         )
 
     user_id = payload["sub"]
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalars().first()
 
-    if not user or not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User account not found or inactive.",
-        )
+    # 1. Search in users table
+    res_user = await db.execute(select(User).where(User.id == user_id))
+    user = res_user.scalars().first()
+    if user:
+        return user
 
-    return user
+    # 2. Search in admin table
+    res_admin = await db.execute(select(Admin).where(Admin.id == user_id))
+    admin = res_admin.scalars().first()
+    if admin:
+        return admin
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="User account not found or inactive.",
+    )
 
 
-# Dependency to get current user, falling back to registered citizen persona if unauthenticated
+# Dependency falling back to registered default persona if unauthenticated
 async def get_current_user_or_default(
     authorization: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_db),
-) -> User:
-    """Returns the authenticated user if token is valid, or falls back to the default citizen persona."""
+) -> Union[User, Admin]:
+    """Returns the authenticated user/admin if token is valid, or falls back to default persona."""
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ")[1]
         payload = decode_access_token(token)
         if payload and "sub" in payload:
             user_id = payload["sub"]
-            result = await db.execute(select(User).where(User.id == user_id))
-            user = result.scalars().first()
-            if user and user.is_active:
+            res_user = await db.execute(select(User).where(User.id == user_id))
+            user = res_user.scalars().first()
+            if user:
                 return user
 
-    # Fallback 1: Default citizen persona
+            res_admin = await db.execute(select(Admin).where(Admin.id == user_id))
+            admin = res_admin.scalars().first()
+            if admin:
+                return admin
+
+    # Fallback: Default citizen persona
     result = await db.execute(
         select(User).where(User.email == "anirban.chatterjee@kolkata.org")
     )
     default_citizen = result.scalars().first()
-    if default_citizen and default_citizen.is_active:
+    if default_citizen:
         return default_citizen
 
-    # Fallback 2: Any active user in DB
-    result = await db.execute(select(User).where(User.is_active == True))
+    # Fallback: Any active user in DB
+    result = await db.execute(select(User))
     first_user = result.scalars().first()
     if first_user:
         return first_user
 
-    # Fallback 3: Create default citizen if none exists
+    # Fallback: Create default citizen
     new_citizen = User(
         id="USR-CIT-003",
+        name="Anirban Chatterjee",
         email="anirban.chatterjee@kolkata.org",
         hashed_password="dummy",
-        full_name="Anirban Chatterjee",
         role="Community Lead Reporter",
-        department="Kolkata Citizen Water Watch",
-        badge_id="CITIZEN-KOL-9182",
         clearance="Verified Citizen ID",
-        avatar="🌊",
-        is_active=True,
+        status="active",
     )
     db.add(new_citizen)
     await db.commit()
@@ -103,22 +113,23 @@ async def get_current_user_or_default(
     "/signup",
     response_model=TokenResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Register a new citizen or officer account",
+    summary="Register a new citizen or admin account",
 )
 async def signup(
     payload: UserSignupRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    """Register a new user, hashes password, saves to DB, and returns a signed JWT."""
-    user = await AuthService.register_user(db, payload)
+    """Register a new account into 'users' or 'admin' table, and returns a signed JWT."""
+    entity = await AuthService.register_user(db, payload)
+    portal = "admin" if isinstance(entity, Admin) else "user"
     access_token = create_access_token(
-        subject=user.id,
-        extra_claims={"email": user.email, "role": user.role},
+        subject=entity.id,
+        extra_claims={"email": entity.email, "role": entity.role, "portal": portal},
     )
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
-        user=AuthService.to_user_response(user),
+        user=AuthService.to_user_response(entity),
     )
 
 
@@ -126,64 +137,77 @@ async def signup(
     "/login",
     response_model=TokenResponse,
     status_code=status.HTTP_200_OK,
-    summary="Authenticate user and obtain JWT token",
+    summary="Authenticate user or admin and obtain JWT token",
 )
 async def login(
     payload: UserLoginRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    """Authenticate email & password. Returns JWT token and municipal persona."""
-    user = await AuthService.authenticate_user(db, payload.email, payload.password)
-    if not user:
+    """Authenticate email & password. Sets status to 'active', returns JWT token and profile."""
+    entity = await AuthService.authenticate_user(
+        db, payload.email, payload.password, payload.portal or "user"
+    )
+    if not entity:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password.",
         )
 
+    portal = "admin" if isinstance(entity, Admin) else "user"
     access_token = create_access_token(
-        subject=user.id,
-        extra_claims={"email": user.email, "role": user.role},
+        subject=entity.id,
+        extra_claims={"email": entity.email, "role": entity.role, "portal": portal},
     )
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
-        user=AuthService.to_user_response(user),
+        user=AuthService.to_user_response(entity),
     )
+
+
+@router.post(
+    "/logout",
+    status_code=status.HTTP_200_OK,
+    summary="Logout user and set status to not active",
+)
+async def logout(
+    current_user: Union[User, Admin] = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Marks user/admin status as 'not active' upon logout."""
+    await AuthService.logout_user(db, current_user.id)
+    return {"status": "ok", "message": "Successfully logged out."}
 
 
 @router.get(
     "/me",
     response_model=UserResponse,
-    summary="Get profile of currently logged-in user",
+    summary="Get profile of currently logged-in user or admin",
 )
-async def get_my_profile(current_user: User = Depends(get_current_user)):
-    """Protected endpoint: Reads token from Authorization header and returns user profile."""
+async def get_my_profile(current_user: Union[User, Admin] = Depends(get_current_user)):
+    """Protected endpoint: Reads token from Authorization header and returns profile."""
     return AuthService.to_user_response(current_user)
 
 
 @router.patch(
     "/me",
     response_model=UserResponse,
-    summary="Update profile fields of the currently logged-in user",
+    summary="Update profile fields of currently logged-in user or admin",
 )
 async def update_my_profile(
     payload: UserUpdateRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: Union[User, Admin] = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Update only the provided profile fields (full name, department, phone, location, bio, avatar)."""
+    """Update profile fields (name, department, phone, location)."""
     if payload.full_name is not None:
-        current_user.full_name = payload.full_name.strip() or current_user.full_name
-    if payload.department is not None:
+        current_user.name = payload.full_name.strip() or current_user.name
+    if payload.department is not None and hasattr(current_user, "department"):
         current_user.department = payload.department.strip() or current_user.department
     if payload.phone is not None:
         current_user.phone = payload.phone.strip() or None
     if payload.location is not None:
         current_user.location = payload.location.strip() or None
-    if payload.bio is not None:
-        current_user.bio = payload.bio.strip() or None
-    if payload.avatar_url is not None:
-        current_user.avatar_url = payload.avatar_url.strip() or None
 
     await db.commit()
     await db.refresh(current_user)

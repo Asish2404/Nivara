@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlalchemy import String, Float, Integer, DateTime, Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
+from ..core.datetime_utils import get_current_time
 from ..core.database import Base
 
 
@@ -11,7 +12,7 @@ class Report(Base):
     report_id: Mapped[str] = mapped_column(String(32), unique=True, index=True, nullable=False)
     # Ownership — every report is scoped to the user who submitted it
     user_id: Mapped[str] = mapped_column(
-        String(64), ForeignKey("users.id"), index=True, nullable=False
+        String(64), index=True, nullable=False
     )
     user_name: Mapped[str] = mapped_column(String(128), nullable=False)
     user_email: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -34,7 +35,7 @@ class Report(Base):
     description: Mapped[str] = mapped_column(Text, default="")
 
     # Lifecycle
-    submitted_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=get_current_time)
     status: Mapped[str] = mapped_column(String(32), default="Under Review")
 
     # AI verification
@@ -44,4 +45,4 @@ class Report(Base):
     # Dispatch
     dispatch_status: Mapped[str] = mapped_column(String(32), default="Unassigned")
     dispatched_to: Mapped[str] = mapped_column(String(128), default="")
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=get_current_time)

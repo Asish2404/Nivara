@@ -11,6 +11,7 @@ from ..models.user import User
 from ..schemas.report import ReportCreate
 from .geocoding_service import GeocodingService
 from .jurisdiction_service import JurisdictionService
+from ..core.datetime_utils import get_current_time, ensure_kolkata_tz, get_kolkata_tz
 
 # Directory where citizen-submitted report images are stored (relative to Backend/)
 UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "uploads"))
@@ -68,7 +69,9 @@ class ReportService:
     @staticmethod
     def _apply_aging(report: Report, now: datetime) -> None:
         """Advance a single report's status based on elapsed time since submission."""
-        elapsed = (now - report.submitted_at).total_seconds()
+        sub_time = ensure_kolkata_tz(report.submitted_at)
+        now_tz = ensure_kolkata_tz(now)
+        elapsed = (now_tz - sub_time).total_seconds() if sub_time and now_tz else 0
         for prev_status, next_status, threshold_secs in STATUS_AGING:
             if report.status == prev_status and elapsed >= threshold_secs:
                 report.status = next_status
@@ -92,7 +95,7 @@ class ReportService:
                         report.dispatched_to = DISPATCH_TEAMS["Roads"]
                 elif next_status == "Resolved":
                     report.dispatch_status = "Resolved – Area Returned to Service"
-                report.updated_at = now
+                report.updated_at = now_tz
 
     @classmethod
     async def create_report(
@@ -162,7 +165,7 @@ class ReportService:
         if file is not None and file.filename:
             original_image, image_url = cls.save_upload(file, report_id)
 
-        now = datetime.utcnow()
+        now = get_current_time()
         report = Report(
             report_id=report_id,
             user_id=user.id,
@@ -192,6 +195,8 @@ class ReportService:
         db.add(report)
         await db.commit()
         await db.refresh(report)
+        report.submitted_at = ensure_kolkata_tz(report.submitted_at)
+        report.updated_at = ensure_kolkata_tz(report.updated_at)
         return report
 
     @classmethod
@@ -204,7 +209,7 @@ class ReportService:
         )
         reports = list(result.scalars().all())
 
-        now = datetime.utcnow()
+        now = get_current_time()
         changed = False
         for report in reports:
             before = (report.status, report.updated_at)
@@ -215,6 +220,10 @@ class ReportService:
         if changed:
             await db.commit()
 
+        for report in reports:
+            report.submitted_at = ensure_kolkata_tz(report.submitted_at)
+            report.updated_at = ensure_kolkata_tz(report.updated_at)
+
         return reports
 
     @classmethod
@@ -222,7 +231,7 @@ class ReportService:
         cls, db: AsyncSession, user_id: str, report_id: str
     ) -> Report:
         """Return one of the user's reports, ownership-checked (404 if not owner)."""
-        now = datetime.utcnow()
+        now = get_current_time()
         result = await db.execute(
             select(Report).where(
                 Report.report_id == report_id, Report.user_id == user_id
@@ -236,4 +245,6 @@ class ReportService:
             )
         cls._apply_aging(report, now)
         await db.commit()
+        report.submitted_at = ensure_kolkata_tz(report.submitted_at)
+        report.updated_at = ensure_kolkata_tz(report.updated_at)
         return report

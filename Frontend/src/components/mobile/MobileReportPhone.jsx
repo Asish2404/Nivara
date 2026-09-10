@@ -20,13 +20,15 @@ export function MobileReportPhone() {
   const [phoneStep, setPhoneStep] = useState(-1)
   const [islandExpanded, setIslandExpanded] = useState(false)
 
-  // 1. Live Real-Time Clock & Date (iPhone Lock Screen Style)
+  // 1. Live Real-Time Clock & Date (iPhone Lock Screen Style with 12-hour AM/PM)
   const [currentTime, setCurrentTime] = useState(() => {
     const now = new Date()
     const hours = now.getHours() % 12 || 12
     const minutes = now.getMinutes().toString().padStart(2, '0')
     return `${hours}:${minutes}`
   })
+
+  const [ampm, setAmpm] = useState(() => (new Date().getHours() >= 12 ? 'PM' : 'AM'))
 
   const [currentDate, setCurrentDate] = useState(() => {
     const now = new Date()
@@ -39,6 +41,7 @@ export function MobileReportPhone() {
       const hours = now.getHours() % 12 || 12
       const minutes = now.getMinutes().toString().padStart(2, '0')
       setCurrentTime(`${hours}:${minutes}`)
+      setAmpm(now.getHours() >= 12 ? 'PM' : 'AM')
       setCurrentDate(
         now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
       )
@@ -236,8 +239,8 @@ export function MobileReportPhone() {
                     Jio 5G
                   </span>
                 ) : (
-                  <span className="text-[13px] font-semibold font-sans tracking-tight text-slate-900 min-w-[40px]">
-                    {currentTime}
+                  <span className="text-[12px] font-semibold font-sans tracking-tight text-slate-900 min-w-[40px]">
+                    {currentTime} <span className="text-[10px] font-mono">{ampm}</span>
                   </span>
                 )}
 
@@ -383,9 +386,14 @@ export function MobileReportPhone() {
                           <p className="text-[13.5px] font-medium text-white/95 tracking-tight font-sans drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]">
                             {currentDate}
                           </p>
-                          <h1 className="text-[70px] sm:text-[76px] font-bold text-white tracking-tight font-sans leading-none drop-shadow-[0_2px_14px_rgba(0,0,0,0.45)] my-1 select-none">
-                            {currentTime}
-                          </h1>
+                          <div className="flex items-baseline justify-center gap-1.5 my-1 select-none">
+                            <h1 className="text-[70px] sm:text-[76px] font-bold text-white tracking-tight font-sans leading-none drop-shadow-[0_2px_14px_rgba(0,0,0,0.45)]">
+                              {currentTime}
+                            </h1>
+                            <span className="text-base font-bold text-white/90 drop-shadow-md uppercase tracking-wider font-mono">
+                              {ampm}
+                            </span>
+                          </div>
                         </div>
 
                         {/* Lock Screen Notification Banners */}

@@ -60,12 +60,26 @@ function EarthScene({ zoomStarted, earthRef, controlsRef, onCloudEntry, onVideoR
 }
 
 function App() {
-  const { currentRoute, navigate, theme, initUser } = useKWIStore()
+  const { currentRoute, navigate, theme, initUser, currentUser } = useKWIStore()
 
   // On mount, refresh the logged-in user from the backend using the stored token.
   useEffect(() => {
     initUser()
   }, [initUser])
+
+  // Route guard: When not signed in, user can only see the Home page ('/')
+  // or auth pages ('/signup', '/login', '/auth'). Any other page redirects to '/signup'.
+  useEffect(() => {
+    const isPublic =
+      currentRoute === '/' ||
+      currentRoute === '/signup' ||
+      currentRoute === '/login' ||
+      currentRoute === '/auth'
+
+    if (!currentUser && !isPublic) {
+      navigate('/signup')
+    }
+  }, [currentUser, currentRoute, navigate])
 
   // Central theme application: resolve 'system' via prefers-color-scheme,
   // apply .dark class + color-scheme on <html>, and follow OS changes live.
@@ -218,6 +232,16 @@ function App() {
   }, [])
 
   const renderContent = () => {
+    // If not signed in and on auth route, render Auth view
+    if (currentRoute === '/login' || currentRoute === '/auth' || currentRoute === '/signup') {
+      return <AIUnleashedAuth />
+    }
+
+    // If not signed in, they cannot view any protected pages
+    if (!currentUser && currentRoute !== '/') {
+      return <AIUnleashedAuth />
+    }
+
     if (currentRoute === '/live-city' || currentRoute === '/incidents' || currentRoute === '/forecast') {
       return <LiveCityPage />
     }
@@ -252,10 +276,6 @@ function App() {
           <ActionsView />
         </SubpageLayout>
       )
-    }
-
-    if (currentRoute === '/login' || currentRoute === '/auth' || currentRoute === '/signup') {
-      return <AIUnleashedAuth />
     }
 
     // Root Landing Route ('/')
