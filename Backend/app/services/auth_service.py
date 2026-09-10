@@ -51,6 +51,17 @@ DEFAULT_PERSONAS = [
         "phone": "+91 98301 54321",
         "location": "Ballygunge, Kolkata",
     },
+    {
+        "id": "USR-CIT-004",
+        "portal": "user",
+        "email": "abhishekb@gmail.com",
+        "password": "Citizen@2026",
+        "name": "Abhishek Bose",
+        "role": "Community Lead Reporter",
+        "clearance": "Verified Citizen ID",
+        "phone": "+91 98301 54321",
+        "location": "Ballygunge, Kolkata",
+    },
 ]
 
 

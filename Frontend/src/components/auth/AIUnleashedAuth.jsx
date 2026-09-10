@@ -175,8 +175,8 @@ export default function AIUnleashedAuth() {
   const [activeTab, setActiveTab] = useState("signin"); // 'signin' | 'create'
   const [selectedPortal, setSelectedPortal] = useState("user"); // Visual portal selection ('user' | 'admin' | 'super_admin')
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("officer.roy@kolkata-water.gov.in");
-  const [password, setPassword] = useState("Kolkata@Water2026");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberSession, setRememberSession] = useState(true);
@@ -208,13 +208,15 @@ export default function AIUnleashedAuth() {
     // Derive a readable name from the email username when not typed explicitly.
     const derivedName =
       fullName.trim() ||
-      email
-        .split("@")[0]
-        .replace(".", " ")
-        .split(" ")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" ") ||
-      "Officer";
+      (email && email.includes("@")
+        ? email
+            .split("@")[0]
+            .replace(".", " ")
+            .split(" ")
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" ")
+        : "") ||
+      (selectedPortal === "user" ? "Citizen" : "Officer");
 
     try {
       if (activeTab === "signin") {
@@ -274,8 +276,8 @@ export default function AIUnleashedAuth() {
             access_token: "offline-demo-token-" + Date.now(),
             user: {
               id: isUserPortal ? "USR-LOCAL-01" : "ADM-LOCAL-01",
-              name: derivedName || (isUserPortal ? "Anirban Chatterjee" : "Officer Sourav Roy"),
-              email: email || (isUserPortal ? "anirban.chatterjee@kolkata.org" : "officer.roy@kolkata-water.gov.in"),
+              name: derivedName || (isUserPortal ? "Abhishek Bose" : "Officer Sourav Roy"),
+              email: email || (isUserPortal ? "abhishekb@gmail.com" : "officer.roy@kolkata-water.gov.in"),
               phone: phoneNumber.trim() || "+91 98300 12345",
               role: isUserPortal
                 ? "Citizen"
@@ -330,9 +332,9 @@ export default function AIUnleashedAuth() {
   const handleDemoFill = (e) => {
     if (e) e.preventDefault();
     if (selectedPortal === "user") {
-      setEmail("anirban.chatterjee@kolkata.org");
+      setEmail("abhishekb@gmail.com");
       setPassword("Citizen@2026");
-      setFullName("Anirban Chatterjee");
+      setFullName("Abhishek Bose");
       setPhoneNumber("+91 98301 54321");
     } else {
       setEmail("officer.roy@kolkata-water.gov.in");
@@ -586,7 +588,11 @@ export default function AIUnleashedAuth() {
                             setFullName(e.target.value);
                             if (authError) setAuthError("");
                           }}
-                          placeholder="e.g. Officer Sourav Roy"
+                          placeholder={
+                            selectedPortal === "user"
+                              ? "Abhishek Bose"
+                              : "e.g. Officer Sourav Roy"
+                          }
                           required={activeTab === "create"}
                           className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
                         />
@@ -611,7 +617,11 @@ export default function AIUnleashedAuth() {
                         setEmail(e.target.value);
                         if (authError) setAuthError("");
                       }}
-                      placeholder="officer.roy@kolkata-water.gov.in"
+                      placeholder={
+                        selectedPortal === "user"
+                          ? "abhishekb@gmail.com"
+                          : "officer.roy@kolkata-water.gov.in"
+                      }
                       required
                       className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
                     />
@@ -634,7 +644,7 @@ export default function AIUnleashedAuth() {
                         setPassword(e.target.value);
                         if (authError) setAuthError("");
                       }}
-                      placeholder="••••••••••••"
+                      placeholder="Enter Password"
                       minLength={3}
                       required
                       className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-11 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
@@ -695,7 +705,13 @@ export default function AIUnleashedAuth() {
                   </label>
                   <button
                     type="button"
-                    onClick={() => alert(`Reset link dispatched to: ${email}`)}
+                    onClick={() =>
+                      alert(
+                        email
+                          ? `Reset link dispatched to: ${email}`
+                          : "Please enter your email address to receive a password reset link."
+                      )
+                    }
                     className="text-cyan-400 hover:text-cyan-300 hover:underline font-semibold cursor-pointer transition-colors duration-150"
                   >
                     Forgot password?
