@@ -30,22 +30,26 @@ class UserLoginRequest(BaseModel):
 
 
 class GenerateOtpRequest(BaseModel):
-    email: str = Field(..., description="Target email for OTP dispatch")
-    phone: Optional[str] = Field(default=None, description="Optional phone number")
+    email: Optional[str] = Field(default=None, description="Target email for OTP dispatch")
+    phone: Optional[str] = Field(default=None, description="Target mobile phone number for SMS OTP dispatch")
     purpose: str = Field(default="login", description="'login' or 'signup'")
 
 
 class VerifyOtpRequest(BaseModel):
-    email: str = Field(..., description="Target email")
     otp: str = Field(..., min_length=4, max_length=8, description="Verification OTP code")
+    email: Optional[str] = Field(default=None, description="Target email")
+    phone: Optional[str] = Field(default=None, description="Target mobile phone number")
     purpose: str = Field(default="login", description="'login' or 'signup'")
 
 
 class OtpResponse(BaseModel):
     status: str = "ok"
     message: str
-    otp: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
     expires_in: int = 300
+    sms_preview: Optional[str] = None
+    otp: Optional[str] = None
 
 
 class UserResponse(BaseModel):

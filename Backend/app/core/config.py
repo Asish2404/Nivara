@@ -27,6 +27,19 @@ class Settings(BaseSettings):
     # Telemetry stream interval (seconds)
     TELEMETRY_BROADCAST_INTERVAL: float = 2.0
 
+    # SMS Gateway Configuration (Fast2SMS / Twilio)
+    FAST2SMS_API_KEY: str = ""
+    TWILIO_ACCOUNT_SID: str = ""
+    TWILIO_AUTH_TOKEN: str = ""
+    TWILIO_PHONE_NUMBER: str = ""
+
+    # Free Email SMTP Configuration (Gmail)
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    EMAILS_FROM_NAME: str = "Kolkata Municipal Corporation - KWI 2FA"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

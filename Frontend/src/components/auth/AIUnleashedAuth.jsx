@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Mail,
@@ -6,6 +6,7 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
+  ArrowLeft,
   Shield,
   ShieldCheck,
   CheckCircle2,
@@ -17,6 +18,7 @@ import {
   BarChart3,
   Leaf,
   Phone,
+  Smartphone,
   KeyRound,
   Check,
 } from "lucide-react";
@@ -236,16 +238,16 @@ export default function AIUnleashedAuth() {
   const [successMessage, setSuccessMessage] = useState("");
   const [authError, setAuthError] = useState("");
 
-  // OTP States for Administrative Clearance
-  const [otpCode, setOtpCode] = useState("");
-  const [isGeneratingOtp, setIsGeneratingOtp] = useState(false);
-  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
+  // Dedicated 2FA OTP Step State
+  const [isOtpStep, setIsOtpStep] = useState(false);
+  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
+  const [otpTargetPhone, setOtpTargetPhone] = useState("");
   const [otpCountdown, setOtpCountdown] = useState(0);
-  const [demoOtpDisplay, setDemoOtpDisplay] = useState("");
+  const [isGeneratingOtp, setIsGeneratingOtp] = useState(false);
+  const [smsToast, setSmsToast] = useState(null);
+  const otpInputRefs = useRef([]);
 
-  const { navigate, loginUser, postLoginRedirect } = useKWIStore();
+  const { navigate, loginUser } = useKWIStore();
 
   // 60-second OTP countdown ticker
   useEffect(() => {
@@ -258,122 +260,333 @@ export default function AIUnleashedAuth() {
     return () => clearInterval(timer);
   }, [otpCountdown]);
 
+  // Auto-dismiss simulated SMS toast after 14 seconds
+  useEffect(() => {
+    if (!smsToast) return;
+    const timer = setTimeout(() => {
+      setSmsToast(null);
+    }, 14000);
+    return () => clearTimeout(timer);
+  }, [smsToast]);
+
+  // Tab switcher
   const handleTabChange = (tab) => {
     if (audioEngine) audioEngine.playUiChirp(920);
     setActiveTab(tab);
     setSuccessMessage("");
     setAuthError("");
-    setOtpCode("");
-    setOtpSent(false);
-    setOtpVerified(false);
-    setDemoOtpDisplay("");
+    setIsOtpStep(false);
+    setOtpDigits(["", "", "", "", "", ""]);
     setOtpCountdown(0);
   };
 
-  // Visual-only portal switcher - DOES NOT mutate credentials or break authentication
+  // Portal switcher
   const handlePortalSelect = (portalId) => {
     if (audioEngine) audioEngine.playUiChirp(880);
     setSelectedPortal(portalId);
     setAuthError("");
     setSuccessMessage("");
-    setOtpCode("");
-    setOtpSent(false);
-    setOtpVerified(false);
-    setDemoOtpDisplay("");
+    setIsOtpStep(false);
+    setOtpDigits(["", "", "", "", "", ""]);
     setOtpCountdown(0);
   };
 
-  // Generate Admin 2FA OTP
-  const handleGenerateOtp = async (e) => {
-    if (e) e.preventDefault();
-    if (!email.trim()) {
-      setAuthError("Please enter your official email address first to generate OTP.");
+  // Digit Input Keypad Navigation (Auto-advance, Backspace & Paste)
+  const handleDigitChange = (index, val) => {
+    const stringVal = String(val ?? "");
+    const digitsOnly = stringVal.replace(/\D/g, "");
+    if (!digitsOnly) {
+      const newDigits = [...otpDigits];
+      newDigits[index] = "";
+      setOtpDigits(newDigits);
       return;
     }
+
+    if (digitsOnly.length > 1) {
+      // User pasted or typed multiple digits
+      const newDigits = [...otpDigits];
+      for (let i = 0; i < digitsOnly.length && index + i < 6; i++) {
+        newDigits[index + i] = digitsOnly[i];
+      }
+      setOtpDigits(newDigits);
+      if (authError) setAuthError("");
+      const nextFocus = Math.min(index + digitsOnly.length, 5);
+      otpInputRefs.current[nextFocus]?.focus();
+      return;
+    }
+
+    const newDigits = [...otpDigits];
+    newDigits[index] = digitsOnly;
+    setOtpDigits(newDigits);
+    if (authError) setAuthError("");
+
+    if (index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleDigitKeyDown = (index, e) => {
+    if (e.key === "Backspace") {
+      if (!otpDigits[index] && index > 0) {
+        otpInputRefs.current[index - 1]?.focus();
+      }
+    } else if (e.key === "ArrowLeft" && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    } else if (e.key === "ArrowRight" && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+    const newDigits = [...otpDigits];
+    for (let i = 0; i < 6; i++) {
+      newDigits[i] = pasted[i] || "";
+    }
+    setOtpDigits(newDigits);
+    const focusIndex = Math.min(pasted.length, 5);
+    otpInputRefs.current[focusIndex]?.focus();
+  };
+
+  // Helper to resolve email vs phone identifier
+  const resolveTargetCredentials = () => {
+    const cleanEmail = email.trim();
+    const cleanPhone = phoneNumber.trim();
+    const isPhoneLike = !cleanEmail.includes("@") && cleanEmail.replace(/[\s+-]/g, "").length >= 7;
+
+    return {
+      email: isPhoneLike ? undefined : (cleanEmail || undefined),
+      phone: isPhoneLike ? cleanEmail : (cleanPhone || undefined),
+    };
+  };
+
+  // Resend OTP via SMS
+  const handleResendOtp = async () => {
+    if (otpCountdown > 0 || isGeneratingOtp) return;
     setIsGeneratingOtp(true);
     setAuthError("");
     if (audioEngine) audioEngine.playUiChirp(820);
-
     try {
+      const targets = resolveTargetCredentials();
       const res = await api.post("/auth/admin/generate-otp", {
-        email: email.trim(),
-        phone: phoneNumber.trim() || undefined,
+        email: targets.email,
+        phone: targets.phone,
         purpose: activeTab,
       });
-      setOtpSent(true);
       setOtpCountdown(60);
-      const receivedOtp = res?.otp || "749201";
-      setDemoOtpDisplay(receivedOtp);
-      setSuccessMessage(
-        res?.message || `Security OTP dispatched! (Code: ${receivedOtp})`
-      );
+      setSuccessMessage(res?.message || "New 6-digit security code dispatched via SMS.");
+      if (res?.otp) {
+        setSmsToast({
+          code: res.otp,
+          phone: res?.phone || targets.phone || phoneNumber || email || "Registered Phone",
+          message: res.sms_preview,
+        });
+      }
       if (audioEngine) audioEngine.playUiChirp(1040);
     } catch (err) {
-      // Offline fallback simulation for local testing
-      const offlineOtp = `${Math.floor(100000 + Math.random() * 900000)}`;
-      setOtpSent(true);
-      setOtpCountdown(60);
-      setDemoOtpDisplay(offlineOtp);
-      setSuccessMessage(
-        `Security OTP generated: ${offlineOtp} (Valid for 5 mins)`
-      );
-      if (audioEngine) audioEngine.playUiChirp(1040);
+      setAuthError(err?.message || "Failed to resend OTP. Please try again.");
     } finally {
       setIsGeneratingOtp(false);
     }
   };
 
-  // Validate Admin 2FA OTP
-  const handleValidateOtp = async (e) => {
-    if (e) e.preventDefault();
-    if (!otpCode || otpCode.trim().length < 6) {
-      setAuthError("Please enter the complete 6-digit OTP code.");
-      return;
-    }
-    setIsVerifyingOtp(true);
-    setAuthError("");
+  // Direct Citizen Auth
+  const handleDirectUserAuth = async () => {
+    setIsSubmitting(true);
+    if (audioEngine) audioEngine.playUiChirp(980);
+    const derivedName =
+      fullName.trim() ||
+      email
+        .split("@")[0]
+        .replace(".", " ")
+        .split(" ")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ") ||
+      "Citizen";
 
     try {
-      await api.post("/auth/admin/verify-otp", {
-        email: email.trim(),
-        otp: otpCode.trim(),
-        purpose: activeTab,
-      });
-      setOtpVerified(true);
-      setSuccessMessage("Administrative 2FA clearance verified!");
-      if (audioEngine) audioEngine.playStationLock();
-    } catch (err) {
-      if (demoOtpDisplay && otpCode.trim() === demoOtpDisplay.trim()) {
-        setOtpVerified(true);
-        setSuccessMessage("Administrative 2FA clearance verified!");
+      if (activeTab === "signin") {
+        const result = await api.post("/auth/login", {
+          email,
+          password,
+          portal: "user",
+        });
         if (audioEngine) audioEngine.playStationLock();
+        loginUser(result);
+        setSuccessMessage(`Welcome back, ${result?.user?.name || derivedName}`);
+        setTimeout(() => {
+          navigate("/");
+        }, 650);
       } else {
-        setAuthError(err?.message || "Invalid or expired OTP code.");
+        const result = await api.post("/auth/signup", {
+          email,
+          password,
+          fullName: derivedName,
+          phone: phoneNumber.trim() || undefined,
+          portal: "user",
+        });
+        if (audioEngine) audioEngine.playStationLock();
+        setSuccessMessage(`Account created successfully for ${result?.user?.name || derivedName}! Please sign in to continue.`);
+        setActiveTab("signin");
       }
+    } catch (err) {
+      const isNetworkIssue =
+        err?.message?.includes("fetch") ||
+        err?.message?.includes("Failed to fetch") ||
+        err?.message?.includes("NetworkError");
+
+      if (isNetworkIssue) {
+        if (activeTab === "signin") {
+          const mockResult = {
+            access_token: "offline-user-token-" + Date.now(),
+            user: {
+              id: "USR-LOCAL-01",
+              name: derivedName || "Anirban Chatterjee",
+              email: email || "anirban.chatterjee@kolkata.org",
+              phone: phoneNumber.trim() || "+91 98301 54321",
+              role: "Citizen",
+              badgeId: "",
+              department: "Kolkata Citizen Water Watch",
+              portal: "user",
+              status: "active",
+            },
+          };
+          if (audioEngine) audioEngine.playStationLock();
+          loginUser(mockResult);
+          setSuccessMessage(`Welcome back, ${mockResult.user.name}`);
+          setTimeout(() => {
+            navigate("/");
+          }, 650);
+        } else {
+          if (audioEngine) audioEngine.playStationLock();
+          setSuccessMessage(`Account created successfully for ${derivedName}! Please sign in to continue.`);
+          setActiveTab("signin");
+        }
+        return;
+      }
+      setAuthError(err?.message || "Authentication failed. Please check your credentials.");
+      if (audioEngine) audioEngine.playUiChirp(420);
     } finally {
-      setIsVerifyingOtp(false);
+      setIsSubmitting(false);
     }
   };
 
-  // 100% Original Submit Handler - Enhanced with Admin OTP validation
-  const handleSubmit = async (e) => {
+  // Step 1 Submit: Credential validation & OTP generation for Admin
+  const handleCredentialSubmit = async (e) => {
     if (e) e.preventDefault();
-    setIsSubmitting(true);
-    if (audioEngine) audioEngine.playUiChirp(980);
+    setAuthError("");
+    setSuccessMessage("");
 
-    // Admin clearance requires OTP validation
-    if (selectedPortal === "admin") {
-      if (!otpCode.trim()) {
-        setAuthError("Admin clearance requires 2-factor OTP verification. Please generate and validate your OTP.");
-        if (!otpSent) {
-          handleGenerateOtp();
-        }
-        setIsSubmitting(false);
+    if (selectedPortal === "user") {
+      await handleDirectUserAuth();
+      return;
+    }
+
+    // Admin validation
+    if (activeTab === "create") {
+      if (!fullName.trim()) {
+        setAuthError("Please enter your full name.");
+        return;
+      }
+      if (!email.trim()) {
+        setAuthError("Please enter your official email address.");
+        return;
+      }
+      if (!password || password.length < 3) {
+        setAuthError("Password must be at least 3 characters.");
+        return;
+      }
+      if (!phoneNumber.trim()) {
+        setAuthError("Please enter your mobile phone number to receive the security OTP.");
+        return;
+      }
+    } else {
+      if (!email.trim() && !phoneNumber.trim()) {
+        setAuthError("Please enter your official email or registered mobile number.");
+        return;
+      }
+      if (!password) {
+        setAuthError("Please enter your password.");
         return;
       }
     }
 
-    // Derive a readable name from the email username when not typed explicitly.
+    setIsSubmitting(true);
+    if (audioEngine) audioEngine.playUiChirp(980);
+
+    try {
+      const targets = resolveTargetCredentials();
+      const res = await api.post("/auth/admin/generate-otp", {
+        email: targets.email,
+        phone: targets.phone,
+        purpose: activeTab,
+      });
+
+      const target = res?.phone || phoneNumber.trim() || email.trim();
+      setOtpTargetPhone(target);
+      setIsOtpStep(true);
+      setOtpCountdown(60);
+      setOtpDigits(["", "", "", "", "", ""]);
+      setSuccessMessage(res?.message || "6-digit security code dispatched via SMS.");
+      if (res?.otp) {
+        setSmsToast({
+          code: res.otp,
+          phone: target,
+          message: res.sms_preview,
+        });
+      }
+      if (audioEngine) audioEngine.playStationLock();
+      setTimeout(() => {
+        otpInputRefs.current[0]?.focus();
+      }, 150);
+    } catch (err) {
+      const isNetworkIssue =
+        err?.message?.includes("fetch") ||
+        err?.message?.includes("Failed to fetch") ||
+        err?.message?.includes("NetworkError");
+
+      if (isNetworkIssue) {
+        const target = phoneNumber.trim() || email.trim() || "+91 6289143592";
+        const offlineCode = "582914";
+        setOtpTargetPhone(target);
+        setIsOtpStep(true);
+        setOtpCountdown(60);
+        setOtpDigits(["", "", "", "", "", ""]);
+        setSuccessMessage(`Offline simulation: 6-digit code dispatched to ${target}.`);
+        setSmsToast({
+          code: offlineCode,
+          phone: target,
+          message: `KMC-SECURE: Your 2-Factor Officer Clearance OTP is ${offlineCode}. Valid for 5 minutes.`,
+        });
+        if (audioEngine) audioEngine.playStationLock();
+        setTimeout(() => {
+          otpInputRefs.current[0]?.focus();
+        }, 150);
+        return;
+      }
+
+      setAuthError(err?.message || "Failed to dispatch verification code. Please check your credentials.");
+      if (audioEngine) audioEngine.playUiChirp(420);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Step 2 Submit: Validate OTP on dedicated page and complete authentication
+  const handleOtpVerifySubmit = async (e) => {
+    if (e) e.preventDefault();
+    const code = otpDigits.join("").trim();
+    if (code.length !== 6) {
+      setAuthError("Please enter all 6 digits of the verification code.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setAuthError("");
+    if (audioEngine) audioEngine.playUiChirp(980);
+
     const derivedName =
       fullName.trim() ||
       email
@@ -385,126 +598,94 @@ export default function AIUnleashedAuth() {
       "Officer";
 
     try {
+      // 1. Validate OTP with backend
+      const targets = resolveTargetCredentials();
+      await api.post("/auth/admin/verify-otp", {
+        otp: code,
+        email: targets.email,
+        phone: targets.phone,
+        purpose: activeTab,
+      });
+
+      // 2. Complete registration or login
       if (activeTab === "signin") {
         const result = await api.post("/auth/login", {
-          email,
+          email: email.trim(),
           password,
-          portal: selectedPortal,
-          otp: selectedPortal === "admin" ? otpCode.trim() : undefined,
+          portal: "admin",
+          otp: code,
         });
 
         if (audioEngine) audioEngine.playStationLock();
-        // Persist JWT + normalized user into the store (also cached to localStorage).
         loginUser(result);
-
         const signedInName = result?.user?.name || derivedName;
         setSuccessMessage(`Welcome back, ${signedInName}`);
-        setAuthError("");
-
-        // Always redirect to the Home page ('/') after login
         setTimeout(() => {
           navigate("/");
         }, 650);
       } else {
-        // Account creation flow:
-        // Registers credentials in 'users' or 'admin' table with status 'not active'
         const result = await api.post("/auth/signup", {
-          email,
+          email: email.trim(),
           password,
           fullName: derivedName,
-          phone: phoneNumber.trim() || undefined,
-          portal: selectedPortal,
-          otp: selectedPortal === "admin" ? otpCode.trim() : undefined,
+          phone: phoneNumber.trim(),
+          portal: "admin",
+          otp: code,
         });
 
         if (audioEngine) audioEngine.playStationLock();
-
         const createdName = result?.user?.name || derivedName;
-        setSuccessMessage(
-          `Account created successfully for ${createdName}! Please sign in to continue.`,
-        );
-        setAuthError("");
-
-        // Redirect directly to the Sign In section as requested
-        setTimeout(() => {
-          setActiveTab("signin");
-        }, 650);
+        setSuccessMessage(`Administrative clearance verified and account created for ${createdName}! Please sign in to continue.`);
+        setIsOtpStep(false);
+        setActiveTab("signin");
+        setOtpDigits(["", "", "", "", "", ""]);
       }
     } catch (err) {
       const isNetworkIssue =
         err?.message?.includes("fetch") ||
         err?.message?.includes("Failed to fetch") ||
-        err?.message?.includes("NetworkError") ||
-        err?.message?.includes("Failed to load");
+        err?.message?.includes("NetworkError");
 
       if (isNetworkIssue) {
         if (activeTab === "signin") {
-          const isUserPortal = selectedPortal === "user";
           const mockResult = {
-            access_token: "offline-demo-token-" + Date.now(),
+            access_token: "offline-admin-token-" + Date.now(),
             user: {
-              id: isUserPortal ? "USR-LOCAL-01" : "ADM-LOCAL-01",
-              name:
-                derivedName ||
-                (isUserPortal ? "Anirban Chatterjee" : "Officer Sourav Roy"),
-              email:
-                email ||
-                (isUserPortal
-                  ? "anirban.chatterjee@kolkata.org"
-                  : "officer.roy@kolkata-water.gov.in"),
+              id: "ADM-LOCAL-01",
+              name: derivedName || "Officer Devjyoti Sen",
+              email: email || "officer.roy@kolkata-water.gov.in",
               phone: phoneNumber.trim() || "+91 98300 12345",
-              role: isUserPortal
-                ? "Citizen"
-                : selectedPortal === "admin"
-                  ? "Administrative Lead"
-                  : selectedPortal === "super_admin"
-                    ? "Commissioner"
-                    : "Command Officer",
-              badgeId: isUserPortal ? "" : "KWI-OFFICER-7702",
-              department: isUserPortal
-                ? "Kolkata Citizen Water Watch"
-                : "KMC Water Directorate & Drainage",
-              portal: isUserPortal ? "user" : "admin",
+              role: "Command Officer",
+              badgeId: "KWI-OFFICER-7702",
+              department: "KMC Water Directorate & Drainage",
+              portal: "admin",
               status: "active",
             },
           };
           if (audioEngine) audioEngine.playStationLock();
           loginUser(mockResult);
           setSuccessMessage(`Welcome back, ${mockResult.user.name}`);
-          // Always redirect to the Home page ('/') after login
           setTimeout(() => {
             navigate("/");
           }, 650);
         } else {
-          // Offline create account fallback: redirect to Sign In section
           if (audioEngine) audioEngine.playStationLock();
-          setSuccessMessage(
-            `Account created successfully for ${derivedName}! Please sign in to continue.`,
-          );
-          setAuthError("");
-          setTimeout(() => {
-            setActiveTab("signin");
-          }, 650);
+          setSuccessMessage(`Administrative account created successfully for ${derivedName}! Please sign in to continue.`);
+          setIsOtpStep(false);
+          setActiveTab("signin");
+          setOtpDigits(["", "", "", "", "", ""]);
         }
         return;
       }
 
       if (audioEngine) audioEngine.playUiChirp(420);
-      setSuccessMessage("");
-      // Surface backend validation / auth errors to the user as a failure alert.
-      const errorMsg =
-        typeof err?.message === "string"
-          ? err.message
-          : typeof err === "string"
-            ? err
-            : "Authentication failed. Please check your credentials and try again.";
-      setAuthError(errorMsg);
+      setAuthError(err?.message || "Invalid or expired verification code. Please check your SMS and try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Demo Fill Handler - adapts to selected portal
+  // Demo Fill Handler
   const handleDemoFill = (e) => {
     if (e) e.preventDefault();
     if (selectedPortal === "user") {
@@ -512,25 +693,75 @@ export default function AIUnleashedAuth() {
       setPassword("Citizen@2026");
       setFullName("Anirban Chatterjee");
       setPhoneNumber("+91 98301 54321");
-      setOtpCode("");
-      setOtpSent(false);
-      setOtpVerified(false);
-      setDemoOtpDisplay("");
     } else {
       setEmail("officer.roy@kolkata-water.gov.in");
       setPassword("Kolkata@Water2026");
       setFullName("Officer Devjyoti Sen");
-      setPhoneNumber("+91 98300 12345");
-      setOtpSent(true);
-      setDemoOtpDisplay("749201");
-      setOtpCode("749201");
-      setOtpVerified(true);
+      setPhoneNumber("9830012345");
     }
+    setIsOtpStep(false);
+    setOtpDigits(["", "", "", "", "", ""]);
     if (audioEngine) audioEngine.playUiChirp(1040);
   };
 
   return (
     <div className="min-h-screen w-full bg-[#070e1c] text-white flex flex-col justify-between font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden relative">
+      {/* 100% Free In-App Simulated Mobile SMS Push Notification Toast */}
+      <AnimatePresence>
+        {smsToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -70, scale: 0.94 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -50, scale: 0.94 }}
+            transition={{ type: "spring", stiffness: 450, damping: 28 }}
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md p-4 rounded-2xl bg-[#08152b]/95 backdrop-blur-2xl border border-cyan-400/50 shadow-[0_20px_50px_rgba(0,10,30,0.85),0_0_35px_rgba(6,182,212,0.3)] text-left"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center shrink-0 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+                <Smartphone className="w-5 h-5 animate-pulse" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between text-[11px] font-bold text-cyan-300 uppercase tracking-wider mb-0.5">
+                  <span>MESSAGES · KMC GATEWAY</span>
+                  <span className="text-slate-400 font-normal">Just now</span>
+                </div>
+                <div className="text-[13px] text-white font-medium leading-snug">
+                  KMC 2FA Security Code:{" "}
+                  <span className="font-mono font-extrabold text-cyan-300 bg-cyan-950/90 px-2 py-0.5 rounded-lg border border-cyan-400/50 text-[14px] tracking-widest shadow-inner">
+                    {smsToast.code}
+                  </span>
+                </div>
+                <div className="text-[11px] text-slate-300/80 mt-1">
+                  Simulated SMS to <strong>{smsToast.phone}</strong> (100% Free Demo Mode)
+                </div>
+                <div className="flex items-center gap-2 mt-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const digits = smsToast.code.split("").slice(0, 6);
+                      setOtpDigits(digits);
+                      setSmsToast(null);
+                      if (audioEngine) audioEngine.playStationLock();
+                    }}
+                    className="px-3 py-1 rounded-lg bg-cyan-500/25 hover:bg-cyan-500/40 border border-cyan-400/60 text-cyan-200 text-xs font-bold cursor-pointer transition-all duration-150 flex items-center gap-1 shadow-[0_0_12px_rgba(6,182,212,0.3)]"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Fill Code</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSmsToast(null)}
+                    className="px-2.5 py-1 text-xs text-slate-400 hover:text-white cursor-pointer transition-colors"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ========================================================= */}
       {/* 1. EXACT FULL-SCREEN BACKGROUND: LoginPage_bg.png         */}
       {/* ========================================================= */}
@@ -662,486 +893,515 @@ export default function AIUnleashedAuth() {
               {/* Subtle divider under header */}
               <div className="w-full h-px bg-white/10 mb-4" />
 
-              {/* Sign In / Create Account Wide Segmented Control */}
-              <div className="relative flex bg-[#061022]/75 rounded-2xl p-1.5 mb-4 border border-white/10">
-                <button
-                  type="button"
-                  onClick={() => handleTabChange("signin")}
-                  className={`flex-1 text-center py-2 text-[13px] font-bold border-none bg-transparent cursor-pointer relative z-10 transition-colors duration-200 ${
-                    activeTab === "signin"
-                      ? "text-white"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  Sign In
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleTabChange("create")}
-                  className={`flex-1 text-center py-2 text-[13px] font-bold border-none bg-transparent cursor-pointer relative z-10 transition-colors duration-200 ${
-                    activeTab === "create"
-                      ? "text-white"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  Create Account
-                </button>
-
-                {/* Animated Gradient Tab Indicator */}
-                <motion.div
-                  layoutId="authTabSlider"
-                  className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] rounded-xl bg-gradient-to-r from-[#0284c7] to-[#2563eb] shadow-[0_2px_12px_rgba(2,132,199,0.4)]"
-                  style={{
-                    left: activeTab === "signin" ? "6px" : "calc(50% + 0px)",
-                  }}
-                  transition={{ type: "spring", stiffness: 500, damping: 38 }}
-                />
-              </div>
-
-              {/* Select Access Portal Section (3 Large Cards matching reference) */}
-              <div className="mb-4">
-                <div className="text-center text-slate-300 text-[12px] sm:text-[12.5px] font-semibold uppercase tracking-wider mb-2.5">
-                  Select Access Portal
-                </div>
-                <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-                  {/* User Portal */}
-                  <button
-                    type="button"
-                    onClick={() => handlePortalSelect("user")}
-                    className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${
-                      selectedPortal === "user"
-                        ? "bg-gradient-to-b from-[#0070f3] to-[#0055d4] text-white border-cyan-400/80 shadow-[0_0_22px_rgba(0,112,243,0.5)]"
-                        : "bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border-white/10 hover:border-white/20"
-                    }`}
+              <AnimatePresence mode="wait">
+                {isOtpStep ? (
+                  /* ========================================================= */
+                  /* DEDICATED 2-FACTOR OTP VALIDATION PAGE                    */
+                  /* ========================================================= */
+                  <motion.div
+                    key="otp-step-panel"
+                    initial={{ opacity: 0, x: 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -24 }}
+                    transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex flex-col"
                   >
-                    <User className="w-6 h-6 mb-1.5 text-inherit" />
-                    <span className="text-[13px] font-bold leading-tight">
-                      User
-                    </span>
-                    <span className="text-[10px] opacity-80 leading-tight mt-1">
-                      View Reports &amp; Insights
-                    </span>
-                  </button>
-
-                  {/* Admin Portal */}
-                  <button
-                    type="button"
-                    onClick={() => handlePortalSelect("admin")}
-                    className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${
-                      selectedPortal === "admin"
-                        ? "bg-gradient-to-b from-[#0070f3] to-[#0055d4] text-white border-cyan-400/80 shadow-[0_0_22px_rgba(0,112,243,0.5)]"
-                        : "bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border-white/10 hover:border-white/20"
-                    }`}
-                  >
-                    <Shield className="w-6 h-6 mb-1.5 text-inherit" />
-                    <span className="text-[13px] font-bold leading-tight">
-                      Admin
-                    </span>
-                    <span className="text-[10px] opacity-80 leading-tight mt-1">
-                      Manage Users &amp; Reports
-                    </span>
-                  </button>
-
-                  {/* Super Admin Portal (Commented Out)
-                  <button
-                    type="button"
-                    onClick={() => handlePortalSelect("super_admin")}
-                    className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${selectedPortal === "super_admin"
-                      ? "bg-gradient-to-b from-[#0070f3] to-[#0055d4] text-white border-cyan-400/80 shadow-[0_0_22px_rgba(0,112,243,0.5)]"
-                      : "bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border-white/10 hover:border-white/20"
-                      }`}
-                  >
-                    <Crown className="w-6 h-6 mb-1.5 text-inherit" />
-                    <span className="text-[13px] font-bold leading-tight">Super Admin</span>
-                    <span className="text-[10px] opacity-80 leading-tight mt-1">Full System Control</span>
-                  </button>
-                  */}
-                </div>
-              </div>
-
-              {/* Divider: Login to Continue */}
-              <div className="flex items-center gap-3 text-slate-400 text-[12px] my-4">
-                <span className="flex-1 h-px bg-white/15" />
-                <span>
-                  {activeTab === "signin"
-                    ? "Login to Continue"
-                    : "Register to Continue"}
-                </span>
-                <span className="flex-1 h-px bg-white/15" />
-              </div>
-
-              {/* Form Fields: 100% Original Working Handlers & Inputs */}
-              <form onSubmit={handleSubmit} className="space-y-3.5">
-                {/* Full Name Field (Appears smoothly on Create Account tab) */}
-                <AnimatePresence>
-                  {activeTab === "create" && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                      animate={{ opacity: 1, height: "auto", marginBottom: 14 }}
-                      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                      transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                      className="overflow-hidden"
-                    >
-                      <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
-                        Full name
-                      </label>
-                      <div className="relative">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
-                          <User className="w-4 h-4" />
-                        </div>
-                        <input
-                          type="text"
-                          value={fullName}
-                          onChange={(e) => {
-                            setFullName(e.target.value);
-                            if (authError) setAuthError("");
-                          }}
-                          placeholder="e.g. Officer Sourav Roy"
-                          required={activeTab === "create"}
-                          className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
-                        />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Official Email */}
-                <div>
-                  <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
-                      <Mail className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        if (authError) setAuthError("");
-                      }}
-                      placeholder="officer.roy@kolkata-water.gov.in"
-                      required
-                      className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
-                    />
-                  </div>
-                </div>
-
-                {/* Password / Security Passcode */}
-                <div>
-                  <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
-                      <Lock className="w-4 h-4" />
-                    </div>
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        if (authError) setAuthError("");
-                      }}
-                      placeholder="••••••••••••"
-                      minLength={3}
-                      required
-                      className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-11 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
-                    />
+                    {/* Back to credentials button */}
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer p-1 transition-colors duration-150"
+                      onClick={() => {
+                        setIsOtpStep(false);
+                        setAuthError("");
+                        setSuccessMessage("");
+                      }}
+                      className="inline-flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 text-[12.5px] font-semibold mb-4 transition-colors cursor-pointer w-fit"
                     >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
+                      <ArrowLeft className="w-4 h-4" />
+                      <span>Back to credentials</span>
                     </button>
-                  </div>
-                </div>
 
-                {/* Phone Number Field (After Password, appears on Create Account tab) */}
-                <AnimatePresence>
-                  {activeTab === "create" && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                      animate={{ opacity: 1, height: "auto", marginBottom: 14 }}
-                      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                      transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                      className="overflow-hidden"
-                    >
-                      <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
-                        Phone Number
-                      </label>
-                      <div className="relative">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
-                          <Phone className="w-4 h-4" />
-                        </div>
-                        <input
-                          type="tel"
-                          value={phoneNumber}
-                          onChange={(e) => {
-                            setPhoneNumber(e.target.value);
-                            if (authError) setAuthError("");
-                          }}
-                          placeholder="+91 98300 12345"
-                          required={activeTab === "create"}
-                          className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
-                        />
+                    {/* Verification Header */}
+                    <div className="text-center mb-6">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-600/30 to-blue-600/20 border border-cyan-400/40 flex items-center justify-center mx-auto mb-3 shadow-[0_0_24px_rgba(6,182,212,0.3)]">
+                        <Mail className="w-7 h-7 text-cyan-400 animate-pulse" />
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                      <h3 className="text-[19px] sm:text-[20px] font-bold text-white tracking-tight leading-tight">
+                        Two-Factor Security Verification
+                      </h3>
+                      <p className="text-slate-300/90 text-[12px] mt-1.5 max-w-sm mx-auto leading-relaxed">
+                        For officer clearance, a 6-digit security OTP has been dispatched to your official email and mobile.
+                      </p>
 
-                {/* Admin 2FA OTP Verification Section (For Admin Login & Signup) */}
-                <AnimatePresence>
-                  {selectedPortal === "admin" && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                      animate={{ opacity: 1, height: "auto", marginBottom: 14 }}
-                      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                      className="overflow-hidden"
-                    >
-                      <div className="p-3.5 rounded-2xl bg-cyan-950/40 border border-cyan-400/40 backdrop-blur-md shadow-[0_4px_24px_rgba(6,182,212,0.14)]">
-                        {/* Header Row */}
-                        <div className="flex items-center justify-between gap-2 mb-1.5">
-                          <div className="flex items-center gap-1.5 text-cyan-300 text-[12.5px] font-bold">
-                            <ShieldCheck className="w-4 h-4 text-cyan-400" />
-                            <span>Admin 2-Factor Authentication</span>
-                          </div>
-                          {otpVerified ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300 bg-emerald-500/20 border border-emerald-400/40 px-2 py-0.5 rounded-full">
-                              <Check className="w-3 h-3 text-emerald-400" />
-                              Verified
-                            </span>
-                          ) : (
-                            <span className="text-[10.5px] font-semibold text-amber-300 bg-amber-500/15 border border-amber-400/30 px-2 py-0.5 rounded-full">
-                              Required
-                            </span>
-                          )}
+                      {/* Dispatched to Email / Phone indicator */}
+                      <div className="inline-flex items-center gap-2 mt-3 px-3.5 py-1.5 rounded-full bg-cyan-950/70 border border-cyan-400/40 text-cyan-300 text-[12px] font-mono shadow-inner">
+                        <Mail className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                        <span>Dispatched to: <strong className="text-white font-semibold">{email || otpTargetPhone || phoneNumber}</strong></span>
+                      </div>
+                    </div>
+
+                    {/* Dedicated 6-Digit OTP Form */}
+                    <form onSubmit={handleOtpVerifySubmit} className="space-y-5">
+                      <div>
+                        <div className="text-center text-slate-300 text-[11px] font-bold uppercase tracking-wider mb-3">
+                          Enter 6-Digit Verification Code
                         </div>
-
-                        <p className="text-slate-300 text-[11.5px] leading-relaxed mb-2.5">
-                          Officer clearance requires generating and validating a 6-digit OTP to {activeTab === "signin" ? "sign in" : "create an admin account"}.
-                        </p>
-
-                        {/* Demo OTP Preview Badge & 1-Click Auto-fill */}
-                        {demoOtpDisplay && (
-                          <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-400/35 text-[11.5px] text-cyan-200 mb-2.5">
-                            <div className="flex items-center gap-1.5 truncate">
-                              <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                              <span>Code: <strong className="font-mono text-white tracking-widest bg-black/40 px-1.5 py-0.5 rounded border border-cyan-400/30">{demoOtpDisplay}</strong></span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOtpCode(demoOtpDisplay);
-                                setOtpVerified(true);
-                                if (audioEngine) audioEngine.playStationLock();
-                              }}
-                              className="text-[11px] font-bold text-cyan-300 hover:text-white underline cursor-pointer shrink-0"
-                            >
-                              Auto-fill
-                            </button>
-                          </div>
-                        )}
-
-                        {/* OTP Input & Action Buttons */}
-                        <div className="flex gap-2 items-center">
-                          <div className="relative flex-1">
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
-                              <KeyRound className="w-4 h-4" />
-                            </div>
+                        {/* 6 Digit Input Keypad */}
+                        <div className="flex justify-center items-center gap-2 sm:gap-2.5">
+                          {otpDigits.map((digit, idx) => (
                             <input
+                              key={idx}
+                              ref={(el) => (otpInputRefs.current[idx] = el)}
                               type="text"
                               inputMode="numeric"
-                              value={otpCode}
-                              onChange={(e) => {
-                                const val = e.target.value.replace(/\D/g, "").slice(0, 6);
-                                setOtpCode(val);
-                                if (authError) setAuthError("");
-                                if (val.length === 6 && demoOtpDisplay && val === demoOtpDisplay) {
-                                  setOtpVerified(true);
-                                }
-                              }}
-                              placeholder="6-Digit OTP"
-                              maxLength={6}
-                              required={selectedPortal === "admin"}
-                              className="w-full bg-[#08152e] border border-white/20 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/25 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder-slate-400 text-[13px] font-mono tracking-widest text-center outline-none transition-all duration-200"
+                              pattern="[0-9]*"
+                              maxLength={1}
+                              value={digit}
+                              onChange={(e) => handleDigitChange(idx, e.target.value)}
+                              onKeyDown={(e) => handleDigitKeyDown(idx, e)}
+                              onPaste={handleOtpPaste}
+                              className="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl sm:text-2xl font-mono font-bold text-white bg-[#0e203f]/90 border-2 border-cyan-400/30 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-4 focus:ring-cyan-400/25 rounded-xl outline-none transition-all duration-200 shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
                             />
-                          </div>
+                          ))}
+                        </div>
+                      </div>
 
-                          {/* Generate / Resend OTP Button */}
+                      {/* Resend & Status */}
+                      <div className="flex items-center justify-between text-[12px] text-slate-300 px-1 pt-1">
+                        <span>Didn't receive SMS code?</span>
+                        {otpCountdown > 0 ? (
+                          <span className="text-cyan-400 font-mono font-semibold">Resend in {otpCountdown}s</span>
+                        ) : (
                           <button
                             type="button"
-                            onClick={handleGenerateOtp}
-                            disabled={isGeneratingOtp || (otpSent && otpCountdown > 0)}
-                            className="px-3 py-2.5 rounded-xl bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-400/40 text-cyan-200 hover:text-white text-[11.5px] font-semibold flex items-center gap-1.5 cursor-pointer transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shadow-[0_0_12px_rgba(6,182,212,0.2)]"
+                            onClick={handleResendOtp}
+                            disabled={isGeneratingOtp}
+                            className="text-cyan-400 hover:text-cyan-300 font-bold underline cursor-pointer disabled:opacity-50 transition-colors"
                           >
-                            {isGeneratingOtp ? (
-                              <>
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                <span>Sending...</span>
-                              </>
-                            ) : otpSent && otpCountdown > 0 ? (
-                              <span>Resend ({otpCountdown}s)</span>
-                            ) : (
-                              <span>{otpSent ? "Resend OTP" : "Generate OTP"}</span>
-                            )}
+                            {isGeneratingOtp ? "Sending SMS..." : "Resend SMS Code"}
                           </button>
+                        )}
+                      </div>
 
-                          {/* Validate Button */}
+                      {/* Alerts */}
+                      <AnimatePresence>
+                        {successMessage && (
+                          <motion.div
+                            key="otp-ok"
+                            initial={{ opacity: 0, y: -6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -6 }}
+                            className="flex items-center gap-2 p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-medium"
+                          >
+                            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                            <span>{successMessage}</span>
+                          </motion.div>
+                        )}
+                        {authError && (
+                          <motion.div
+                            key="otp-err"
+                            initial={{ opacity: 0, y: -6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -6 }}
+                            className="flex items-start gap-2 p-3 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-medium"
+                          >
+                            <Shield className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
+                            <span>{authError}</span>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Action Submit */}
+                      <motion.button
+                        whileHover={{ scale: 1.012 }}
+                        whileTap={{ scale: 0.985 }}
+                        transition={{ duration: 0.15, ease: "easeInOut" }}
+                        type="submit"
+                        disabled={isSubmitting || otpDigits.join("").length < 6}
+                        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#0070f3] via-[#0080ff] to-[#0099ff] hover:from-[#0060df] hover:to-[#0088ee] text-white font-bold text-[15px] flex items-center justify-center gap-2 cursor-pointer shadow-[0_6px_28px_rgba(0,112,243,0.5)] hover:shadow-[0_8px_32px_rgba(0,112,243,0.6)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin text-white" />
+                            <span>Verifying Officer Clearance...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>
+                              {activeTab === "signin" ? "Verify & Sign In" : "Verify & Complete Registration"}
+                            </span>
+                            <ArrowRight className="w-4 h-4" />
+                          </>
+                        )}
+                      </motion.button>
+                    </form>
+                  </motion.div>
+                ) : (
+                  /* ========================================================= */
+                  /* CREDENTIALS ENTRY SCREEN                                  */
+                  /* ========================================================= */
+                  <motion.div
+                    key="credentials-panel"
+                    initial={{ opacity: 0, x: -24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 24 }}
+                    transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    {/* Sign In / Create Account Wide Segmented Control */}
+                    <div className="relative flex bg-[#061022]/75 rounded-2xl p-1.5 mb-4 border border-white/10">
+                      <button
+                        type="button"
+                        onClick={() => handleTabChange("signin")}
+                        className={`flex-1 text-center py-2 text-[13px] font-bold border-none bg-transparent cursor-pointer relative z-10 transition-colors duration-200 ${
+                          activeTab === "signin"
+                            ? "text-white"
+                            : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        Sign In
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleTabChange("create")}
+                        className={`flex-1 text-center py-2 text-[13px] font-bold border-none bg-transparent cursor-pointer relative z-10 transition-colors duration-200 ${
+                          activeTab === "create"
+                            ? "text-white"
+                            : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        Create Account
+                      </button>
+
+                      {/* Animated Gradient Tab Indicator */}
+                      <motion.div
+                        layoutId="authTabSlider"
+                        className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] rounded-xl bg-gradient-to-r from-[#0284c7] to-[#2563eb] shadow-[0_2px_12px_rgba(2,132,199,0.4)]"
+                        style={{
+                          left: activeTab === "signin" ? "6px" : "calc(50% + 0px)",
+                        }}
+                        transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                      />
+                    </div>
+
+                    {/* Select Access Portal Section (User / Admin) */}
+                    <div className="mb-4">
+                      <div className="text-center text-slate-300 text-[12px] sm:text-[12.5px] font-semibold uppercase tracking-wider mb-2.5">
+                        Select Access Portal
+                      </div>
+                      <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                        {/* User Portal */}
+                        <button
+                          type="button"
+                          onClick={() => handlePortalSelect("user")}
+                          className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${
+                            selectedPortal === "user"
+                              ? "bg-gradient-to-b from-[#0070f3] to-[#0055d4] text-white border-cyan-400/80 shadow-[0_0_22px_rgba(0,112,243,0.5)]"
+                              : "bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border-white/10 hover:border-white/20"
+                          }`}
+                        >
+                          <User className="w-6 h-6 mb-1.5 text-inherit" />
+                          <span className="text-[13px] font-bold leading-tight">
+                            User
+                          </span>
+                          <span className="text-[10px] opacity-80 leading-tight mt-1">
+                            View Reports &amp; Insights
+                          </span>
+                        </button>
+
+                        {/* Admin Portal */}
+                        <button
+                          type="button"
+                          onClick={() => handlePortalSelect("admin")}
+                          className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${
+                            selectedPortal === "admin"
+                              ? "bg-gradient-to-b from-[#0070f3] to-[#0055d4] text-white border-cyan-400/80 shadow-[0_0_22px_rgba(0,112,243,0.5)]"
+                              : "bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border-white/10 hover:border-white/20"
+                          }`}
+                        >
+                          <Shield className="w-6 h-6 mb-1.5 text-inherit" />
+                          <span className="text-[13px] font-bold leading-tight">
+                            Admin
+                          </span>
+                          <span className="text-[10px] opacity-80 leading-tight mt-1">
+                            2FA SMS Clearance
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Divider: Login to Continue */}
+                    <div className="flex items-center gap-3 text-slate-400 text-[12px] my-4">
+                      <span className="flex-1 h-px bg-white/15" />
+                      <span>
+                        {activeTab === "signin"
+                          ? "Login to Continue"
+                          : "Register to Continue"}
+                      </span>
+                      <span className="flex-1 h-px bg-white/15" />
+                    </div>
+
+                    {/* Form Fields */}
+                    <form onSubmit={handleCredentialSubmit} className="space-y-3.5">
+                      {/* Full Name Field (Appears smoothly on Create Account tab) */}
+                      <AnimatePresence>
+                        {activeTab === "create" && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                            animate={{ opacity: 1, height: "auto", marginBottom: 14 }}
+                            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                            className="overflow-hidden"
+                          >
+                            <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
+                              Full name
+                            </label>
+                            <div className="relative">
+                              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
+                                <User className="w-4 h-4" />
+                              </div>
+                              <input
+                                type="text"
+                                value={fullName}
+                                onChange={(e) => {
+                                  setFullName(e.target.value);
+                                  if (authError) setAuthError("");
+                                }}
+                                placeholder="e.g. Officer Sourav Roy"
+                                required={activeTab === "create"}
+                                className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Official Email / Registered Identifier */}
+                      <div>
+                        <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
+                          {selectedPortal === "admin" && activeTab === "signin"
+                            ? "Email Address or Phone"
+                            : "Email Address"}
+                        </label>
+                        <div className="relative">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
+                            <Mail className="w-4 h-4" />
+                          </div>
+                          <input
+                            type="text"
+                            value={email}
+                            onChange={(e) => {
+                              setEmail(e.target.value);
+                              if (authError) setAuthError("");
+                            }}
+                            placeholder={
+                              selectedPortal === "admin"
+                                ? "officer.roy@kolkata-water.gov.in or 6289143592"
+                                : "citizen.roy@kolkata-water.gov.in"
+                            }
+                            required
+                            className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Password */}
+                      <div>
+                        <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
+                          Password
+                        </label>
+                        <div className="relative">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
+                            <Lock className="w-4 h-4" />
+                          </div>
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => {
+                              setPassword(e.target.value);
+                              if (authError) setAuthError("");
+                            }}
+                            placeholder="••••••••••••"
+                            minLength={3}
+                            required
+                            className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-11 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
+                          />
                           <button
                             type="button"
-                            onClick={handleValidateOtp}
-                            disabled={isVerifyingOtp || !otpCode || otpCode.length < 6}
-                            className={`px-3 py-2.5 rounded-xl border text-[11.5px] font-semibold flex items-center gap-1 cursor-pointer transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
-                              otpVerified
-                                ? "bg-emerald-500/25 border-emerald-400 text-emerald-200 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
-                                : "bg-gradient-to-r from-[#0070f3] to-[#0099ff] border-cyan-400/60 text-white shadow-[0_0_14px_rgba(0,112,243,0.35)] hover:shadow-[0_0_18px_rgba(0,112,243,0.5)]"
-                            }`}
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer p-1 transition-colors duration-150"
                           >
-                            {isVerifyingOtp ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : otpVerified ? (
-                              <>
-                                <Check className="w-3.5 h-3.5 text-emerald-300" />
-                                <span>Verified</span>
-                              </>
+                            {showPassword ? (
+                              <EyeOff className="w-4 h-4" />
                             ) : (
-                              <span>Validate</span>
+                              <Eye className="w-4 h-4" />
                             )}
                           </button>
                         </div>
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
 
-                {/* Remember me & Reset passcode */}
-                <div className="flex items-center justify-between text-[12.5px] pt-0.5">
-                  <label className="flex items-center gap-2 text-slate-300 cursor-pointer font-medium select-none">
-                    <input
-                      type="checkbox"
-                      checked={rememberSession}
-                      onChange={(e) => setRememberSession(e.target.checked)}
-                      className="rounded accent-cyan-500 cursor-pointer"
-                    />
-                    <span>Remember me</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => alert(`Reset link dispatched to: ${email}`)}
-                    className="text-cyan-400 hover:text-cyan-300 hover:underline font-semibold cursor-pointer transition-colors duration-150"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
+                      {/* Phone Number Field (Appears on Create Account tab) */}
+                      <AnimatePresence>
+                        {activeTab === "create" && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                            animate={{ opacity: 1, height: "auto", marginBottom: 14 }}
+                            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                            className="overflow-hidden"
+                          >
+                            <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
+                              Mobile Phone Number {selectedPortal === "admin" && "(for SMS OTP)"}
+                            </label>
+                            <div className="relative">
+                              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
+                                <Phone className="w-4 h-4" />
+                              </div>
+                              <input
+                                type="tel"
+                                value={phoneNumber}
+                                onChange={(e) => {
+                                  setPhoneNumber(e.target.value);
+                                  if (authError) setAuthError("");
+                                }}
+                                placeholder="6289143592 or +91 98300 12345"
+                                required={activeTab === "create" && selectedPortal === "admin"}
+                                className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
-                {/* Success / Error Alerts */}
-                <AnimatePresence>
-                  {successMessage && (
-                    <motion.div
-                      key="auth-ok"
-                      initial={{ opacity: 0, y: -6, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                      transition={{ duration: 0.25, ease: "easeOut" }}
-                      className="flex items-center gap-2 p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-medium"
-                    >
-                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-                      <span>{successMessage}</span>
-                    </motion.div>
-                  )}
+                      {/* Remember me & Reset passcode */}
+                      <div className="flex items-center justify-between text-[12.5px] pt-0.5">
+                        <label className="flex items-center gap-2 text-slate-300 cursor-pointer font-medium select-none">
+                          <input
+                            type="checkbox"
+                            checked={rememberSession}
+                            onChange={(e) => setRememberSession(e.target.checked)}
+                            className="rounded accent-cyan-500 cursor-pointer"
+                          />
+                          <span>Remember me</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => alert(`Password reset instructions sent to: ${email || "your registered email"}`)}
+                          className="text-cyan-400 hover:text-cyan-300 hover:underline font-semibold cursor-pointer transition-colors duration-150"
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
 
-                  {authError && (
-                    <motion.div
-                      key="auth-err"
-                      initial={{ opacity: 0, y: -6, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                      transition={{ duration: 0.25, ease: "easeOut" }}
-                      className="flex items-start gap-2 p-3 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-medium"
-                    >
-                      <Shield className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
-                      <span>{authError}</span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                      {/* Success / Error Alerts */}
+                      <AnimatePresence>
+                        {successMessage && (
+                          <motion.div
+                            key="auth-ok"
+                            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                            transition={{ duration: 0.25, ease: "easeOut" }}
+                            className="flex items-center gap-2 p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-medium"
+                          >
+                            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                            <span>{successMessage}</span>
+                          </motion.div>
+                        )}
 
-                {/* Submit Button (Prominent Blue Gradient matching reference) */}
-                <motion.button
-                  whileHover={{ scale: 1.012 }}
-                  whileTap={{ scale: 0.985 }}
-                  transition={{ duration: 0.15, ease: "easeInOut" }}
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#0070f3] via-[#0080ff] to-[#0099ff] hover:from-[#0060df] hover:to-[#0088ee] text-white font-bold text-[15px] flex items-center justify-center gap-2 cursor-pointer shadow-[0_6px_28px_rgba(0,112,243,0.5)] hover:shadow-[0_8px_32px_rgba(0,112,243,0.6)] transition-all duration-200 disabled:opacity-60"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin text-white" />
-                      <span>Verifying clearance...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>
-                        {activeTab === "signin" ? "Login" : "Create Account"}
-                      </span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </motion.button>
-              </form>
+                        {authError && (
+                          <motion.div
+                            key="auth-err"
+                            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                            transition={{ duration: 0.25, ease: "easeOut" }}
+                            className="flex items-start gap-2 p-3 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-medium"
+                          >
+                            <Shield className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
+                            <span>{authError}</span>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
-              {/* Secondary Authentication SSO */}
-              <div className="flex items-center gap-3 text-slate-400 text-[11.5px] my-3.5">
-                <span className="flex-1 h-px bg-white/10" />
-                <span>or authenticate via</span>
-                <span className="flex-1 h-px bg-white/10" />
-              </div>
+                      {/* Submit Button */}
+                      <motion.button
+                        whileHover={{ scale: 1.012 }}
+                        whileTap={{ scale: 0.985 }}
+                        transition={{ duration: 0.15, ease: "easeInOut" }}
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#0070f3] via-[#0080ff] to-[#0099ff] hover:from-[#0060df] hover:to-[#0088ee] text-white font-bold text-[15px] flex items-center justify-center gap-2 cursor-pointer shadow-[0_6px_28px_rgba(0,112,243,0.5)] hover:shadow-[0_8px_32px_rgba(0,112,243,0.6)] transition-all duration-200 disabled:opacity-60"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin text-white" />
+                            <span>
+                              {selectedPortal === "admin"
+                                ? "Dispatching 2FA SMS Code..."
+                                : "Verifying clearance..."}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span>
+                              {selectedPortal === "admin"
+                                ? (activeTab === "signin"
+                                    ? "Continue with 2FA Verification"
+                                    : "Generate OTP & Continue")
+                                : (activeTab === "signin" ? "Login" : "Create Account")}
+                            </span>
+                            <ArrowRight className="w-4 h-4" />
+                          </>
+                        )}
+                      </motion.button>
+                    </form>
 
-              <div className="grid grid-cols-2 gap-2.5 mb-3">
-                <motion.button
-                  whileHover={{ scale: 1.015, y: -1 }}
-                  whileTap={{ scale: 0.985 }}
-                  transition={{ duration: 0.15 }}
-                  type="button"
-                  onClick={() => handleSubmit()}
-                  className="flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.09] border border-white/15 rounded-xl py-2.5 text-slate-200 text-[12.5px] font-semibold cursor-pointer transition-all duration-200"
-                >
-                  <GoogleIcon />
-                  <span>Google SSO</span>
-                </motion.button>
+                    {/* Secondary Authentication SSO */}
+                    <div className="flex items-center gap-3 text-slate-400 text-[11.5px] my-3.5">
+                      <span className="flex-1 h-px bg-white/10" />
+                      <span>or authenticate via</span>
+                      <span className="flex-1 h-px bg-white/10" />
+                    </div>
 
-                <motion.button
-                  whileHover={{ scale: 1.015, y: -1 }}
-                  whileTap={{ scale: 0.985 }}
-                  transition={{ duration: 0.15 }}
-                  type="button"
-                  onClick={() => handleSubmit()}
-                  className="flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.09] border border-white/15 rounded-xl py-2.5 text-slate-200 text-[12.5px] font-semibold cursor-pointer transition-all duration-200"
-                >
-                  <GovIdIcon />
-                  <span>Gov ID token</span>
-                </motion.button>
-              </div>
+                    <div className="grid grid-cols-2 gap-2.5 mb-3">
+                      <motion.button
+                        whileHover={{ scale: 1.015, y: -1 }}
+                        whileTap={{ scale: 0.985 }}
+                        transition={{ duration: 0.15 }}
+                        type="button"
+                        onClick={() => handleCredentialSubmit()}
+                        className="flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.09] border border-white/15 rounded-xl py-2.5 text-slate-200 text-[12.5px] font-semibold cursor-pointer transition-all duration-200"
+                      >
+                        <GoogleIcon />
+                        <span>Google SSO</span>
+                      </motion.button>
 
-              {/* Demo Fill */}
-              <div className="text-center pt-2 border-t border-white/10 mb-4">
-                <button
-                  type="button"
-                  onClick={handleDemoFill}
-                  className="text-center text-[12.5px] text-cyan-400 hover:text-cyan-300 font-semibold cursor-pointer inline-flex items-center gap-1.5 transition-colors duration-150"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Fill demo officer credentials</span>
-                </button>
-              </div>
+                      <motion.button
+                        whileHover={{ scale: 1.015, y: -1 }}
+                        whileTap={{ scale: 0.985 }}
+                        transition={{ duration: 0.15 }}
+                        type="button"
+                        onClick={() => handleCredentialSubmit()}
+                        className="flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.09] border border-white/15 rounded-xl py-2.5 text-slate-200 text-[12.5px] font-semibold cursor-pointer transition-all duration-200"
+                      >
+                        <GovIdIcon />
+                        <span>Gov ID token</span>
+                      </motion.button>
+                    </div>
+
+                    {/* Demo Fill */}
+                    <div className="text-center pt-2 border-t border-white/10 mb-4">
+                      <button
+                        type="button"
+                        onClick={handleDemoFill}
+                        className="text-center text-[12.5px] text-cyan-400 hover:text-cyan-300 font-semibold cursor-pointer inline-flex items-center gap-1.5 transition-colors duration-150"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Fill demo officer credentials</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Bottom Kolkata Skyline Vector Art & Typography */}
               <div className="pt-3 border-t border-white/10 text-center">
