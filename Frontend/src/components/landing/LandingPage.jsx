@@ -49,9 +49,8 @@ const IMPACT_STATS = [
           <div
             key={i}
             style={{ height: `${h}%` }}
-            className={`w-1.5 rounded-t-sm transition-all duration-500 ${
-              i >= 8 ? "bg-cyan-500" : "bg-cyan-200/80"
-            }`}
+            className={`w-1.5 rounded-t-sm transition-all duration-500 ${i >= 8 ? "bg-cyan-500" : "bg-cyan-200/80"
+              }`}
           />
         ))}
       </div>
@@ -425,7 +424,7 @@ export function LandingPage() {
             <div className="flex justify-center">
               <SplitText
                 text="Active Ground Inundation Hotspots"
-                className="text-2xl sm:text-3xl font-bold text-slate-950 dark:text-slate-100 tracking-tight text-center"
+                className="text-2xl sm:text-3xl font-bold text-black tracking-tight text-center"
                 delay={50}
                 duration={1.25}
                 ease="power3.out"
@@ -436,11 +435,11 @@ export function LandingPage() {
                 rootMargin="-100px"
                 textAlign="center"
                 tag="h2"
-                onLetterAnimationComplete={() => {}}
+                onLetterAnimationComplete={() => { }}
                 showCallback
               />
             </div>
-            <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
+            <p className="text-sm text-black mt-2 leading-relaxed">
               Live field data, citizen reports and sensor streams to identify and respond faster.
             </p>
             <div className="mt-3.5 flex items-center justify-center">
@@ -486,7 +485,7 @@ export function LandingPage() {
             <span className="inline-block text-[11px] font-mono font-bold text-cyan-800 tracking-[0.2em] uppercase mb-1">
               CITYWIDE CAPACITY & IMPACT
             </span>
-            <h3 className="text-xl sm:text-2xl font-bold text-slate-950 dark:text-slate-100 tracking-tight">
+            <h3 className="text-xl sm:text-2xl font-bold text-black tracking-tight">
               Hydrological Telemetry & Outfall Impact
             </h3>
           </div>

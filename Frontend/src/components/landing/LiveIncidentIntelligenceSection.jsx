@@ -1,32 +1,48 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ChevronDown, ChevronUp, Droplets, CheckCircle2 } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronDown,
+  ChevronUp,
+  Droplets,
+  CheckCircle2,
+} from "lucide-react";
+
 import { useKWIStore } from "../../store/useKWIStore";
 import { ACTIVE_INCIDENTS } from "../gis/kolkataCartographicData";
 import { audioEngine } from "../../utils/audioEngine";
 import { BorderBeam } from "../ui/BorderBeam";
 
+import AnimatedContent from "../ui/AnimatedContent";
+import FadeContent from "../ui/FadeContent";
+
 // Priority Rank: CRITICAL > HIGH > MODERATE > MONITORING
 const getSeverityRank = (s) => {
   const sev = (s || "").toUpperCase();
+
   if (sev === "CRITICAL") return 4;
   if (sev === "HIGH") return 3;
   if (sev === "MODERATE") return 2;
   if (sev === "MONITORING") return 1;
+
   return 0;
 };
 
 // Numeric parser for riskScore (e.g. "89 / 100" -> 89)
 const getRiskScoreNum = (score) => {
   if (!score) return 0;
+
   const num = parseInt(score, 10);
+
   return isNaN(num) ? 0 : num;
 };
 
 // Numeric parser for water depth (e.g. "28.4 cm" -> 28.4)
 const getWaterDepthNum = (depth) => {
   if (!depth) return 0;
+
   const num = parseFloat(depth);
+
   return isNaN(num) ? 0 : num;
 };
 
@@ -34,71 +50,117 @@ const getWaterDepthNum = (depth) => {
 const SEVERITY_CONFIG = {
   CRITICAL: {
     label: "CRITICAL",
-    dotClass: "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)] animate-pulse",
-    badgeClass: "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border-rose-200/80 dark:border-rose-500/20",
-    accentBorder: "hover:border-sky-400 dark:hover:border-sky-400",
+    dotClass:
+      "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)] animate-pulse",
+    badgeClass:
+      "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border-rose-200/80 dark:border-rose-500/20",
+    accentBorder:
+      "hover:border-sky-400 dark:hover:border-sky-400",
     glowColor: "rgba(244, 63, 94, 0.14)",
     hasScanLine: true,
   },
+
   HIGH: {
     label: "HIGH",
-    dotClass: "bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.5)] animate-pulse",
-    badgeClass: "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10 border-orange-200/80 dark:border-orange-500/20",
-    accentBorder: "hover:border-sky-400 dark:hover:border-sky-400",
+    dotClass:
+      "bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.5)] animate-pulse",
+    badgeClass:
+      "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10 border-orange-200/80 dark:border-orange-500/20",
+    accentBorder:
+      "hover:border-sky-400 dark:hover:border-sky-400",
     glowColor: "rgba(249, 115, 22, 0.1)",
     hasScanLine: false,
   },
+
   MODERATE: {
     label: "MODERATE",
     dotClass: "bg-amber-500",
-    badgeClass: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200/80 dark:border-amber-500/20",
-    accentBorder: "hover:border-sky-400 dark:hover:border-sky-400",
+    badgeClass:
+      "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200/80 dark:border-amber-500/20",
+    accentBorder:
+      "hover:border-sky-400 dark:hover:border-sky-400",
     glowColor: "rgba(245, 158, 11, 0.08)",
     hasScanLine: false,
   },
+
   MONITORING: {
     label: "MONITORING",
     dotClass: "bg-cyan-500",
-    badgeClass: "text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-500/10 border-cyan-200/80 dark:border-cyan-500/20",
-    accentBorder: "hover:border-sky-400 dark:hover:border-sky-400",
+    badgeClass:
+      "text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-500/10 border-cyan-200/80 dark:border-cyan-500/20",
+    accentBorder:
+      "hover:border-sky-400 dark:hover:border-sky-400",
     glowColor: "rgba(6, 182, 212, 0.06)",
     hasScanLine: false,
   },
 };
 
 export function LiveIncidentIntelligenceSection() {
-  const { setSelectedIncident, setHoveredIncidentId, navigate } = useKWIStore();
+  const {
+    setSelectedIncident,
+    setHoveredIncidentId,
+    navigate,
+  } = useKWIStore();
+
   const [showAll, setShowAll] = useState(false);
 
   // Dynamic Data Source: Sort existing Intelligence ACTIVE_INCIDENTS by priority rule
   const sortedIncidents = useMemo(() => {
     return [...ACTIVE_INCIDENTS].sort((a, b) => {
-      const rankDiff = getSeverityRank(b.severity) - getSeverityRank(a.severity);
+      const rankDiff =
+        getSeverityRank(b.severity) -
+        getSeverityRank(a.severity);
+
       if (rankDiff !== 0) return rankDiff;
-      const scoreDiff = getRiskScoreNum(b.riskScore) - getRiskScoreNum(a.riskScore);
+
+      const scoreDiff =
+        getRiskScoreNum(b.riskScore) -
+        getRiskScoreNum(a.riskScore);
+
       if (scoreDiff !== 0) return scoreDiff;
-      return getWaterDepthNum(b.waterDepth) - getWaterDepthNum(a.waterDepth);
+
+      return (
+        getWaterDepthNum(b.waterDepth) -
+        getWaterDepthNum(a.waterDepth)
+      );
     });
   }, []);
 
   // Dynamically calculated active incidents count
   const activeCount = useMemo(() => {
-    return sortedIncidents.filter((i) => i.severity !== "MONITORING" || i.status !== "Resolved").length;
+    return sortedIncidents.filter(
+      (i) =>
+        i.severity !== "MONITORING" ||
+        i.status !== "Resolved"
+    ).length;
   }, [sortedIncidents]);
 
-  const formattedActiveCount = activeCount < 10 ? `0${activeCount}` : `${activeCount}`;
+  const formattedActiveCount =
+    activeCount < 10
+      ? `0${activeCount}`
+      : `${activeCount}`;
 
   // Visible incidents: initial 3 vs all
-  const visibleIncidents = showAll ? sortedIncidents : sortedIncidents.slice(0, 3);
+  const visibleIncidents = showAll
+    ? sortedIncidents
+    : sortedIncidents.slice(0, 3);
+
   const hasMore = sortedIncidents.length > 3;
 
   const handleInspect = (incident) => {
     audioEngine.playUiChirp(1050);
+
     setSelectedIncident(incident);
     setHoveredIncidentId(incident.id);
-    const mapEl = document.getElementById("gis-map-viewport");
+
+    const mapEl =
+      document.getElementById("gis-map-viewport");
+
     if (mapEl) {
-      mapEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      mapEl.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     }
   };
 
@@ -109,11 +171,15 @@ export function LiveIncidentIntelligenceSection() {
 
   return (
     <section className="relative w-full py-4 sm:py-6 font-sans">
+
       {/* ======================================================== */}
       {/* 1. SECTION HEADER                                        */}
       {/* ======================================================== */}
+
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-4 sm:mb-5 px-1">
+
         <div>
+
           {/* Eyebrow */}
           <div className="inline-flex items-center gap-2 text-[11px] font-mono font-bold tracking-[0.2em] uppercase text-cyan-700 dark:text-cyan-400 mb-1">
             <span>LIVE INCIDENT INTELLIGENCE</span>
@@ -123,161 +189,276 @@ export function LiveIncidentIntelligenceSection() {
           <p className="text-sm sm:text-[15px] font-semibold text-slate-800 dark:text-slate-200 tracking-tight">
             Ground reports requiring attention
           </p>
+
         </div>
 
         {/* Dynamic Active Count Pill */}
         <div className="self-start sm:self-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 dark:bg-[#131d31]/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 shadow-[0_2px_12px_rgba(15,23,42,0.03)] font-mono text-xs text-slate-700 dark:text-slate-300">
+
           <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+
           <span className="font-bold text-slate-900 dark:text-slate-100 tracking-wider">
             {formattedActiveCount} ACTIVE
           </span>
+
         </div>
+
       </div>
 
       {/* ======================================================== */}
       {/* 2. INCIDENT CARDS GRID                                   */}
       {/* ======================================================== */}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
+
         <AnimatePresence initial={false}>
+
           {visibleIncidents.map((incident, idx) => {
-            const config = SEVERITY_CONFIG[incident.severity] || SEVERITY_CONFIG.MONITORING;
-            const isDepthPending = incident.waterDepth === "Pending" || !incident.waterDepth;
-            const displayDepth = isDepthPending ? "Telemetry Pending" : `${incident.waterDepth} water depth`;
-            const reportCount = incident.verifiedReports ?? 0;
-            const displayReports = `${reportCount} verified ${reportCount === 1 ? "report" : "reports"}`;
+
+            const config =
+              SEVERITY_CONFIG[incident.severity] ||
+              SEVERITY_CONFIG.MONITORING;
+
+            const isDepthPending =
+              incident.waterDepth === "Pending" ||
+              !incident.waterDepth;
+
+            const displayDepth = isDepthPending
+              ? "Telemetry Pending"
+              : `${incident.waterDepth} water depth`;
+
+            const reportCount =
+              incident.verifiedReports ?? 0;
+
+            const displayReports =
+              `${reportCount} verified ${reportCount === 1
+                ? "report"
+                : "reports"
+              }`;
 
             return (
-              <motion.div
+
+              <AnimatedContent
                 key={incident.id}
-                layout
-                initial={{ opacity: 0, y: 35, x: -18, filter: "blur(4px)" }}
-                whileInView={{ opacity: 1, y: 0, x: 0, filter: "blur(0px)" }}
-                viewport={{ once: true, amount: 0.15 }}
-                exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.25 } }}
-                transition={{
-                  duration: 0.6,
-                  delay: (idx % 3) * 0.12,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                onMouseEnter={() => {
-                  setHoveredIncidentId(incident.id);
-                }}
-                onMouseLeave={() => {
-                  setHoveredIncidentId(null);
-                }}
-                className={`group relative flex flex-col justify-between p-5 sm:p-6 rounded-[18px] bg-white/90 dark:bg-[#111a2e]/90 backdrop-blur-xl border border-sky-300/50 dark:border-sky-500/30 ${config.accentBorder} shadow-[0_4px_20px_rgba(56,189,248,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.25)] hover:shadow-[0_12px_36px_rgba(56,189,248,0.22)] hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-default`}
+                distance={55}
+                direction="vertical"
+                reverse={false}
+                duration={0.75}
+                ease="power3.out"
+                initialOpacity={0}
+                animateOpacity={true}
+                scale={0.97}
+                threshold={0.15}
+                delay={(idx % 3) * 0.1}
               >
-                {/* Animated Light Blue Border Beam Effect */}
-                <BorderBeam
-                  size={260}
-                  duration={7 + (idx % 3) * 2}
-                  borderWidth={1.8}
-                  colorFrom="#38bdf8"
-                  colorTo="#0284c7"
-                  delay={idx * 2.5}
-                />
 
-                {/* One-time entrance Risk Scan-line for CRITICAL */}
-                {config.hasScanLine && (
+                <FadeContent
+                  blur={true}
+                  duration={0.55}
+                  ease="power2.out"
+                  threshold={0.15}
+                >
+
                   <motion.div
-                    initial={{ left: "-100%" }}
-                    animate={{ left: "140%" }}
-                    transition={{
-                      duration: 1.1,
-                      delay: 0.2,
-                      ease: [0.22, 1, 0.36, 1],
+                    layout
+                    initial={{
+                      opacity: 1,
+                      y: 0,
+                      x: 0,
                     }}
-                    className="pointer-events-none absolute inset-y-0 w-24 bg-gradient-to-r from-transparent via-rose-500/15 to-transparent skew-x-[-20deg] z-10"
-                  />
-                )}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      x: 0,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.96,
+                      transition: {
+                        duration: 0.25,
+                      },
+                    }}
 
-                {/* Card Top: Severity Badge + ID + Location */}
-                <div>
-                  {/* Top Metadata Row */}
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${config.dotClass}`} />
-                      <span
-                        className={`text-[10px] font-mono font-bold tracking-wider px-2 py-0.5 rounded-md border ${config.badgeClass}`}
-                      >
-                        {config.label}
-                      </span>
+                    onMouseEnter={() => {
+                      setHoveredIncidentId(
+                        incident.id
+                      );
+                    }}
+
+                    onMouseLeave={() => {
+                      setHoveredIncidentId(null);
+                    }}
+
+                    className={`group relative flex flex-col justify-between p-5 sm:p-6 rounded-[18px] bg-white/90 dark:bg-[#111a2e]/90 backdrop-blur-xl border border-sky-300/50 dark:border-sky-500/30 ${config.accentBorder} shadow-[0_4px_20px_rgba(56,189,248,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.25)] hover:shadow-[0_12px_36px_rgba(56,189,248,0.22)] hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-default`}
+                  >
+
+                    {/* Animated Light Blue Border Beam Effect */}
+                    <BorderBeam
+                      size={260}
+                      duration={
+                        7 + (idx % 3) * 2
+                      }
+                      borderWidth={1.8}
+                      colorFrom="#38bdf8"
+                      colorTo="#0284c7"
+                      delay={idx * 2.5}
+                    />
+
+                    {/* One-time entrance Risk Scan-line for CRITICAL */}
+                    {config.hasScanLine && (
+                      <motion.div
+                        initial={{
+                          left: "-100%",
+                        }}
+                        animate={{
+                          left: "140%",
+                        }}
+                        transition={{
+                          duration: 1.1,
+                          delay: 0.2,
+                          ease: [
+                            0.22,
+                            1,
+                            0.36,
+                            1,
+                          ],
+                        }}
+                        className="pointer-events-none absolute inset-y-0 w-24 bg-gradient-to-r from-transparent via-rose-500/15 to-transparent skew-x-[-20deg] z-10"
+                      />
+                    )}
+
+                    {/* Card Top: Severity Badge + ID + Location */}
+                    <div>
+
+                      {/* Top Metadata Row */}
+                      <div className="flex items-center justify-between gap-2 mb-3">
+
+                        <div className="flex items-center gap-2">
+
+                          <span
+                            className={`w-2 h-2 rounded-full ${config.dotClass}`}
+                          />
+
+                          <span
+                            className={`text-[10px] font-mono font-bold tracking-wider px-2 py-0.5 rounded-md border ${config.badgeClass}`}
+                          >
+                            {config.label}
+                          </span>
+
+                        </div>
+
+                        <span className="text-[11px] font-mono font-semibold text-slate-400 dark:text-slate-500 tracking-tight">
+                          {incident.id}
+                        </span>
+
+                      </div>
+
+                      {/* Incident Location Headline */}
+                      <h3 className="text-base sm:text-[17px] font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-snug line-clamp-2 mb-4 group-hover:text-cyan-700 dark:group-hover:text-cyan-400 transition-colors">
+                        {incident.location}
+                      </h3>
+
                     </div>
 
-                    <span className="text-[11px] font-mono font-semibold text-slate-400 dark:text-slate-500 tracking-tight">
-                      {incident.id}
-                    </span>
-                  </div>
+                    {/* Card Middle: Minimalist Telemetry Subset */}
+                    <div className="space-y-2 pt-3 border-t border-slate-100/90 dark:border-slate-800/80">
 
-                  {/* Incident Location Headline */}
-                  <h3 className="text-base sm:text-[17px] font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-snug line-clamp-2 mb-4 group-hover:text-cyan-700 dark:group-hover:text-cyan-400 transition-colors">
-                    {incident.location}
-                  </h3>
-                </div>
+                      {/* Water Depth */}
+                      <div className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
 
-                {/* Card Middle: Minimalist Telemetry Subset */}
-                <div className="space-y-2 pt-3 border-t border-slate-100/90 dark:border-slate-800/80">
-                  {/* Water Depth */}
-                  <div className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
-                    <Droplets className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
-                    <span className="font-semibold text-slate-900 dark:text-slate-100 font-mono">
-                      {displayDepth}
-                    </span>
-                  </div>
+                        <Droplets className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
 
-                  {/* Verified Reports */}
-                  <div className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-400">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-                    <span>{displayReports}</span>
-                  </div>
-                </div>
+                        <span className="font-semibold text-slate-900 dark:text-slate-100 font-mono">
+                          {displayDepth}
+                        </span>
 
-                {/* Card Bottom: Inspect Action */}
-                <div className="pt-3.5 mt-3 border-t border-slate-100/90 dark:border-slate-800/80 flex items-center justify-between">
-                  <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">
-                    {incident.subdivision || "KOLKATA GRID"}
-                  </span>
+                      </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleInspect(incident)}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors cursor-pointer group/inspect"
-                    title={`Inspect details for ${incident.id}`}
-                  >
-                    <span>Inspect</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover/inspect:translate-x-1 transition-transform" />
-                  </button>
-                </div>
-              </motion.div>
+                      {/* Verified Reports */}
+                      <div className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-400">
+
+                        <CheckCircle2 className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+
+                        <span>
+                          {displayReports}
+                        </span>
+
+                      </div>
+
+                    </div>
+
+                    {/* Card Bottom: Inspect Action */}
+                    <div className="pt-3.5 mt-3 border-t border-slate-100/90 dark:border-slate-800/80 flex items-center justify-between">
+
+                      <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">
+                        {incident.subdivision ||
+                          "KOLKATA GRID"}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleInspect(incident)
+                        }
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors cursor-pointer group/inspect"
+                        title={`Inspect details for ${incident.id}`}
+                      >
+
+                        <span>Inspect</span>
+
+                        <ArrowRight className="w-3.5 h-3.5 group-hover/inspect:translate-x-1 transition-transform" />
+
+                      </button>
+
+                    </div>
+
+                  </motion.div>
+
+                </FadeContent>
+
+              </AnimatedContent>
+
             );
           })}
+
         </AnimatePresence>
+
       </div>
 
       {/* ======================================================== */}
       {/* 3. SHOW MORE / SHOW LESS CONTROL                         */}
       {/* ======================================================== */}
+
       {hasMore && (
+
         <div className="mt-5 sm:mt-6 flex justify-center">
+
           <button
             type="button"
             onClick={toggleShowMore}
             className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/85 dark:bg-[#111a2e]/85 hover:bg-slate-50 dark:hover:bg-[#16223d] text-slate-700 dark:text-slate-300 hover:text-cyan-700 dark:hover:text-cyan-400 border border-slate-200/90 dark:border-slate-700/90 font-mono text-xs font-bold tracking-wider uppercase shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer active:scale-98"
           >
+
             {showAll ? (
               <>
                 <span>SHOW LESS</span>
+
                 <ChevronUp className="w-3.5 h-3.5 text-cyan-600" />
               </>
             ) : (
               <>
                 <span>SHOW MORE</span>
+
                 <ChevronDown className="w-3.5 h-3.5 text-cyan-600" />
               </>
             )}
+
           </button>
+
         </div>
+
       )}
+
     </section>
   );
 }

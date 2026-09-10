@@ -1,6 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import createGlobe from "cobe";
 import {
   Mail,
   Lock,
@@ -8,10 +7,15 @@ import {
   EyeOff,
   ArrowRight,
   Shield,
+  ShieldCheck,
   CheckCircle2,
   Loader2,
   Sparkles,
   User,
+  Crown,
+  Droplets,
+  BarChart3,
+  Leaf,
 } from "lucide-react";
 import { useKWIStore } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
@@ -20,116 +24,96 @@ import { KWINavbar } from "../navigation/KWINavbar";
 import { AskKolkataDrawer } from "../navigation/AskKolkataDrawer";
 import Footer from "../Footer";
 
-// Pure, Seamless 3D Interactive WebGL Globe with Buttery Smooth Damping Physics
-function CobeGlobeInsidePanel() {
-  const canvasRef = useRef(null);
-  const pointerInteracting = useRef(null);
-  const pointerInteractionMovement = useRef(0);
-  const rRef = useRef(0);
-  const velocityRef = useRef(0);
+// Authentic KMC Municipal Seal Vector Emblem matching the reference image
+const KMCEmblem = () => (
+  <svg
+    width="60"
+    height="60"
+    viewBox="0 0 100 100"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="shrink-0 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]"
+  >
+    {/* Outer Double Frame with rounded rect */}
+    <rect x="6" y="6" width="88" height="88" rx="8" stroke="currentColor" strokeWidth="2.5" />
+    <rect
+      x="11"
+      y="11"
+      width="78"
+      height="78"
+      rx="5"
+      stroke="currentColor"
+      strokeWidth="1"
+      strokeDasharray="2 2"
+      opacity="0.65"
+    />
 
-  useEffect(() => {
-    if (!canvasRef.current) return;
+    {/* Top Temple Spire / Kalasa Dome Motif */}
+    <path
+      d="M50 16 L50 22 M46 22 H54 M50 22 C43 27 41 33 41 37 H59 C59 33 57 27 50 22 Z"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+      fill="currentColor"
+      fillOpacity="0.15"
+    />
 
-    let phi = 4.6;
-    let animId;
-    const width = 450;
+    {/* Central Arch & Radiant Wheel / Sudarshan */}
+    <circle cx="50" cy="48" r="8" stroke="currentColor" strokeWidth="1.5" />
+    <circle cx="50" cy="48" r="3" fill="currentColor" />
+    <line x1="50" y1="40" x2="50" y2="56" stroke="currentColor" strokeWidth="1" />
+    <line x1="42" y1="48" x2="58" y2="48" stroke="currentColor" strokeWidth="1" />
+    <line x1="44.3" y1="42.3" x2="55.7" y2="53.7" stroke="currentColor" strokeWidth="1" />
+    <line x1="44.3" y1="53.7" x2="55.7" y2="42.3" stroke="currentColor" strokeWidth="1" />
 
-    const globe = createGlobe(canvasRef.current, {
-      devicePixelRatio: 2,
-      width: width * 2,
-      height: width * 2,
-      phi: 4.6,
-      theta: 0.35,
-      dark: 1, // Deep black sphere
-      diffuse: 1.2,
-      mapSamples: 16000,
-      mapBrightness: 3.8,
-      mapBaseBrightness: 0.05,
-      baseColor: [0.65, 0.65, 0.65], // Pure grey dots
-      markerColor: [0, 0, 0],
-      glowColor: [0.25, 0.25, 0.25], // Subtle monochrome grey rim
-      opacity: 1,
-      scale: 1,
-      markers: [],
-      arcs: [],
-    });
+    {/* Flanking Regal Pillars / Lions / Guardians */}
+    <path
+      d="M26 36 C30 36 33 40 33 47 C33 54 30 58 26 58 L24 58 L24 36 Z"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      fill="currentColor"
+      fillOpacity="0.1"
+    />
+    <path
+      d="M74 36 C70 36 67 40 67 47 C67 54 70 58 74 58 L76 58 L76 36 Z"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      fill="currentColor"
+      fillOpacity="0.1"
+    />
 
-    const animate = () => {
-      if (pointerInteracting.current === null) {
-        // Smooth inertia deceleration
-        velocityRef.current *= 0.94;
-        rRef.current += velocityRef.current;
-        // Continuous smooth idle rotation
-        phi += 0.0032;
-      }
+    {/* River Hooghly Water Waves below */}
+    <path
+      d="M22 66 C27 64 31 68 36 66 C41 64 45 68 50 66 C55 64 59 68 64 66 C69 64 73 68 78 66"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+    />
+    <path
+      d="M24 72 C28 70 32 74 37 72 C42 70 46 74 50 72 C54 70 58 74 63 72 C68 70 72 74 76 72"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      opacity="0.8"
+    />
 
-      globe.update({
-        phi: phi + rRef.current,
-        theta: 0.35,
-      });
-      animId = requestAnimationFrame(animate);
-    };
+    {/* Civic Scroll Banner at base with 'KMC' */}
+    <path d="M20 78 L80 78 L76 84 L24 84 Z" stroke="currentColor" strokeWidth="1.4" fill="currentColor" fillOpacity="0.2" />
+    <text x="50" y="83" fill="currentColor" fontSize="5.5" fontWeight="bold" textAnchor="middle" letterSpacing="1.5">
+      K.M.C
+    </text>
+  </svg>
+);
 
-    animId = requestAnimationFrame(animate);
-
-    return () => {
-      cancelAnimationFrame(animId);
-      globe.destroy();
-    };
-  }, []);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.94 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      className="relative w-full aspect-square max-w-[420px] mx-auto flex items-center justify-center select-none bg-transparent"
-    >
-      <canvas
-        ref={canvasRef}
-        onPointerDown={(e) => {
-          pointerInteracting.current =
-            e.clientX - pointerInteractionMovement.current;
-          velocityRef.current = 0;
-          if (canvasRef.current) canvasRef.current.style.cursor = "grabbing";
-        }}
-        onPointerUp={() => {
-          pointerInteracting.current = null;
-          if (canvasRef.current) canvasRef.current.style.cursor = "grab";
-        }}
-        onPointerOut={() => {
-          pointerInteracting.current = null;
-          if (canvasRef.current) canvasRef.current.style.cursor = "grab";
-        }}
-        onMouseMove={(e) => {
-          if (pointerInteracting.current !== null) {
-            const delta = e.clientX - pointerInteracting.current;
-            const stepDelta = delta - pointerInteractionMovement.current;
-            pointerInteractionMovement.current = delta;
-            velocityRef.current = stepDelta / 140;
-            rRef.current = delta / 120;
-          }
-        }}
-        onTouchMove={(e) => {
-          if (pointerInteracting.current !== null && e.touches[0]) {
-            const delta = e.touches[0].clientX - pointerInteracting.current;
-            const stepDelta = delta - pointerInteractionMovement.current;
-            pointerInteractionMovement.current = delta;
-            velocityRef.current = stepDelta / 140;
-            rRef.current = delta / 120;
-          }
-        }}
-        className="w-full h-full cursor-grab opacity-100 block bg-transparent transition-opacity duration-500"
-        style={{
-          width: "100%",
-          height: "100%",
-          aspectRatio: "1",
-        }}
-      />
-    </motion.div>
-  );
-}
+// High-fidelity line art illustration of the Kolkata skyline (Victoria Memorial, High Court, Howrah Bridge)
+// Kolkata skyline PNG
+const KolkataSkylineArt = () => (
+  <img
+    src="/textures/Kolkata_Skyline.png"
+    alt="Kolkata skyline"
+    className="w-full max-w-[360px] h-auto mx-auto object-contain"
+  />
+);
 
 const GoogleIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24">
@@ -156,13 +140,39 @@ const GovIdIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
     <path
       d="M12 2a10 10 0 00-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.1-1-1.4-1-1.4-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.7.4-1.1.6-1.4-2.2-.2-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.2-.4-1.3.1-2.6 0 0 .8-.3 2.7 1a9.4 9.4 0 015 0c1.9-1.3 2.7-1 2.7-1 .5 1.3.2 2.4.1 2.6.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5A10 10 0 0012 2z"
-      fill="#3d4356"
+      fill="#94a3b8"
     />
   </svg>
 );
 
+// 4 Feature Cards matching the second reference image
+const FEATURE_CARDS = [
+  {
+    icon: Droplets,
+    title: "Real-time\nMonitoring",
+    desc: "Track water levels, blockages and flood risks.",
+  },
+  {
+    icon: BarChart3,
+    title: "Predictive\nAnalytics",
+    desc: "AI-driven insights for proactive decisions.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Healthier\nCommunities",
+    desc: "Safer neighborhoods for a better tomorrow.",
+  },
+  {
+    icon: Leaf,
+    title: "Sustainable\nKolkata",
+    desc: "Cleaner. Greener. More resilient.",
+  },
+];
+
 export default function AIUnleashedAuth() {
+  // 100% Original Working State & Handlers
   const [activeTab, setActiveTab] = useState("signin"); // 'signin' | 'create'
+  const [selectedPortal, setSelectedPortal] = useState("user"); // Visual portal selection ('user' | 'admin' | 'super_admin')
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("officer.roy@kolkata-water.gov.in");
   const [password, setPassword] = useState("Kolkata@Water2026");
@@ -181,6 +191,13 @@ export default function AIUnleashedAuth() {
     setAuthError("");
   };
 
+  // Visual-only portal switcher - DOES NOT mutate credentials or break authentication
+  const handlePortalSelect = (portalId) => {
+    if (audioEngine) audioEngine.playUiChirp(880);
+    setSelectedPortal(portalId);
+  };
+
+  // 100% Original Submit Handler - Exact source of truth
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setIsSubmitting(true);
@@ -233,6 +250,7 @@ export default function AIUnleashedAuth() {
     }
   };
 
+  // 100% Original Demo Fill Handler
   const handleDemoFill = (e) => {
     if (e) e.preventDefault();
     setEmail("officer.roy@kolkata-water.gov.in");
@@ -241,138 +259,239 @@ export default function AIUnleashedAuth() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0b1220] text-[#181c2a] dark:text-slate-100 flex flex-col justify-between font-sans selection:bg-[#0284c7]/20 selection:text-[#0284c7] overflow-x-hidden relative">
+    <div className="min-h-screen w-full bg-[#070e1c] text-white flex flex-col justify-between font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden relative">
+      {/* ========================================================= */}
+      {/* 1. EXACT FULL-SCREEN BACKGROUND: LoginPage_bg.png         */}
+      {/* ========================================================= */}
+      <div
+        className="fixed inset-0 w-full h-full pointer-events-none overflow-hidden select-none z-0"
+        aria-hidden="true"
+      >
+        <div
+          className="absolute inset-0 w-full h-full bg-cover bg-center"
+          style={{
+            backgroundImage: "url('/textures/LoginPage_bg.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center 42%",
+          }}
+        />
+        {/* Subtle, delicate gradient overlay only where needed for readability without darkening */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#070e1c]/70 via-transparent to-[#070e1c]/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#040814]/60 via-transparent to-[#040814]/30" />
+      </div>
+
       {/* Global Navigation Bar */}
       <div className="relative z-30">
         <KWINavbar />
         <AskKolkataDrawer />
       </div>
 
-      {/* Main Hero Container */}
-      <main className="flex-1 w-full max-w-[1320px] mx-auto px-4 sm:px-7 py-6 sm:py-10 relative z-20 flex flex-col justify-center">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      {/* ========================================================= */}
+      {/* 2. MAIN VIEWPORT CONTAINER WITH EXACT PROPORTIONS         */}
+      {/* ========================================================= */}
+      <main className="flex-1 w-full max-w-[1500px] mx-auto px-4 sm:px-8 lg:px-[4.3vw] py-2 sm:py-3 relative z-20 flex flex-col justify-between min-h-[calc(100vh-80px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 xl:gap-10 items-stretch flex-1 py-2 sm:py-3">
 
           {/* ========================================================= */}
-          {/* LEFT COLUMN: Floating 3D Globe with Staggered Entrance   */}
+          {/* LEFT COLUMN: HERO CONTENT & 4 FEATURE CARDS               */}
           {/* ========================================================= */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -25 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-7 flex flex-col items-center justify-center text-center lg:text-left"
+            className="lg:col-span-7 flex flex-col text-left pt-2 lg:pt-[8vh] pb-1"
           >
-            {/* Pure 3D Globe with No Background Box */}
-            <div className="w-full flex items-center justify-center bg-transparent">
-              <CobeGlobeInsidePanel />
+            {/* Top Hero Section */}
+            <div className="max-w-[680px]">
+              <div className="text-white/90 text-xs sm:text-[14px] font-medium tracking-[0.24em] uppercase mb-3">
+                Kolkata Municipal Corporation
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl lg:text-[56px] xl:text-[56px] font-extrabold tracking-tight text-white leading-[1.12]">
+                A Cleaner Kolkata <br />
+                Through{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00d2ff] via-[#38bdf8] to-[#00f0ff] drop-shadow-[0_0_30px_rgba(0,210,255,0.45)]">
+                  Smarter Insights
+                </span>
+              </h1>
+
+              <p className="text-slate-200/90 text-base sm:text-lg lg:text-[18px] xl:text-[18px] font-normal mt-4 sm:mt-5 max-w-[560px] leading-relaxed">
+                AI-powered drainage intelligence for a healthier, safer and more resilient city.
+              </p>
+
+              {/* Cyan Accent Line */}
+              <div className="h-[2px] w-16 bg-gradient-to-r from-[#00d2ff] to-[#0070f3] rounded-full my-5 sm:my-6 shadow-[0_0_12px_rgba(0,210,255,0.7)]" />
+
+              {/* Quote */}
+              <p className="text-slate-300 italic text-sm sm:text-base tracking-wide max-w-[500px]">
+                “Resilient infrastructure for a brighter tomorrow.”
+              </p>
             </div>
 
-            {/* Bottom Caption & Version Header */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="px-2 mt-4 text-center lg:text-left max-w-[560px]"
-            >
-              <div className="flex items-center justify-center lg:justify-start gap-2.5">
-                <h1 className="text-2xl sm:text-[26px] font-bold tracking-tight text-[#181c2a] dark:text-white m-0">
-                  Kolkata Water Intelligence
-                </h1>
-                <span className="text-[11px] text-[#0284c7] bg-cyan-50 border border-cyan-200/80 dark:bg-cyan-500/15 dark:border-cyan-500/30 px-2 py-0.5 rounded-md font-semibold transition-colors duration-200">
-                  v3.4
-                </span>
-              </div>
-              <p className="text-sm text-[#6b7488] dark:text-slate-400 leading-relaxed mt-2">
-                Real-time urban drainage telemetry, storm surge forecasting, and municipal command coordination for Kolkata Municipal Corporation.
-              </p>
-            </motion.div>
+            {/* Bottom 4 Feature Cards (Substantial, tall, prominent cards) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-8 lg:mt-30 max-w-[640px]">
+              {FEATURE_CARDS.map((card, idx) => {
+                const Icon = card.icon;
+                return (
+                  <motion.div
+                    key={card.title}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.15 + idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                    whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                    className="rounded-2xl bg-[#0c1f3d]/50 backdrop-blur-xl border border-white/20 hover:border-cyan-400/50 p-4 sm:p-5 flex flex-col justify-between min-h-[175px] sm:min-h-[195px] shadow-[0_15px_35px_rgba(0,0,0,0.35)] hover:shadow-[0_18px_40px_rgba(0,180,240,0.25)] transition-all duration-300"
+                  >
+                    <div className="text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.6)] mb-3">
+                      <Icon className="w-7 h-7 sm:w-8 sm:h-8" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-bold text-[13.5px] sm:text-[15px] leading-snug whitespace-pre-line">
+                        {card.title}
+                      </h3>
+                      <p className="text-slate-300/80 text-[11px] sm:text-[12px] leading-relaxed mt-1.5">
+                        {card.desc}
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </motion.div>
 
           {/* ========================================================= */}
-          {/* RIGHT COLUMN: Clean White Auth Card with Smooth Animation*/}
+          {/* RIGHT COLUMN: LARGE WIDE TRANSLUCENT GLASS AUTH PANEL     */}
           {/* ========================================================= */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 25 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-5 flex flex-col justify-center"
+            className="lg:col-span-5 flex flex-col justify-center w-full"
           >
-            <div className="w-full bg-white dark:bg-[#16213a] border border-[#e6e9f2] dark:border-slate-800 rounded-[20px] p-6 sm:p-7 shadow-[0_20px_50px_rgba(40,40,90,0.08)] text-left transition-shadow duration-300">
+            <div className="w-full h-[950px] max-w-[570px] xl:max-w-[570px] mx-auto lg:ml-auto bg-[#0a1b38]/70 backdrop-blur-2xl border border-cyan-400/25 rounded-[28px] sm:rounded-[30px] p-5 sm:p-6 xl:p-7 shadow-[0_30px_70px_rgba(0,10,30,0.7),0_0_45px_rgba(2,132,199,0.18)] text-left transition-all duration-300 relative overflow-hidden">
 
-              {/* Tabs: Sign In / Create Account with Smooth Spring Slider */}
-              <div className="relative flex bg-[#f0f2f8] dark:bg-slate-800/80 rounded-xl p-1 mb-5.5">
+              {/* Top KMC Emblem Header */}
+              <div className="flex items-center gap-4 mb-4">
+                <KMCEmblem />
+                <div>
+                  <h2 className="text-[19px] sm:text-[20px] font-bold text-white tracking-tight leading-tight m-0">
+                    Kolkata
+                  </h2>
+                  <div className="text-[14px] sm:text-[15px] font-semibold text-slate-200 leading-tight mt-0.5">
+                    Municipal Corporation
+                  </div>
+                  <div className="text-[11.5px] font-medium text-cyan-400 tracking-wide mt-1">
+                    Cleaner City · Safer Tomorrow
+                  </div>
+                </div>
+              </div>
+
+              {/* Subtle divider under header */}
+              <div className="w-full h-px bg-white/10 mb-4" />
+
+              {/* Sign In / Create Account Wide Segmented Control */}
+              <div className="relative flex bg-[#061022]/75 rounded-2xl p-1.5 mb-4 border border-white/10">
                 <button
                   type="button"
                   onClick={() => handleTabChange("signin")}
-                  className={`flex-1 text-center py-2.5 text-[13.5px] font-bold border-none bg-transparent cursor-pointer relative z-10 transition-colors duration-200 ${
-                    activeTab === "signin" ? "text-white" : "text-[#7b8398] dark:text-slate-400 hover:text-[#181c2a] dark:hover:text-slate-200"
-                  }`}
+                  className={`flex-1 text-center py-2 text-[13px] font-bold border-none bg-transparent cursor-pointer relative z-10 transition-colors duration-200 ${activeTab === "signin" ? "text-white" : "text-slate-400 hover:text-white"
+                    }`}
                 >
                   Sign In
                 </button>
                 <button
                   type="button"
                   onClick={() => handleTabChange("create")}
-                  className={`flex-1 text-center py-2.5 text-[13.5px] font-bold border-none bg-transparent cursor-pointer relative z-10 transition-colors duration-200 ${
-                    activeTab === "create" ? "text-white" : "text-[#7b8398] dark:text-slate-400 hover:text-[#181c2a] dark:hover:text-slate-200"
-                  }`}
+                  className={`flex-1 text-center py-2 text-[13px] font-bold border-none bg-transparent cursor-pointer relative z-10 transition-colors duration-200 ${activeTab === "create" ? "text-white" : "text-slate-400 hover:text-white"
+                    }`}
                 >
                   Create Account
                 </button>
 
-                {/* Sliding Gradient Indicator Pill */}
+                {/* Animated Gradient Tab Indicator */}
                 <motion.div
                   layoutId="authTabSlider"
-                  className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-[9px] bg-gradient-to-r from-[#0284c7] to-[#2563eb] shadow-sm"
+                  className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] rounded-xl bg-gradient-to-r from-[#0284c7] to-[#2563eb] shadow-[0_2px_12px_rgba(2,132,199,0.4)]"
                   style={{
-                    left: activeTab === "signin" ? "4px" : "calc(50% + 0px)",
+                    left: activeTab === "signin" ? "6px" : "calc(50% + 0px)",
                   }}
                   transition={{ type: "spring", stiffness: 500, damping: 38 }}
                 />
               </div>
 
-              {/* Badge Row */}
-              <div className="flex items-center gap-1.5 text-[#0d9488] text-[11.5px] font-bold mb-2.5 uppercase tracking-wide">
-                <Shield className="w-3.5 h-3.5" />
-                <span>Municipal officer access</span>
+              {/* Select Access Portal Section (3 Large Cards matching reference) */}
+              <div className="mb-4">
+                <div className="text-center text-slate-300 text-[12px] sm:text-[12.5px] font-semibold uppercase tracking-wider mb-2.5">
+                  Select Access Portal
+                </div>
+                <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+                  {/* User Portal */}
+                  <button
+                    type="button"
+                    onClick={() => handlePortalSelect("user")}
+                    className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${selectedPortal === "user"
+                      ? "bg-gradient-to-b from-[#0070f3] to-[#0055d4] text-white border-cyan-400/80 shadow-[0_0_22px_rgba(0,112,243,0.5)]"
+                      : "bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border-white/10 hover:border-white/20"
+                      }`}
+                  >
+                    <User className="w-6 h-6 mb-1.5 text-inherit" />
+                    <span className="text-[13px] font-bold leading-tight">User</span>
+                    <span className="text-[10px] opacity-80 leading-tight mt-1">View Reports &amp; Insights</span>
+                  </button>
+
+                  {/* Admin Portal */}
+                  <button
+                    type="button"
+                    onClick={() => handlePortalSelect("admin")}
+                    className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${selectedPortal === "admin"
+                      ? "bg-gradient-to-b from-[#0070f3] to-[#0055d4] text-white border-cyan-400/80 shadow-[0_0_22px_rgba(0,112,243,0.5)]"
+                      : "bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border-white/10 hover:border-white/20"
+                      }`}
+                  >
+                    <Shield className="w-6 h-6 mb-1.5 text-inherit" />
+                    <span className="text-[13px] font-bold leading-tight">Admin</span>
+                    <span className="text-[10px] opacity-80 leading-tight mt-1">Manage Users &amp; Reports</span>
+                  </button>
+
+                  {/* Super Admin Portal */}
+                  <button
+                    type="button"
+                    onClick={() => handlePortalSelect("super_admin")}
+                    className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${selectedPortal === "super_admin"
+                      ? "bg-gradient-to-b from-[#0070f3] to-[#0055d4] text-white border-cyan-400/80 shadow-[0_0_22px_rgba(0,112,243,0.5)]"
+                      : "bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border-white/10 hover:border-white/20"
+                      }`}
+                  >
+                    <Crown className="w-6 h-6 mb-1.5 text-inherit" />
+                    <span className="text-[13px] font-bold leading-tight">Super Admin</span>
+                    <span className="text-[10px] opacity-80 leading-tight mt-1">Full System Control</span>
+                  </button>
+                </div>
               </div>
 
-              {/* Animated Form Header & Content Transitions */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeTab}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  <h2 className="text-[21px] font-bold text-[#181c2a] m-0 mb-1 tracking-tight">
-                    {activeTab === "signin" ? "Command authorization" : "Officer Registration"}
-                  </h2>
-                  <p className="text-[13px] text-[#6b7488] m-0 mb-5">
-                    {activeTab === "signin"
-                      ? "Verify your municipal clearance to enter the command grid."
-                      : "Register your official credentials for civic telemetry access."}
-                  </p>
-                </motion.div>
-              </AnimatePresence>
+              {/* Divider: Login to Continue */}
+              <div className="flex items-center gap-3 text-slate-400 text-[12px] my-4">
+                <span className="flex-1 h-px bg-white/15" />
+                <span>{activeTab === "signin" ? "Login to Continue" : "Register to Continue"}</span>
+                <span className="flex-1 h-px bg-white/15" />
+              </div>
 
-              {/* Form Fields */}
-              <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Form Fields: 100% Original Working Handlers & Inputs */}
+              <form onSubmit={handleSubmit} className="space-y-3.5">
                 {/* Full Name Field (Appears smoothly on Create Account tab) */}
                 <AnimatePresence>
                   {activeTab === "create" && (
                     <motion.div
                       initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                      animate={{ opacity: 1, height: "auto", marginBottom: 16 }}
+                      animate={{ opacity: 1, height: "auto", marginBottom: 14 }}
                       exit={{ opacity: 0, height: 0, marginBottom: 0 }}
                       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
                       className="overflow-hidden"
                     >
-                      <label className="block text-[12.5px] font-bold text-[#3d4356] dark:text-slate-300 mb-1.5">
+                      <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
                         Full name
                       </label>
                       <div className="relative">
-                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#0284c7]">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
                           <User className="w-4 h-4" />
                         </div>
                         <input
@@ -381,7 +500,7 @@ export default function AIUnleashedAuth() {
                           onChange={(e) => setFullName(e.target.value)}
                           placeholder="e.g. Officer Sourav Roy"
                           required={activeTab === "create"}
-                          className="w-full bg-[#f8f9fc] dark:bg-slate-800/50 border border-[#e6e9f2] dark:border-slate-700 rounded-[11px] py-3 pl-10 pr-3.5 text-[#181c2a] dark:text-slate-100 text-[13.5px] focus:outline-none focus:border-[#0284c7] focus:bg-white dark:focus:bg-slate-800 focus:ring-3 focus:ring-[#0284c7]/15 transition-all duration-200"
+                          className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
                         />
                       </div>
                     </motion.div>
@@ -390,11 +509,11 @@ export default function AIUnleashedAuth() {
 
                 {/* Official Email */}
                 <div>
-                  <label className="block text-[12.5px] font-bold text-[#3d4356] dark:text-slate-300 mb-1.5">
-                    Official email
+                  <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
+                    Email Address
                   </label>
                   <div className="relative">
-                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#0284c7]">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
                       <Mail className="w-4 h-4" />
                     </div>
                     <input
@@ -403,18 +522,18 @@ export default function AIUnleashedAuth() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="officer.roy@kolkata-water.gov.in"
                       required
-                      className="w-full bg-[#f8f9fc] dark:bg-slate-800/50 border border-[#e6e9f2] dark:border-slate-700 rounded-[11px] py-3 pl-10 pr-3.5 text-[#181c2a] dark:text-slate-100 text-[13.5px] focus:outline-none focus:border-[#0284c7] focus:bg-white dark:focus:bg-slate-800 focus:ring-3 focus:ring-[#0284c7]/15 transition-all duration-200"
+                      className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
                     />
                   </div>
                 </div>
 
-                {/* Security Passcode */}
+                {/* Password / Security Passcode */}
                 <div>
-                  <label className="block text-[12.5px] font-bold text-[#3d4356] dark:text-slate-300 mb-1.5">
-                    Security passcode
+                  <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
+                    Password
                   </label>
                   <div className="relative">
-                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#0284c7]">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
                       <Lock className="w-4 h-4" />
                     </div>
                     <input
@@ -423,39 +542,39 @@ export default function AIUnleashedAuth() {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••••••"
                       required
-                      className="w-full bg-[#f8f9fc] dark:bg-slate-800/50 border border-[#e6e9f2] dark:border-slate-700 rounded-[11px] py-3 pl-10 pr-10 text-[#181c2a] dark:text-slate-100 text-[13.5px] focus:outline-none focus:border-[#0284c7] focus:bg-white dark:focus:bg-slate-800 focus:ring-3 focus:ring-[#0284c7]/15 transition-all duration-200"
+                      className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-11 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8b96ab] hover:text-[#181c2a] cursor-pointer p-1 transition-colors duration-150"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer p-1 transition-colors duration-150"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
 
-                {/* Remember & Reset Links */}
+                {/* Remember me & Reset passcode */}
                 <div className="flex items-center justify-between text-[12.5px] pt-0.5">
-                  <label className="flex items-center gap-2 text-[#5b6478] cursor-pointer font-medium">
+                  <label className="flex items-center gap-2 text-slate-300 cursor-pointer font-medium select-none">
                     <input
                       type="checkbox"
                       checked={rememberSession}
                       onChange={(e) => setRememberSession(e.target.checked)}
-                      className="rounded accent-[#0284c7] cursor-pointer"
+                      className="rounded accent-cyan-500 cursor-pointer"
                     />
-                    <span>Remember session</span>
+                    <span>Remember me</span>
                   </label>
                   <button
                     type="button"
                     onClick={() => alert(`Reset link dispatched to: ${email}`)}
-                    className="text-[#0284c7] hover:underline font-semibold cursor-pointer transition-colors duration-150"
+                    className="text-cyan-400 hover:text-cyan-300 hover:underline font-semibold cursor-pointer transition-colors duration-150"
                   >
-                    Reset passcode?
+                    Forgot password?
                   </button>
                 </div>
 
-                {/* Success Message Alert with Smooth Entrance */}
+                {/* Success / Error Alerts */}
                 <AnimatePresence>
                   {successMessage && (
                     <motion.div
@@ -464,9 +583,9 @@ export default function AIUnleashedAuth() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -6, scale: 0.98 }}
                       transition={{ duration: 0.25, ease: "easeOut" }}
-                      className="flex items-center gap-2 p-2.5 rounded-xl bg-[#22c55e]/10 border border-[#22c55e]/30 text-[#15803d] dark:text-emerald-400 text-xs font-medium"
+                      className="flex items-center gap-2 p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-medium"
                     >
-                      <CheckCircle2 className="w-4 h-4 shrink-0 text-[#22c55e]" />
+                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
                       <span>{successMessage}</span>
                     </motion.div>
                   )}
@@ -478,22 +597,22 @@ export default function AIUnleashedAuth() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -6, scale: 0.98 }}
                       transition={{ duration: 0.25, ease: "easeOut" }}
-                      className="flex items-start gap-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-medium"
+                      className="flex items-start gap-2 p-3 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-medium"
                     >
-                      <Shield className="w-4 h-4 shrink-0 text-rose-500 mt-0.5" />
+                      <Shield className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
                       <span>{authError}</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
-                {/* Submit Button with Smooth Micro-Interaction */}
+                {/* Submit Button (Prominent Blue Gradient matching reference) */}
                 <motion.button
                   whileHover={{ scale: 1.012 }}
                   whileTap={{ scale: 0.985 }}
                   transition={{ duration: 0.15, ease: "easeInOut" }}
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3.5 rounded-[12px] bg-gradient-to-r from-[#0284c7] to-[#2563eb] text-white font-bold text-[14.5px] flex items-center justify-center gap-2 cursor-pointer shadow-[0_10px_24px_rgba(2,132,199,0.28)] hover:shadow-[0_12px_28px_rgba(2,132,199,0.36)] hover:brightness-105 transition-all duration-200 disabled:opacity-60"
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#0070f3] via-[#0080ff] to-[#0099ff] hover:from-[#0060df] hover:to-[#0088ee] text-white font-bold text-[15px] flex items-center justify-center gap-2 cursor-pointer shadow-[0_6px_28px_rgba(0,112,243,0.5)] hover:shadow-[0_8px_32px_rgba(0,112,243,0.6)] transition-all duration-200 disabled:opacity-60"
                 >
                   {isSubmitting ? (
                     <>
@@ -502,29 +621,28 @@ export default function AIUnleashedAuth() {
                     </>
                   ) : (
                     <>
-                      <span>{activeTab === "signin" ? "Sign in to command" : "Create officer account"}</span>
+                      <span>{activeTab === "signin" ? "Login" : "Create Account"}</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
                 </motion.button>
               </form>
 
-              {/* Divider */}
-              <div className="flex items-center gap-3 text-[#9aa2b4] text-[11.5px] my-5">
-                <span className="flex-1 h-px bg-[#e6e9f2]" />
+              {/* Secondary Authentication SSO */}
+              <div className="flex items-center gap-3 text-slate-400 text-[11.5px] my-3.5">
+                <span className="flex-1 h-px bg-white/10" />
                 <span>or authenticate via</span>
-                <span className="flex-1 h-px bg-[#e6e9f2]" />
+                <span className="flex-1 h-px bg-white/10" />
               </div>
 
-              {/* SSO Buttons */}
-              <div className="grid grid-cols-2 gap-2.5 mb-4.5">
+              <div className="grid grid-cols-2 gap-2.5 mb-3">
                 <motion.button
                   whileHover={{ scale: 1.015, y: -1 }}
                   whileTap={{ scale: 0.985 }}
                   transition={{ duration: 0.15 }}
                   type="button"
                   onClick={() => handleSubmit()}
-                  className="flex items-center justify-center gap-2 bg-white dark:bg-slate-800/60 border border-[#e6e9f2] dark:border-slate-700 rounded-[11px] py-2.5 text-[#3d4356] dark:text-slate-200 text-[13px] font-semibold cursor-pointer hover:shadow-[0_4px_14px_rgba(30,40,80,0.08)] hover:border-[#cbd5e1] dark:hover:bg-slate-700/60 dark:hover:border-slate-600 transition-all duration-200"
+                  className="flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.09] border border-white/15 rounded-xl py-2.5 text-slate-200 text-[12.5px] font-semibold cursor-pointer transition-all duration-200"
                 >
                   <GoogleIcon />
                   <span>Google SSO</span>
@@ -536,23 +654,35 @@ export default function AIUnleashedAuth() {
                   transition={{ duration: 0.15 }}
                   type="button"
                   onClick={() => handleSubmit()}
-                  className="flex items-center justify-center gap-2 bg-white dark:bg-slate-800/60 border border-[#e6e9f2] dark:border-slate-700 rounded-[11px] py-2.5 text-[#3d4356] dark:text-slate-200 text-[13px] font-semibold cursor-pointer hover:shadow-[0_4px_14px_rgba(30,40,80,0.08)] hover:border-[#cbd5e1] dark:hover:bg-slate-700/60 dark:hover:border-slate-600 transition-all duration-200"
+                  className="flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.09] border border-white/15 rounded-xl py-2.5 text-slate-200 text-[12.5px] font-semibold cursor-pointer transition-all duration-200"
                 >
                   <GovIdIcon />
                   <span>Gov ID token</span>
                 </motion.button>
               </div>
 
-              {/* Demo Credentials Quick Fill */}
-              <div className="text-center pt-2 border-t border-[#e6e9f2]/70">
+              {/* Demo Fill */}
+              <div className="text-center pt-2 border-t border-white/10 mb-4">
                 <button
                   type="button"
                   onClick={handleDemoFill}
-                  className="text-center text-[12.5px] text-[#0284c7] hover:text-[#0369a1] font-semibold cursor-pointer inline-flex items-center gap-1.5 transition-colors duration-150"
+                  className="text-center text-[12.5px] text-cyan-400 hover:text-cyan-300 font-semibold cursor-pointer inline-flex items-center gap-1.5 transition-colors duration-150"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-[#0284c7]" />
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
                   <span>Fill demo officer credentials</span>
                 </button>
+              </div>
+
+              {/* Bottom Kolkata Skyline Vector Art & Typography */}
+              <div className="pt-3 border-t border-white/10 text-center">
+                <KolkataSkylineArt />
+                <div className="text-cyan-300/90 text-[11.5px] font-bold tracking-[0.32em] uppercase mt-2.5">
+                  K O L K A T A
+                </div>
+                <div className="text-slate-400 text-[10px] font-medium tracking-wider uppercase mt-0.5">
+                  Cleaner City · Safer Tomorrow
+                </div>
+                <div className="w-14 h-1 bg-cyan-400/70 rounded-full mx-auto mt-2.5 shadow-[0_0_10px_rgba(6,182,212,0.6)]" />
               </div>
 
             </div>
@@ -562,7 +692,9 @@ export default function AIUnleashedAuth() {
       </main>
 
       {/* Global Footer */}
-      <Footer />
+      <div className="relative z-20">
+        <Footer />
+      </div>
     </div>
   );
 }
