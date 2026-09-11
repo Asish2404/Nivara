@@ -148,7 +148,7 @@ export default function Footer() {
               {/* Official KWI Emblem Logo */}
               <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-white border border-cyan-400/40 shadow-[0_0_20px_rgba(6,182,212,0.3)] flex items-center justify-center p-0.5 shrink-0 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(0,240,255,0.45)] transition-all duration-300">
                 <img
-                  src="/textures/NIVARA.jpeg"
+                  src="/textures/NIVARA_LOGO.png"
                   alt="NIVARA Logo"
                   className="w-full h-full object-contain rounded-lg"
                 />

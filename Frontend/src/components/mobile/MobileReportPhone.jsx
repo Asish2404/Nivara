@@ -463,7 +463,7 @@ export function MobileReportPhone() {
                             <div className="flex items-center gap-2.5">
                               <div className="w-8 h-8 rounded-xl overflow-hidden bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center p-0.5 shrink-0">
                                 <img
-                                  src="/textures/NIVARA.jpeg"
+                                  src="/textures/NIVARA_LOGO.png"
                                   alt="NIVARA Logo"
                                   className="w-full h-full object-contain rounded-lg"
                                 />

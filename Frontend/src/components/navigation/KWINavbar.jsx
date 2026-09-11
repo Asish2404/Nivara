@@ -226,7 +226,7 @@ export function KWINavbar() {
                 {/* KWI Emblem Logo - Left exactly as is */}
                 <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-white border border-slate-200/80 shadow-xs flex items-center justify-center p-0.5 group-hover:scale-105 group-hover:shadow-sm transition-all duration-200 shrink-0">
                   <img
-                    src="/textures/NIVARA.jpeg"
+                    src="/textures/NIVARA_LOGO.png"
                     alt="NIVARA Logo"
                     className="w-full h-full object-contain rounded-lg mix-blend-multiply"
                   />
@@ -235,9 +235,8 @@ export function KWINavbar() {
                 <div>
                   <div className="flex items-center gap-2">
                     <div
-                      className={`text-[15px] sm:text-[17px] font-extrabold tracking-[0.18em] uppercase font-sans leading-none transition-all duration-300 flex items-baseline ${
-                        isDarkMode ? "text-white" : "text-slate-900"
-                      }`}
+                      className={`text-[15px] sm:text-[17px] font-extrabold tracking-[0.18em] uppercase font-sans leading-none transition-all duration-300 flex items-baseline ${isDarkMode ? "text-white" : "text-slate-900"
+                        }`}
                     >
                       <span className="relative">
                         NIV
@@ -257,11 +256,10 @@ export function KWINavbar() {
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500 dark:bg-cyan-400" />
                     </span>
                     <span
-                      className={`text-[9.5px] font-medium tracking-wide uppercase leading-tight transition-colors truncate max-w-[210px] sm:max-w-none ${
-                        isDarkMode
+                      className={`text-[9.5px] font-medium tracking-wide uppercase leading-tight transition-colors truncate max-w-[210px] sm:max-w-none ${isDarkMode
                           ? "text-slate-400 group-hover:text-slate-300"
                           : "text-slate-500 group-hover:text-slate-700"
-                      }`}
+                        }`}
                     >
                       Predict. Prepare. Prevent.
                     </span>
