@@ -341,9 +341,9 @@ export function GorgeousLoginModal() {
           </div>
         </div>
 
-        {/* ===================================================== */}
-        {/* AUTHENTICATION METHOD SELECTOR (Biometric / Card / PIN) */}
-        {/* ===================================================== */}
+        {/* ===================================================== *
+         AUTHENTICATION METHOD SELECTOR (Biometric / Card / PIN)
+        =====================================================
         <div className="relative z-10 mt-5">
           <div className="flex items-center justify-center p-1 bg-black/50 border border-white/10 rounded-2xl max-w-md mx-auto">
             <button
@@ -391,14 +391,14 @@ export function GorgeousLoginModal() {
               <span>Matrix Key</span>
             </button>
           </div>
-        </div>
+        </div> */}
 
-        {/* ===================================================== */}
-        {/* TAB 1: BIOMETRIC NEURAL SCANNER                       */}
-        {/* ===================================================== */}
+        {/* =====================================================
+        TAB 1: BIOMETRIC NEURAL SCANNER                      
+        =====================================================
         {authMethod === 'biometric' && (
           <div className="relative z-10 mt-6 flex flex-col items-center justify-center py-4 px-2">
-            {/* Interactive Scanner Core */}
+            Interactive Scanner Core
             <div className="relative flex flex-col items-center">
               <button
                 type="button"
@@ -411,7 +411,7 @@ export function GorgeousLoginModal() {
                       : 'border-2 border-cyan-500/40 hover:border-cyan-400 hover:shadow-[0_0_25px_rgba(0,240,255,0.35)] bg-black/60 hover:scale-102'
                   }`}
               >
-                {/* Sonar Ripple Rings when scanning */}
+                Sonar Ripple Rings when scanning
                 {isScanning && (
                   <>
                     <span className="absolute inset-0 rounded-3xl border border-cyan-400 animate-ping opacity-60 pointer-events-none" />
@@ -419,7 +419,7 @@ export function GorgeousLoginModal() {
                   </>
                 )}
 
-                {/* Laser Scanning Bar */}
+                Laser Scanning Bar
                 {isScanning && (
                   <motion.div
                     animate={{ top: ['0%', '100%', '0%'] }}
@@ -428,7 +428,7 @@ export function GorgeousLoginModal() {
                   />
                 )}
 
-                {/* Icon inside Pad */}
+                Icon inside Pad
                 <div className="relative z-10 flex flex-col items-center justify-center">
                   {scanStatus === 'SUCCESS' ? (
                     <motion.div
@@ -457,7 +457,7 @@ export function GorgeousLoginModal() {
                 </div>
               </button>
 
-              {/* Dermal Status Feedback */}
+              Dermal Status Feedback
               <div className="mt-4 text-center">
                 <div className="text-xs font-semibold text-white">
                   {scanStatus === 'READY' && 'Place finger or click scanner to verify officer identity'}
@@ -470,7 +470,7 @@ export function GorgeousLoginModal() {
                 </div>
               </div>
 
-              {/* Simulated Progress Bar */}
+              Simulated Progress Bar
               {isScanning && (
                 <div className="w-64 h-1.5 bg-black/60 rounded-full mt-3 overflow-hidden border border-white/10">
                   <motion.div
@@ -481,20 +481,20 @@ export function GorgeousLoginModal() {
               )}
             </div>
           </div>
-        )}
+        )} */}
 
-        {/* ===================================================== */}
-        {/* TAB 2: HOLOGRAPHIC SMART PASS / NFC CARD              */}
-        {/* ===================================================== */}
+        {/* =====================================================
+        TAB 2: HOLOGRAPHIC SMART PASS / NFC CARD             
+        ===================================================== 
         {authMethod === 'smartcard' && (
           <div className="relative z-10 mt-6 flex flex-col items-center">
-            {/* 3D Holographic Card Preview */}
+            3D Holographic Card Preview
             <div
               onMouseEnter={() => setCardHovered(true)}
               onMouseLeave={() => setCardHovered(false)}
               className="relative w-full max-w-sm h-48 rounded-3xl p-5 border border-cyan-400/40 bg-gradient-to-br from-[#0e1e38] via-[#09152b] to-[#040915] shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(0,240,255,0.15)] overflow-hidden transition-all duration-300 hover:scale-[1.02]"
             >
-              {/* Refractive Sheen Foil Effect */}
+              Refractive Sheen Foil Effect
               <div
                 className="absolute inset-0 opacity-30 pointer-events-none transition-transform duration-700"
                 style={{
@@ -516,7 +516,7 @@ export function GorgeousLoginModal() {
                 <Radio className="w-5 h-5 text-cyan-400 animate-pulse" />
               </div>
 
-              {/* Gold Chip & Contactless Emblem */}
+              Gold Chip & Contactless Emblem
               <div className="flex items-center gap-3 mt-4">
                 <div className="w-9 h-7 rounded-md bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-600 border border-amber-200/60 shadow-inner flex items-center justify-center">
                   <div className="w-full h-[1px] bg-amber-800/40" />
@@ -524,7 +524,7 @@ export function GorgeousLoginModal() {
                 <span className="text-[10px] font-mono text-slate-400">NFC ENCRYPTED</span>
               </div>
 
-              {/* Officer Data */}
+              Officer Data
               <div className="mt-4 flex items-end justify-between">
                 <div>
                   <div className="text-sm font-bold text-white tracking-wide">
@@ -542,7 +542,7 @@ export function GorgeousLoginModal() {
               </div>
             </div>
 
-            {/* Smartcard Tap CTA */}
+            Smartcard Tap CTA
             <button
               type="button"
               onClick={handleSmartCardAuth}
@@ -562,11 +562,11 @@ export function GorgeousLoginModal() {
               )}
             </button>
           </div>
-        )}
-
-        {/* ===================================================== */}
-        {/* TAB 3: MATRIX PASSCODE / MAGIC CREDENTIALS            */}
-        {/* ===================================================== */}
+        )} */}
+{/* 
+        =====================================================
+        TAB 3: MATRIX PASSCODE / MAGIC CREDENTIALS           
+        =====================================================
         {authMethod === 'passcode' && (
           <form onSubmit={handlePasscodeSubmit} className="relative z-10 mt-6 space-y-4 max-w-md mx-auto">
             <div>
@@ -634,7 +634,7 @@ export function GorgeousLoginModal() {
               )}
             </button>
           </form>
-        )}
+        )} */}
 
         {/* ===================================================== */}
         {/* FOOTER: Security Registry & 3D Stage Switcher         */}

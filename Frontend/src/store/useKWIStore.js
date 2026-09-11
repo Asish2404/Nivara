@@ -831,7 +831,7 @@ export const useKWIStore = create((set, get) => ({
   chatMessages: [
     {
       sender: 'system',
-      text: 'Kolkata Water Intelligence Copilot online. Telemetry synchronized with KMC Drainage Department, Hooghly River Sluice Grid, and 84 municipal pumping stations.',
+      text: 'NIVARA Copilot online. Telemetry synchronized with KMC Drainage Department, Hooghly River Sluice Grid, and 84 municipal pumping stations.',
       timestamp: '01:00 PM',
     },
   ],

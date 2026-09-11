@@ -18,7 +18,7 @@ import {
 } from "../../utils/dateTimeUtils";
 
 /* ═══════════════════════════════════════════════════════════════
-   KOLKATA WATER INTELLIGENCE — PROFILE & DASHBOARD
+   NIVARA — PROFILE & DASHBOARD
    Polished high-contrast light theme without footer
    ═══════════════════════════════════════════════════════════════ */
 
@@ -45,7 +45,7 @@ export function ProfileView() {
     phone: currentUser?.phone || "",
     location: currentUser?.location || "Kolkata, West Bengal",
     institution: currentUser?.institution || "",
-    department: currentUser?.department || "Kolkata Water Intelligence",
+    department: currentUser?.department || "NIVARA",
     bio:
       currentUser?.bio ||
       "Computer Science student with a strong interest in technology, data-driven solutions, and building impactful applications. Contributing to a safer and smarter Kolkata.",
@@ -335,7 +335,7 @@ export function ProfileView() {
               )}
             </div>
             {/* Green Online Dot */}
-            <span className="kwi-avatar-status" title="Active on Kolkata Water Intelligence" />
+            <span className="kwi-avatar-status" title="Active on NIVARA" />
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}

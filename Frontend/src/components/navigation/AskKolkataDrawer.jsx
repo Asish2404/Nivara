@@ -75,7 +75,7 @@ export function AskKolkataDrawer() {
                   >
                     {msg.sender === "user"
                       ? "You"
-                      : "Kolkata Water Intelligence"}
+                      : "NIVARA"}
                   </span>
                   <span className="opacity-60 font-mono">{msg.timestamp}</span>
                 </div>

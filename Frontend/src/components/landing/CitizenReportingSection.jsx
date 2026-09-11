@@ -1444,17 +1444,17 @@ export function CitizenReportingSection() {
                           <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-xl overflow-hidden bg-white border border-slate-200 shadow-2xs flex items-center justify-center p-0.5 shrink-0">
                               <img
-                                src="/textures/KWI_LOGO.jpeg"
-                                alt="KWI Logo"
+                                src="/textures/NIVARA.jpeg"
+                                alt="NIVARA Logo"
                                 className="w-full h-full object-contain rounded-lg"
                               />
                             </div>
                             <div>
-                              <span className="text-[12px] font-bold text-slate-900 tracking-[0.08em] block leading-tight font-sans">
+                              {/* <span className="text-[12px] font-bold text-slate-900 tracking-[0.08em] block leading-tight font-sans">
                                 KWI
-                              </span>
+                              </span> */}
                               <span className="text-[10.5px] text-slate-500 font-medium block leading-tight mt-0.5">
-                                Kolkata Water Intelligence
+                                NIVARA
                               </span>
                             </div>
                           </div>

@@ -240,7 +240,7 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
                   type="text"
                   value={org}
                   onChange={(e) => setOrg(e.target.value)}
-                  placeholder="Kolkata Water Intelligence"
+                  placeholder="NIVARA"
                   required
                   className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#0891B2]/20 transition-all ${
                     isDarkMode

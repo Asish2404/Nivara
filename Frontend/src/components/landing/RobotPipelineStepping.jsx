@@ -1171,7 +1171,7 @@ export const RobotPipelineStepping = ({
               <div className="flex items-center gap-1.5 mb-1 sm:mb-1.5">
                 <span className="w-1.5 h-3 bg-[#08B8F5] rounded-full" />
                 <span className="text-[10px] sm:text-[11px] font-mono font-bold tracking-[0.2em] text-slate-500 uppercase">
-                  KOLKATA WATER INTELLIGENCE
+                  NIVARA
                 </span>
               </div>
 
