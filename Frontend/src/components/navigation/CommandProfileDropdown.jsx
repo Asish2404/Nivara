@@ -72,7 +72,7 @@ export function CommandProfileDropdown({ isDarkMode }) {
 
   // Compute initials from real user name — show initials or placeholder when no user is logged in
   const userName = currentUser?.name || "Guest";
-  const userOrg = currentUser?.department || "Kolkata Water Intelligence";
+  const userOrg = currentUser?.department || "NIVARA";
   const avatarUrl = currentUser?.avatarUrl || null;
 
   const userInitials = userName

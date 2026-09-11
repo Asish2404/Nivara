@@ -1,13 +1,14 @@
+import re
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, Field, EmailStr, computed_field
+from pydantic import BaseModel, Field, EmailStr, computed_field, field_validator
 
 
 class UserSignupRequest(BaseModel):
     email: str = Field(..., description="User municipal or personal email")
     password: str = Field(..., min_length=3, description="Password (min 3 characters)")
     fullName: Optional[str] = Field(default="", alias="full_name")
-    phone: Optional[str] = None
+    phone: str = Field(..., description="User contact mobile phone number")
     role: Optional[str] = None
     department: Optional[str] = None
     badgeId: Optional[str] = Field(default="", alias="badge_id")
@@ -17,6 +18,16 @@ class UserSignupRequest(BaseModel):
     portal: Optional[str] = "user"
     location: Optional[str] = None
     otp: Optional[str] = Field(default=None, description="2FA OTP code for administrative registration")
+
+    @field_validator("phone")
+    @classmethod
+    def validate_phone(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Phone number is required.")
+        digits = re.sub(r"[^\d]", "", v.strip())
+        if len(digits) < 10 or len(digits) > 15:
+            raise ValueError("Please provide a valid 10-digit mobile phone number.")
+        return v.strip()
 
     class Config:
         populate_by_name = True

@@ -9,7 +9,7 @@ import { MobileReportVerification } from './MobileReportVerification'
 const CHASSIS_SLICES = Array.from({ length: 29 }, (_, i) => i - 14)
 
 export function MobileReportPhone() {
-  const { isReportSubmitted } = useKWIStore()
+  const { isReportSubmitted, currentUser, navigate } = useKWIStore()
   const phoneContainerRef = useRef(null)
 
   // 3D Turntable Rotation State (0deg -> 360deg full continuous rotation around central vertical Y-axis)
@@ -364,8 +364,22 @@ export function MobileReportPhone() {
                         exit={{ opacity: 0 }}
                         transition={screenTransition}
                         onClick={() => {
+                          if (!currentUser) {
+                            navigate('/login')
+                            return
+                          }
                           if (audioEngine) audioEngine.playUiChirp(1200)
                           setPhoneStep(0)
+                        }}
+                        onPanEnd={(e, info) => {
+                          if (info.offset.y < -20 || info.velocity.y < -100) {
+                            if (!currentUser) {
+                              navigate('/login')
+                              return
+                            }
+                            if (audioEngine) audioEngine.playUiChirp(1200)
+                            setPhoneStep(0)
+                          }
                         }}
                         className="absolute inset-0 -top-12 -bottom-2 w-full h-[calc(100%+56px)] flex flex-col justify-between pt-16 pb-4 px-3.5 cursor-pointer select-none z-10 bg-[#488bc6]"
                       >
@@ -449,17 +463,17 @@ export function MobileReportPhone() {
                             <div className="flex items-center gap-2.5">
                               <div className="w-8 h-8 rounded-xl overflow-hidden bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center p-0.5 shrink-0">
                                 <img
-                                  src="/textures/KWI_LOGO.jpeg"
-                                  alt="KWI Logo"
+                                  src="/textures/NIVARA.jpeg"
+                                  alt="NIVARA Logo"
                                   className="w-full h-full object-contain rounded-lg"
                                 />
                               </div>
                               <div>
                                 <span className="text-[12px] font-bold text-slate-900 tracking-[0.08em] block leading-tight font-sans">
-                                  KWI
+                                  NIVARA
                                 </span>
                                 <span className="text-[10.5px] text-slate-500 font-medium block leading-tight mt-0.5">
-                                  Kolkata Water Intelligence
+                                  {/* Water Intelligence */}
                                 </span>
                               </div>
                             </div>
@@ -613,6 +627,10 @@ export function MobileReportPhone() {
                           <button
                             type="button"
                             onClick={() => {
+                              if (!currentUser) {
+                                navigate('/login')
+                                return
+                              }
                               if (audioEngine) audioEngine.playUiChirp(1050)
                               setPhoneStep(1)
                             }}
@@ -766,7 +784,15 @@ export function MobileReportPhone() {
               title={phoneStep === -1 ? 'Unlock Phone' : 'Lock Phone'}
               onClick={() => {
                 if (audioEngine) audioEngine.playUiChirp(phoneStep === -1 ? 1200 : 700)
-                setPhoneStep((prev) => (prev === -1 ? 0 : -1))
+                if (phoneStep === -1) {
+                  if (!currentUser) {
+                    navigate('/login')
+                    return
+                  }
+                  setPhoneStep(0)
+                } else {
+                  setPhoneStep(-1)
+                }
               }}
               className="w-[6px] h-20 rounded-full bg-gradient-to-r from-[#444] to-[#222] border border-white/20 shadow-md cursor-pointer hover:bg-slate-400 active:scale-95 transition-all"
             />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2,
@@ -37,6 +37,63 @@ export function ActionsView() {
   const [currentStage, setCurrentStage] = useState(1); // 0: Recommended, 1: Dispatched, 2: In Progress, 3: Resolved
   const [selectedTicketId, setSelectedTicketId] = useState("WO-0041");
 
+  // Dynamic Live Clock & Auto-Detected User Timezone
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [userTimeZone, setUserTimeZone] = useState(() => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    } catch {
+      return "UTC";
+    }
+  });
+
+  useEffect(() => {
+    try {
+      const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (detected) {
+        setUserTimeZone(detected);
+      }
+    } catch {
+      // fallback already initialized
+    }
+
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Format date helper: e.g., "Thu, 11 Sep 2026"
+  const getFormattedDate = (date, timeZone) => {
+    try {
+      const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone,
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+      const parts = formatter.formatToParts(date);
+      const partMap = {};
+      for (const p of parts) {
+        partMap[p.type] = p.value;
+      }
+      if (partMap.weekday && partMap.day && partMap.month && partMap.year) {
+        return `${partMap.weekday}, ${partMap.day} ${partMap.month} ${partMap.year}`;
+      }
+    } catch {
+      // fallback
+    }
+    return date.toLocaleDateString("en-US", {
+      timeZone,
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   const STAGES = [
     { num: 1, name: "Recommended", desc: "Assessment & Hydraulic Triage" },
     { num: 2, name: "Dispatched", desc: "Field Crews En Route" },
@@ -56,10 +113,7 @@ export function ActionsView() {
       assignedCrew: "Drainage Quick Response Unit 04",
       chief: "Er. S. Chatterjee",
       radio: "CH-08-TAC",
-      equipment: [
-        "20 HP Godwin High-Head Pump",
-        "Suction Desilter",
-      ],
+      equipment: ["20 HP Godwin High-Head Pump", "Suction Desilter"],
       eta: "18 minutes",
       trigger:
         "Station PS-07 operating at 100% capacity while Sector V receives 74 mm/hr rainfall.",
@@ -79,13 +133,9 @@ export function ActionsView() {
       assignedCrew: "Central Borough Rapid Squad 02",
       chief: "Er. A. Mukherjee",
       radio: "CH-02-TAC",
-      equipment: [
-        "High-Capacity Silt Dredger",
-        "15 HP Dewatering Rig",
-      ],
+      equipment: ["High-Capacity Silt Dredger", "15 HP Dewatering Rig"],
       eta: "24 minutes",
-      trigger:
-        "Inlet silt throttling gravity draw into Circular Canal.",
+      trigger: "Inlet silt throttling gravity draw into Circular Canal.",
       lat: "22.5448° N",
       lng: "88.3697° E",
       borough: "KMC Borough VII",
@@ -102,13 +152,9 @@ export function ActionsView() {
       assignedCrew: "South Suburban Mobile Force 07",
       chief: "Er. R. Mondal",
       radio: "CH-09-TAC",
-      equipment: [
-        "Mobile Trailer Diesel Pump",
-        "Culvert Jetter",
-      ],
+      equipment: ["Mobile Trailer Diesel Pump", "Culvert Jetter"],
       eta: "32 minutes",
-      trigger:
-        "Heavy surface backflow along Diamond Harbour artery.",
+      trigger: "Heavy surface backflow along Diamond Harbour artery.",
       lat: "22.4988° N",
       lng: "88.3182° E",
       borough: "KMC Borough XIV",
@@ -196,12 +242,15 @@ export function ActionsView() {
 
           {/* Heading with Electric Cyan Split */}
           <h1 className="text-3xl sm:text-[38px] font-extrabold tracking-tight text-[#0a1a36] dark:text-white leading-tight">
-            Emergency Response & <span className="text-[#0088ff]">Incident Dispatch</span>
+            Emergency Response &{" "}
+            <span className="text-[#0088ff]">Incident Dispatch</span>
           </h1>
 
           {/* Subtitle description */}
           <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 max-w-2xl leading-relaxed font-normal">
-            Coordinating municipal quick-response drainage units, submersible dewatering pumps, and sluice outfall gate operations across Kolkata catchments.
+            Coordinating municipal quick-response drainage units, submersible
+            dewatering pumps, and sluice outfall gate operations across Kolkata
+            catchments.
           </p>
         </div>
 
@@ -218,7 +267,7 @@ export function ActionsView() {
           {/* Top-Right Status Card */}
           <div className="flex items-center gap-3">
             {/* Current Time Card */}
-            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/95 dark:bg-[#111a2e]/95 border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.03)] min-w-[175px]">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/95 dark:bg-[#111a2e]/95 border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.03)] min-w-[185px]">
               <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-50 border border-blue-200 shrink-0 text-blue-600 dark:text-cyan-400">
                 <Clock className="w-4 h-4" />
               </div>
@@ -226,11 +275,23 @@ export function ActionsView() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 block leading-none mb-1">
                   CURRENT TIME
                 </span>
+
                 <span className="font-mono text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-none block">
-                  11:28 AM IST
+                  {currentTime.toLocaleTimeString("en-US", {
+                    timeZone: userTimeZone,
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: true,
+                  })}
                 </span>
+
                 <span className="text-[10px] text-slate-400 font-normal mt-0.5 block">
-                  Tue, 09 Sep 2026
+                  {getFormattedDate(currentTime, userTimeZone)}
+                </span>
+
+                <span className="text-[9px] font-mono text-slate-400 dark:text-slate-400 font-medium mt-0.5 block truncate max-w-[160px]">
+                  {userTimeZone}
                 </span>
               </div>
             </div>
@@ -249,7 +310,10 @@ export function ActionsView() {
             const isPending = idx > currentStage;
 
             return (
-              <div key={stage.name} className="flex items-center flex-1 min-w-0">
+              <div
+                key={stage.name}
+                className="flex items-center flex-1 min-w-0"
+              >
                 <button
                   type="button"
                   onClick={() => {
@@ -275,8 +339,8 @@ export function ActionsView() {
                         isCurrent
                           ? "text-blue-900 dark:text-cyan-300"
                           : isCompleted
-                          ? "text-slate-900 dark:text-slate-100"
-                          : "text-slate-700 dark:text-slate-300"
+                            ? "text-slate-900 dark:text-slate-100"
+                            : "text-slate-700 dark:text-slate-300"
                       }`}
                     >
                       {stage.name}
@@ -292,7 +356,9 @@ export function ActionsView() {
                   <div className="hidden md:flex items-center px-3 text-slate-300 shrink-0">
                     <div
                       className={`h-[2px] w-10 lg:w-16 rounded-full transition-colors ${
-                        idx < currentStage ? "bg-cyan-400" : "bg-slate-200 dark:bg-slate-700"
+                        idx < currentStage
+                          ? "bg-cyan-400"
+                          : "bg-slate-200 dark:bg-slate-700"
                       }`}
                     />
                     <ChevronRight
@@ -374,7 +440,8 @@ export function ActionsView() {
                   </div>
 
                   <div className="text-xs font-mono text-slate-500 dark:text-slate-400 mt-1">
-                    {activeTicket.lat}, {activeTicket.lng} | {activeTicket.borough}
+                    {activeTicket.lat}, {activeTicket.lng} |{" "}
+                    {activeTicket.borough}
                   </div>
                 </div>
               </div>
@@ -536,7 +603,9 @@ export function ActionsView() {
                     backgroundColor: "#007dfc",
                   }}
                 >
-                  <span>Advance Status: Mark as {STAGES[currentStage + 1].name}</span>
+                  <span>
+                    Advance Status: Mark as {STAGES[currentStage + 1].name}
+                  </span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               ) : (
@@ -623,7 +692,10 @@ export function ActionsView() {
                   </div>
                   <div>
                     <div className="font-bold text-slate-900 dark:text-white text-xs leading-tight">
-                      14 <span className="font-normal text-slate-500">Mobile Pumps Deployed</span>
+                      14{" "}
+                      <span className="font-normal text-slate-500">
+                        Mobile Pumps Deployed
+                      </span>
                     </div>
                     <div className="font-bold text-cyan-600 dark:text-cyan-400 text-xs">
                       14 of 16 Boroughs
@@ -810,7 +882,8 @@ export function ActionsView() {
               Real-time field updates keep Kolkata moving.
             </div>
             <div className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed font-normal">
-              Integrated communications across field units, pumping stations, and control room.
+              Integrated communications across field units, pumping stations,
+              and control room.
             </div>
           </div>
         </div>

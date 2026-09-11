@@ -43,7 +43,6 @@ const ROLES = [
       department: 'KMC Sewerage & Drainage Directorate',
       badgeId: 'KMC-DIR-7049',
       clearance: 'Level 4 // Command Clearance',
-      avatar: '👨‍✈️',
       initials: 'DS',
       wardAccess: 'All Boroughs (I - XVI)',
     },
@@ -63,7 +62,6 @@ const ROLES = [
       department: 'KWI Real-time Telemetry Wing',
       badgeId: 'ENG-TELEMETRY-284',
       clearance: 'Level 3 // Systems Ops',
-      avatar: '👩‍💻',
       initials: 'PM',
       wardAccess: 'Sector V & Central Boroughs',
     },
@@ -83,7 +81,6 @@ const ROLES = [
       department: 'Kolkata Citizen Water Watch',
       badgeId: 'CITIZEN-KOL-9182',
       clearance: 'Verified Citizen ID',
-      avatar: '🌊',
       initials: 'AC',
       wardAccess: 'Salt Lake & South Kolkata',
     },
@@ -309,19 +306,17 @@ export function GorgeousLoginModal() {
                   key={role.id}
                   type="button"
                   onClick={() => handleQuickDemoFill(role.id)}
-                  className={`relative p-2.5 sm:p-3 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
-                    isSelected
+                  className={`relative p-2.5 sm:p-3 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${isSelected
                       ? `bg-gradient-to-b from-cyan-950/50 to-blue-950/40 border-cyan-400 shadow-[0_0_20px_${role.borderGlow}]`
                       : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/8 text-slate-400'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <div
-                      className={`w-7 h-7 rounded-xl flex items-center justify-center ${
-                        isSelected
+                      className={`w-7 h-7 rounded-xl flex items-center justify-center ${isSelected
                           ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-400/40'
                           : 'bg-white/5 text-slate-400'
-                      }`}
+                        }`}
                     >
                       <RoleIcon className="w-3.5 h-3.5" />
                     </div>
@@ -331,9 +326,8 @@ export function GorgeousLoginModal() {
                   </div>
                   <div>
                     <span
-                      className={`text-xs font-bold block leading-tight ${
-                        isSelected ? 'text-white' : 'text-slate-300'
-                      }`}
+                      className={`text-xs font-bold block leading-tight ${isSelected ? 'text-white' : 'text-slate-300'
+                        }`}
                     >
                       {role.title}
                     </span>
@@ -347,9 +341,9 @@ export function GorgeousLoginModal() {
           </div>
         </div>
 
-        {/* ===================================================== */}
-        {/* AUTHENTICATION METHOD SELECTOR (Biometric / Card / PIN) */}
-        {/* ===================================================== */}
+        {/* ===================================================== *
+         AUTHENTICATION METHOD SELECTOR (Biometric / Card / PIN)
+        =====================================================
         <div className="relative z-10 mt-5">
           <div className="flex items-center justify-center p-1 bg-black/50 border border-white/10 rounded-2xl max-w-md mx-auto">
             <button
@@ -358,11 +352,10 @@ export function GorgeousLoginModal() {
                 setAuthMethod('biometric')
                 audioEngine.playUiChirp(820)
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                authMethod === 'biometric'
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${authMethod === 'biometric'
                   ? 'bg-gradient-to-r from-cyan-500/30 to-blue-500/30 text-cyan-300 border border-cyan-400/40 shadow-sm'
                   : 'text-slate-400 hover:text-white'
-              }`}
+                }`}
             >
               <Fingerprint className="w-3.5 h-3.5" />
               <span>Biometric Scan</span>
@@ -374,11 +367,10 @@ export function GorgeousLoginModal() {
                 setAuthMethod('smartcard')
                 audioEngine.playUiChirp(860)
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                authMethod === 'smartcard'
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${authMethod === 'smartcard'
                   ? 'bg-gradient-to-r from-cyan-500/30 to-blue-500/30 text-cyan-300 border border-cyan-400/40 shadow-sm'
                   : 'text-slate-400 hover:text-white'
-              }`}
+                }`}
             >
               <CreditCard className="w-3.5 h-3.5" />
               <span>Smart Pass NFC</span>
@@ -390,38 +382,36 @@ export function GorgeousLoginModal() {
                 setAuthMethod('passcode')
                 audioEngine.playUiChirp(900)
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                authMethod === 'passcode'
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${authMethod === 'passcode'
                   ? 'bg-gradient-to-r from-cyan-500/30 to-blue-500/30 text-cyan-300 border border-cyan-400/40 shadow-sm'
                   : 'text-slate-400 hover:text-white'
-              }`}
+                }`}
             >
               <KeyRound className="w-3.5 h-3.5" />
               <span>Matrix Key</span>
             </button>
           </div>
-        </div>
+        </div> */}
 
-        {/* ===================================================== */}
-        {/* TAB 1: BIOMETRIC NEURAL SCANNER                       */}
-        {/* ===================================================== */}
+        {/* =====================================================
+        TAB 1: BIOMETRIC NEURAL SCANNER                      
+        =====================================================
         {authMethod === 'biometric' && (
           <div className="relative z-10 mt-6 flex flex-col items-center justify-center py-4 px-2">
-            {/* Interactive Scanner Core */}
+            Interactive Scanner Core
             <div className="relative flex flex-col items-center">
               <button
                 type="button"
                 onClick={handleStartBiometricScan}
                 disabled={isScanning || scanStatus === 'SUCCESS'}
-                className={`relative w-28 h-28 sm:w-32 sm:h-32 rounded-3xl p-1 flex items-center justify-center cursor-pointer transition-all duration-300 group ${
-                  scanStatus === 'SUCCESS'
+                className={`relative w-28 h-28 sm:w-32 sm:h-32 rounded-3xl p-1 flex items-center justify-center cursor-pointer transition-all duration-300 group ${scanStatus === 'SUCCESS'
                     ? 'border-2 border-emerald-400 shadow-[0_0_35px_rgba(16,185,129,0.5)] bg-emerald-950/40'
                     : isScanning
-                    ? 'border-2 border-cyan-400 shadow-[0_0_40px_rgba(0,240,255,0.6)] bg-cyan-950/40 scale-105'
-                    : 'border-2 border-cyan-500/40 hover:border-cyan-400 hover:shadow-[0_0_25px_rgba(0,240,255,0.35)] bg-black/60 hover:scale-102'
-                }`}
+                      ? 'border-2 border-cyan-400 shadow-[0_0_40px_rgba(0,240,255,0.6)] bg-cyan-950/40 scale-105'
+                      : 'border-2 border-cyan-500/40 hover:border-cyan-400 hover:shadow-[0_0_25px_rgba(0,240,255,0.35)] bg-black/60 hover:scale-102'
+                  }`}
               >
-                {/* Sonar Ripple Rings when scanning */}
+                Sonar Ripple Rings when scanning
                 {isScanning && (
                   <>
                     <span className="absolute inset-0 rounded-3xl border border-cyan-400 animate-ping opacity-60 pointer-events-none" />
@@ -429,7 +419,7 @@ export function GorgeousLoginModal() {
                   </>
                 )}
 
-                {/* Laser Scanning Bar */}
+                Laser Scanning Bar
                 {isScanning && (
                   <motion.div
                     animate={{ top: ['0%', '100%', '0%'] }}
@@ -438,7 +428,7 @@ export function GorgeousLoginModal() {
                   />
                 )}
 
-                {/* Icon inside Pad */}
+                Icon inside Pad
                 <div className="relative z-10 flex flex-col items-center justify-center">
                   {scanStatus === 'SUCCESS' ? (
                     <motion.div
@@ -454,11 +444,10 @@ export function GorgeousLoginModal() {
                   ) : (
                     <>
                       <Fingerprint
-                        className={`w-12 h-12 transition-colors ${
-                          isScanning
+                        className={`w-12 h-12 transition-colors ${isScanning
                             ? 'text-cyan-300 drop-shadow-[0_0_15px_#00f0ff]'
                             : 'text-slate-400 group-hover:text-cyan-400'
-                        }`}
+                          }`}
                       />
                       <span className="text-[10px] font-mono tracking-widest text-slate-400 group-hover:text-cyan-300 mt-1 uppercase">
                         {isScanning ? `${scanProgress}%` : 'TAP TO SCAN'}
@@ -468,7 +457,7 @@ export function GorgeousLoginModal() {
                 </div>
               </button>
 
-              {/* Dermal Status Feedback */}
+              Dermal Status Feedback
               <div className="mt-4 text-center">
                 <div className="text-xs font-semibold text-white">
                   {scanStatus === 'READY' && 'Place finger or click scanner to verify officer identity'}
@@ -481,7 +470,7 @@ export function GorgeousLoginModal() {
                 </div>
               </div>
 
-              {/* Simulated Progress Bar */}
+              Simulated Progress Bar
               {isScanning && (
                 <div className="w-64 h-1.5 bg-black/60 rounded-full mt-3 overflow-hidden border border-white/10">
                   <motion.div
@@ -492,20 +481,20 @@ export function GorgeousLoginModal() {
               )}
             </div>
           </div>
-        )}
+        )} */}
 
-        {/* ===================================================== */}
-        {/* TAB 2: HOLOGRAPHIC SMART PASS / NFC CARD              */}
-        {/* ===================================================== */}
+        {/* =====================================================
+        TAB 2: HOLOGRAPHIC SMART PASS / NFC CARD             
+        ===================================================== 
         {authMethod === 'smartcard' && (
           <div className="relative z-10 mt-6 flex flex-col items-center">
-            {/* 3D Holographic Card Preview */}
+            3D Holographic Card Preview
             <div
               onMouseEnter={() => setCardHovered(true)}
               onMouseLeave={() => setCardHovered(false)}
               className="relative w-full max-w-sm h-48 rounded-3xl p-5 border border-cyan-400/40 bg-gradient-to-br from-[#0e1e38] via-[#09152b] to-[#040915] shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(0,240,255,0.15)] overflow-hidden transition-all duration-300 hover:scale-[1.02]"
             >
-              {/* Refractive Sheen Foil Effect */}
+              Refractive Sheen Foil Effect
               <div
                 className="absolute inset-0 opacity-30 pointer-events-none transition-transform duration-700"
                 style={{
@@ -527,7 +516,7 @@ export function GorgeousLoginModal() {
                 <Radio className="w-5 h-5 text-cyan-400 animate-pulse" />
               </div>
 
-              {/* Gold Chip & Contactless Emblem */}
+              Gold Chip & Contactless Emblem
               <div className="flex items-center gap-3 mt-4">
                 <div className="w-9 h-7 rounded-md bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-600 border border-amber-200/60 shadow-inner flex items-center justify-center">
                   <div className="w-full h-[1px] bg-amber-800/40" />
@@ -535,7 +524,7 @@ export function GorgeousLoginModal() {
                 <span className="text-[10px] font-mono text-slate-400">NFC ENCRYPTED</span>
               </div>
 
-              {/* Officer Data */}
+              Officer Data
               <div className="mt-4 flex items-end justify-between">
                 <div>
                   <div className="text-sm font-bold text-white tracking-wide">
@@ -553,7 +542,7 @@ export function GorgeousLoginModal() {
               </div>
             </div>
 
-            {/* Smartcard Tap CTA */}
+            Smartcard Tap CTA
             <button
               type="button"
               onClick={handleSmartCardAuth}
@@ -573,11 +562,11 @@ export function GorgeousLoginModal() {
               )}
             </button>
           </div>
-        )}
-
-        {/* ===================================================== */}
-        {/* TAB 3: MATRIX PASSCODE / MAGIC CREDENTIALS            */}
-        {/* ===================================================== */}
+        )} */}
+{/* 
+        =====================================================
+        TAB 3: MATRIX PASSCODE / MAGIC CREDENTIALS           
+        =====================================================
         {authMethod === 'passcode' && (
           <form onSubmit={handlePasscodeSubmit} className="relative z-10 mt-6 space-y-4 max-w-md mx-auto">
             <div>
@@ -645,7 +634,7 @@ export function GorgeousLoginModal() {
               )}
             </button>
           </form>
-        )}
+        )} */}
 
         {/* ===================================================== */}
         {/* FOOTER: Security Registry & 3D Stage Switcher         */}

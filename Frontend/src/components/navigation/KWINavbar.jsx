@@ -46,7 +46,7 @@ export function KWINavbar() {
     setMobileMenuOpen(false);
 
     if (!currentUser && path !== "/") {
-      navigate("/signup");
+      navigate("/login");
       return;
     }
 
@@ -61,7 +61,7 @@ export function KWINavbar() {
   // Configure navigation items strictly according to authenticated role:
   // - User: Home, Field Report, My Reports
   // - Admin: Home, Live Map, Simulate, Respond (+ Profile section on right)
-  // - Not logged in: Home + preview items (redirects unauthenticated clicks to signup)
+  // - Not logged in: Home, Report, Live Map, Simulate, Respond (redirects unauthenticated clicks to sign in)
   let NAV_ITEMS = [];
 
   if (currentUser) {
@@ -125,7 +125,7 @@ export function KWINavbar() {
       ];
     }
   } else {
-    // Visitor (Not logged in) - Clean overview without user-only reporting buttons
+    // Visitor (Not logged in) - Overview with Report section between Home and Live Map
     NAV_ITEMS = [
       {
         key: "HOME",
@@ -133,6 +133,13 @@ export function KWINavbar() {
         icon: Home,
         path: "/",
         isActive: currentRoute === "/",
+      },
+      {
+        key: "REPORT",
+        label: "Report",
+        icon: FileText,
+        path: "/reports",
+        isActive: currentRoute === "/reports" || currentRoute === "/report",
       },
       {
         key: "LIVE_MAP",
@@ -219,28 +226,45 @@ export function KWINavbar() {
                 {/* KWI Emblem Logo - Left exactly as is */}
                 <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-white border border-slate-200/80 shadow-xs flex items-center justify-center p-0.5 group-hover:scale-105 group-hover:shadow-sm transition-all duration-200 shrink-0">
                   <img
-                    src="/textures/KWI_LOGO.jpeg"
-                    alt="Kolkata Water Intelligence Logo"
+                    src="/textures/NIVARA.jpeg"
+                    alt="NIVARA Logo"
                     className="w-full h-full object-contain rounded-lg mix-blend-multiply"
                   />
                 </div>
 
                 <div>
-                  <div
-                    className={`text-[12px] font-bold tracking-[0.14em] uppercase font-sans leading-tight transition-colors ${isDarkMode ? "text-white" : "text-slate-900"
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`text-[15px] sm:text-[17px] font-extrabold tracking-[0.18em] uppercase font-sans leading-none transition-all duration-300 flex items-baseline ${
+                        isDarkMode ? "text-white" : "text-slate-900"
                       }`}
-                  >
-                    KOLKATA{" "}
-                    <span className="text-blue-600 dark:text-cyan-400 font-extrabold">
-                      WATER
-                    </span>{" "}
-                    INTELLIGENCE
+                    >
+                      <span className="relative">
+                        NIV
+                        <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      </span>
+                      <span className="bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-400 dark:from-cyan-300 dark:via-sky-300 dark:to-teal-300 bg-clip-text text-transparent font-black ml-[1.5px] drop-shadow-[0_0_12px_rgba(0,240,255,0.35)]">
+                        ARA
+                      </span>
+                    </div>
+
+                    {/*  */}
                   </div>
-                  <div
-                    className={`text-[10px] font-medium tracking-normal block leading-tight mt-0.5 transition-colors ${isDarkMode ? "text-slate-400" : "text-slate-500"
+
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="relative flex h-1.5 w-1.5 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500 dark:bg-cyan-400" />
+                    </span>
+                    <span
+                      className={`text-[9.5px] font-medium tracking-wide uppercase leading-tight transition-colors truncate max-w-[210px] sm:max-w-none ${
+                        isDarkMode
+                          ? "text-slate-400 group-hover:text-slate-300"
+                          : "text-slate-500 group-hover:text-slate-700"
                       }`}
-                  >
-                    Municipal Corporation & Irrigation Department
+                    >
+                      Predict. Prepare. Prevent.
+                    </span>
                   </div>
                 </div>
               </button>

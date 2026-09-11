@@ -1,5 +1,5 @@
 /**
- * Standardized Motion Design System for Kolkata Water Intelligence
+ * Standardized Motion Design System for NIVARA
  * Calibrated for smooth, calm, intentional product transitions.
  * Standard easing: cubic-bezier(0.22, 1, 0.36, 1)
  */

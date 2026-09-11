@@ -27,21 +27,24 @@ class WaterloggingPredictor:
     """Singleton-style cached predictor for baseline waterlogging probability."""
 
     _cached_bundle: Optional[Dict[str, Any]] = None
+    _cached_mtime: float = 0.0
 
     @classmethod
-    def load_model(cls) -> Optional[Dict[str, Any]]:
-        """Loads and caches the model bundle from disk."""
-        if cls._cached_bundle is not None:
-            return cls._cached_bundle
-
+    def load_model(cls, force_reload: bool = False) -> Optional[Dict[str, Any]]:
+        """Loads and caches the model bundle from disk, reloading if file changed."""
         if not MODEL_PATH.exists():
             logger.warning("Model file not found at %s. Predictor will use heuristic fallback.", MODEL_PATH)
             return None
 
         try:
+            current_mtime = MODEL_PATH.stat().st_mtime
+            if not force_reload and cls._cached_bundle is not None and cls._cached_mtime == current_mtime:
+                return cls._cached_bundle
+
             bundle = joblib.load(MODEL_PATH)
             if isinstance(bundle, dict) and "model" in bundle:
                 cls._cached_bundle = bundle
+                cls._cached_mtime = current_mtime
                 logger.info("Successfully loaded waterlogging model bundle (%s)", MODEL_VERSION)
                 return cls._cached_bundle
             else:

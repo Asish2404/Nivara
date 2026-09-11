@@ -146,25 +146,35 @@ export default function Footer() {
               className="flex items-center gap-3.5 mb-4 text-left cursor-pointer group focus:outline-none"
             >
               {/* Official KWI Emblem Logo */}
-              <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-white border border-cyan-400/40 shadow-[0_0_20px_rgba(6,182,212,0.3)] flex items-center justify-center p-0.5 shrink-0 group-hover:scale-105 transition-transform duration-200">
+              <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-white border border-cyan-400/40 shadow-[0_0_20px_rgba(6,182,212,0.3)] flex items-center justify-center p-0.5 shrink-0 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(0,240,255,0.45)] transition-all duration-300">
                 <img
-                  src="/textures/New_Logo.png"
-                  alt="Kolkata Water Intelligence Logo"
+                  src="/textures/NIVARA.jpeg"
+                  alt="NIVARA Logo"
                   className="w-full h-full object-contain rounded-lg"
                 />
               </div>
 
               {/* Title Text */}
-              <div className="flex flex-col">
-                <span className="text-[12px] font-bold tracking-[0.14em] text-slate-200 uppercase leading-tight font-sans">
-                  KOLKATA WATER
-                </span>
-                <span className="text-[18px] font-black tracking-[0.08em] text-white uppercase leading-tight font-sans">
-                  INTELLIGENCE
-                </span>
-                <span className="text-[9px] font-mono tracking-[0.22em] text-cyan-400 font-bold uppercase leading-tight mt-0.5">
-                  URBAN WATER COMMAND SYSTEM
-                </span>
+              <div className="flex flex-col justify-center">
+                <div className="flex items-baseline text-[20px] sm:text-[22px] font-extrabold tracking-[0.18em] uppercase font-sans leading-none text-white transition-all duration-300">
+                  <span className="relative text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
+                    NIV
+                    <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </span>
+                  <span className="bg-gradient-to-r from-cyan-300 via-sky-400 to-teal-300 bg-clip-text text-transparent font-black ml-[1.5px] drop-shadow-[0_0_16px_rgba(0,240,255,0.45)]">
+                    ARA
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <span className="relative flex h-1.5 w-1.5 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-400" />
+                  </span>
+                  <span className="text-[9.5px] font-mono font-bold tracking-[0.22em] text-cyan-400/90 uppercase leading-none group-hover:text-cyan-300 transition-colors">
+                    Predict. Prepare. Prevent.
+                  </span>
+                </div>
               </div>
             </button>
 
