@@ -5,7 +5,8 @@ from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.security import create_access_token, decode_access_token
+from app.core.security import create_access_token, decode_access_token, verify_password
+from app.core.datetime_utils import get_current_time
 from app.models.user import User
 from app.models.admin import Admin
 from app.schemas.auth import (
@@ -146,55 +147,52 @@ async def generate_admin_otp(
     # Normalize canonical purpose
     canon_purpose = "signup" if purpose in ["signup", "create", "register"] else "login"
 
+    name_raw = (payload.name or "").strip() or None
+    target_name = name_raw
+    target_portal = (payload.portal or "admin").lower().strip()
+
     target_phone = phone_clean
     if canon_purpose == "login":
-        # Look up admin by email or phone
-        phone_digits = re.sub(r"\D", "", phone_clean or "")
-        last10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
-
-        conditions = []
-        if email_clean:
-            conditions.append(Admin.email == email_clean)
-        if phone_clean:
-            conditions.append(Admin.phone == phone_clean)
-            if len(phone_digits) >= 7:
-                conditions.append(Admin.phone.like(f"%{last10}"))
-
-        res = await db.execute(select(Admin).where(or_(*conditions)))
-        admin = res.scalars().first()
-        if not admin:
+        # 1. Look up account across DB by email or phone
+        account = await AuthService.find_account_by_identifier(db, email_clean or phone_clean)
+        if not account:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No administrative officer account found with these credentials. Please check your phone or email.",
+                detail="No account found with these credentials. Please check your phone or email.",
             )
-        target_phone = phone_clean or admin.phone
-        email_clean = email_clean or admin.email
+
+        # 2. Strict Role-Based Portal Validation
+        is_valid_role, role_error = AuthService.validate_role_for_portal(account.role, target_portal)
+        if not is_valid_role:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=role_error,
+            )
+
+        # 3. Optional password verification if provided
+        if payload.password and not verify_password(payload.password, account.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid password. Please check your credentials.",
+            )
+
+        target_phone = phone_clean or getattr(account, "phone", None)
+        email_clean = email_clean or getattr(account, "email", None)
+        target_name = getattr(account, "name", None) or name_raw
 
     elif canon_purpose == "signup":
-        # Check if already registered
-        phone_digits = re.sub(r"\D", "", phone_clean or "")
-        last10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
-
-        conditions = []
-        if email_clean:
-            conditions.append(Admin.email == email_clean)
-        if phone_clean:
-            conditions.append(Admin.phone == phone_clean)
-            if len(phone_digits) >= 7:
-                conditions.append(Admin.phone.like(f"%{last10}"))
-
-        if conditions:
-            res = await db.execute(select(Admin).where(or_(*conditions)))
-            if res.scalars().first():
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="An admin account with this email or phone number already exists. Please sign in instead.",
-                )
+        # Check if already registered across both tables
+        existing = await AuthService.find_account_by_identifier(db, email_clean or phone_clean)
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="An account with this email or phone number already exists. Please sign in instead.",
+            )
 
     # Dispatch OTP and trigger gateways (Free Email + SMS)
     otp = OtpService.generate_otp(email=email_clean, phone=target_phone, purpose=canon_purpose)
     if email_clean and "@" in email_clean:
-        await OtpService.dispatch_email_otp(to_email=email_clean, otp=otp, purpose=canon_purpose)
+        await OtpService.dispatch_email_otp(to_email=email_clean, otp=otp, purpose=canon_purpose, user_name=target_name)
     if target_phone:
         await OtpService.dispatch_real_sms(phone=target_phone, otp=otp)
 
@@ -216,8 +214,6 @@ async def generate_admin_otp(
         phone=target_phone,
         email=email_clean,
         expires_in=OtpService.DEFAULT_EXPIRY_SECONDS,
-        sms_preview=f"KMC-SECURE: Your 2-Factor Officer Clearance OTP is {otp}. Valid for 5 minutes.",
-        otp=otp,
     )
 
 
@@ -272,7 +268,7 @@ async def signup(
 ):
     """Register a new account into 'users' or 'admin' table, and returns a signed JWT."""
     portal = (payload.portal or "user").lower().strip()
-    if portal in ["admin", "super_admin"]:
+    if AuthService.get_canonical_portal_category(portal) == "ADMIN":
         email_clean = payload.email.lower().strip()
         phone_clean = (payload.phone or "").strip() or None
         if not OtpService.consume_otp(otp=payload.otp, email=email_clean, phone=phone_clean, purpose="signup"):
@@ -287,6 +283,21 @@ async def signup(
         subject=entity.id,
         extra_claims={"email": entity.email, "role": entity.role, "portal": entity_portal},
     )
+
+    # Trigger Welcome Email ONLY ONCE upon first successful account creation & verification
+    if not getattr(entity, "welcome_email_sent", False):
+        entity.welcome_email_sent = True
+        await db.commit()
+        await db.refresh(entity)
+        from app.services.email_service import EmailService
+        EmailService.dispatch_background(
+            EmailService.send_welcome_email(
+                to_email=entity.email,
+                user_name=entity.name,
+                role=entity.role,
+            )
+        )
+
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
@@ -304,21 +315,22 @@ async def login(
     payload: UserLoginRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    """Authenticate email & password. If portal is admin, requires OTP verification."""
+    """Authenticate email & password with role portal validation. If portal is admin, requires OTP verification."""
     portal = (payload.portal or "user").lower().strip()
 
-    # 1. Authenticate user credentials first (supports email OR phone)
-    entity = await AuthService.authenticate_user(
+    # 1. Authenticate user credentials with strict role-based portal validation
+    entity, auth_error = await AuthService.authenticate_user(
         db, payload.email, payload.password, payload.portal or "user"
     )
     if not entity:
+        status_code = status.HTTP_403_FORBIDDEN if "portal" in auth_error.lower() else status.HTTP_401_UNAUTHORIZED
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email/phone or password.",
+            status_code=status_code,
+            detail=auth_error,
         )
 
-    # 2. If admin portal, verify and consume OTP
-    if portal in ["admin", "super_admin"]:
+    # 2. If OTP is required or provided (admin portal, or user with OTP), verify & consume OTP
+    if AuthService.get_canonical_portal_category(portal) == "ADMIN" or payload.otp:
         admin_email = getattr(entity, "email", payload.email)
         admin_phone = getattr(entity, "phone", None) or payload.email
         if not OtpService.consume_otp(
@@ -329,7 +341,7 @@ async def login(
         ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Admin access requires verified 2-factor OTP. Please verify the code sent to your mobile number.",
+                detail="Security clearance requires verified 2-factor OTP. Please verify the code sent to your email or mobile.",
             )
 
     entity_portal = "admin" if isinstance(entity, Admin) else "user"
@@ -337,6 +349,32 @@ async def login(
         subject=entity.id,
         extra_claims={"email": entity.email, "role": entity.role, "portal": entity_portal},
     )
+
+    from app.services.email_service import EmailService
+
+    # 3. If Welcome Email was never sent (first time access), send it once
+    if not getattr(entity, "welcome_email_sent", False):
+        entity.welcome_email_sent = True
+        await db.commit()
+        await db.refresh(entity)
+        EmailService.dispatch_background(
+            EmailService.send_welcome_email(
+                to_email=entity.email,
+                user_name=entity.name,
+                role=entity.role,
+            )
+        )
+
+    # 4. Send Login Security Notification Email (non-blocking)
+    EmailService.dispatch_background(
+        EmailService.send_login_notification_email(
+            to_email=entity.email,
+            user_name=entity.name,
+            role=entity.role,
+            login_time=get_current_time(),
+        )
+    )
+
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",

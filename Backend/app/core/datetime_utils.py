@@ -16,6 +16,11 @@ def get_current_time() -> datetime:
     return datetime.now(get_kolkata_tz())
 
 
+def utc_now() -> datetime:
+    """Return the current UTC time."""
+    return datetime.now(timezone.utc)
+
+
 def ensure_kolkata_tz(dt: Optional[datetime]) -> Optional[datetime]:
     """Ensure a datetime has the Asia/Kolkata timezone attached.
 
