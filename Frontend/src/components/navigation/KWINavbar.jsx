@@ -46,7 +46,7 @@ export function KWINavbar() {
     setMobileMenuOpen(false);
 
     if (!currentUser && path !== "/") {
-      navigate("/signup");
+      navigate("/login");
       return;
     }
 
@@ -61,7 +61,7 @@ export function KWINavbar() {
   // Configure navigation items strictly according to authenticated role:
   // - User: Home, Field Report, My Reports
   // - Admin: Home, Live Map, Simulate, Respond (+ Profile section on right)
-  // - Not logged in: Home + preview items (redirects unauthenticated clicks to signup)
+  // - Not logged in: Home, Report, Live Map, Simulate, Respond (redirects unauthenticated clicks to sign in)
   let NAV_ITEMS = [];
 
   if (currentUser) {
@@ -125,7 +125,7 @@ export function KWINavbar() {
       ];
     }
   } else {
-    // Visitor (Not logged in) - Clean overview without user-only reporting buttons
+    // Visitor (Not logged in) - Overview with Report section between Home and Live Map
     NAV_ITEMS = [
       {
         key: "HOME",
@@ -133,6 +133,13 @@ export function KWINavbar() {
         icon: Home,
         path: "/",
         isActive: currentRoute === "/",
+      },
+      {
+        key: "REPORT",
+        label: "Report",
+        icon: FileText,
+        path: "/reports",
+        isActive: currentRoute === "/reports" || currentRoute === "/report",
       },
       {
         key: "LIVE_MAP",

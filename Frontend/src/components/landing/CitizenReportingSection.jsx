@@ -64,6 +64,7 @@ const AMBIENT_DROPLETS = [
 
 export function CitizenReportingSection() {
   const {
+    currentUser,
     isReportSubmitted,
     resetCitizenReport,
     reportLocality,
@@ -575,6 +576,10 @@ export function CitizenReportingSection() {
 
   // Handler for tapping on a post-submission or lockscreen notification
   const handleNotificationTap = (notifId) => {
+    if (!currentUser) {
+      navigate("/login");
+      return;
+    }
     if (audioEngine) audioEngine.playUiChirp(1000);
     setExpandedNotification(notifId);
   };
@@ -740,6 +745,10 @@ export function CitizenReportingSection() {
                   setExpandedNotification(null);
                   setPhoneStep(-1);
                 } else if (phoneStep === -1) {
+                  if (!currentUser) {
+                    navigate("/login");
+                    return;
+                  }
                   setPhoneStep(0);
                 } else {
                   setPhoneStep(-1);
@@ -1077,6 +1086,10 @@ export function CitizenReportingSection() {
                               type="button"
                               onClick={() => {
                                 if (expandedNotification === 1 && !isReportSubmitted) {
+                                  if (!currentUser) {
+                                    navigate("/login");
+                                    return;
+                                  }
                                   if (audioEngine) audioEngine.playUiChirp(1050);
                                   setExpandedNotification(null);
                                   setPhoneStep(1);
@@ -1116,7 +1129,29 @@ export function CitizenReportingSection() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={screenTransition}
-                      className="absolute inset-0 w-full h-full flex flex-col justify-between pt-1 pb-3 px-3 sm:px-3.5 z-10 select-none overflow-hidden"
+                      onClick={() => {
+                        if (!isReportSubmitted) {
+                          if (!currentUser) {
+                            navigate("/login");
+                            return;
+                          }
+                          if (audioEngine) audioEngine.playUiChirp(1200);
+                          setPhoneStep(0);
+                        }
+                      }}
+                      onPanEnd={(e, info) => {
+                        if (!isReportSubmitted) {
+                          if (info.offset.y < -20 || info.velocity.y < -100) {
+                            if (!currentUser) {
+                              navigate("/login");
+                              return;
+                            }
+                            if (audioEngine) audioEngine.playUiChirp(1200);
+                            setPhoneStep(0);
+                          }
+                        }
+                      }}
+                      className="absolute inset-0 w-full h-full flex flex-col justify-between pt-1 pb-3 px-3 sm:px-3.5 z-10 select-none overflow-hidden cursor-pointer"
                     >
                       {/* iOS Lock Screen Header: Lock Icon, Date & Huge Clock */}
                       <div className="relative z-10 flex flex-col items-center pt-1 text-center pointer-events-none shrink-0">
@@ -1337,11 +1372,25 @@ export function CitizenReportingSection() {
                       {/* LOCK SCREEN BOTTOM BAR */}
                       {!isReportSubmitted ? (
                         /* Pre-submission unlock trigger */
-                        <div
+                        <motion.div
                           onClick={(e) => {
                             e.stopPropagation();
+                            if (!currentUser) {
+                              navigate("/login");
+                              return;
+                            }
                             if (audioEngine) audioEngine.playUiChirp(1200);
                             setPhoneStep(0);
+                          }}
+                          onPanEnd={(e, info) => {
+                            if (info.offset.y < -20 || info.velocity.y < -100) {
+                              if (!currentUser) {
+                                navigate("/login");
+                                return;
+                              }
+                              if (audioEngine) audioEngine.playUiChirp(1200);
+                              setPhoneStep(0);
+                            }
                           }}
                           className="relative z-10 flex flex-col items-center gap-2 pb-1 cursor-pointer"
                         >
@@ -1354,7 +1403,7 @@ export function CitizenReportingSection() {
                             <ChevronUp className="w-3.5 h-3.5 text-white/95" />
                           </motion.div>
                           <div className="w-36 h-[4.5px] bg-white rounded-full shadow-[0_1px_4px_rgba(0,0,0,0.6)]" />
-                        </div>
+                        </motion.div>
                       ) : (
                         /* Post-submission status & Submit Another */
                         <div className="pt-1.5 pb-1 flex flex-col gap-1.5 shrink-0 border-t border-white/15">
@@ -1521,6 +1570,10 @@ export function CitizenReportingSection() {
                         <button
                           type="button"
                           onClick={() => {
+                            if (!currentUser) {
+                              navigate("/login");
+                              return;
+                            }
                             if (audioEngine) audioEngine.playUiChirp(1050);
                             setPhoneStep(1);
                           }}
@@ -1678,6 +1731,10 @@ export function CitizenReportingSection() {
                   setExpandedNotification(null);
                   setPhoneStep(-1);
                 } else if (phoneStep === -1) {
+                  if (!currentUser) {
+                    navigate("/login");
+                    return;
+                  }
                   setPhoneStep(0);
                 } else {
                   setPhoneStep(-1);

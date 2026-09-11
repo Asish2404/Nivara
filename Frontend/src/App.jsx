@@ -68,16 +68,17 @@ function App() {
   }, [initUser])
 
   // Route guard: When not signed in, user can only see the Home page ('/')
-  // or auth pages ('/signup', '/login', '/auth'). Any other page redirects to '/signup'.
+  // or auth pages ('/signup', '/login', '/signin', '/auth'). Any other page redirects to '/login'.
   useEffect(() => {
     const isPublic =
       currentRoute === '/' ||
       currentRoute === '/signup' ||
       currentRoute === '/login' ||
+      currentRoute === '/signin' ||
       currentRoute === '/auth'
 
     if (!currentUser && !isPublic) {
-      navigate('/signup')
+      navigate('/login')
     }
   }, [currentUser, currentRoute, navigate])
 
@@ -233,7 +234,7 @@ function App() {
 
   const renderContent = () => {
     // If not signed in and on auth route, render Auth view
-    if (currentRoute === '/login' || currentRoute === '/auth' || currentRoute === '/signup') {
+    if (currentRoute === '/login' || currentRoute === '/signin' || currentRoute === '/auth' || currentRoute === '/signup') {
       return <AIUnleashedAuth />
     }
 

@@ -7,7 +7,7 @@ import { formatTime12Hour } from '../utils/dateTimeUtils.js'
 export const isPublicRoute = (path) => {
   if (!path) return true
   const clean = path.split('?')[0].split('#')[0]
-  return clean === '/' || clean === '/signup' || clean === '/login' || clean === '/auth'
+  return clean === '/' || clean === '/signup' || clean === '/login' || clean === '/signin' || clean === '/auth'
 }
 
 // Helper to check if a user belongs to admin portal
@@ -92,9 +92,9 @@ const getInitialRoute = () => {
 
     if (!cachedUser && !isPublicRoute(p)) {
       if (window.history && window.history.replaceState) {
-        window.history.replaceState({}, '', '/signup')
+        window.history.replaceState({}, '', '/login')
       }
-      return '/signup'
+      return '/login'
     }
 
     if (cachedUser && !isRouteAllowedForUser(p, cachedUser)) {
@@ -164,7 +164,7 @@ export const useKWIStore = create((set, get) => ({
     let target = path
     if (!currentUser && !isPublicRoute(path)) {
       set({ postLoginRedirect: path })
-      target = '/signup'
+      target = '/login'
     } else if (currentUser && !isRouteAllowedForUser(path, currentUser)) {
       target = '/'
     }

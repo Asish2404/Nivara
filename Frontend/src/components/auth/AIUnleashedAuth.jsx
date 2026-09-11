@@ -225,13 +225,22 @@ const FEATURE_CARDS = [
 ];
 
 export default function AIUnleashedAuth() {
+  const { navigate, loginUser, currentRoute } = useKWIStore();
+
   // 100% Original Working State & Handlers
-  const [activeTab, setActiveTab] = useState("signin"); // 'signin' | 'create'
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== "undefined") {
+      const p = window.location.pathname.toLowerCase();
+      if (p === "/signup" || p === "/register") return "create";
+    }
+    return "signin";
+  }); // 'signin' | 'create'
   const [selectedPortal, setSelectedPortal] = useState("user"); // Visual portal selection ('user' | 'admin' | 'super_admin')
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberSession, setRememberSession] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -247,8 +256,6 @@ export default function AIUnleashedAuth() {
   const [isShaking, setIsShaking] = useState(false);
   const otpInputRefs = useRef([]);
   const nativeOtpInputRef = useRef(null);
-
-  const { navigate, loginUser } = useKWIStore();
 
   // 60-second OTP countdown ticker
   useEffect(() => {
@@ -271,21 +278,35 @@ export default function AIUnleashedAuth() {
     }
   }, [isOtpStep]);
 
-  // Auto-verify once all 6 digits are entered (exact Pinterest video interaction)
+  // Synchronize activeTab if route changes between /signup and /login / /signin
   useEffect(() => {
-    if (!isOtpStep) return;
-    const code = otpDigits.join("").trim();
-    if (code.length === 6 && !isSubmitting) {
-      handleOtpVerifySubmit();
+    if (currentRoute === "/signup" || currentRoute === "/register") {
+      setActiveTab("create");
+    } else if (
+      currentRoute === "/login" ||
+      currentRoute === "/signin" ||
+      currentRoute === "/auth"
+    ) {
+      setActiveTab("signin");
     }
-  }, [otpDigits, isOtpStep]);
+  }, [currentRoute]);
 
   // Tab switcher
   const handleTabChange = (tab) => {
     if (audioEngine) audioEngine.playUiChirp(920);
     setActiveTab(tab);
+    if (tab === "signin") {
+      if (currentRoute !== "/login" && currentRoute !== "/signin") {
+        navigate("/login");
+      }
+    } else {
+      if (currentRoute !== "/signup") {
+        navigate("/signup");
+      }
+    }
     setSuccessMessage("");
     setAuthError("");
+    setPhoneError("");
     setIsOtpStep(false);
     setOtpDigits(["", "", "", "", "", ""]);
     setOtpCountdown(0);
@@ -296,10 +317,24 @@ export default function AIUnleashedAuth() {
     if (audioEngine) audioEngine.playUiChirp(880);
     setSelectedPortal(portalId);
     setAuthError("");
+    setPhoneError("");
     setSuccessMessage("");
     setIsOtpStep(false);
-    setOtpDigits(["", "", "", "", "", ""]);
-    setOtpCountdown(0);
+  };
+
+  // Phone number validator (requires 10-digit mobile number, accepts optional +91 / country prefix)
+  const validatePhoneNumber = (phone) => {
+    if (!phone || !phone.trim()) {
+      return "Phone number is a required field.";
+    }
+    const clean = phone.trim().replace(/[\s\-\(\)\.]/g, "");
+    const indianMobileRegex = /^(?:\+?91|0)?[6-9]\d{9}$/;
+    const generalPhoneRegex = /^\+?[1-9]\d{9,14}$/;
+
+    if (!indianMobileRegex.test(clean) && !generalPhoneRegex.test(clean)) {
+      return "Please enter a valid 10-digit mobile number (e.g. 98300 12345).";
+    }
+    return null;
   };
 
   // Digit Input Keypad Navigation (Auto-advance, Backspace & Paste)
@@ -408,8 +443,10 @@ export default function AIUnleashedAuth() {
 
   // Direct Citizen Auth
   const handleDirectUserAuth = async () => {
-    setIsSubmitting(true);
-    if (audioEngine) audioEngine.playUiChirp(980);
+    setAuthError("");
+    setPhoneError("");
+    setSuccessMessage("");
+
     const derivedName =
       fullName.trim() ||
       email
@@ -420,35 +457,70 @@ export default function AIUnleashedAuth() {
         .join(" ") ||
       "Citizen";
 
+    if (activeTab === "create") {
+      if (!fullName.trim()) {
+        setAuthError("Please enter your full name.");
+        return;
+      }
+      if (!email.trim() || !email.includes("@")) {
+        setAuthError("Please enter a valid email address.");
+        return;
+      }
+      if (!password || password.length < 3) {
+        setAuthError("Password must be at least 3 characters.");
+        return;
+      }
+      const phoneErr = validatePhoneNumber(phoneNumber);
+      if (phoneErr) {
+        setPhoneError(phoneErr);
+        setAuthError(phoneErr);
+        return;
+      }
+    } else {
+      if (!email.trim()) {
+        setAuthError("Please enter your email address.");
+        return;
+      }
+      if (!password) {
+        setAuthError("Please enter your password.");
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
+    if (audioEngine) audioEngine.playUiChirp(980);
+
     try {
       if (activeTab === "signin") {
         const result = await api.post("/auth/login", {
-          email,
+          email: email.trim(),
           password,
           portal: "user",
         });
         if (audioEngine) audioEngine.playStationLock();
         loginUser(result);
         setSuccessMessage(`Welcome back, ${result?.user?.name || derivedName}`);
+        const redirectPath = useKWIStore.getState().postLoginRedirect || "/";
         setTimeout(() => {
-          navigate("/");
+          navigate(redirectPath);
+          useKWIStore.getState().setPostLoginRedirect(null);
         }, 650);
       } else {
-        const result = await api.post("/auth/signup", {
-          email,
+        await api.post("/auth/signup", {
+          email: email.trim(),
           password,
           fullName: derivedName,
-          phone: phoneNumber.trim() || undefined,
+          phone: phoneNumber.trim(),
           portal: "user",
         });
         if (audioEngine) audioEngine.playStationLock();
-        loginUser(result);
+        // Redirect to sign in section after account creation
+        setActiveTab("signin");
+        setPassword("");
+        setPhoneError("");
         setSuccessMessage(
-          `Welcome to Kolkata Water Intelligence, ${result?.user?.name || derivedName}!`,
+          "Account created successfully! Please sign in with your credentials to continue.",
         );
-        setTimeout(() => {
-          navigate("/");
-        }, 650);
       }
     } catch (err) {
       const isNetworkIssue =
@@ -457,13 +529,25 @@ export default function AIUnleashedAuth() {
         err?.message?.includes("NetworkError");
 
       if (isNetworkIssue) {
+        if (activeTab === "create") {
+          if (audioEngine) audioEngine.playStationLock();
+          // Redirect to sign in section after account creation (offline simulation)
+          setActiveTab("signin");
+          setPassword("");
+          setPhoneError("");
+          setSuccessMessage(
+            "Account created successfully (offline simulation)! Please sign in with your credentials to continue.",
+          );
+          return;
+        }
+
         const mockResult = {
           access_token: "offline-user-token-" + Date.now(),
           user: {
             id: "USR-LOCAL-01",
             name: derivedName || "Anirban Chatterjee",
             email: email || "anirban.chatterjee@kolkata.org",
-            phone: phoneNumber.trim() || "+91 98301 54321",
+            phone: phoneNumber.trim() || "98301 54321",
             role: "Citizen",
             badgeId: "",
             department: "Kolkata Citizen Water Watch",
@@ -492,6 +576,7 @@ export default function AIUnleashedAuth() {
   const handleCredentialSubmit = async (e) => {
     if (e) e.preventDefault();
     setAuthError("");
+    setPhoneError("");
     setSuccessMessage("");
 
     if (selectedPortal === "user") {
@@ -505,7 +590,7 @@ export default function AIUnleashedAuth() {
         setAuthError("Please enter your full name.");
         return;
       }
-      if (!email.trim()) {
+      if (!email.trim() || !email.includes("@")) {
         setAuthError("Please enter your official email address.");
         return;
       }
@@ -513,10 +598,10 @@ export default function AIUnleashedAuth() {
         setAuthError("Password must be at least 3 characters.");
         return;
       }
-      if (!phoneNumber.trim()) {
-        setAuthError(
-          "Please enter your mobile phone number to receive the security OTP.",
-        );
+      const phoneErr = validatePhoneNumber(phoneNumber);
+      if (phoneErr) {
+        setPhoneError(phoneErr);
+        setAuthError(phoneErr);
         return;
       }
     } else {
@@ -582,7 +667,7 @@ export default function AIUnleashedAuth() {
 
       setAuthError(
         err?.message ||
-          "Failed to dispatch verification code. Please check your credentials.",
+        "Failed to dispatch verification code. Please check your credentials.",
       );
       if (audioEngine) audioEngine.playUiChirp(420);
     } finally {
@@ -601,6 +686,7 @@ export default function AIUnleashedAuth() {
 
     setIsSubmitting(true);
     setAuthError("");
+    setPhoneError("");
     if (audioEngine) audioEngine.playUiChirp(980);
 
     const derivedName =
@@ -627,11 +713,13 @@ export default function AIUnleashedAuth() {
         loginUser(result);
         const signedInName = result?.user?.name || derivedName;
         setSuccessMessage(`Welcome back, ${signedInName}`);
+        const redirectPath = useKWIStore.getState().postLoginRedirect || "/";
         setTimeout(() => {
-          navigate("/");
+          navigate(redirectPath);
+          useKWIStore.getState().setPostLoginRedirect(null);
         }, 650);
       } else {
-        const result = await api.post("/auth/signup", {
+        await api.post("/auth/signup", {
           email: email.trim(),
           password,
           fullName: derivedName,
@@ -641,16 +729,17 @@ export default function AIUnleashedAuth() {
         });
 
         if (audioEngine) audioEngine.playStationLock();
-        loginUser(result);
-        const createdName = result?.user?.name || derivedName;
+        // Redirect to sign in section after account creation
+        setIsOtpStep(false);
+        setActiveTab("signin");
+        setPassword("");
+        setPhoneError("");
+        setOtpDigits(["", "", "", "", "", ""]);
         setSuccessMessage(
           selectedPortal === "admin"
-            ? `Administrative clearance verified! Welcome, ${createdName}`
-            : `Welcome to Kolkata Water Intelligence, ${createdName}`,
+            ? "Administrative clearance verified and account created! Please sign in with your credentials."
+            : "Account created successfully! Please sign in with your credentials.",
         );
-        setTimeout(() => {
-          navigate("/");
-        }, 650);
       }
     } catch (err) {
       const isNetworkIssue =
@@ -659,6 +748,22 @@ export default function AIUnleashedAuth() {
         err?.message?.includes("NetworkError");
 
       if (isNetworkIssue) {
+        if (activeTab === "create") {
+          if (audioEngine) audioEngine.playStationLock();
+          // Redirect to sign in section after account creation (offline simulation)
+          setIsOtpStep(false);
+          setActiveTab("signin");
+          setPassword("");
+          setPhoneError("");
+          setOtpDigits(["", "", "", "", "", ""]);
+          setSuccessMessage(
+            selectedPortal === "admin"
+              ? "Administrative clearance verified (offline simulation)! Please sign in with your credentials."
+              : "Account created successfully (offline simulation)! Please sign in with your credentials.",
+          );
+          return;
+        }
+
         const mockResult = {
           access_token: "offline-admin-token-" + Date.now(),
           user: {
@@ -700,7 +805,7 @@ export default function AIUnleashedAuth() {
       setTimeout(() => setIsShaking(false), 500);
       setAuthError(
         err?.message ||
-          "Invalid or expired verification code. Please check your code and try again.",
+        "Invalid or expired verification code. Please check your code and try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -721,6 +826,7 @@ export default function AIUnleashedAuth() {
       setFullName("Administrator");
       setPhoneNumber("9830012345");
     }
+    setPhoneError("");
     setIsOtpStep(false);
     setOtpDigits(["", "", "", "", "", ""]);
     if (audioEngine) audioEngine.playUiChirp(1040);
@@ -771,7 +877,7 @@ export default function AIUnleashedAuth() {
             {/* Top Hero Section */}
             <div className="max-w-[680px]">
               <div className="text-white/90 text-xs sm:text-[14px] font-medium tracking-[0.24em] uppercase mb-3">
-                Kolkata Municipal Corporation
+                Kolkata Water Intelligence
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-[56px] xl:text-[56px] font-extrabold tracking-tight text-white leading-[1.12]">
@@ -840,11 +946,10 @@ export default function AIUnleashedAuth() {
             className="lg:col-span-5 flex flex-col justify-center w-full"
           >
             <div
-              className={`w-full mx-auto lg:ml-auto bg-[#0a1936]/85 backdrop-blur-2xl border border-cyan-400/25 rounded-[32px] text-left transition-all duration-300 relative overflow-hidden shadow-[0_30px_70px_rgba(0,10,30,0.7),0_0_45px_rgba(2,132,199,0.18)] ${
-                isOtpStep
-                  ? "max-w-[460px] p-6 sm:p-8 min-h-0"
-                  : "max-w-[570px] xl:max-w-[570px] min-h-[950px] p-5 sm:p-6 xl:p-7"
-              }`}
+              className={`w-full mx-auto lg:ml-auto bg-[#0a1936]/85 backdrop-blur-2xl border border-cyan-400/25 rounded-[32px] text-left transition-all duration-300 relative overflow-hidden shadow-[0_30px_70px_rgba(0,10,30,0.7),0_0_45px_rgba(2,132,199,0.18)] ${isOtpStep
+                ? "max-w-[460px] p-6 sm:p-8 min-h-0"
+                : "max-w-[570px] xl:max-w-[570px] min-h-[950px] p-5 sm:p-6 xl:p-7"
+                }`}
             >
               {/* Top KMC Emblem Header (Only on credentials step) */}
               {!isOtpStep && (
@@ -856,7 +961,7 @@ export default function AIUnleashedAuth() {
                         Kolkata
                       </h2>
                       <div className="text-[14px] sm:text-[15px] font-semibold text-slate-200 leading-tight mt-0.5">
-                        Municipal Corporation
+                        Water Intelligence
                       </div>
                       <div className="text-[11.5px] font-medium text-cyan-400 tracking-wide mt-1">
                         Cleaner City · Safer Tomorrow
@@ -979,13 +1084,12 @@ export default function AIUnleashedAuth() {
                                 key={idx}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className={`w-11 h-14 sm:w-13 sm:h-16 flex items-center justify-center text-2xl sm:text-3xl font-mono font-bold rounded-2xl transition-all duration-200 ${
-                                  isFilled
-                                    ? "bg-[#151a24] border-2 border-white/25 text-white shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
-                                    : isFocused
+                                className={`w-11 h-14 sm:w-13 sm:h-16 flex items-center justify-center text-2xl sm:text-3xl font-mono font-bold rounded-2xl transition-all duration-200 ${isFilled
+                                  ? "bg-[#151a24] border-2 border-white/25 text-white shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
+                                  : isFocused
                                     ? "bg-[#121826] border-2 border-[#00f0ff] shadow-[0_0_22px_rgba(0,240,255,0.45)] ring-2 ring-cyan-400/25"
                                     : "bg-[#0d121c]/80 border-2 border-white/10 text-transparent"
-                                }`}
+                                  }`}
                               >
                                 {isFilled ? (
                                   <motion.span
@@ -1104,22 +1208,20 @@ export default function AIUnleashedAuth() {
                       <button
                         type="button"
                         onClick={() => handleTabChange("signin")}
-                        className={`flex-1 text-center py-2 text-[13px] font-bold border-none bg-transparent cursor-pointer relative z-10 transition-colors duration-200 ${
-                          activeTab === "signin"
-                            ? "text-white"
-                            : "text-slate-400 hover:text-white"
-                        }`}
+                        className={`flex-1 text-center py-2 text-[13px] font-bold border-none bg-transparent cursor-pointer relative z-10 transition-colors duration-200 ${activeTab === "signin"
+                          ? "text-white"
+                          : "text-slate-400 hover:text-white"
+                          }`}
                       >
                         Sign In
                       </button>
                       <button
                         type="button"
                         onClick={() => handleTabChange("create")}
-                        className={`flex-1 text-center py-2 text-[13px] font-bold border-none bg-transparent cursor-pointer relative z-10 transition-colors duration-200 ${
-                          activeTab === "create"
-                            ? "text-white"
-                            : "text-slate-400 hover:text-white"
-                        }`}
+                        className={`flex-1 text-center py-2 text-[13px] font-bold border-none bg-transparent cursor-pointer relative z-10 transition-colors duration-200 ${activeTab === "create"
+                          ? "text-white"
+                          : "text-slate-400 hover:text-white"
+                          }`}
                       >
                         Create Account
                       </button>
@@ -1150,18 +1252,14 @@ export default function AIUnleashedAuth() {
                         <button
                           type="button"
                           onClick={() => handlePortalSelect("user")}
-                          className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${
-                            selectedPortal === "user"
-                              ? "bg-gradient-to-b from-[#0070f3] to-[#0055d4] text-white border-cyan-400/80 shadow-[0_0_22px_rgba(0,112,243,0.5)]"
-                              : "bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border-white/10 hover:border-white/20"
-                          }`}
+                          className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${selectedPortal === "user"
+                            ? "bg-gradient-to-b from-[#0070f3] to-[#0055d4] text-white border-cyan-400/80 shadow-[0_0_22px_rgba(0,112,243,0.5)]"
+                            : "bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border-white/10 hover:border-white/20"
+                            }`}
                         >
                           <User className="w-6 h-6 mb-1.5 text-inherit" />
                           <span className="text-[13px] font-bold leading-tight">
                             User
-                          </span>
-                          <span className="text-[10px] opacity-80 leading-tight mt-1">
-                            View Reports &amp; Insights
                           </span>
                         </button>
 
@@ -1169,18 +1267,14 @@ export default function AIUnleashedAuth() {
                         <button
                           type="button"
                           onClick={() => handlePortalSelect("admin")}
-                          className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${
-                            selectedPortal === "admin"
-                              ? "bg-gradient-to-b from-[#0070f3] to-[#0055d4] text-white border-cyan-400/80 shadow-[0_0_22px_rgba(0,112,243,0.5)]"
-                              : "bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border-white/10 hover:border-white/20"
-                          }`}
+                          className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${selectedPortal === "admin"
+                            ? "bg-gradient-to-b from-[#0070f3] to-[#0055d4] text-white border-cyan-400/80 shadow-[0_0_22px_rgba(0,112,243,0.5)]"
+                            : "bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border-white/10 hover:border-white/20"
+                            }`}
                         >
                           <Shield className="w-6 h-6 mb-1.5 text-inherit" />
                           <span className="text-[13px] font-bold leading-tight">
                             Admin
-                          </span>
-                          <span className="text-[10px] opacity-80 leading-tight mt-1">
-                            2FA Security Clearance
                           </span>
                         </button>
                       </div>
@@ -1266,8 +1360,8 @@ export default function AIUnleashedAuth() {
                             }}
                             placeholder={
                               selectedPortal === "admin"
-                                ? "admin@kolkata-water.gov.in or 6289143592"
-                                : "user@kolkata-water.gov.in"
+                                ? "admin@kolkata-water.gov.in"
+                                : "souravroy@gmail.com"
                             }
                             required
                             className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
@@ -1291,7 +1385,7 @@ export default function AIUnleashedAuth() {
                               setPassword(e.target.value);
                               if (authError) setAuthError("");
                             }}
-                            placeholder="••••••••••••"
+                            placeholder="Enter Password"
                             minLength={3}
                             required
                             className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-11 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
@@ -1327,12 +1421,20 @@ export default function AIUnleashedAuth() {
                             }}
                             className="overflow-hidden"
                           >
-                            <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
-                              Mobile Phone Number{" "}
-                              {selectedPortal === "admin" && "(for SMS OTP)"}
-                            </label>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <label className="block text-[12.5px] font-semibold text-slate-200">
+                                Phone Number
+                                {selectedPortal === "admin" && (
+                                  <span className="text-slate-400 font-normal ml-1">
+                                    (for SMS OTP)
+                                  </span>
+                                )}
+                              </label>                            </div>
                             <div className="relative">
-                              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
+                              <div
+                                className={`absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-200 ${phoneError ? "text-rose-400" : "text-cyan-400"
+                                  }`}
+                              >
                                 <Phone className="w-4 h-4" />
                               </div>
                               <input
@@ -1340,16 +1442,38 @@ export default function AIUnleashedAuth() {
                                 value={phoneNumber}
                                 onChange={(e) => {
                                   setPhoneNumber(e.target.value);
+                                  if (phoneError) setPhoneError("");
                                   if (authError) setAuthError("");
                                 }}
-                                placeholder="6289143592 or +91 98300 12345"
-                                required={
-                                  activeTab === "create" &&
+                                onBlur={() => {
+                                  if (phoneNumber.trim()) {
+                                    const err = validatePhoneNumber(phoneNumber);
+                                    setPhoneError(err || "");
+                                  }
+                                }}
+                                placeholder={
                                   selectedPortal === "admin"
+                                    ? "98300 12345"
+                                    : "+91 98301 54321"
                                 }
-                                className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
+                                required={activeTab === "create"}
+                                aria-required="true"
+                                className={`w-full bg-[#0e203f]/75 border ${phoneError
+                                  ? "border-rose-500/80 focus:border-rose-400 focus:ring-2 focus:ring-rose-400/25"
+                                  : "border-white/20 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/25"
+                                  } focus:bg-[#11274d] rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200`}
                               />
                             </div>
+                            {phoneError && (
+                              <motion.p
+                                initial={{ opacity: 0, y: -4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="text-rose-400 text-[11.5px] mt-1.5 font-medium flex items-center gap-1.5"
+                              >
+                                <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0" />
+                                <span>{phoneError}</span>
+                              </motion.p>
+                            )}
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -1445,6 +1569,33 @@ export default function AIUnleashedAuth() {
                         )}
                       </motion.button>
                     </form>
+
+                    {/* Quick Mode Toggle Link between Sign In and Create Account */}
+                    <div className="text-center text-[12.5px] text-slate-300 pt-3">
+                      {activeTab === "signin" ? (
+                        <span>
+                          Don't have an account?{" "}
+                          <button
+                            type="button"
+                            onClick={() => handleTabChange("create")}
+                            className="text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-2 ml-1 cursor-pointer transition-colors"
+                          >
+                            Create Account
+                          </button>
+                        </span>
+                      ) : (
+                        <span>
+                          Already have an account?{" "}
+                          <button
+                            type="button"
+                            onClick={() => handleTabChange("signin")}
+                            className="text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-2 ml-1 cursor-pointer transition-colors"
+                          >
+                            Sign In
+                          </button>
+                        </span>
+                      )}
+                    </div>
 
                     {/* Secondary Authentication SSO */}
                     <div className="flex items-center gap-3 text-slate-400 text-[11.5px] my-3.5">

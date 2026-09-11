@@ -43,7 +43,6 @@ const ROLES = [
       department: 'KMC Sewerage & Drainage Directorate',
       badgeId: 'KMC-DIR-7049',
       clearance: 'Level 4 // Command Clearance',
-      avatar: '👨‍✈️',
       initials: 'DS',
       wardAccess: 'All Boroughs (I - XVI)',
     },
@@ -63,7 +62,6 @@ const ROLES = [
       department: 'KWI Real-time Telemetry Wing',
       badgeId: 'ENG-TELEMETRY-284',
       clearance: 'Level 3 // Systems Ops',
-      avatar: '👩‍💻',
       initials: 'PM',
       wardAccess: 'Sector V & Central Boroughs',
     },
@@ -83,7 +81,6 @@ const ROLES = [
       department: 'Kolkata Citizen Water Watch',
       badgeId: 'CITIZEN-KOL-9182',
       clearance: 'Verified Citizen ID',
-      avatar: '🌊',
       initials: 'AC',
       wardAccess: 'Salt Lake & South Kolkata',
     },
@@ -309,19 +306,17 @@ export function GorgeousLoginModal() {
                   key={role.id}
                   type="button"
                   onClick={() => handleQuickDemoFill(role.id)}
-                  className={`relative p-2.5 sm:p-3 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
-                    isSelected
+                  className={`relative p-2.5 sm:p-3 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${isSelected
                       ? `bg-gradient-to-b from-cyan-950/50 to-blue-950/40 border-cyan-400 shadow-[0_0_20px_${role.borderGlow}]`
                       : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/8 text-slate-400'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <div
-                      className={`w-7 h-7 rounded-xl flex items-center justify-center ${
-                        isSelected
+                      className={`w-7 h-7 rounded-xl flex items-center justify-center ${isSelected
                           ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-400/40'
                           : 'bg-white/5 text-slate-400'
-                      }`}
+                        }`}
                     >
                       <RoleIcon className="w-3.5 h-3.5" />
                     </div>
@@ -331,9 +326,8 @@ export function GorgeousLoginModal() {
                   </div>
                   <div>
                     <span
-                      className={`text-xs font-bold block leading-tight ${
-                        isSelected ? 'text-white' : 'text-slate-300'
-                      }`}
+                      className={`text-xs font-bold block leading-tight ${isSelected ? 'text-white' : 'text-slate-300'
+                        }`}
                     >
                       {role.title}
                     </span>
@@ -358,11 +352,10 @@ export function GorgeousLoginModal() {
                 setAuthMethod('biometric')
                 audioEngine.playUiChirp(820)
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                authMethod === 'biometric'
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${authMethod === 'biometric'
                   ? 'bg-gradient-to-r from-cyan-500/30 to-blue-500/30 text-cyan-300 border border-cyan-400/40 shadow-sm'
                   : 'text-slate-400 hover:text-white'
-              }`}
+                }`}
             >
               <Fingerprint className="w-3.5 h-3.5" />
               <span>Biometric Scan</span>
@@ -374,11 +367,10 @@ export function GorgeousLoginModal() {
                 setAuthMethod('smartcard')
                 audioEngine.playUiChirp(860)
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                authMethod === 'smartcard'
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${authMethod === 'smartcard'
                   ? 'bg-gradient-to-r from-cyan-500/30 to-blue-500/30 text-cyan-300 border border-cyan-400/40 shadow-sm'
                   : 'text-slate-400 hover:text-white'
-              }`}
+                }`}
             >
               <CreditCard className="w-3.5 h-3.5" />
               <span>Smart Pass NFC</span>
@@ -390,11 +382,10 @@ export function GorgeousLoginModal() {
                 setAuthMethod('passcode')
                 audioEngine.playUiChirp(900)
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                authMethod === 'passcode'
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${authMethod === 'passcode'
                   ? 'bg-gradient-to-r from-cyan-500/30 to-blue-500/30 text-cyan-300 border border-cyan-400/40 shadow-sm'
                   : 'text-slate-400 hover:text-white'
-              }`}
+                }`}
             >
               <KeyRound className="w-3.5 h-3.5" />
               <span>Matrix Key</span>
@@ -413,13 +404,12 @@ export function GorgeousLoginModal() {
                 type="button"
                 onClick={handleStartBiometricScan}
                 disabled={isScanning || scanStatus === 'SUCCESS'}
-                className={`relative w-28 h-28 sm:w-32 sm:h-32 rounded-3xl p-1 flex items-center justify-center cursor-pointer transition-all duration-300 group ${
-                  scanStatus === 'SUCCESS'
+                className={`relative w-28 h-28 sm:w-32 sm:h-32 rounded-3xl p-1 flex items-center justify-center cursor-pointer transition-all duration-300 group ${scanStatus === 'SUCCESS'
                     ? 'border-2 border-emerald-400 shadow-[0_0_35px_rgba(16,185,129,0.5)] bg-emerald-950/40'
                     : isScanning
-                    ? 'border-2 border-cyan-400 shadow-[0_0_40px_rgba(0,240,255,0.6)] bg-cyan-950/40 scale-105'
-                    : 'border-2 border-cyan-500/40 hover:border-cyan-400 hover:shadow-[0_0_25px_rgba(0,240,255,0.35)] bg-black/60 hover:scale-102'
-                }`}
+                      ? 'border-2 border-cyan-400 shadow-[0_0_40px_rgba(0,240,255,0.6)] bg-cyan-950/40 scale-105'
+                      : 'border-2 border-cyan-500/40 hover:border-cyan-400 hover:shadow-[0_0_25px_rgba(0,240,255,0.35)] bg-black/60 hover:scale-102'
+                  }`}
               >
                 {/* Sonar Ripple Rings when scanning */}
                 {isScanning && (
@@ -454,11 +444,10 @@ export function GorgeousLoginModal() {
                   ) : (
                     <>
                       <Fingerprint
-                        className={`w-12 h-12 transition-colors ${
-                          isScanning
+                        className={`w-12 h-12 transition-colors ${isScanning
                             ? 'text-cyan-300 drop-shadow-[0_0_15px_#00f0ff]'
                             : 'text-slate-400 group-hover:text-cyan-400'
-                        }`}
+                          }`}
                       />
                       <span className="text-[10px] font-mono tracking-widest text-slate-400 group-hover:text-cyan-300 mt-1 uppercase">
                         {isScanning ? `${scanProgress}%` : 'TAP TO SCAN'}
