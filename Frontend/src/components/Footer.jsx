@@ -80,21 +80,13 @@ export default function Footer() {
   return (
     <footer className="relative w-full overflow-hidden isolate text-white select-none font-sans">
       {/* ===================================================== */}
-      {/* 1. TOP SEAMLESS ATMOSPHERIC GRADIENT FADE (TIGHT)     */}
+      {/* TOP EDGE — BLEND FOOTER INTO WHITE PAGE              */}
       {/* ===================================================== */}
       <div
-        className="absolute top-0 inset-x-0 h-16 sm:h-24 z-10 pointer-events-none dark:hidden"
+        className="absolute top-0 inset-x-0 h-40 sm:h-48 lg:h-56 z-0 pointer-events-none"
         style={{
           background:
-            'linear-gradient(to bottom, #f8fafc 0%, rgba(248, 250, 252, 0.85) 35%, rgba(248, 250, 252, 0) 100%)',
-        }}
-        aria-hidden="true"
-      />
-      <div
-        className="absolute top-0 inset-x-0 h-16 sm:h-24 z-10 pointer-events-none hidden dark:block"
-        style={{
-          background:
-            'linear-gradient(to bottom, #0b1220 0%, rgba(11, 18, 32, 0.85) 35%, rgba(11, 18, 32, 0) 100%)',
+            'linear-gradient(to bottom, #ffffff 0%, rgba(255,255,255,0.75) 20%, rgba(255,255,255,0.45) 40%, rgba(255,255,255,0.22) 60%, rgba(255,255,255,0.08) 80%, rgba(255,255,255,0.04) 90%, rgba(255,255,255,0) 100%)',
         }}
         aria-hidden="true"
       />
@@ -103,9 +95,9 @@ export default function Footer() {
       {/* 2. BACKGROUND PANORAMA - HOWRAH BRIDGE AT NIGHT       */}
       {/* ===================================================== */}
       <div
-        className="absolute inset-0 -z-20 bg-cover bg-bottom md:bg-[center_42%] bg-no-repeat contrast-[1.08] brightness-[0.72] saturate-[1.15]"
+        className="absolute inset-0 -z-20 bg-cover bg-bottom md:bg-[center_42%] bg-no-repeat contrast-[1.05] brightness-[0.82] saturate-[1.15]"
         style={{
-          backgroundImage: "url('/textures/Footer_img2.png')",
+          backgroundImage: "url('/textures/Footer_bg5.png')",
         }}
         aria-hidden="true"
       />
@@ -117,17 +109,17 @@ export default function Footer() {
           background: `
             linear-gradient(
               180deg,
-              rgba(2, 6, 9, 0.05) 0%,
-              rgba(2, 8, 12, 0.35) 25%,
-              rgba(1, 6, 10, 0.82) 65%,
-              rgba(1, 5, 8, 0.98) 100%
+              rgba(2, 6, 9, 0.02) 0%,
+              rgba(2, 8, 12, 0.18) 25%,
+              rgba(1, 6, 10, 0.50) 65%,
+              rgba(1, 5, 8, 0.72) 100%
             ),
             linear-gradient(
               90deg,
-              rgba(1, 6, 9, 0.70) 0%,
-              rgba(1, 6, 9, 0.25) 40%,
-              rgba(1, 6, 9, 0.35) 70%,
-              rgba(1, 6, 9, 0.80) 100%
+              rgba(1, 6, 9, 0.40) 0%,
+              rgba(1, 6, 9, 0.12) 40%,
+              rgba(1, 6, 9, 0.18) 70%,
+              rgba(1, 6, 9, 0.45) 100%
             )
           `,
         }}
@@ -139,7 +131,7 @@ export default function Footer() {
       {/* ===================================================== */}
       <div className="relative z-20 max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-14 pt-16 sm:pt-20 pb-8 flex flex-col justify-between">
         {/* Top 5-Column Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-6 mb-12 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-6 mb-2 pt-16 sm:pt-20 lg:pt-24 items-start">
           {/* ------------------------------------------------- */}
           {/* Column 1: BRAND + TAGLINE + SOCIALS (Span 4)     */}
           {/* ------------------------------------------------- */}
@@ -156,7 +148,7 @@ export default function Footer() {
               {/* Official KWI Emblem Logo */}
               <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-white border border-cyan-400/40 shadow-[0_0_20px_rgba(6,182,212,0.3)] flex items-center justify-center p-0.5 shrink-0 group-hover:scale-105 transition-transform duration-200">
                 <img
-                  src="/textures/KWI_LOGO.jpeg"
+                  src="/textures/New_Logo.png"
                   alt="Kolkata Water Intelligence Logo"
                   className="w-full h-full object-contain rounded-lg"
                 />
@@ -177,7 +169,7 @@ export default function Footer() {
             </button>
 
             {/* Tagline Description */}
-            <p className="text-[13px] leading-[1.65] text-slate-300/90 max-w-[340px] mb-6 font-normal">
+            <p className="text-[15px] leading-[1.6] text-slate-200/95 max-w-[340px] mb-6 font-normal">
               Empowering Kolkata with real-time water intelligence, predictive insights, and rapid
               response systems for a resilient, flood-safe future.
             </p>
@@ -225,7 +217,7 @@ export default function Footer() {
           {/* ------------------------------------------------- */}
           {NAV_COLUMNS.map((col) => (
             <div key={col.title} className="lg:col-span-2 flex flex-col">
-              <div className="mb-4 font-mono text-[11px] font-bold tracking-[0.2em] text-cyan-400 uppercase">
+              <div className="mb-4 font-mono text-[18px] font-bold tracking-[0.2em] text-400 uppercase">
                 {col.title}
               </div>
 
@@ -235,7 +227,7 @@ export default function Footer() {
                     key={link.label}
                     type="button"
                     onClick={() => handleLinkClick(link)}
-                    className="group flex items-center justify-between gap-2 text-[13px] text-slate-300 hover:text-white transition-colors duration-150 text-left cursor-pointer w-full max-w-[160px]"
+                    className="group flex items-center justify-between gap-2 text-[14px] text-slate-200 hover:text-white transition-colors duration-150 text-left cursor-pointer w-full max-w-[160px]"
                   >
                     <span className="group-hover:translate-x-0.5 transition-transform duration-150 font-normal">
                       {link.label}
@@ -251,7 +243,7 @@ export default function Footer() {
           {/* Column 5: LIVE STATUS CARD (Span 2)               */}
           {/* ------------------------------------------------- */}
           <div className="lg:col-span-2 flex flex-col">
-            <div className="mb-4 font-mono text-[11px] font-bold tracking-[0.2em] text-cyan-400 uppercase">
+            <div className="mb-4 font-mono text-[18px] font-bold tracking-[0.2em] text-400 uppercase">
               LIVE STATUS
             </div>
 
@@ -262,7 +254,7 @@ export default function Footer() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400 shadow-[0_0_10px_#34d399]" />
                 </span>
-                <span className="font-mono text-[10.5px] font-bold tracking-[0.16em] text-cyan-300 uppercase">
+                <span className="font-mono text-[11px] font-bold tracking-[0.16em] text-cyan-300 uppercase">
                   SYSTEM OPERATIONAL
                 </span>
               </div>
@@ -288,7 +280,7 @@ export default function Footer() {
         {/* ===================================================== */}
         <div className="w-full h-[1px] bg-white/10 mt-6 mb-6" />
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[10.5px] font-mono tracking-[0.16em] text-slate-400 uppercase">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[14px] font-mono tracking-[0.16em] text-slate-400 uppercase">
           {/* Copyright */}
           <div className="flex items-center gap-2.5">
             <span>© 2026 KWI COMMAND</span>
