@@ -19,8 +19,9 @@ import { SimulateView } from './components/views/SimulateView'
 import { ReportsView } from './components/views/ReportsView'
 import { ActionsView } from './components/views/ActionsView'
 import { ProfileView } from './components/views/ProfileView'
+import { AdminDashboardView } from './components/views/AdminDashboardView'
 import AIUnleashedAuth from './components/auth/AIUnleashedAuth'
-import { useKWIStore } from './store/useKWIStore'
+import { useKWIStore, isUserAdmin } from './store/useKWIStore'
 import './App.css'
 
 function EarthScene({ zoomStarted, earthRef, controlsRef, onCloudEntry, onVideoReveal, onZoomComplete }) {
@@ -267,6 +268,21 @@ function App() {
       return (
         <SubpageLayout>
           <ProfileView />
+        </SubpageLayout>
+      )
+    }
+
+    if (currentRoute === '/dashboard' || currentRoute === '/admin-dashboard') {
+      if (!isUserAdmin(currentUser)) {
+        return (
+          <SubpageLayout>
+            <ReportsView />
+          </SubpageLayout>
+        )
+      }
+      return (
+        <SubpageLayout>
+          <AdminDashboardView />
         </SubpageLayout>
       )
     }

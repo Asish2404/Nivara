@@ -946,13 +946,12 @@ function IncidentsLayer({ visible, selectedIncident, onSelectIncident }) {
                   e.stopPropagation()
                   onSelectIncident(inc)
                 }}
-                className={`cursor-pointer transition-all duration-200 select-none flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/95 backdrop-blur-md border shadow-[0_4px_16px_rgba(15,23,42,0.14)] ${
-                  isSelected
+                className={`cursor-pointer transition-all duration-200 select-none flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/95 backdrop-blur-md border shadow-[0_4px_16px_rgba(15,23,42,0.14)] ${isSelected
                     ? 'border-rose-500 ring-2 ring-rose-500/30 scale-110 text-slate-900'
                     : isCritical
-                    ? 'border-rose-200 hover:border-rose-400 text-rose-700'
-                    : 'border-amber-200 hover:border-amber-400 text-amber-700'
-                }`}
+                      ? 'border-rose-200 hover:border-rose-400 text-rose-700'
+                      : 'border-amber-200 hover:border-amber-400 text-amber-700'
+                  }`}
               >
                 <span className={`w-2 h-2 rounded-full ${isCritical ? 'bg-rose-500 animate-ping' : 'bg-amber-500'}`} />
                 <span className="text-[11px] font-mono font-bold tracking-wider">{inc.id}</span>
@@ -1022,13 +1021,12 @@ function PumpingStationsLayer({ visible, selectedPumpStation, onSelectPumpStatio
                   e.stopPropagation()
                   onSelectPumpStation(ps)
                 }}
-                className={`cursor-pointer transition-all duration-200 select-none flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/95 backdrop-blur-md border shadow-[0_4px_16px_rgba(15,23,42,0.12)] ${
-                  isSelected
+                className={`cursor-pointer transition-all duration-200 select-none flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/95 backdrop-blur-md border shadow-[0_4px_16px_rgba(15,23,42,0.12)] ${isSelected
                     ? 'border-emerald-500 ring-2 ring-emerald-500/30 scale-110 text-slate-900'
                     : isAtCapacity
-                    ? 'border-rose-200 text-rose-700'
-                    : 'border-emerald-200 text-emerald-700'
-                }`}
+                      ? 'border-rose-200 text-rose-700'
+                      : 'border-emerald-200 text-emerald-700'
+                  }`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${isAtCapacity ? 'bg-rose-500 animate-ping' : 'bg-emerald-500'}`} />
                 <span className="text-[10px] font-mono font-bold">{ps.id}</span>

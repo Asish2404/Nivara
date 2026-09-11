@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   User,
+  LayoutDashboard,
 } from "lucide-react";
 import { useKWIStore, isUserAdmin } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
@@ -60,7 +61,7 @@ export function KWINavbar() {
 
   // Configure navigation items strictly according to authenticated role:
   // - User: Home, Field Report, My Reports
-  // - Admin: Home, Live Map, Simulate, Respond (+ Profile section on right)
+  // - Admin: Dashboard, Home, Live Map, Simulate, Respond (+ Profile section on right)
   // - Not logged in: Home, Report, Live Map, Simulate, Respond (redirects unauthenticated clicks to sign in)
   let NAV_ITEMS = [];
 
@@ -73,6 +74,13 @@ export function KWINavbar() {
           icon: Home,
           path: "/",
           isActive: currentRoute === "/",
+        },
+        {
+          key: "DASHBOARD",
+          label: "Dashboard",
+          icon: LayoutDashboard,
+          path: "/dashboard",
+          isActive: currentRoute === "/dashboard" || currentRoute === "/admin-dashboard",
         },
         {
           key: "LIVE_MAP",

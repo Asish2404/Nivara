@@ -28,16 +28,14 @@ function Toggle({ checked, onChange }) {
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative w-11 h-6 rounded-full transition-all duration-300 focus:outline-none shrink-0 cursor-pointer ${
-        checked
+      className={`relative w-11 h-6 rounded-full transition-all duration-300 focus:outline-none shrink-0 cursor-pointer ${checked
           ? "bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_12px_rgba(6,182,212,0.45)]"
           : "bg-slate-200"
-      }`}
+        }`}
     >
       <span
-        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full shadow-sm transition-transform duration-300 ${
-          checked ? "translate-x-5 bg-white" : "translate-x-0 bg-white"
-        }`}
+        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full shadow-sm transition-transform duration-300 ${checked ? "translate-x-5 bg-white" : "translate-x-0 bg-white"
+          }`}
       />
     </button>
   );
@@ -48,13 +46,12 @@ function TimelineStep({ num, label, sublabel, active, done, isSimulating }) {
   return (
     <div className="flex items-center gap-3 flex-1 min-w-0">
       <div
-        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs border transition-all duration-300 shrink-0 ${
-          done
+        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs border transition-all duration-300 shrink-0 ${done
             ? "bg-emerald-600 border-emerald-600 text-white font-medium shadow-xs"
             : active
               ? "bg-blue-50 border-blue-600 text-blue-700 font-semibold ring-2 ring-blue-100 shadow-xs"
               : "bg-slate-50 border-slate-200 text-slate-500 font-medium"
-        }`}
+          }`}
       >
         {done ? (
           <CheckCircle2 className="w-4 h-4 text-white stroke-[2.5]" />
@@ -66,13 +63,12 @@ function TimelineStep({ num, label, sublabel, active, done, isSimulating }) {
       </div>
       <div className="min-w-0">
         <div
-          className={`text-[12.5px] truncate ${
-            done
+          className={`text-[12.5px] truncate ${done
               ? "text-emerald-700 font-semibold"
               : active
                 ? "text-blue-700 font-semibold"
                 : "text-slate-700 font-medium"
-          }`}
+            }`}
         >
           {label}
         </div>
@@ -124,51 +120,34 @@ export function SimulateView() {
   return (
     /*
      * SimulateView content area:
-     *   - Strictly placed between KWINavbar and Footer (never overlaps either)
-     *   - Shows panoramic Kolkata Digital Twin background edge-to-edge
+     *   - Shows panoramic Kolkata Golden Sunset with Heritage Dome, Yellow Taxis & Vintage Tram edge-to-edge
      */
     <div
-      className="relative w-full overflow-hidden -mt-[104px]"
+      className="relative w-full overflow-hidden -mt-[104px] bg-[#e8f1f8] dark:bg-[#070c14]"
       style={{
         minHeight: "calc(100vh - 40px)",
       }}
     >
-      {/* ── 100% Full-Width Edge-to-Edge Panoramic Background Layer ── */}
+      {/* ── 100% Full-Width Edge-to-Edge Panoramic Heritage Background Layer ── */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 pointer-events-none [background-size:cover] lg:[background-size:100%_100%]"
-        style={{
-          top: "-12px",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          width: "100%",
-          height: "calc(100% + 12px)",
-          backgroundColor: "#f4f9fd",
-          backgroundImage: "url('/assets/simulate-bg.jpg?v=10')",
-          backgroundPosition: "center top",
-          backgroundRepeat: "no-repeat",
-        }}
-      />
+        className="absolute inset-0 pointer-events-none overflow-hidden"
+      >
+        <img
+          src="/images/kolkata_golden_sunset_trams.jpg"
+          alt="Kolkata Heritage Building at Golden Sunset with Yellow Taxis and Vintage Tram"
+          className="w-full h-full object-cover object-[center_35%] sm:object-[center_30%] filter contrast-[0.84] brightness-[0.98] saturate-[0.82] opacity-[0.82] transition-all duration-300"
+        />
 
-      {/* Soft atmospheric gradient buffer on left to ensure hero text readability without washing out scenery */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            "linear-gradient(to right, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.08) 24%, rgba(255,255,255,0) 45%)",
-        }}
-      />
-      {/* Soft bottom edge transition to footer */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-x-0 bottom-0 h-16 pointer-events-none"
-        style={{
-          background:
-            "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.65) 100%)",
-        }}
-      />
+        {/* Subtle, soft atmospheric gradient (Reduced smokiness to let vibrant scenery shine) */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#e8f1f8]/55 via-[#e8f1f8]/25 via-25% to-transparent to-55% dark:from-[#070c14]/65 dark:via-[#070c14]/30 dark:via-25% dark:to-transparent" />
+
+        {/* Soft top blend into navbar */}
+        <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-[#e8f1f8]/60 to-transparent dark:from-[#070c14]/65" />
+
+        {/* Soft bottom edge transition to footer */}
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#e8f1f8]/60 to-transparent dark:from-[#070c14]/65" />
+      </div>
 
       {/* Main Content Container */}
       <motion.div
@@ -178,19 +157,22 @@ export function SimulateView() {
         initial="hidden"
         animate="show"
       >
-        {/* ── 1. Hero Section ────────────────────────────────────────── */}
-        <motion.div variants={fadeUp} className="mb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/95 border border-slate-200/90 text-[12px] text-slate-700 mb-2.5 shadow-xs backdrop-blur-md">
-            <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-            <span className="font-semibold text-slate-900">Hydraulic Intervention Modeling</span>
-            <span className="text-slate-300">·</span>
-            <span className="text-slate-500 font-normal">Scenario Simulator</span>
+        {/* ── 1. Hero Section with Blue Glow Effect ─────────────────── */}
+        <motion.div variants={fadeUp} className="mb-6 relative">
+          {/* Ambient Blue/Cyan Glow Sphere behind Header */}
+          <div className="absolute -left-10 -top-8 w-80 h-44 bg-gradient-to-br from-blue-500/25 via-cyan-400/20 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+
+          <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/60 dark:bg-slate-900/60 border border-white/70 dark:border-slate-700/60 text-[12px] text-slate-700 dark:text-slate-200 mb-3 shadow-[0_4px_16px_rgba(15,23,42,0.05),0_0_12px_rgba(59,130,246,0.12)] backdrop-blur-xl">
+            <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+            <span className="font-bold text-slate-900 dark:text-white">Hydraulic Intervention Modeling</span>
+            <span className="text-slate-400 dark:text-slate-500">·</span>
+            <span className="text-blue-600 dark:text-cyan-400 font-semibold">Scenario Simulator</span>
           </div>
 
-          <h1 className="text-3xl sm:text-[35px] font-bold tracking-[-0.025em] text-slate-950 mb-2 leading-tight">
+          <h1 className="text-3xl sm:text-[35px] font-bold tracking-[-0.025em] text-[#0a325c] dark:text-white mb-2 leading-tight drop-shadow-[0_0_24px_rgba(59,130,246,0.45)] dark:drop-shadow-[0_0_30px_rgba(6,182,212,0.6)]">
             Simulate Drainage Interventions
           </h1>
-          <p className="text-[13.5px] text-slate-600 max-w-2xl leading-relaxed font-normal">
+          <p className="text-[13.5px] text-[#1c4774] dark:text-cyan-100/90 max-w-2xl leading-relaxed font-medium drop-shadow-[0_0_12px_rgba(59,130,246,0.25)]">
             Test pumping station boosts, inlet desilting crews, and mobile
             submersible units to predict flood reduction before dispatching
             field teams.
@@ -209,11 +191,10 @@ export function SimulateView() {
               isSimulating={false}
             />
             <div
-              className={`h-[2px] w-8 sm:w-16 mx-2 rounded-full transition-all duration-500 ${
-                simState === "SIMULATING" || simState === "RESULT"
+              className={`h-[2px] w-8 sm:w-16 mx-2 rounded-full transition-all duration-500 ${simState === "SIMULATING" || simState === "RESULT"
                   ? "bg-blue-600"
                   : "bg-slate-200"
-              }`}
+                }`}
             />
             <TimelineStep
               num="2"
@@ -224,11 +205,10 @@ export function SimulateView() {
               isSimulating={simState === "SIMULATING"}
             />
             <div
-              className={`h-[2px] w-8 sm:w-16 mx-2 rounded-full transition-all duration-500 ${
-                simState === "RESULT"
+              className={`h-[2px] w-8 sm:w-16 mx-2 rounded-full transition-all duration-500 ${simState === "RESULT"
                   ? "bg-emerald-600"
                   : "bg-slate-200"
-              }`}
+                }`}
             />
             <TimelineStep
               num="3"
@@ -294,9 +274,8 @@ export function SimulateView() {
                 }}
                 className="w-full h-2 rounded-full appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #2563eb 0%, #0ea5e9 ${
-                    ((pumpCapacity - 50) / 50) * 100
-                  }%, #e2e8f0 ${((pumpCapacity - 50) / 50) * 100}%, #e2e8f0 100%)`,
+                  background: `linear-gradient(to right, #2563eb 0%, #0ea5e9 ${((pumpCapacity - 50) / 50) * 100
+                    }%, #e2e8f0 ${((pumpCapacity - 50) / 50) * 100}%, #e2e8f0 100%)`,
                 }}
               />
               <div className="flex justify-between text-[11px] text-slate-500 mt-1.5 font-normal">
@@ -532,11 +511,10 @@ export function SimulateView() {
             <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all duration-300 shadow-xs ${
-                    simState === "RESULT"
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all duration-300 shadow-xs ${simState === "RESULT"
                       ? "bg-emerald-50 border-emerald-200 text-emerald-600"
                       : "bg-blue-50 border-blue-100 text-blue-600"
-                  }`}
+                    }`}
                 >
                   <TrendingDown className="w-4 h-4" />
                 </div>
@@ -552,11 +530,10 @@ export function SimulateView() {
                 </div>
               </div>
               <span
-                className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border transition-all duration-300 ${
-                  simState === "RESULT"
+                className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border transition-all duration-300 ${simState === "RESULT"
                     ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                     : "bg-slate-100 border-slate-200 text-slate-600"
-                }`}
+                  }`}
               >
                 {simState === "RESULT" ? "Verified" : "Pending"}
               </span>
@@ -564,11 +541,10 @@ export function SimulateView() {
 
             {/* Empty / Simulating / Result State Center Area */}
             <div
-              className={`rounded-2xl border p-5 flex flex-col items-center justify-center text-center gap-2 transition-all duration-300 min-h-[175px] ${
-                simState === "RESULT"
+              className={`rounded-2xl border p-5 flex flex-col items-center justify-center text-center gap-2 transition-all duration-300 min-h-[175px] ${simState === "RESULT"
                   ? "bg-gradient-to-b from-emerald-50/70 via-emerald-50/30 to-white/40 border-emerald-200/80"
                   : "bg-slate-50/70 border-slate-100"
-              }`}
+                }`}
             >
               <AnimatePresence mode="wait">
                 {simState === "SIMULATING" ? (
@@ -646,9 +622,8 @@ export function SimulateView() {
                     Drainage Load
                   </span>
                   <span
-                    className={`font-semibold tabular-nums ${
-                      simState === "RESULT" ? "text-blue-700" : "text-slate-400"
-                    }`}
+                    className={`font-semibold tabular-nums ${simState === "RESULT" ? "text-blue-700" : "text-slate-400"
+                      }`}
                   >
                     {simState === "RESULT" ? "87%" : "—"}
                   </span>
@@ -671,9 +646,8 @@ export function SimulateView() {
                     Risk Score
                   </span>
                   <span
-                    className={`font-semibold tabular-nums ${
-                      simState === "RESULT" ? "text-emerald-700" : "text-slate-400"
-                    }`}
+                    className={`font-semibold tabular-nums ${simState === "RESULT" ? "text-emerald-700" : "text-slate-400"
+                      }`}
                   >
                     {simState === "RESULT" ? "54 / 100" : "—"}
                   </span>
@@ -696,9 +670,8 @@ export function SimulateView() {
                     Affected Area
                   </span>
                   <span
-                    className={`font-semibold tabular-nums ${
-                      simState === "RESULT" ? "text-teal-700" : "text-slate-400"
-                    }`}
+                    className={`font-semibold tabular-nums ${simState === "RESULT" ? "text-teal-700" : "text-slate-400"
+                      }`}
                   >
                     {simState === "RESULT" ? "4,100 m²" : "—"}
                   </span>

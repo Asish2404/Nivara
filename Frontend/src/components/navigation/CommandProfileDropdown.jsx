@@ -8,8 +8,9 @@ import {
   LogOut,
   ChevronRight,
   ChevronDown,
+  LayoutDashboard,
 } from "lucide-react";
-import { useKWIStore } from "../../store/useKWIStore";
+import { useKWIStore, isUserAdmin } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
 import { ProfileModal } from "../modals/ProfileModal";
 
@@ -212,6 +213,43 @@ export function CommandProfileDropdown({ isDarkMode }) {
 
               {/* MENU ITEMS */}
               <div className="p-2 space-y-1">
+                {/* Admin Dashboard Quick Link (Admin Only) */}
+                {isUserAdmin(currentUser) && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleMenuClick(() => {
+                        navigate("/dashboard");
+                      })
+                    }
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${isDarkMode
+                      ? "hover:bg-cyan-950/30 text-slate-200"
+                      : "hover:bg-blue-50/70 text-slate-800"
+                      }`}
+                  >
+                    <div
+                      className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${isDarkMode
+                        ? "text-slate-400 group-hover:text-cyan-400"
+                        : "text-slate-500 group-hover:text-[#0284c7]"
+                        }`}
+                    >
+                      <LayoutDashboard className="w-[17px] h-[17px]" strokeWidth={1.75} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span>Admin Dashboard</span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
+                          ADMIN
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                        City Response Center &amp; Ops
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#0284c7] group-hover:translate-x-0.5 transition-all duration-150" />
+                  </button>
+                )}
+
                 {/* 1. My Profile */}
                 <button
                   type="button"

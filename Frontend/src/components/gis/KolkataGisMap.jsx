@@ -1089,8 +1089,8 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
           type="button"
           onClick={handleToggle3D}
           className={`p-2 rounded-xl backdrop-blur-md border transition-all cursor-pointer shadow-lg text-xs font-mono font-bold flex items-center gap-1 ${is3DMode
-              ? "bg-cyan-500/20 text-cyan-300 border-cyan-400/40"
-              : "bg-slate-900/90 text-slate-300 border-white/15 hover:bg-slate-800"
+            ? "bg-cyan-500/20 text-cyan-300 border-cyan-400/40"
+            : "bg-slate-900/90 text-slate-300 border-white/15 hover:bg-slate-800"
             }`}
           title={is3DMode ? "Switch to 2D Overhead" : "Switch to 3D Perspective"}
         >
@@ -1165,8 +1165,8 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                     audioEngine.playUiChirp(800 + mins * 10);
                   }}
                   className={`px-2.5 py-1 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer ${active
-                      ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_12px_rgba(6,182,212,0.5)] border border-cyan-300/40"
-                      : "text-slate-400 hover:text-white hover:bg-white/10"
+                    ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_12px_rgba(6,182,212,0.5)] border border-cyan-300/40"
+                    : "text-slate-400 hover:text-white hover:bg-white/10"
                     }`}
                 >
                   {mins === 0 ? "NOW" : `+${mins}m`}
@@ -1289,8 +1289,8 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
           type="button"
           onClick={() => setShowLayerMenu(!showLayerMenu)}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl backdrop-blur-md border shadow-xl text-xs font-semibold transition-all cursor-pointer ${showLayerMenu
-              ? "bg-cyan-500 text-slate-950 border-cyan-400"
-              : "bg-slate-900/90 text-slate-200 border-white/15 hover:bg-slate-800"
+            ? "bg-cyan-500 text-slate-950 border-cyan-400"
+            : "bg-slate-900/90 text-slate-200 border-white/15 hover:bg-slate-800"
             }`}
         >
           <Layers className="w-4 h-4" />
@@ -1475,8 +1475,8 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                       setSimulateState("BEFORE");
                     }}
                     className={`py-1.5 rounded-lg text-xs font-bold font-mono cursor-pointer transition-all ${simulateState === "BEFORE"
-                        ? "bg-rose-500/30 text-rose-300 border border-rose-500/40 shadow-xs"
-                        : "text-slate-400 hover:text-white"
+                      ? "bg-rose-500/30 text-rose-300 border border-rose-500/40 shadow-xs"
+                      : "text-slate-400 hover:text-white"
                       }`}
                   >
                     BEFORE (Baseline)
@@ -1488,8 +1488,8 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                       setSimulateState("AFTER");
                     }}
                     className={`py-1.5 rounded-lg text-xs font-bold font-mono cursor-pointer transition-all ${simulateState === "AFTER"
-                        ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 shadow-xs"
-                        : "text-slate-400 hover:text-white"
+                      ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 shadow-xs"
+                      : "text-slate-400 hover:text-white"
                       }`}
                   >
                     AFTER (Mitigated)

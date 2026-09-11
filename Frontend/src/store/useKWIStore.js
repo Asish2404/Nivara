@@ -53,12 +53,15 @@ export const isRouteAllowedForUser = (path, user) => {
     cleanPath.startsWith('/my-reports/')
 
   const isAdminOnlyRoute =
+    cleanPath === '/dashboard' ||
+    cleanPath === '/admin-dashboard' ||
     cleanPath === '/live-city' ||
     cleanPath === '/incidents' ||
     cleanPath === '/forecast' ||
     cleanPath === '/simulate' ||
     cleanPath === '/action-center' ||
     cleanPath === '/respond' ||
+    cleanPath.startsWith('/dashboard/') ||
     cleanPath.startsWith('/live-city/') ||
     cleanPath.startsWith('/simulate/') ||
     cleanPath.startsWith('/action-center/')
@@ -113,6 +116,9 @@ const routeToSection = (path) => {
   switch (path) {
     case '/':
       return 'HOME'
+    case '/dashboard':
+    case '/admin-dashboard':
+      return 'DASHBOARD'
     case '/live-city':
     case '/incidents':
     case '/forecast':
@@ -306,6 +312,8 @@ export const useKWIStore = create((set, get) => ({
   setActiveSection: (section) => {
     const routeMap = {
       HOME: '/',
+      DASHBOARD: '/dashboard',
+      ADMIN_DASHBOARD: '/dashboard',
       LIVE_MAP: '/live-city',
       REPORT: '/reports',
       MY_REPORTS: '/my-reports',

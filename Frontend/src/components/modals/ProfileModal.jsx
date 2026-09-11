@@ -94,11 +94,10 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 12 }}
         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-        className={`relative w-full max-w-lg rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(15,23,42,0.25)] border backdrop-blur-2xl z-10 font-sans ${
-          isDarkMode
-            ? "bg-[#0b1220]/95 border-slate-700/80 text-white"
-            : "bg-white/95 border-slate-200/90 text-slate-900"
-        }`}
+        className={`relative w-full max-w-lg rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(15,23,42,0.25)] border backdrop-blur-2xl z-10 font-sans ${isDarkMode
+          ? "bg-[#0b1220]/95 border-slate-700/80 text-white"
+          : "bg-white/95 border-slate-200/90 text-slate-900"
+          }`}
       >
         {/* Close Button */}
         <button
@@ -107,11 +106,10 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
             if (audioEngine) audioEngine.playUiChirp(720);
             onClose();
           }}
-          className={`absolute top-5 right-5 p-2 rounded-xl border transition-colors cursor-pointer ${
-            isDarkMode
-              ? "bg-slate-800/60 border-slate-700 text-slate-400 hover:text-white"
-              : "bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-900"
-          }`}
+          className={`absolute top-5 right-5 p-2 rounded-xl border transition-colors cursor-pointer ${isDarkMode
+            ? "bg-slate-800/60 border-slate-700 text-slate-400 hover:text-white"
+            : "bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-900"
+            }`}
           aria-label="Close modal"
         >
           <X className="w-4 h-4" />
@@ -221,11 +219,10 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Asish Bose"
                   required
-                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#0891B2]/20 transition-all ${
-                    isDarkMode
-                      ? "bg-slate-900 border-slate-700 text-white focus:border-[#0891B2]"
-                      : "bg-white border-slate-200 text-slate-900 focus:border-[#0891B2]"
-                  }`}
+                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#0891B2]/20 transition-all ${isDarkMode
+                    ? "bg-slate-900 border-slate-700 text-white focus:border-[#0891B2]"
+                    : "bg-white border-slate-200 text-slate-900 focus:border-[#0891B2]"
+                    }`}
                 />
               </div>
             </div>
@@ -242,11 +239,10 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
                   onChange={(e) => setOrg(e.target.value)}
                   placeholder="NIVARA"
                   required
-                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#0891B2]/20 transition-all ${
-                    isDarkMode
-                      ? "bg-slate-900 border-slate-700 text-white focus:border-[#0891B2]"
-                      : "bg-white border-slate-200 text-slate-900 focus:border-[#0891B2]"
-                  }`}
+                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#0891B2]/20 transition-all ${isDarkMode
+                    ? "bg-slate-900 border-slate-700 text-white focus:border-[#0891B2]"
+                    : "bg-white border-slate-200 text-slate-900 focus:border-[#0891B2]"
+                    }`}
                 />
               </div>
             </div>
@@ -264,11 +260,10 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="asishbose313@gmail.com"
-                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#0891B2]/20 transition-all ${
-                    isDarkMode
-                      ? "bg-slate-900 border-slate-700 text-white focus:border-[#0891B2]"
-                      : "bg-white border-slate-200 text-slate-900 focus:border-[#0891B2]"
-                  }`}
+                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#0891B2]/20 transition-all ${isDarkMode
+                    ? "bg-slate-900 border-slate-700 text-white focus:border-[#0891B2]"
+                    : "bg-white border-slate-200 text-slate-900 focus:border-[#0891B2]"
+                    }`}
                 />
               </div>
             </div>
@@ -284,11 +279,10 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="Kolkata, Sector V"
-                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#0891B2]/20 transition-all ${
-                    isDarkMode
-                      ? "bg-slate-900 border-slate-700 text-white focus:border-[#0891B2]"
-                      : "bg-white border-slate-200 text-slate-900 focus:border-[#0891B2]"
-                  }`}
+                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#0891B2]/20 transition-all ${isDarkMode
+                    ? "bg-slate-900 border-slate-700 text-white focus:border-[#0891B2]"
+                    : "bg-white border-slate-200 text-slate-900 focus:border-[#0891B2]"
+                    }`}
                 />
               </div>
             </div>
@@ -314,11 +308,10 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
             <button
               type="button"
               onClick={onClose}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-                isDarkMode
-                  ? "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
-                  : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
-              }`}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${isDarkMode
+                ? "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
+                : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
+                }`}
             >
               Cancel
             </button>
