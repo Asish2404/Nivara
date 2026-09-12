@@ -1,0 +1,30 @@
+# Environment files & secrets
+.env
+.env.*
+!.env.example
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+npm-debug.log*
+
+# Database & Runtime Uploads
+*.db-journal
+*.db-wal
+*.db-shm
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
