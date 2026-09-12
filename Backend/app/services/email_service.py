@@ -111,7 +111,7 @@ class EmailService:
             greeting_html = "Hello,"
             greeting_text = "Hello,"
 
-        subject = "Your Kolkata Water Intelligence verification code"
+        subject = "Your verification code for NIVARA"
         action_text = "account registration" if purpose in ["signup", "create"] else "sign in"
 
         html_content = f"""<!DOCTYPE html>
@@ -125,7 +125,7 @@ class EmailService:
   <div style="max-width: 540px; margin: 36px auto; background-color: #ffffff; border-radius: 14px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);">
     <div style="background-color: #0b2545; padding: 28px 32px; text-align: left;">
       <div style="font-size: 12px; font-weight: 700; letter-spacing: 1.5px; color: #38bdf8; margin-bottom: 8px;">
-        KOLKATA WATER INTELLIGENCE
+        NIVARA
       </div>
       <h1 style="margin: 0; font-size: 20px; font-weight: 600; color: #ffffff;">
         Security Verification
@@ -155,8 +155,7 @@ class EmailService:
     </div>
 
     <div style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px 32px; font-size: 12px; color: #94a3b8; line-height: 1.6;">
-      <strong style="color: #475569;">Kolkata Water Intelligence</strong><br>
-      Municipal Water & Drainage Intelligence System<br>
+      <strong style="color: #475569;">NIVARA</strong><br>
       This is an automated notification.
     </div>
   </div>
