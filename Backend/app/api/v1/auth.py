@@ -91,7 +91,7 @@ async def get_current_user_or_default(
 
     # Fallback: Default citizen persona
     result = await db.execute(
-        select(User).where(User.email == "anirban.chatterjee@kolkata.org")
+        select(User).where(User.email == "[EMAIL_ADDRESS]")
     )
     default_citizen = result.scalars().first()
     if default_citizen:
@@ -107,7 +107,7 @@ async def get_current_user_or_default(
     new_citizen = User(
         id="USR-CIT-003",
         name="Shuvajit Saha",
-        email="shuvajit.saha@kolkata.org",
+        email="[EMAIL_ADDRESS]",
         hashed_password="dummy",
         role="Volunteer",
         clearance="Volunteer ID",
