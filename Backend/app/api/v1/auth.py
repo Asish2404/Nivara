@@ -1,17 +1,20 @@
 import re
+import uuid
+import secrets
 from typing import Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, Header, status
 from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.security import create_access_token, decode_access_token, verify_password
+from app.core.security import create_access_token, decode_access_token, verify_password, hash_password
 from app.core.datetime_utils import get_current_time
 from app.models.user import User
 from app.models.admin import Admin
 from app.schemas.auth import (
     UserSignupRequest,
     UserLoginRequest,
+    GoogleLoginRequest,
     UserResponse,
     UserUpdateRequest,
     TokenResponse,
@@ -21,6 +24,7 @@ from app.schemas.auth import (
 )
 from app.services.auth_service import AuthService
 from app.services.otp_service import OtpService
+from app.services.google_auth_service import GoogleAuthService
 
 router = APIRouter()
 
@@ -366,6 +370,115 @@ async def login(
         )
 
     # 4. Send Login Security Notification Email (non-blocking)
+    EmailService.dispatch_background(
+        EmailService.send_login_notification_email(
+            to_email=entity.email,
+            user_name=entity.name,
+            role=entity.role,
+            login_time=get_current_time(),
+        )
+    )
+
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user=AuthService.to_user_response(entity),
+    )
+
+
+@router.post(
+    "/google",
+    response_model=TokenResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Authenticate or register user via verified Google SSO credential",
+)
+async def google_login(
+    payload: GoogleLoginRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Real Google SSO Authentication for NIVARA:
+    1. Cryptographically verifies Google ID token credential with Google's public key infrastructure.
+    2. Validates audience matches configured GOOGLE_CLIENT_ID and email is verified.
+    3. Checks SQLite database (admin and users tables) for an account matching the verified email.
+    4. Existing accounts:
+       - Preserves existing role (Official/Admin or Citizen) and clearance.
+       - Links google_id and sets status to active.
+    5. New accounts:
+       - Safely registers a Citizen in 'users' table (role='User', clearance='Citizen Access').
+       - Prevents arbitrary Google accounts from gaining administrative privileges.
+       - Generates a high-entropy password hash so empty password logins are impossible.
+    6. Generates existing NIVARA signed JWT session token.
+    7. Dispatches security notifications and returns TokenResponse.
+    """
+    google_user = GoogleAuthService.verify_credential(payload.credential)
+    verified_email = google_user["email"].lower().strip()
+    google_id = google_user["google_id"]
+    google_name = google_user.get("name") or verified_email.split("@")[0]
+
+    # 1. Search Admin table for existing official account
+    res_admin = await db.execute(select(Admin).where(Admin.email == verified_email))
+    entity: Union[User, Admin, None] = res_admin.scalars().first()
+
+    # 2. If not found in Admin table, search Users table for existing citizen
+    if not entity:
+        res_user = await db.execute(select(User).where(User.email == verified_email))
+        entity = res_user.scalars().first()
+
+    is_new_user = False
+    if entity:
+        # Existing account: PRESERVE EXACT ROLE & PERMISSIONS (Admin or Citizen)
+        entity.status = "active"
+        if hasattr(entity, "google_id") and not entity.google_id:
+            entity.google_id = google_id
+        if hasattr(entity, "auth_provider") and not entity.auth_provider:
+            entity.auth_provider = "google"
+        await db.commit()
+        await db.refresh(entity)
+    else:
+        # New account: Register safe default Citizen ONLY (Never Admin)
+        is_new_user = True
+        user_id = f"USR-{uuid.uuid4().hex[:8].upper()}"
+        random_pw = secrets.token_urlsafe(32)
+        entity = User(
+            id=user_id,
+            name=google_name,
+            email=verified_email,
+            hashed_password=hash_password(random_pw),
+            role="User",
+            clearance="Citizen Access",
+            status="active",
+            created_at=get_current_time(),
+            location="Kolkata, West Bengal",
+            auth_provider="google",
+            google_id=google_id,
+        )
+        db.add(entity)
+        await db.commit()
+        await db.refresh(entity)
+
+    entity_portal = "admin" if isinstance(entity, Admin) else "user"
+    access_token = create_access_token(
+        subject=entity.id,
+        extra_claims={"email": entity.email, "role": entity.role, "portal": entity_portal},
+    )
+
+    from app.services.email_service import EmailService
+
+    # Dispatch Welcome Email for newly registered accounts
+    if is_new_user or not getattr(entity, "welcome_email_sent", False):
+        entity.welcome_email_sent = True
+        await db.commit()
+        await db.refresh(entity)
+        EmailService.dispatch_background(
+            EmailService.send_welcome_email(
+                to_email=entity.email,
+                user_name=entity.name,
+                role=entity.role,
+            )
+        )
+
+    # Dispatch Login Security Notification Email
     EmailService.dispatch_background(
         EmailService.send_login_notification_email(
             to_email=entity.email,

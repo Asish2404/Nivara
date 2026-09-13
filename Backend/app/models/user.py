@@ -20,6 +20,8 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=get_current_time)
     location: Mapped[str | None] = mapped_column(String(128), nullable=True, default=None)
     welcome_email_sent: Mapped[bool] = mapped_column(Boolean, default=False)
+    auth_provider: Mapped[str | None] = mapped_column(String(32), nullable=True, default="local")
+    google_id: Mapped[str | None] = mapped_column(String(128), nullable=True, default=None)
 
     @property
     def full_name(self) -> str:

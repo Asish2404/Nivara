@@ -99,13 +99,13 @@ async def test_database_and_auth():
     print("\n=== [TEST 4] Testing Login Status Update -> 'active' ===")
     async with async_session() as db:
         # User login
-        auth_u = await AuthService.authenticate_user(db, "citizen.test@kolkata.org", "Password@123", portal="user")
+        auth_u, _ = await AuthService.authenticate_user(db, "citizen.test@kolkata.org", "Password@123", portal="user")
         assert auth_u is not None
         assert auth_u.status == "active", "User status should be 'active' after login"
         print(f"User login successful -> Status: {auth_u.status}")
 
         # Admin login
-        auth_a = await AuthService.authenticate_user(db, "officer.test@kolkata-water.gov.in", "Officer@123", portal="admin")
+        auth_a, _ = await AuthService.authenticate_user(db, "officer.test@kolkata-water.gov.in", "Officer@123", portal="admin")
         assert auth_a is not None
         assert auth_a.status == "active", "Admin status should be 'active' after login"
         print(f"Admin login successful -> Status: {auth_a.status}")

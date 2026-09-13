@@ -19,10 +19,9 @@ import {
   Leaf,
   Phone,
   Smartphone,
-  KeyRound,
   Check,
 } from "lucide-react";
-import { useKWIStore } from "../../store/useKWIStore";
+import { useKWIStore, isUserAdmin } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
 import { api } from "../../utils/api";
 import { KWINavbar } from "../navigation/KWINavbar";
@@ -272,6 +271,114 @@ export default function AIUnleashedAuth() {
   const [isShaking, setIsShaking] = useState(false);
   const otpInputRefs = useRef([]);
   const nativeOtpInputRef = useRef(null);
+
+  // Google SSO state and container ref
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [googleAuthMessage, setGoogleAuthMessage] = useState("");
+  const googleBtnContainerRef = useRef(null);
+  const googleClientId =
+    import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+    "720592181985-nl0vbi1spjvavemtnri1ufb9ib1knlic.apps.googleusercontent.com";
+
+  // Google Credential Response Handler
+  const handleGoogleCredentialResponse = async (response) => {
+    if (!response || !response.credential) {
+      setAuthError("Google authentication was cancelled or returned no credentials.");
+      return;
+    }
+
+    setAuthError("");
+    setPhoneError("");
+    setSuccessMessage("");
+    setIsGoogleLoading(true);
+    setGoogleAuthMessage("Verifying secure identity...");
+    if (audioEngine) audioEngine.playUiChirp(980);
+
+    try {
+      const result = await api.post("/auth/google", {
+        credential: response.credential,
+      });
+
+      setGoogleAuthMessage("Authentication Successful");
+      if (audioEngine) audioEngine.playStationLock();
+      loginUser(result);
+
+      const userName = result?.user?.name || "User";
+      setSuccessMessage(`Welcome back, ${userName}`);
+
+      // Role-based redirection:
+      // Existing Official/Admin -> /dashboard or /admin-dashboard
+      // Existing Citizen/New Google User -> / or /reports (or postLoginRedirect)
+      const postRedirect = useKWIStore.getState().postLoginRedirect;
+      const isAdmin = isUserAdmin(result.user);
+      const targetRoute = postRedirect || (isAdmin ? "/dashboard" : "/");
+
+      setTimeout(() => {
+        navigate(targetRoute);
+        useKWIStore.getState().setPostLoginRedirect(null);
+      }, 700);
+    } catch (err) {
+      console.error("Google authentication failure:", err);
+      const msg =
+        err?.message || "Google authentication failed. Please check your network and try again.";
+      setAuthError(msg);
+      if (audioEngine) audioEngine.playUiChirp(420);
+    } finally {
+      setIsGoogleLoading(false);
+      setGoogleAuthMessage("");
+    }
+  };
+
+  // Mount Google Identity Services button inside the custom overlay
+  useEffect(() => {
+    let cancel = false;
+
+    const setupGoogleSSO = () => {
+      if (cancel || !window.google?.accounts?.id || !googleBtnContainerRef.current) return;
+      try {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: handleGoogleCredentialResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+
+        if (googleBtnContainerRef.current) {
+          googleBtnContainerRef.current.innerHTML = "";
+          window.google.accounts.id.renderButton(googleBtnContainerRef.current, {
+            theme: "outline",
+            size: "large",
+            type: "standard",
+            shape: "rectangular",
+            text: "signin_with",
+            logo_alignment: "left",
+            width: 280,
+          });
+        }
+      } catch (err) {
+        console.warn("Google Identity Services setup notice:", err);
+      }
+    };
+
+    if (window.google?.accounts?.id) {
+      setupGoogleSSO();
+    } else {
+      const timer = setInterval(() => {
+        if (window.google?.accounts?.id) {
+          clearInterval(timer);
+          setupGoogleSSO();
+        }
+      }, 250);
+      return () => {
+        cancel = true;
+        clearInterval(timer);
+      };
+    }
+
+    return () => {
+      cancel = true;
+    };
+  }, [googleClientId, currentRoute, isOtpStep]);
 
   // 60-second OTP countdown ticker
   useEffect(() => {
@@ -1333,19 +1440,58 @@ export default function AIUnleashedAuth() {
 
                     {/* Secondary Authentication SSO */}
                     <div className="grid grid-cols-2 gap-2.5 mb-3">
-                      <button
-                        type="button"
-                        onClick={() => handleCredentialSubmit()}
-                        className="flex items-center justify-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl py-2 px-3 text-slate-200 text-xs font-semibold cursor-pointer transition-all duration-200"
-                      >
-                        <GoogleIcon />
-                        <span>Google SSO</span>
-                      </button>
+                      {/* Preserved 100% exact NIVARA Google SSO Button with GIS overlay */}
+                      <div className="relative overflow-hidden rounded-xl">
+                        <button
+                          type="button"
+                          disabled={isGoogleLoading || isSubmitting}
+                          onClick={() => {
+                            if (window.google?.accounts?.id?.prompt) {
+                              window.google.accounts.id.prompt();
+                            }
+                          }}
+                          className="w-full flex items-center justify-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl py-2 px-3 text-slate-200 text-xs font-semibold cursor-pointer transition-all duration-200 disabled:opacity-50"
+                        >
+                          {isGoogleLoading ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400 shrink-0" />
+                              <span className="truncate">
+                                {googleAuthMessage || "Connecting..."}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <GoogleIcon />
+                              <span>Google SSO</span>
+                            </>
+                          )}
+                        </button>
 
+                        {/* Hidden Transparent Google Identity Services Overlay Target */}
+                        <div
+                          ref={googleBtnContainerRef}
+                          className="absolute inset-0 opacity-0 overflow-hidden cursor-pointer z-10"
+                          style={{
+                            pointerEvents:
+                              isGoogleLoading || isSubmitting ? "none" : "auto",
+                            transform: "scale(1.4)",
+                            transformOrigin: "center",
+                          }}
+                          title="Authenticate via Google SSO"
+                        />
+                      </div>
+
+                      {/* Preserved 100% exact NIVARA Gov ID Token Button */}
                       <button
                         type="button"
-                        onClick={() => handleCredentialSubmit()}
+                        onClick={() => {
+                          if (audioEngine) audioEngine.playUiChirp(880);
+                          setAuthError(
+                            "Gov ID Token: Municipal Digital ID infrastructure integration ready. For production clearance, please authenticate via Official Portal or Google SSO."
+                          );
+                        }}
                         className="flex items-center justify-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl py-2 px-3 text-slate-200 text-xs font-semibold cursor-pointer transition-all duration-200"
+                        title="Gov ID Token (Municipal Clearance Integration Ready)"
                       >
                         <GovIdIcon />
                         <span>Gov ID Token</span>

@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     EMAILS_FROM_NAME: str = "Kolkata Municipal Corporation - KWI 2FA"
 
+    # Google OAuth / SSO Configuration
+    GOOGLE_CLIENT_ID: str = "720592181985-nl0vbi1spjvavemtnri1ufb9ib1knlic.apps.googleusercontent.com"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

@@ -40,6 +40,10 @@ class UserLoginRequest(BaseModel):
     otp: Optional[str] = Field(default=None, description="2FA OTP code for administrative login")
 
 
+class GoogleLoginRequest(BaseModel):
+    credential: str = Field(..., description="Google ID Token / Credential string returned by Google Identity Services")
+
+
 class GenerateOtpRequest(BaseModel):
     name: Optional[str] = Field(default=None, description="User or admin full name for personalized messaging")
     email: Optional[str] = Field(default=None, description="Target email for OTP dispatch")

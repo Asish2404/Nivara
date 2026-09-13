@@ -93,6 +93,10 @@ async def init_db() -> None:
                         connection.execute(text("ALTER TABLE users ADD COLUMN location VARCHAR(128)"))
                     if "phone" not in existing_cols:
                         connection.execute(text("ALTER TABLE users ADD COLUMN phone VARCHAR(32)"))
+                    if "auth_provider" not in existing_cols:
+                        connection.execute(text("ALTER TABLE users ADD COLUMN auth_provider VARCHAR(32) DEFAULT 'local'"))
+                    if "google_id" not in existing_cols:
+                        connection.execute(text("ALTER TABLE users ADD COLUMN google_id VARCHAR(128)"))
 
             # Migrate / ensure 'admin' table has exact requested columns:
             # id, badge_id, name, email, hashed_password, phone, role, department, clearance, status, created_at, location
@@ -106,6 +110,8 @@ async def init_db() -> None:
                     "status": "VARCHAR(32) DEFAULT 'not active'",
                     "phone": "VARCHAR(32)",
                     "location": "VARCHAR(128)",
+                    "auth_provider": "VARCHAR(32) DEFAULT 'local'",
+                    "google_id": "VARCHAR(128)",
                 }
                 for col_name, col_type in missing_admin_columns.items():
                     if col_name not in existing_admin_cols:
