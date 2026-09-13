@@ -106,11 +106,11 @@ async def get_current_user_or_default(
     # Fallback: Create default citizen
     new_citizen = User(
         id="USR-CIT-003",
-        name="Anirban Chatterjee",
-        email="anirban.chatterjee@kolkata.org",
+        name="Shuvajit Saha",
+        email="shuvajit.saha@kolkata.org",
         hashed_password="dummy",
-        role="Community Lead Reporter",
-        clearance="Verified Citizen ID",
+        role="Volunteer",
+        clearance="Volunteer ID",
         status="active",
     )
     db.add(new_citizen)
