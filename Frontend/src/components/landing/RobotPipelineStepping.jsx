@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   Play,
@@ -29,9 +35,11 @@ export const KWI_PIPELINE_STAGES = [
     name: "DETECT",
     microLabel: "ACOUSTIC & CITIZEN SENSING",
     speechTitle: "Signal Registered",
-    speechSub: "Acoustic IoT Hydro-node #86 confirms 25.0cm street immersion (Ward 86).",
+    speechSub:
+      "Acoustic IoT Hydro-node #86 confirms 25.0cm street immersion (Ward 86).",
     cardTitle: "Citizen Field Observation Ingested",
-    cardSubtitle: "Acoustic IoT sensor and geotagged field observation registered at Ward 86",
+    cardSubtitle:
+      "Acoustic IoT sensor and geotagged field observation registered at Ward 86",
     accent: "#08B8F5",
     icon: Radio,
     metricName: "MEASURED DEPTH",
@@ -46,7 +54,8 @@ export const KWI_PIPELINE_STAGES = [
     name: "VERIFY",
     microLabel: "SPATIAL COMPUTER VISION",
     speechTitle: "Spatial Geometry Calibrated",
-    speechSub: "Edge CV validated curb datum: 38.5cm water column at 99.4% confidence.",
+    speechSub:
+      "Edge CV validated curb datum: 38.5cm water column at 99.4% confidence.",
     cardTitle: "Spatial Computer Vision Validation",
     cardSubtitle: "Edge model calibrated against physical curb datum landmarks",
     accent: "#08B8F5",
@@ -63,9 +72,11 @@ export const KWI_PIPELINE_STAGES = [
     name: "CORRELATE",
     microLabel: "HYDRAULIC GRAPH TOPOLOGY",
     speechTitle: "Topology Synchronized",
-    speechSub: "41 conduit nodes & sluice gates linked; trunk saturation at 72% (flow: 2.1 m/s).",
+    speechSub:
+      "41 conduit nodes & sluice gates linked; trunk saturation at 72% (flow: 2.1 m/s).",
     cardTitle: "Hydraulic Conduit Graph Network",
-    cardSubtitle: "Conduit saturation correlated with Palmer Bridge siphon capacity",
+    cardSubtitle:
+      "Conduit saturation correlated with Palmer Bridge siphon capacity",
     accent: "#08B8F5",
     icon: Activity,
     metricName: "TRUNK SATURATION",
@@ -80,7 +91,8 @@ export const KWI_PIPELINE_STAGES = [
     name: "SIMULATE",
     microLabel: "CATCHMENT VULNERABILITY",
     speechTitle: "Bottleneck Isolated",
-    speechSub: "Catchment risk 84/100. Bottleneck: Palmer Bridge conduit sill (-62% throughput).",
+    speechSub:
+      "Catchment risk 84/100. Bottleneck: Palmer Bridge conduit sill (-62% throughput).",
     cardTitle: "Catchment Risk Scoring & Matrix",
     cardSubtitle: "Real-time risk scoring across Borough VII drainage basin",
     accent: "#08B8F5",
@@ -97,9 +109,11 @@ export const KWI_PIPELINE_STAGES = [
     name: "PREDICT",
     microLabel: "STORM SURGE FORECAST",
     speechTitle: "Surge Trajectory Projected",
-    speechSub: "60-min Doppler runoff curve: storm surge peaks at T+25m (+18cm rise), Hooghly tidal lockout active.",
+    speechSub:
+      "60-min Doppler runoff curve: storm surge peaks at T+25m (+18cm rise), Hooghly tidal lockout active.",
     cardTitle: "60-Minute Radar Runoff Projection",
-    cardSubtitle: "Doppler storm runoff curve constrained by Hooghly tidal lockout",
+    cardSubtitle:
+      "Doppler storm runoff curve constrained by Hooghly tidal lockout",
     accent: "#08B8F5",
     icon: Waves,
     metricName: "PROJECTED PEAK",
@@ -115,7 +129,8 @@ export const KWI_PIPELINE_STAGES = [
     name: "ALERT",
     microLabel: "DIGITAL TWIN INTERVENTION",
     speechTitle: "Relief Strategy Modeled",
-    speechSub: "Digital twin pump simulation: 3 high-capacity mobile pumps achieve -24cm relief in 4.5 hrs.",
+    speechSub:
+      "Digital twin pump simulation: 3 high-capacity mobile pumps achieve -24cm relief in 4.5 hrs.",
     cardTitle: "Digital Twin Mobile Pump Modeling",
     cardSubtitle: "Simulates high-capacity mobile pump dispatch at EM Bypass",
     accent: "#08B8F5",
@@ -133,7 +148,8 @@ export const KWI_PIPELINE_STAGES = [
     name: "ACT",
     microLabel: "MUNICIPAL DISPATCH EXECUTION",
     speechTitle: "Work Order Dispatched",
-    speechSub: "Municipal Work Order #9418 dispatched to Borough VII Rapid Unit #4; live ETA 11 mins.",
+    speechSub:
+      "Municipal Work Order #9418 dispatched to Borough VII Rapid Unit #4; live ETA 11 mins.",
     cardTitle: "Municipal Work Order Generation",
     cardSubtitle: "Direct field crew dispatch with live 11-min ETA tracking",
     accent: "#08B8F5",
@@ -240,7 +256,12 @@ const STAIR_PLATFORMS = [
 ];
 
 /* Smooth Count-up hook with Audio shimmer */
-function useCountUp(targetValue, duration = 450, decimals = 0, shouldPlaySound = true) {
+function useCountUp(
+  targetValue,
+  duration = 450,
+  decimals = 0,
+  shouldPlaySound = true,
+) {
   const [displayValue, setDisplayValue] = useState(0);
 
   useEffect(() => {
@@ -274,7 +295,9 @@ function useCountUp(targetValue, duration = 450, decimals = 0, shouldPlaySound =
     };
   }, [targetValue, duration, shouldPlaySound]);
 
-  return decimals > 0 ? displayValue.toFixed(decimals) : Math.round(displayValue);
+  return decimals > 0
+    ? displayValue.toFixed(decimals)
+    : Math.round(displayValue);
 }
 
 /* ========================================================================= */
@@ -525,7 +548,7 @@ const ProtagonistRobot = ({
                   }
                 : {
                     scaleX: [1, 0.93, 1],
-                    opacity: [0.44, 0.30, 0.44],
+                    opacity: [0.44, 0.3, 0.44],
                   }
         }
         transition={
@@ -792,7 +815,11 @@ const CatchmentArtVisual = () => {
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${runoff}%` }}
-                transition={{ duration: 0.5, delay: 0.06, ease: [0.25, 1, 0.5, 1] }}
+                transition={{
+                  duration: 0.5,
+                  delay: 0.06,
+                  ease: [0.25, 1, 0.5, 1],
+                }}
                 className="h-full bg-amber-500 rounded-full"
               />
             </div>
@@ -859,7 +886,9 @@ const PredictArtVisual = () => {
         className="flex justify-between text-[9px] border-t border-slate-100 pt-1.5"
       >
         <span className="text-slate-500">TIDAL CREST LOCKOUT</span>
-        <span className="font-bold text-rose-500">Gravity Gates Constrained</span>
+        <span className="font-bold text-rose-500">
+          Gravity Gates Constrained
+        </span>
       </motion.div>
     </div>
   );
@@ -909,7 +938,9 @@ const SimulateArtVisual = () => {
         className="flex justify-between text-[9px] border-t border-slate-100 pt-1.5"
       >
         <span className="text-slate-500">SIMULATED RELIEF</span>
-        <span className="font-bold text-emerald-600">-{relief} cm (-4.5 hrs)</span>
+        <span className="font-bold text-emerald-600">
+          -{relief} cm (-4.5 hrs)
+        </span>
       </motion.div>
     </div>
   );
@@ -932,7 +963,9 @@ const ActArtVisual = ({ onNavigateCity }) => {
           <span className="text-emerald-400">DISPATCHED</span>
         </div>
         <div>CREW: Borough VII Rapid Unit #4</div>
-        <div className="text-sky-300 font-bold">ESTIMATED ARRIVAL: {eta} MINS</div>
+        <div className="text-sky-300 font-bold">
+          ESTIMATED ARRIVAL: {eta} MINS
+        </div>
       </motion.div>
 
       <motion.button
@@ -1418,7 +1451,12 @@ export const RobotPipelineStepping = ({
               {isChapterOpen && (
                 <motion.div
                   key={`analytical-chapter-${currentStage.id}`}
-                  initial={{ opacity: 0, scale: 0.94, y: 10, filter: "blur(4px)" }}
+                  initial={{
+                    opacity: 0,
+                    scale: 0.94,
+                    y: 10,
+                    filter: "blur(4px)",
+                  }}
                   animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
                   exit={{ opacity: 0, scale: 0.94, y: 8, filter: "blur(3px)" }}
                   transition={{ duration: 0.32, ease: [0.25, 1, 0.5, 1] }}

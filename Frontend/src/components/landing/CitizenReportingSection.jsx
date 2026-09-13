@@ -1,9 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import {
-  motion,
-  AnimatePresence,
-  useReducedMotion,
-} from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   Wifi,
   Lock,
@@ -112,7 +108,12 @@ export function CitizenReportingSection() {
   const isDraggingRef = useRef(false);
 
   const handlePointerDownPull = (e) => {
-    if (e.target.closest("button") || e.target.closest("a") || e.target.closest("[data-notif-clickable]")) return;
+    if (
+      e.target.closest("button") ||
+      e.target.closest("a") ||
+      e.target.closest("[data-notif-clickable]")
+    )
+      return;
     if (!notifContainerRef.current) return;
     isDraggingRef.current = false;
     pullStartY.current = e.clientY;
@@ -143,7 +144,9 @@ export function CitizenReportingSection() {
     return `${hours}:${minutes}`;
   });
 
-  const [ampm, setAmpm] = useState(() => (new Date().getHours() >= 12 ? "PM" : "AM"));
+  const [ampm, setAmpm] = useState(() =>
+    new Date().getHours() >= 12 ? "PM" : "AM",
+  );
 
   const [currentDate, setCurrentDate] = useState(() => {
     const now = new Date();
@@ -166,7 +169,7 @@ export function CitizenReportingSection() {
           weekday: "long",
           month: "long",
           day: "numeric",
-        })
+        }),
       );
     };
     updateClock();
@@ -197,8 +200,8 @@ export function CitizenReportingSection() {
     return () => {
       if (batteryInstance) {
         try {
-          batteryInstance.removeEventListener("levelchange", () => { });
-          batteryInstance.removeEventListener("chargingchange", () => { });
+          batteryInstance.removeEventListener("levelchange", () => {});
+          batteryInstance.removeEventListener("chargingchange", () => {});
         } catch {
           // ignore
         }
@@ -238,7 +241,7 @@ export function CitizenReportingSection() {
         } catch {
           // fallback
         }
-      }, delay)
+      }, delay),
     );
 
     return () => {
@@ -251,10 +254,14 @@ export function CitizenReportingSection() {
   const city = reportCity || "Kolkata, West Bengal";
   const coords = reportCoords || { lat: 22.5735, lon: 88.4331, accuracy: 3 };
   const depth = reportDepth || "15–30 cm";
-  const localityCode = (locality.replace(/[^a-zA-Z]/g, "").slice(0, 2) || "SV").toUpperCase();
+  const localityCode = (
+    locality.replace(/[^a-zA-Z]/g, "").slice(0, 2) || "SV"
+  ).toUpperCase();
   const incidentNum = Math.floor(10 + (Math.abs(coords.lat * 1000) % 90));
   const incidentId = `#${localityCode}-${incidentNum}`;
-  const sluiceStation = `PS-${Math.floor(1 + (Math.abs(coords.lon * 10) % 12)).toString().padStart(2, "0")}`;
+  const sluiceStation = `PS-${Math.floor(1 + (Math.abs(coords.lon * 10) % 12))
+    .toString()
+    .padStart(2, "0")}`;
 
   const depthTag =
     depth === "0–15 cm"
@@ -281,8 +288,10 @@ export function CitizenReportingSection() {
         desc: `74% probability of severe precipitation · ${locality.split(",")[0]} catchment`,
         tag: "74% Probability · 68–82 mm/3hr",
         badgeBg: "bg-amber-50 text-amber-800 border-amber-200",
-        lightAccent: "bg-gradient-to-r from-amber-50/70 via-white to-white border-amber-200/90",
-        accent: "border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-transparent",
+        lightAccent:
+          "bg-gradient-to-r from-amber-50/70 via-white to-white border-amber-200/90",
+        accent:
+          "border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-transparent",
       },
       {
         id: 2,
@@ -299,8 +308,10 @@ export function CitizenReportingSection() {
         desc: `GPS coordinates matched with municipal GIS boundary (±${coords.accuracy || 3}m accuracy)`,
         tag: `±${coords.accuracy || 3}m Accuracy · ${localityCode} Ward`,
         badgeBg: "bg-cyan-50 text-cyan-800 border-cyan-200",
-        lightAccent: "bg-gradient-to-r from-cyan-50/70 via-white to-white border-cyan-200/90",
-        accent: "border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 to-transparent",
+        lightAccent:
+          "bg-gradient-to-r from-cyan-50/70 via-white to-white border-cyan-200/90",
+        accent:
+          "border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 to-transparent",
       },
       {
         id: 3,
@@ -319,8 +330,10 @@ export function CitizenReportingSection() {
           : "Hydro-Vision vision model identified active carriageway water accumulation",
         tag: "94.2% AI Confidence · Inundated",
         badgeBg: "bg-blue-50 text-blue-800 border-blue-200",
-        lightAccent: "bg-gradient-to-r from-blue-50/70 via-white to-white border-blue-200/90",
-        accent: "border-blue-500/30 bg-gradient-to-r from-blue-500/10 to-transparent",
+        lightAccent:
+          "bg-gradient-to-r from-blue-50/70 via-white to-white border-blue-200/90",
+        accent:
+          "border-blue-500/30 bg-gradient-to-r from-blue-500/10 to-transparent",
       },
       {
         id: 4,
@@ -339,8 +352,10 @@ export function CitizenReportingSection() {
           : "Surface inlet capacity constrained by silt load · Flow throttled: 64%",
         tag: "Flow Throttled: 64% · Silt Load 58%",
         badgeBg: "bg-orange-50 text-orange-800 border-orange-200",
-        lightAccent: "bg-gradient-to-r from-orange-50/70 via-white to-white border-orange-200/90",
-        accent: "border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-transparent",
+        lightAccent:
+          "bg-gradient-to-r from-orange-50/70 via-white to-white border-orange-200/90",
+        accent:
+          "border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-transparent",
       },
       {
         id: 5,
@@ -357,8 +372,10 @@ export function CitizenReportingSection() {
         desc: `Estimated depth: ${depthTag} · Critical threshold reached (>15cm)`,
         tag: `Depth: ${depthTag} · Inundation`,
         badgeBg: "bg-sky-50 text-sky-800 border-sky-200",
-        lightAccent: "bg-gradient-to-r from-sky-50/70 via-white to-white border-sky-200/90",
-        accent: "border-sky-500/30 bg-gradient-to-r from-sky-500/10 to-transparent",
+        lightAccent:
+          "bg-gradient-to-r from-sky-50/70 via-white to-white border-sky-200/90",
+        accent:
+          "border-sky-500/30 bg-gradient-to-r from-sky-500/10 to-transparent",
       },
       {
         id: 6,
@@ -375,8 +392,10 @@ export function CitizenReportingSection() {
         desc: `Matched with 17 citizen and telemetry signals into unified incident ${incidentId}`,
         tag: "17 Signals · ~12,400 m² Correlated",
         badgeBg: "bg-indigo-50 text-indigo-800 border-indigo-200",
-        lightAccent: "bg-gradient-to-r from-indigo-50/70 via-white to-white border-indigo-200/90",
-        accent: "border-indigo-500/30 bg-gradient-to-r from-indigo-500/10 to-transparent",
+        lightAccent:
+          "bg-gradient-to-r from-indigo-50/70 via-white to-white border-indigo-200/90",
+        accent:
+          "border-indigo-500/30 bg-gradient-to-r from-indigo-500/10 to-transparent",
       },
       {
         id: 7,
@@ -384,22 +403,34 @@ export function CitizenReportingSection() {
         type: "verified",
         icon: ShieldCheck,
         iconColor: "text-emerald-400",
-        iconBg: "bg-emerald-500/20 border-emerald-400/40 shadow-[0_0_12px_rgba(52,211,153,0.3)]",
+        iconBg:
+          "bg-emerald-500/20 border-emerald-400/40 shadow-[0_0_12px_rgba(52,211,153,0.3)]",
         iconLightColor: "text-emerald-700",
-        iconLightBg: "bg-emerald-100 border-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]",
+        iconLightBg:
+          "bg-emerald-100 border-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]",
         app: "KWI OPERATIONAL DISPATCH",
         time: "now",
         title: "Report Verified · Dispatched",
         desc: `Validated telemetry dispatched to ${locality} drainage unit & ${sluiceStation}`,
         tag: `Dispatched · Pump Station ${sluiceStation}`,
         badgeBg: "bg-emerald-50 text-emerald-800 border-emerald-200",
-        lightAccent: "bg-gradient-to-r from-emerald-50/80 via-white to-white border-emerald-300/90 shadow-[0_4px_20px_rgba(16,185,129,0.12)]",
+        lightAccent:
+          "bg-gradient-to-r from-emerald-50/80 via-white to-white border-emerald-300/90 shadow-[0_4px_20px_rgba(16,185,129,0.12)]",
         accent:
           "border-emerald-500/40 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent shadow-[0_4px_24px_rgba(16,185,129,0.18)]",
         isFinal: true,
       },
     ],
-    [coords, depthTag, incidentId, locality, localityCode, reportDescription, reportPhoto, sluiceStation]
+    [
+      coords,
+      depthTag,
+      incidentId,
+      locality,
+      localityCode,
+      reportDescription,
+      reportPhoto,
+      sluiceStation,
+    ],
   );
 
   const visibleNotifications = useMemo(() => {
@@ -438,7 +469,8 @@ export function CitizenReportingSection() {
       riskScore: "82 / 100",
       connectedDrainage: "Municipal Canal Trunk",
       nearestPump: sluiceStation,
-      probableCause: reportDescription || "Rainfall exceeding local drainage capacity.",
+      probableCause:
+        reportDescription || "Rainfall exceeding local drainage capacity.",
       severity: depth === "30+ cm" ? "CRITICAL" : "HIGH",
       severityColor: depth === "30+ cm" ? "#e11d48" : "#d64545",
       status: "Needs Intervention",
@@ -466,113 +498,275 @@ export function CitizenReportingSection() {
   };
 
   // Detail content definitions for each notification step (shown when user taps a notification)
-  const getNotificationDetailContent = useCallback((notifId) => {
-    const details = {
-      1: {
-        title: "Heavy Rainfall Forecast",
-        subtitle: "Weather Intelligence System",
-        accentColor: "amber",
-        icon: CloudRain,
-        sections: [
-          { label: "Precipitation Probability", value: "74%", icon: Droplets, color: "text-amber-400" },
-          { label: "Expected Rainfall", value: "68–82 mm / 3hr", icon: Gauge, color: "text-blue-400" },
-          { label: "Wind Speed", value: "32 km/h NW", icon: Wind, color: "text-slate-300" },
-          { label: "Temperature", value: "28°C (feels 33°C)", icon: Thermometer, color: "text-orange-400" },
-        ],
-        alertMessage: `⚠️ Severe weather alert for ${locality}. Heavy precipitation expected within the next 2 hours. Municipal drainage systems may be overwhelmed. Check local drainage conditions and report any waterlogging immediately.`,
-        actionText: !isReportSubmitted ? "Report waterlogging in your area" : "Return to Notifications",
-      },
-      2: {
-        title: "Location Verified",
-        subtitle: "GPS & GIS Boundary Analysis",
-        accentColor: "cyan",
-        icon: MapPin,
-        sections: [
-          { label: "GPS Coordinates", value: `${coords.lat?.toFixed(4)}°N, ${coords.lon?.toFixed(4)}°E`, icon: MapPin, color: "text-cyan-400" },
-          { label: "Accuracy", value: `±${coords.accuracy || 3}m (High Precision)`, icon: Eye, color: "text-green-400" },
-          { label: "Municipal Ward", value: locality, icon: Map, color: "text-blue-400" },
-          { label: "Nearest Pump Station", value: sluiceStation, icon: Activity, color: "text-indigo-400" },
-        ],
-        alertMessage: `✅ Your reported location has been cross-referenced with the Kolkata Municipal Corporation GIS database. The coordinates fall within the ${locality} municipal boundary and have been matched to the nearest drainage network node.`,
-        actionText: "Return to Notifications",
-      },
-      3: {
-        title: "Surface Water Detected",
-        subtitle: "Hydro-Vision AI Model v3.2",
-        accentColor: "blue",
-        icon: Eye,
-        sections: [
-          { label: "Water Detection", value: "94.2% AI Confidence", icon: Droplets, color: "text-blue-400" },
-          { label: "Surface Coverage", value: "~62% of frame area", icon: Layers, color: "text-indigo-400" },
-          { label: "Debris Detected", value: "Minor floating debris", icon: AlertTriangle, color: "text-amber-400" },
-          { label: "Processing Time", value: "1.2 seconds", icon: Clock, color: "text-slate-300" },
-        ],
-        alertMessage: reportPhoto
-          ? "✅ Your uploaded photo has been processed by the Hydro-Vision deep learning model. Active water accumulation detected on carriageway surfaces with high confidence. The image has been geo-tagged and stored for municipal records."
-          : "✅ The Hydro-Vision AI model has analyzed available satellite and sensor imagery for the reported area. Water accumulation patterns detected matching flood conditions.",
-        actionText: "Return to Notifications",
-      },
-      4: {
-        title: "Drainage Obstruction Analysis",
-        subtitle: "Infrastructure Assessment Engine",
-        accentColor: "amber",
-        icon: AlertTriangle,
-        sections: [
-          { label: "Drainage Flow Rate", value: "36% of capacity", icon: Waves, color: "text-amber-400" },
-          { label: "Obstruction Level", value: "Moderate–High", icon: AlertTriangle, color: "text-red-400" },
-          { label: "Silt Load", value: "Estimated 58% blockage", icon: Layers, color: "text-orange-400" },
-          { label: "Flow Constraint", value: "Flow throttled: 64%", icon: Clock, color: "text-slate-300" },
-        ],
-        alertMessage: reportDescription
-          ? `⚠️ Based on citizen description: "${reportDescription.slice(0, 60)}..." — Surface inlet capacity is significantly constrained. The drainage flow rate at the nearest inlet is operating at only 36% capacity due to accumulated silt and debris.`
-          : "⚠️ Automated sensor readings indicate surface inlet capacity is constrained by accumulated silt. Flow rate is throttled to approximately 36% of designed capacity. Priority maintenance flagged.",
-        actionText: "Return to Notifications",
-      },
-      5: {
-        title: "Water Depth Assessment",
-        subtitle: "Depth Estimation Module",
-        accentColor: "sky",
-        icon: Waves,
-        sections: [
-          { label: "Estimated Depth", value: depthTag, icon: Waves, color: "text-sky-400" },
-          { label: "Risk Level", value: depth === "30+ cm" ? "CRITICAL" : depth === "0–15 cm" ? "MODERATE" : "HIGH", icon: AlertTriangle, color: depth === "30+ cm" ? "text-red-400" : "text-amber-400" },
-          { label: "Pedestrian Safety", value: depth === "0–15 cm" ? "Caution advised" : "Unsafe for walking", icon: ShieldCheck, color: "text-orange-400" },
-          { label: "Vehicle Advisory", value: depth === "30+ cm" ? "No entry" : "Low-ground vehicles at risk", icon: Activity, color: "text-red-400" },
-        ],
-        alertMessage: `Water depth at ${locality} has been estimated at ${depthTag} using multi-source verification (citizen report + satellite + sensor fusion). ${depth === "30+ cm" ? "This exceeds the critical threshold of 30cm. Emergency response teams have been notified." : "This exceeds the alert threshold of 15cm. The area has been flagged for priority drainage assistance."}`,
-        actionText: "Return to Notifications",
-      },
-      6: {
-        title: "Incident Correlation",
-        subtitle: "Cross-Signal Intelligence",
-        accentColor: "indigo",
-        icon: Layers,
-        sections: [
-          { label: "Unified Incident ID", value: incidentId, icon: FileCheck, color: "text-indigo-400" },
-          { label: "Correlated Signals", value: "17 citizen + telemetry", icon: Activity, color: "text-cyan-400" },
-          { label: "Affected Area", value: "~12,400 m²", icon: Map, color: "text-blue-400" },
-          { label: "First Reported", value: "42 min ago", icon: Clock, color: "text-slate-300" },
-        ],
-        alertMessage: `Your report has been matched with 16 other citizen signals and automated telemetry data to create unified incident ${incidentId}. The correlated incident covers approximately 12,400 m² across the ${locality} area. This multi-source validation increases the incident's priority score.`,
-        actionText: "Return to Notifications",
-      },
-      7: {
-        title: "Report Verified & Dispatched",
-        subtitle: "KWI Operational Command",
-        accentColor: "emerald",
-        icon: ShieldCheck,
-        sections: [
-          { label: "Verification Status", value: "✓ FULLY VERIFIED", icon: CheckCircle2, color: "text-emerald-400" },
-          { label: "Assigned Station", value: sluiceStation, icon: Megaphone, color: "text-cyan-400" },
-          { label: "Response ETA", value: "~18 minutes", icon: Clock, color: "text-amber-400" },
-          { label: "Priority Level", value: depth === "30+ cm" ? "P1 — CRITICAL" : "P2 — HIGH", icon: AlertTriangle, color: depth === "30+ cm" ? "text-red-400" : "text-amber-400" },
-        ],
-        alertMessage: `✅ All 7 verification checks have passed. Your validated report has been dispatched to the ${locality} drainage operations unit and pump station ${sluiceStation}. Municipal field crew has been mobilized with an estimated response time of 18 minutes. Thank you for helping keep Kolkata safe!`,
-        actionText: "View on Live Map →",
-      },
-    };
-    return details[notifId] || null;
-  }, [coords, depthTag, depth, incidentId, isReportSubmitted, locality, reportDescription, reportPhoto, sluiceStation]);
+  const getNotificationDetailContent = useCallback(
+    (notifId) => {
+      const details = {
+        1: {
+          title: "Heavy Rainfall Forecast",
+          subtitle: "Weather Intelligence System",
+          accentColor: "amber",
+          icon: CloudRain,
+          sections: [
+            {
+              label: "Precipitation Probability",
+              value: "74%",
+              icon: Droplets,
+              color: "text-amber-400",
+            },
+            {
+              label: "Expected Rainfall",
+              value: "68–82 mm / 3hr",
+              icon: Gauge,
+              color: "text-blue-400",
+            },
+            {
+              label: "Wind Speed",
+              value: "32 km/h NW",
+              icon: Wind,
+              color: "text-slate-300",
+            },
+            {
+              label: "Temperature",
+              value: "28°C (feels 33°C)",
+              icon: Thermometer,
+              color: "text-orange-400",
+            },
+          ],
+          alertMessage: `⚠️ Severe weather alert for ${locality}. Heavy precipitation expected within the next 2 hours. Municipal drainage systems may be overwhelmed. Check local drainage conditions and report any waterlogging immediately.`,
+          actionText: !isReportSubmitted
+            ? "Report waterlogging in your area"
+            : "Return to Notifications",
+        },
+        2: {
+          title: "Location Verified",
+          subtitle: "GPS & GIS Boundary Analysis",
+          accentColor: "cyan",
+          icon: MapPin,
+          sections: [
+            {
+              label: "GPS Coordinates",
+              value: `${coords.lat?.toFixed(4)}°N, ${coords.lon?.toFixed(4)}°E`,
+              icon: MapPin,
+              color: "text-cyan-400",
+            },
+            {
+              label: "Accuracy",
+              value: `±${coords.accuracy || 3}m (High Precision)`,
+              icon: Eye,
+              color: "text-green-400",
+            },
+            {
+              label: "Municipal Ward",
+              value: locality,
+              icon: Map,
+              color: "text-blue-400",
+            },
+            {
+              label: "Nearest Pump Station",
+              value: sluiceStation,
+              icon: Activity,
+              color: "text-indigo-400",
+            },
+          ],
+          alertMessage: `✅ Your reported location has been cross-referenced with the Kolkata Municipal Corporation GIS database. The coordinates fall within the ${locality} municipal boundary and have been matched to the nearest drainage network node.`,
+          actionText: "Return to Notifications",
+        },
+        3: {
+          title: "Surface Water Detected",
+          subtitle: "Hydro-Vision AI Model v3.2",
+          accentColor: "blue",
+          icon: Eye,
+          sections: [
+            {
+              label: "Water Detection",
+              value: "94.2% AI Confidence",
+              icon: Droplets,
+              color: "text-blue-400",
+            },
+            {
+              label: "Surface Coverage",
+              value: "~62% of frame area",
+              icon: Layers,
+              color: "text-indigo-400",
+            },
+            {
+              label: "Debris Detected",
+              value: "Minor floating debris",
+              icon: AlertTriangle,
+              color: "text-amber-400",
+            },
+            {
+              label: "Processing Time",
+              value: "1.2 seconds",
+              icon: Clock,
+              color: "text-slate-300",
+            },
+          ],
+          alertMessage: reportPhoto
+            ? "✅ Your uploaded photo has been processed by the Hydro-Vision deep learning model. Active water accumulation detected on carriageway surfaces with high confidence. The image has been geo-tagged and stored for municipal records."
+            : "✅ The Hydro-Vision AI model has analyzed available satellite and sensor imagery for the reported area. Water accumulation patterns detected matching flood conditions.",
+          actionText: "Return to Notifications",
+        },
+        4: {
+          title: "Drainage Obstruction Analysis",
+          subtitle: "Infrastructure Assessment Engine",
+          accentColor: "amber",
+          icon: AlertTriangle,
+          sections: [
+            {
+              label: "Drainage Flow Rate",
+              value: "36% of capacity",
+              icon: Waves,
+              color: "text-amber-400",
+            },
+            {
+              label: "Obstruction Level",
+              value: "Moderate–High",
+              icon: AlertTriangle,
+              color: "text-red-400",
+            },
+            {
+              label: "Silt Load",
+              value: "Estimated 58% blockage",
+              icon: Layers,
+              color: "text-orange-400",
+            },
+            {
+              label: "Flow Constraint",
+              value: "Flow throttled: 64%",
+              icon: Clock,
+              color: "text-slate-300",
+            },
+          ],
+          alertMessage: reportDescription
+            ? `⚠️ Based on citizen description: "${reportDescription.slice(0, 60)}..." — Surface inlet capacity is significantly constrained. The drainage flow rate at the nearest inlet is operating at only 36% capacity due to accumulated silt and debris.`
+            : "⚠️ Automated sensor readings indicate surface inlet capacity is constrained by accumulated silt. Flow rate is throttled to approximately 36% of designed capacity. Priority maintenance flagged.",
+          actionText: "Return to Notifications",
+        },
+        5: {
+          title: "Water Depth Assessment",
+          subtitle: "Depth Estimation Module",
+          accentColor: "sky",
+          icon: Waves,
+          sections: [
+            {
+              label: "Estimated Depth",
+              value: depthTag,
+              icon: Waves,
+              color: "text-sky-400",
+            },
+            {
+              label: "Risk Level",
+              value:
+                depth === "30+ cm"
+                  ? "CRITICAL"
+                  : depth === "0–15 cm"
+                    ? "MODERATE"
+                    : "HIGH",
+              icon: AlertTriangle,
+              color: depth === "30+ cm" ? "text-red-400" : "text-amber-400",
+            },
+            {
+              label: "Pedestrian Safety",
+              value:
+                depth === "0–15 cm" ? "Caution advised" : "Unsafe for walking",
+              icon: ShieldCheck,
+              color: "text-orange-400",
+            },
+            {
+              label: "Vehicle Advisory",
+              value:
+                depth === "30+ cm" ? "No entry" : "Low-ground vehicles at risk",
+              icon: Activity,
+              color: "text-red-400",
+            },
+          ],
+          alertMessage: `Water depth at ${locality} has been estimated at ${depthTag} using multi-source verification (citizen report + satellite + sensor fusion). ${depth === "30+ cm" ? "This exceeds the critical threshold of 30cm. Emergency response teams have been notified." : "This exceeds the alert threshold of 15cm. The area has been flagged for priority drainage assistance."}`,
+          actionText: "Return to Notifications",
+        },
+        6: {
+          title: "Incident Correlation",
+          subtitle: "Cross-Signal Intelligence",
+          accentColor: "indigo",
+          icon: Layers,
+          sections: [
+            {
+              label: "Unified Incident ID",
+              value: incidentId,
+              icon: FileCheck,
+              color: "text-indigo-400",
+            },
+            {
+              label: "Correlated Signals",
+              value: "17 citizen + telemetry",
+              icon: Activity,
+              color: "text-cyan-400",
+            },
+            {
+              label: "Affected Area",
+              value: "~12,400 m²",
+              icon: Map,
+              color: "text-blue-400",
+            },
+            {
+              label: "First Reported",
+              value: "42 min ago",
+              icon: Clock,
+              color: "text-slate-300",
+            },
+          ],
+          alertMessage: `Your report has been matched with 16 other citizen signals and automated telemetry data to create unified incident ${incidentId}. The correlated incident covers approximately 12,400 m² across the ${locality} area. This multi-source validation increases the incident's priority score.`,
+          actionText: "Return to Notifications",
+        },
+        7: {
+          title: "Report Verified & Dispatched",
+          subtitle: "KWI Operational Command",
+          accentColor: "emerald",
+          icon: ShieldCheck,
+          sections: [
+            {
+              label: "Verification Status",
+              value: "✓ FULLY VERIFIED",
+              icon: CheckCircle2,
+              color: "text-emerald-400",
+            },
+            {
+              label: "Assigned Station",
+              value: sluiceStation,
+              icon: Megaphone,
+              color: "text-cyan-400",
+            },
+            {
+              label: "Response ETA",
+              value: "~18 minutes",
+              icon: Clock,
+              color: "text-amber-400",
+            },
+            {
+              label: "Priority Level",
+              value: depth === "30+ cm" ? "P1 — CRITICAL" : "P2 — HIGH",
+              icon: AlertTriangle,
+              color: depth === "30+ cm" ? "text-red-400" : "text-amber-400",
+            },
+          ],
+          alertMessage: `✅ All 7 verification checks have passed. Your validated report has been dispatched to the ${locality} drainage operations unit and pump station ${sluiceStation}. Municipal field crew has been mobilized with an estimated response time of 18 minutes. Thank you for helping keep Kolkata safe!`,
+          actionText: "View on Live Map →",
+        },
+      };
+      return details[notifId] || null;
+    },
+    [
+      coords,
+      depthTag,
+      depth,
+      incidentId,
+      isReportSubmitted,
+      locality,
+      reportDescription,
+      reportPhoto,
+      sluiceStation,
+    ],
+  );
 
   // Handler for tapping on a post-submission or lockscreen notification
   const handleNotificationTap = (notifId) => {
@@ -740,7 +934,8 @@ export function CitizenReportingSection() {
               type="button"
               title={isLockScreen ? "Unlock Phone" : "Lock Phone"}
               onClick={() => {
-                if (audioEngine) audioEngine.playUiChirp(isLockScreen ? 1200 : 700);
+                if (audioEngine)
+                  audioEngine.playUiChirp(isLockScreen ? 1200 : 700);
                 if (expandedNotification !== null) {
                   setExpandedNotification(null);
                   setPhoneStep(-1);
@@ -764,7 +959,10 @@ export function CitizenReportingSection() {
             {/* INNER DISPLAY SURFACE                                        */}
             {/* ============================================================ */}
             <motion.div
-              initial={{ opacity: 0.15, filter: "brightness(0.35) blur(1.5px)" }}
+              initial={{
+                opacity: 0.15,
+                filter: "brightness(0.35) blur(1.5px)",
+              }}
               whileInView={{ opacity: 1, filter: "brightness(1) blur(0px)" }}
               viewport={{ once: true, amount: 0.25 }}
               transition={{
@@ -772,8 +970,9 @@ export function CitizenReportingSection() {
                 duration: 0.75,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className={`w-full h-full rounded-[47px] sm:rounded-[50px] overflow-hidden flex flex-col justify-between relative border border-slate-900/90 shadow-inner transition-colors duration-300 ${isLockScreen ? "bg-slate-950" : "bg-white"
-                }`}
+              className={`w-full h-full rounded-[47px] sm:rounded-[50px] overflow-hidden flex flex-col justify-between relative border border-slate-900/90 shadow-inner transition-colors duration-300 ${
+                isLockScreen ? "bg-slate-950" : "bg-white"
+              }`}
             >
               {/* Seamless Edge-to-Edge Wallpaper (Shown strictly on Lock Screen) */}
               {isLockScreen && (
@@ -808,14 +1007,13 @@ export function CitizenReportingSection() {
                   }}
                   className="bg-black rounded-full px-3 h-[33px] flex items-center justify-between shadow-[0_4px_16px_rgba(0,0,0,0.95)] ring-[0.5px] ring-white/20 select-none cursor-pointer transition-all hover:ring-cyan-500/40"
                   style={{
-                    width:
-                      islandExpanded
-                        ? 200
-                        : isReportSubmitted
-                          ? activeStep >= 7
-                            ? 176
-                            : 164
-                          : 124,
+                    width: islandExpanded
+                      ? 200
+                      : isReportSubmitted
+                        ? activeStep >= 7
+                          ? 176
+                          : 164
+                        : 124,
                   }}
                   transition={{ type: "spring", stiffness: 450, damping: 28 }}
                 >
@@ -828,8 +1026,9 @@ export function CitizenReportingSection() {
                       <motion.span
                         initial={{ opacity: 0, x: -3 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className={`text-[8.5px] font-mono font-bold tracking-wider uppercase pl-0.5 truncate max-w-[95px] ${activeStep >= 7 ? "text-emerald-400" : "text-cyan-400"
-                          }`}
+                        className={`text-[8.5px] font-mono font-bold tracking-wider uppercase pl-0.5 truncate max-w-[95px] ${
+                          activeStep >= 7 ? "text-emerald-400" : "text-cyan-400"
+                        }`}
                       >
                         {activeStep >= 7 ? "VERIFIED" : "KWI GRID"}
                       </motion.span>
@@ -839,10 +1038,11 @@ export function CitizenReportingSection() {
                   {/* Center Pulse Indicator */}
                   {isReportSubmitted ? (
                     <div
-                      className={`w-1.5 h-1.5 rounded-full ${activeStep >= 7
-                        ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.95)]"
-                        : "bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.95)] animate-pulse"
-                        }`}
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        activeStep >= 7
+                          ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.95)]"
+                          : "bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.95)] animate-pulse"
+                      }`}
                     />
                   ) : (
                     <div className="w-1 h-1 rounded-full bg-white/20" />
@@ -861,8 +1061,9 @@ export function CitizenReportingSection() {
               {/* NATIVE STATUS BAR (FLANKING DYNAMIC ISLAND)                */}
               {/* ========================================================== */}
               <div
-                className={`pt-2.5 px-6 sm:px-7 pb-1 flex items-center justify-between z-30 relative select-none shrink-0 bg-transparent transition-colors duration-300 ${isLockScreen ? "text-white" : "text-slate-900"
-                  }`}
+                className={`pt-2.5 px-6 sm:px-7 pb-1 flex items-center justify-between z-30 relative select-none shrink-0 bg-transparent transition-colors duration-300 ${
+                  isLockScreen ? "text-white" : "text-slate-900"
+                }`}
               >
                 {/* Carrier or Time */}
                 {isLockScreen ? (
@@ -883,32 +1084,42 @@ export function CitizenReportingSection() {
                   {/* 4 Cellular Bars */}
                   <div className="flex items-end gap-[1.5px] h-[11px] pb-[0.5px]">
                     <span
-                      className={`w-[2.5px] h-[3.5px] rounded-[0.8px] ${isLockScreen ? "bg-white shadow-xs" : "bg-slate-900"
-                        }`}
+                      className={`w-[2.5px] h-[3.5px] rounded-[0.8px] ${
+                        isLockScreen ? "bg-white shadow-xs" : "bg-slate-900"
+                      }`}
                     />
                     <span
-                      className={`w-[2.5px] h-[5.5px] rounded-[0.8px] ${isLockScreen ? "bg-white shadow-xs" : "bg-slate-900"
-                        }`}
+                      className={`w-[2.5px] h-[5.5px] rounded-[0.8px] ${
+                        isLockScreen ? "bg-white shadow-xs" : "bg-slate-900"
+                      }`}
                     />
                     <span
-                      className={`w-[2.5px] h-[7.5px] rounded-[0.8px] ${isLockScreen ? "bg-white shadow-xs" : "bg-slate-900"
-                        }`}
+                      className={`w-[2.5px] h-[7.5px] rounded-[0.8px] ${
+                        isLockScreen ? "bg-white shadow-xs" : "bg-slate-900"
+                      }`}
                     />
                     <span
-                      className={`w-[2.5px] h-[9.5px] rounded-[0.8px] ${isLockScreen ? "bg-white shadow-xs" : "bg-slate-900"
-                        }`}
+                      className={`w-[2.5px] h-[9.5px] rounded-[0.8px] ${
+                        isLockScreen ? "bg-white shadow-xs" : "bg-slate-900"
+                      }`}
                     />
                   </div>
 
                   {/* Wi-Fi Icon */}
                   <Wifi
-                    className={`w-[13.5px] h-[13.5px] stroke-[2.4] ${isLockScreen ? "text-white" : "text-slate-900"
-                      }`}
+                    className={`w-[13.5px] h-[13.5px] stroke-[2.4] ${
+                      isLockScreen ? "text-white" : "text-slate-900"
+                    }`}
                   />
 
                   {/* iOS Battery Capsule with Inner Percentage */}
                   <div className="flex items-center pl-0.5">
-                    <svg width="26" height="13" viewBox="0 0 25 12" className="overflow-visible select-none">
+                    <svg
+                      width="26"
+                      height="13"
+                      viewBox="0 0 25 12"
+                      className="overflow-visible select-none"
+                    >
                       <rect
                         x="0.5"
                         y="0.5"
@@ -975,148 +1186,186 @@ export function CitizenReportingSection() {
                   {/* - Rainfall alert notification pre-submission (ID: 1)    */}
                   {/* - AI Verification notifications 1..7 post-submission   */}
                   {/* ======================================================= */}
-                  {expandedNotification !== null ? (() => {
-                    const detail = getNotificationDetailContent(expandedNotification);
-                    const notif = NOTIFICATIONS.find((n) => n.id === expandedNotification);
-                    if (!detail || !notif) return null;
-                    const DetailIcon = detail.icon;
+                  {expandedNotification !== null ? (
+                    (() => {
+                      const detail =
+                        getNotificationDetailContent(expandedNotification);
+                      const notif = NOTIFICATIONS.find(
+                        (n) => n.id === expandedNotification,
+                      );
+                      if (!detail || !notif) return null;
+                      const DetailIcon = detail.icon;
 
-                    return (
-                      <motion.div
-                        key={`detail-${expandedNotification}`}
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -50 }}
-                        transition={{ type: "spring", stiffness: 350, damping: 28 }}
-                        className="flex flex-col h-full bg-white rounded-[47px] sm:rounded-[50px] absolute inset-0 z-30 p-4 pt-2"
-                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                      >
-                        {/* Detail Header with Back Button */}
-                        <div className="flex items-center justify-between pb-2.5 shrink-0 border-b border-slate-200">
-                          <button
-                            type="button"
-                            onClick={handleDetailBack}
-                            className="p-1.5 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all cursor-pointer flex items-center gap-1 text-slate-700"
-                          >
-                            <ChevronLeft className="w-4 h-4" />
-                            <span className="text-[10.5px] font-semibold">{isReportSubmitted ? "Back" : "Lock Screen"}</span>
-                          </button>
+                      return (
+                        <motion.div
+                          key={`detail-${expandedNotification}`}
+                          initial={{ opacity: 0, x: 50 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -50 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 350,
+                            damping: 28,
+                          }}
+                          className="flex flex-col h-full bg-white rounded-[47px] sm:rounded-[50px] absolute inset-0 z-30 p-4 pt-2"
+                          style={{
+                            scrollbarWidth: "none",
+                            msOverflowStyle: "none",
+                          }}
+                        >
+                          {/* Detail Header with Back Button */}
+                          <div className="flex items-center justify-between pb-2.5 shrink-0 border-b border-slate-200">
+                            <button
+                              type="button"
+                              onClick={handleDetailBack}
+                              className="p-1.5 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all cursor-pointer flex items-center gap-1 text-slate-700"
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                              <span className="text-[10.5px] font-semibold">
+                                {isReportSubmitted ? "Back" : "Lock Screen"}
+                              </span>
+                            </button>
 
-                          <div className="flex items-center gap-1.5 min-w-0 px-1">
-                            <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 ${notif.iconLightBg}`}>
-                              <DetailIcon className={`w-3 h-3 ${notif.iconLightColor}`} />
+                            <div className="flex items-center gap-1.5 min-w-0 px-1">
+                              <div
+                                className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 ${notif.iconLightBg}`}
+                              >
+                                <DetailIcon
+                                  className={`w-3 h-3 ${notif.iconLightColor}`}
+                                />
+                              </div>
+                              <span className="text-[10px] font-mono font-bold tracking-wider uppercase text-slate-500 truncate max-w-[110px]">
+                                {detail.subtitle}
+                              </span>
                             </div>
-                            <span className="text-[10px] font-mono font-bold tracking-wider uppercase text-slate-500 truncate max-w-[110px]">
-                              {detail.subtitle}
+
+                            <span className="text-[8.5px] font-mono font-bold px-2 py-0.5 rounded-full border border-blue-200 bg-blue-50 text-blue-700 shrink-0">
+                              {isReportSubmitted
+                                ? `CHECK ${expandedNotification}/7`
+                                : "ALERT"}
                             </span>
                           </div>
 
-                          <span className="text-[8.5px] font-mono font-bold px-2 py-0.5 rounded-full border border-blue-200 bg-blue-50 text-blue-700 shrink-0">
-                            {isReportSubmitted ? `CHECK ${expandedNotification}/7` : "ALERT"}
-                          </span>
-                        </div>
-
-                        {/* Detail Content - Scrollable */}
-                        <div
-                          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                          className="flex-1 overflow-y-auto no-scrollbar space-y-3 pt-3"
-                        >
-                          {/* Title Card */}
-                          <div className="rounded-2xl p-3.5 bg-gradient-to-br from-slate-50 to-white border border-slate-200 shadow-xs">
-                            <h3 className="text-[14.5px] font-extrabold font-sans tracking-tight text-slate-900 flex items-center gap-2">
-                              <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${notif.iconLightBg}`}>
-                                <DetailIcon className={`w-4 h-4 ${notif.iconLightColor}`} />
-                              </div>
-                              <span>{detail.title}</span>
-                            </h3>
-                            <p className="text-[10.5px] text-slate-500 mt-1 font-mono">
-                              {locality} · {currentTime}
-                            </p>
-                          </div>
-
-                          {/* Data Grid */}
-                          <div className="grid grid-cols-2 gap-2">
-                            {detail.sections.map((section, i) => {
-                              const SIcon = section.icon;
-                              const lightColorMap = {
-                                'text-amber-400': 'text-amber-600',
-                                'text-cyan-400': 'text-cyan-600',
-                                'text-blue-400': 'text-blue-600',
-                                'text-sky-400': 'text-sky-600',
-                                'text-indigo-400': 'text-indigo-600',
-                                'text-emerald-400': 'text-emerald-600',
-                                'text-green-400': 'text-green-600',
-                                'text-orange-400': 'text-orange-600',
-                                'text-red-400': 'text-red-600',
-                                'text-slate-300': 'text-slate-600',
-                              };
-                              const lightColor = lightColorMap[section.color] || 'text-slate-700';
-                              return (
-                                <motion.div
-                                  key={i}
-                                  initial={{ opacity: 0, y: 8 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: i * 0.06 }}
-                                  className="rounded-xl p-2.5 bg-slate-50 border border-slate-200"
+                          {/* Detail Content - Scrollable */}
+                          <div
+                            style={{
+                              scrollbarWidth: "none",
+                              msOverflowStyle: "none",
+                            }}
+                            className="flex-1 overflow-y-auto no-scrollbar space-y-3 pt-3"
+                          >
+                            {/* Title Card */}
+                            <div className="rounded-2xl p-3.5 bg-gradient-to-br from-slate-50 to-white border border-slate-200 shadow-xs">
+                              <h3 className="text-[14.5px] font-extrabold font-sans tracking-tight text-slate-900 flex items-center gap-2">
+                                <div
+                                  className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${notif.iconLightBg}`}
                                 >
-                                  <div className="flex items-center gap-1 mb-1">
-                                    <SIcon className={`w-3 h-3 ${lightColor}`} />
-                                    <span className="text-[8px] font-mono text-slate-400 uppercase tracking-wider truncate">
-                                      {section.label}
-                                    </span>
-                                  </div>
-                                  <p className={`text-[11px] font-bold font-sans ${lightColor}`}>
-                                    {section.value}
-                                  </p>
-                                </motion.div>
-                              );
-                            })}
-                          </div>
+                                  <DetailIcon
+                                    className={`w-4 h-4 ${notif.iconLightColor}`}
+                                  />
+                                </div>
+                                <span>{detail.title}</span>
+                              </h3>
+                              <p className="text-[10.5px] text-slate-500 mt-1 font-mono">
+                                {locality} · {currentTime}
+                              </p>
+                            </div>
 
-                          {/* Alert Message Box */}
-                          <div className="rounded-xl p-3 bg-blue-50/80 border border-blue-200">
-                            <p className="text-[10.5px] text-slate-700 leading-relaxed font-sans">
-                              {detail.alertMessage}
-                            </p>
-                          </div>
+                            {/* Data Grid */}
+                            <div className="grid grid-cols-2 gap-2">
+                              {detail.sections.map((section, i) => {
+                                const SIcon = section.icon;
+                                const lightColorMap = {
+                                  "text-amber-400": "text-amber-600",
+                                  "text-cyan-400": "text-cyan-600",
+                                  "text-blue-400": "text-blue-600",
+                                  "text-sky-400": "text-sky-600",
+                                  "text-indigo-400": "text-indigo-600",
+                                  "text-emerald-400": "text-emerald-600",
+                                  "text-green-400": "text-green-600",
+                                  "text-orange-400": "text-orange-600",
+                                  "text-red-400": "text-red-600",
+                                  "text-slate-300": "text-slate-600",
+                                };
+                                const lightColor =
+                                  lightColorMap[section.color] ||
+                                  "text-slate-700";
+                                return (
+                                  <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: i * 0.06 }}
+                                    className="rounded-xl p-2.5 bg-slate-50 border border-slate-200"
+                                  >
+                                    <div className="flex items-center gap-1 mb-1">
+                                      <SIcon
+                                        className={`w-3 h-3 ${lightColor}`}
+                                      />
+                                      <span className="text-[8px] font-mono text-slate-400 uppercase tracking-wider truncate">
+                                        {section.label}
+                                      </span>
+                                    </div>
+                                    <p
+                                      className={`text-[11px] font-bold font-sans ${lightColor}`}
+                                    >
+                                      {section.value}
+                                    </p>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
 
-                          {/* Action Button */}
-                          {detail.actionText && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (expandedNotification === 1 && !isReportSubmitted) {
-                                  if (!currentUser) {
-                                    navigate("/login");
-                                    return;
+                            {/* Alert Message Box */}
+                            <div className="rounded-xl p-3 bg-blue-50/80 border border-blue-200">
+                              <p className="text-[10.5px] text-slate-700 leading-relaxed font-sans">
+                                {detail.alertMessage}
+                              </p>
+                            </div>
+
+                            {/* Action Button */}
+                            {detail.actionText && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (
+                                    expandedNotification === 1 &&
+                                    !isReportSubmitted
+                                  ) {
+                                    if (!currentUser) {
+                                      navigate("/login");
+                                      return;
+                                    }
+                                    if (audioEngine)
+                                      audioEngine.playUiChirp(1050);
+                                    setExpandedNotification(null);
+                                    setPhoneStep(1);
+                                  } else if (expandedNotification === 7) {
+                                    handleOpenLiveCity();
+                                  } else {
+                                    handleDetailBack();
                                   }
-                                  if (audioEngine) audioEngine.playUiChirp(1050);
-                                  setExpandedNotification(null);
-                                  setPhoneStep(1);
-                                } else if (expandedNotification === 7) {
-                                  handleOpenLiveCity();
-                                } else {
-                                  handleDetailBack();
-                                }
-                              }}
-                              className={`w-full py-2.5 rounded-xl font-bold text-[11px] font-sans tracking-wide transition-all cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 ${expandedNotification === 7
-                                ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm"
-                                : "bg-blue-600 hover:bg-blue-500 text-white shadow-sm"
+                                }}
+                                className={`w-full py-2.5 rounded-xl font-bold text-[11px] font-sans tracking-wide transition-all cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 ${
+                                  expandedNotification === 7
+                                    ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm"
+                                    : "bg-blue-600 hover:bg-blue-500 text-white shadow-sm"
                                 }`}
-                            >
-                              <span>{detail.actionText}</span>
-                              <ArrowRight className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
+                              >
+                                <span>{detail.actionText}</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
 
-                        {/* Home Indicator */}
-                        <div className="flex justify-center pt-2">
-                          <div className="w-28 h-[4px] bg-slate-300 rounded-full" />
-                        </div>
-                      </motion.div>
-                    );
-                  })() : phoneStep === -1 ? (
+                          {/* Home Indicator */}
+                          <div className="flex justify-center pt-2">
+                            <div className="w-28 h-[4px] bg-slate-300 rounded-full" />
+                          </div>
+                        </motion.div>
+                      );
+                    })()
+                  ) : phoneStep === -1 ? (
                     /* ======================================================= */
                     /* 2. IPHONE LOCK SCREEN                                   */
                     /* Real notifications show on the lock screen!             */
@@ -1163,10 +1412,12 @@ export function CitizenReportingSection() {
                         </p>
                         <div className="flex items-baseline justify-center gap-1.5 my-0.5 select-none">
                           <h1
-                            className={`font-bold text-white tracking-tight font-sans leading-none drop-shadow-[0_2px_14px_rgba(0,0,0,0.5)] ${isReportSubmitted && visibleNotifications.length > 1
-                              ? "text-[54px] sm:text-[58px]"
-                              : "text-[66px] sm:text-[72px]"
-                              }`}
+                            className={`font-bold text-white tracking-tight font-sans leading-none drop-shadow-[0_2px_14px_rgba(0,0,0,0.5)] ${
+                              isReportSubmitted &&
+                              visibleNotifications.length > 1
+                                ? "text-[54px] sm:text-[58px]"
+                                : "text-[66px] sm:text-[72px]"
+                            }`}
                           >
                             {currentTime}
                           </h1>
@@ -1185,7 +1436,11 @@ export function CitizenReportingSection() {
                           <motion.div
                             initial={{ opacity: 0, y: 15, scale: 0.96 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
-                            transition={{ type: "spring", stiffness: 380, damping: 26 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 380,
+                              damping: 26,
+                            }}
                             data-notif-clickable="true"
                             onClick={() => handleNotificationTap(1)}
                             className="w-full rounded-2xl p-3 bg-slate-900/80 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.55)] text-white select-none cursor-pointer hover:bg-slate-900/90 transition-all active:scale-[0.98]"
@@ -1201,7 +1456,9 @@ export function CitizenReportingSection() {
                                 </span>
                               </div>
                               <div className="flex items-center gap-1">
-                                <span className="text-[8.5px] font-mono text-white/60">now</span>
+                                <span className="text-[8.5px] font-mono text-white/60">
+                                  now
+                                </span>
                                 <ChevronRight className="w-3 h-3 text-white/60" />
                               </div>
                             </div>
@@ -1212,7 +1469,8 @@ export function CitizenReportingSection() {
                                 Heavy Rainfall Alert
                               </h4>
                               <p className="text-[10px] text-white/80 leading-relaxed mt-0.5 font-sans">
-                                74% probability of severe precipitation · {locality.split(",")[0]} catchment
+                                74% probability of severe precipitation ·{" "}
+                                {locality.split(",")[0]} catchment
                               </p>
 
                               {/* Tag badge & Details CTA */}
@@ -1250,13 +1508,15 @@ export function CitizenReportingSection() {
                               scrollbarWidth: "none",
                               msOverflowStyle: "none",
                             }}
-                            className={`flex flex-col gap-2 w-full max-h-[360px] sm:max-h-[380px] overflow-y-auto no-scrollbar scroll-smooth pr-0.5 pb-1 select-none ${isPulling ? "cursor-grabbing" : "cursor-grab"
-                              }`}
+                            className={`flex flex-col gap-2 w-full max-h-[360px] sm:max-h-[380px] overflow-y-auto no-scrollbar scroll-smooth pr-0.5 pb-1 select-none ${
+                              isPulling ? "cursor-grabbing" : "cursor-grab"
+                            }`}
                           >
                             <AnimatePresence initial={false}>
                               {visibleNotifications.map((notif, index) => {
                                 const Icon = notif.icon;
-                                const isLatest = index === visibleNotifications.length - 1;
+                                const isLatest =
+                                  index === visibleNotifications.length - 1;
 
                                 return (
                                   <motion.div
@@ -1266,11 +1526,11 @@ export function CitizenReportingSection() {
                                       prefersReducedMotion
                                         ? { opacity: 0 }
                                         : {
-                                          opacity: 0,
-                                          y: -18,
-                                          scale: 0.95,
-                                          filter: "blur(4px)",
-                                        }
+                                            opacity: 0,
+                                            y: -18,
+                                            scale: 0.95,
+                                            filter: "blur(4px)",
+                                          }
                                     }
                                     animate={{
                                       opacity: 1,
@@ -1286,9 +1546,14 @@ export function CitizenReportingSection() {
                                       mass: 0.75,
                                     }}
                                     data-notif-clickable="true"
-                                    onClick={() => handleNotificationTap(notif.id)}
-                                    className={`w-full rounded-2xl p-2.5 sm:p-3 bg-slate-900/85 backdrop-blur-xl border border-white/20 shadow-[0_8px_24px_rgba(0,0,0,0.5)] text-white transition-all cursor-pointer hover:bg-slate-900/95 active:scale-[0.98] ${isLatest ? "ring-2 ring-sky-400/40" : "opacity-95"
-                                      }`}
+                                    onClick={() =>
+                                      handleNotificationTap(notif.id)
+                                    }
+                                    className={`w-full rounded-2xl p-2.5 sm:p-3 bg-slate-900/85 backdrop-blur-xl border border-white/20 shadow-[0_8px_24px_rgba(0,0,0,0.5)] text-white transition-all cursor-pointer hover:bg-slate-900/95 active:scale-[0.98] ${
+                                      isLatest
+                                        ? "ring-2 ring-sky-400/40"
+                                        : "opacity-95"
+                                    }`}
                                   >
                                     {/* Top Header */}
                                     <div className="flex items-center justify-between gap-2 mb-1">
@@ -1296,14 +1561,18 @@ export function CitizenReportingSection() {
                                         <div
                                           className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 ${notif.iconBg}`}
                                         >
-                                          <Icon className={`w-3 h-3 ${notif.iconColor}`} />
+                                          <Icon
+                                            className={`w-3 h-3 ${notif.iconColor}`}
+                                          />
                                         </div>
                                         <span className="text-[9px] font-bold tracking-wider uppercase font-mono text-white/80 truncate">
                                           {notif.app}
                                         </span>
                                       </div>
                                       <div className="flex items-center gap-1">
-                                        <span className="text-[8.5px] font-mono text-white/60 shrink-0">{notif.time}</span>
+                                        <span className="text-[8.5px] font-mono text-white/60 shrink-0">
+                                          {notif.time}
+                                        </span>
                                         <ChevronRight className="w-3 h-3 text-white/60" />
                                       </div>
                                     </div>
@@ -1311,11 +1580,16 @@ export function CitizenReportingSection() {
                                     {/* Title & Desc */}
                                     <div className="text-left pl-6.5">
                                       <h4
-                                        className={`text-[11.5px] sm:text-[12px] font-bold font-sans tracking-tight leading-snug flex items-center gap-1.5 ${notif.isFinal ? "text-emerald-400" : "text-white"
-                                          }`}
+                                        className={`text-[11.5px] sm:text-[12px] font-bold font-sans tracking-tight leading-snug flex items-center gap-1.5 ${
+                                          notif.isFinal
+                                            ? "text-emerald-400"
+                                            : "text-white"
+                                        }`}
                                       >
                                         {notif.title}
-                                        {notif.isFinal && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+                                        {notif.isFinal && (
+                                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                        )}
                                       </h4>
                                       <p className="text-[9.5px] sm:text-[10px] text-white/80 leading-relaxed mt-0.5 line-clamp-2 font-sans">
                                         {notif.desc}
@@ -1332,10 +1606,13 @@ export function CitizenReportingSection() {
                                             e.stopPropagation();
                                             handleNotificationTap(notif.id);
                                           }}
-                                          onPointerDown={(e) => e.stopPropagation()}
+                                          onPointerDown={(e) =>
+                                            e.stopPropagation()
+                                          }
                                           className="text-[8.5px] font-sans font-bold text-sky-400 hover:text-sky-300 active:scale-95 transition-all flex items-center gap-0.5 shrink-0 cursor-pointer bg-transparent border-none p-0"
                                         >
-                                          Details <ArrowRight className="w-2.5 h-2.5" />
+                                          Details{" "}
+                                          <ArrowRight className="w-2.5 h-2.5" />
                                         </button>
                                       </div>
 
@@ -1343,7 +1620,10 @@ export function CitizenReportingSection() {
                                       {notif.isFinal && (
                                         <motion.div
                                           initial={{ opacity: 0, height: 0 }}
-                                          animate={{ opacity: 1, height: "auto" }}
+                                          animate={{
+                                            opacity: 1,
+                                            height: "auto",
+                                          }}
                                           transition={{ delay: 0.2 }}
                                           className="pt-2 mt-1.5 border-t border-emerald-500/30 flex items-center justify-between gap-2"
                                         >
@@ -1352,7 +1632,10 @@ export function CitizenReportingSection() {
                                           </span>
                                           <button
                                             type="button"
-                                            onClick={(e) => { e.stopPropagation(); handleOpenLiveCity(e); }}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleOpenLiveCity(e);
+                                            }}
                                             className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-extrabold text-[9.5px] transition-all flex items-center gap-1 cursor-pointer shadow-sm shrink-0"
                                           >
                                             <span>Live Map</span>
@@ -1396,7 +1679,11 @@ export function CitizenReportingSection() {
                         >
                           <motion.div
                             animate={{ y: [0, -3, 0] }}
-                            transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+                            transition={{
+                              repeat: Infinity,
+                              duration: 1.8,
+                              ease: "easeInOut",
+                            }}
                             className="flex items-center gap-1 text-[11px] font-semibold text-white/95 tracking-wide drop-shadow-md font-sans"
                           >
                             <span>Swipe up or tap to open</span>
@@ -1409,7 +1696,9 @@ export function CitizenReportingSection() {
                         <div className="pt-1.5 pb-1 flex flex-col gap-1.5 shrink-0 border-t border-white/15">
                           <div className="flex items-center justify-between px-1">
                             <span className="text-[9.5px] font-mono text-white/80 font-medium">
-                              {activeStep >= 7 ? "✓ All 7 Checks Passed" : `Running check ${activeStep}/7...`}
+                              {activeStep >= 7
+                                ? "✓ All 7 Checks Passed"
+                                : `Running check ${activeStep}/7...`}
                             </span>
                             <button
                               type="button"
@@ -1475,10 +1764,13 @@ export function CitizenReportingSection() {
                         {/* Main Heading */}
                         <div className="mb-2">
                           <h2 className="text-[25px] sm:text-[27px] font-extrabold text-slate-950 tracking-tight leading-[1.15] font-sans">
-                            Hello & Welcome<br />to our app
+                            Hello & Welcome
+                            <br />
+                            to our app
                           </h2>
                           <p className="text-[13px] text-slate-500 mt-2 leading-relaxed max-w-[260px]">
-                            Report waterlogging across Kolkata by photo, voice notes, text & GPS.
+                            Report waterlogging across Kolkata by photo, voice
+                            notes, text & GPS.
                           </p>
                         </div>
                       </div>
@@ -1502,12 +1794,33 @@ export function CitizenReportingSection() {
 
                           {/* Center Water Network Map */}
                           <div className="relative flex-1 flex items-center justify-center my-0.5 z-10">
-                            <svg viewBox="0 0 240 100" className="w-full h-full overflow-visible select-none">
+                            <svg
+                              viewBox="0 0 240 100"
+                              className="w-full h-full overflow-visible select-none"
+                            >
                               <defs>
-                                <linearGradient id="riverGradLanding" x1="0%" y1="0%" x2="100%" y2="100%">
-                                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
-                                  <stop offset="50%" stopColor="#2563eb" stopOpacity="0.85" />
-                                  <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.5" />
+                                <linearGradient
+                                  id="riverGradLanding"
+                                  x1="0%"
+                                  y1="0%"
+                                  x2="100%"
+                                  y2="100%"
+                                >
+                                  <stop
+                                    offset="0%"
+                                    stopColor="#3b82f6"
+                                    stopOpacity="0.4"
+                                  />
+                                  <stop
+                                    offset="50%"
+                                    stopColor="#2563eb"
+                                    stopOpacity="0.85"
+                                  />
+                                  <stop
+                                    offset="100%"
+                                    stopColor="#1d4ed8"
+                                    stopOpacity="0.5"
+                                  />
                                 </linearGradient>
                               </defs>
                               <path
@@ -1538,7 +1851,15 @@ export function CitizenReportingSection() {
                                   ~~~ Hooghly
                                 </text>
                               </g>
-                              <line x1="45" y1="55" x2="175" y2="55" stroke="#93c5fd" strokeWidth="1.8" strokeDasharray="2 2" />
+                              <line
+                                x1="45"
+                                y1="55"
+                                x2="175"
+                                y2="55"
+                                stroke="#93c5fd"
+                                strokeWidth="1.8"
+                                strokeDasharray="2 2"
+                              />
                               <circle cx="45" cy="55" r="4.5" fill="#2563eb" />
                               <circle cx="45" cy="55" r="2" fill="#ffffff" />
                               <circle cx="105" cy="60" r="5" fill="#1d4ed8" />
@@ -1553,7 +1874,9 @@ export function CitizenReportingSection() {
                               <Droplets className="w-3 h-3 text-blue-600" />
                               TELEMETRY READY
                             </span>
-                            <span className="font-bold text-slate-700">32 GAUGES</span>
+                            <span className="font-bold text-slate-700">
+                              32 GAUGES
+                            </span>
                           </div>
                         </div>
 
@@ -1726,7 +2049,8 @@ export function CitizenReportingSection() {
               type="button"
               title={isLockScreen ? "Unlock Phone" : "Lock Phone"}
               onClick={() => {
-                if (audioEngine) audioEngine.playUiChirp(isLockScreen ? 1200 : 700);
+                if (audioEngine)
+                  audioEngine.playUiChirp(isLockScreen ? 1200 : 700);
                 if (expandedNotification !== null) {
                   setExpandedNotification(null);
                   setPhoneStep(-1);

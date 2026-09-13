@@ -1,164 +1,171 @@
-
-import { create } from 'zustand'
-import { api } from '../utils/api.js'
-import { formatTime12Hour } from '../utils/dateTimeUtils.js'
+import { create } from "zustand";
+import { api } from "../utils/api.js";
+import { formatTime12Hour } from "../utils/dateTimeUtils.js";
 
 // Helper to check public routes
 export const isPublicRoute = (path) => {
-  if (!path) return true
-  const clean = path.split('?')[0].split('#')[0]
-  return clean === '/' || clean === '/signup' || clean === '/login' || clean === '/signin' || clean === '/auth'
-}
+  if (!path) return true;
+  const clean = path.split("?")[0].split("#")[0];
+  return (
+    clean === "/" ||
+    clean === "/signup" ||
+    clean === "/login" ||
+    clean === "/signin" ||
+    clean === "/auth"
+  );
+};
 
 // Helper to check if a user belongs to admin portal
 export const isUserAdmin = (user) => {
-  if (!user) return false
+  if (!user) return false;
   // Explicit citizen ID prefix or portal
-  if (user.id && String(user.id).startsWith('USR-')) return false
-  if (user.portal === 'user') return false
+  if (user.id && String(user.id).startsWith("USR-")) return false;
+  if (user.portal === "user") return false;
 
-  if (user.portal === 'admin') return true
-  if (user.badgeId || user.badge_id) return true
-  if (user.id && String(user.id).startsWith('ADM-')) return true
+  if (user.portal === "admin") return true;
+  if (user.badgeId || user.badge_id) return true;
+  if (user.id && String(user.id).startsWith("ADM-")) return true;
 
-  const role = (user.role || '').toLowerCase()
+  const role = (user.role || "").toLowerCase();
   if (
-    role.includes('admin') ||
-    role.includes('officer') ||
-    role.includes('commander') ||
-    role.includes('director') ||
-    role.includes('commissioner')
+    role.includes("admin") ||
+    role.includes("officer") ||
+    role.includes("commander") ||
+    role.includes("director") ||
+    role.includes("commissioner")
   ) {
-    return true
+    return true;
   }
-  return false
-}
+  return false;
+};
 
 // Role-based route permission checker:
 // - User: Home ('/'), Reports ('/reports', '/my-reports'), Profile ('/profile'), Auth ('/login', '/signup')
 // - Admin: Home ('/'), Live Map ('/live-city'), Simulate ('/simulate'), Respond ('/action-center'), Profile ('/profile'), Auth
 // - Unauthenticated: Home ('/'), Auth ('/signup', '/login')
 export const isRouteAllowedForUser = (path, user) => {
-  const cleanPath = (path || '/').split('?')[0].split('#')[0]
+  const cleanPath = (path || "/").split("?")[0].split("#")[0];
 
-  if (isPublicRoute(cleanPath)) return true
-  if (!user) return false
+  if (isPublicRoute(cleanPath)) return true;
+  if (!user) return false;
 
-  const admin = isUserAdmin(user)
+  const admin = isUserAdmin(user);
   const isReportRoute =
-    cleanPath === '/reports' ||
-    cleanPath === '/report' ||
-    cleanPath === '/my-reports' ||
-    cleanPath.startsWith('/reports/') ||
-    cleanPath.startsWith('/my-reports/')
+    cleanPath === "/reports" ||
+    cleanPath === "/report" ||
+    cleanPath === "/my-reports" ||
+    cleanPath.startsWith("/reports/") ||
+    cleanPath.startsWith("/my-reports/");
 
   const isAdminOnlyRoute =
-    cleanPath === '/dashboard' ||
-    cleanPath === '/admin-dashboard' ||
-    cleanPath === '/live-city' ||
-    cleanPath === '/incidents' ||
-    cleanPath === '/forecast' ||
-    cleanPath === '/simulate' ||
-    cleanPath === '/action-center' ||
-    cleanPath === '/respond' ||
-    cleanPath.startsWith('/dashboard/') ||
-    cleanPath.startsWith('/live-city/') ||
-    cleanPath.startsWith('/simulate/') ||
-    cleanPath.startsWith('/action-center/')
+    cleanPath === "/dashboard" ||
+    cleanPath === "/admin-dashboard" ||
+    cleanPath === "/live-city" ||
+    cleanPath === "/incidents" ||
+    cleanPath === "/forecast" ||
+    cleanPath === "/simulate" ||
+    cleanPath === "/action-center" ||
+    cleanPath === "/respond" ||
+    cleanPath.startsWith("/dashboard/") ||
+    cleanPath.startsWith("/live-city/") ||
+    cleanPath.startsWith("/simulate/") ||
+    cleanPath.startsWith("/action-center/");
 
   const isProfileRoute =
-    cleanPath === '/profile' ||
-    cleanPath === '/my-profile' ||
-    cleanPath.startsWith('/profile/')
+    cleanPath === "/profile" ||
+    cleanPath === "/my-profile" ||
+    cleanPath.startsWith("/profile/");
 
-  if (isProfileRoute) return true
+  if (isProfileRoute) return true;
 
   if (admin) {
     // Admin can see home, live map, simulate, respond, profile; Report page is restricted from admin
-    return !isReportRoute
+    return !isReportRoute;
   } else {
     // User can see home, report page, profile; all other pages are restricted for user
-    return !isAdminOnlyRoute
+    return !isAdminOnlyRoute;
   }
-}
+};
 
 // Helper to determine initial route safely
 const getInitialRoute = () => {
-  if (typeof window !== 'undefined') {
-    const p = window.location.pathname
-    const hasToken = !!localStorage.getItem('kwi_token')
-    let cachedUser = null
+  if (typeof window !== "undefined") {
+    const p = window.location.pathname;
+    const hasToken = !!localStorage.getItem("kwi_token");
+    let cachedUser = null;
     try {
-      const raw = localStorage.getItem('kwi_user')
-      if (raw && hasToken) cachedUser = JSON.parse(raw)
+      const raw = localStorage.getItem("kwi_user");
+      if (raw && hasToken) cachedUser = JSON.parse(raw);
     } catch {}
 
     if (!cachedUser && !isPublicRoute(p)) {
       if (window.history && window.history.replaceState) {
-        window.history.replaceState({}, '', '/login')
+        window.history.replaceState({}, "", "/login");
       }
-      return '/login'
+      return "/login";
     }
 
     if (cachedUser && !isRouteAllowedForUser(p, cachedUser)) {
       if (window.history && window.history.replaceState) {
-        window.history.replaceState({}, '', '/')
+        window.history.replaceState({}, "", "/");
       }
-      return '/'
+      return "/";
     }
 
-    return p
+    return p;
   }
-  return '/'
-}
+  return "/";
+};
 
 const routeToSection = (path) => {
   switch (path) {
-    case '/':
-      return 'HOME'
-    case '/dashboard':
-    case '/admin-dashboard':
-      return 'DASHBOARD'
-    case '/live-city':
-    case '/incidents':
-    case '/forecast':
-      return 'LIVE_MAP'
-    case '/reports':
-    case '/report':
-      return 'REPORT'
-    case '/my-reports':
-      return 'MY_REPORTS'
-    case '/simulate':
-      return 'SIMULATE'
-    case '/action-center':
-    case '/respond':
-      return 'RESPOND'
-    case '/profile':
-    case '/my-profile':
-      return 'PROFILE'
-    case '/signup':
-    case '/login':
-    case '/auth':
-      return 'LOGIN'
+    case "/":
+      return "HOME";
+    case "/dashboard":
+    case "/admin-dashboard":
+      return "DASHBOARD";
+    case "/live-city":
+    case "/incidents":
+    case "/forecast":
+      return "LIVE_MAP";
+    case "/reports":
+    case "/report":
+      return "REPORT";
+    case "/my-reports":
+      return "MY_REPORTS";
+    case "/simulate":
+      return "SIMULATE";
+    case "/action-center":
+    case "/respond":
+      return "RESPOND";
+    case "/profile":
+    case "/my-profile":
+      return "PROFILE";
+    case "/signup":
+    case "/login":
+    case "/auth":
+      return "LOGIN";
     default:
-      return 'HOME'
+      return "HOME";
   }
-}
+};
 
 export const useKWIStore = create((set, get) => ({
   // Theme preference: 'light' | 'dark' | 'system' (persisted)
-  theme: (typeof window !== 'undefined' && localStorage.getItem('kwi_theme')) || 'system',
+  theme:
+    (typeof window !== "undefined" && localStorage.getItem("kwi_theme")) ||
+    "system",
   setTheme: (t) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('kwi_theme', t)
+    if (typeof window !== "undefined") {
+      localStorage.setItem("kwi_theme", t);
     }
-    set({ theme: t })
+    set({ theme: t });
   },
 
   // Active Route & Section Navigation
   currentRoute: getInitialRoute(),
   activeSection: routeToSection(getInitialRoute()),
-  profileActiveTab: 'overview',
+  profileActiveTab: "overview",
   setProfileActiveTab: (tab) => set({ profileActiveTab: tab }),
 
   // Pending redirect after sign-in for guarded navigation
@@ -166,35 +173,35 @@ export const useKWIStore = create((set, get) => ({
   setPostLoginRedirect: (path) => set({ postLoginRedirect: path }),
 
   navigate: (path) => {
-    const { currentUser } = get()
-    let target = path
+    const { currentUser } = get();
+    let target = path;
     if (!currentUser && !isPublicRoute(path)) {
-      set({ postLoginRedirect: path })
-      target = '/login'
+      set({ postLoginRedirect: path });
+      target = "/login";
     } else if (currentUser && !isRouteAllowedForUser(path, currentUser)) {
-      target = '/'
+      target = "/";
     }
 
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       if (window.location.pathname !== target) {
-        window.history.pushState({}, '', target)
+        window.history.pushState({}, "", target);
       }
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     }
-    const section = routeToSection(target)
-    set({ currentRoute: target, activeSection: section })
+    const section = routeToSection(target);
+    set({ currentRoute: target, activeSection: section });
   },
 
   // Shared Mobile Report & Verification State (Stores original user input)
   reportPhoto: null,
   reportPhotoName: null,
-  reportDescription: '',
-  reportLocation: 'Salt Lake, Sector V, Kolkata',
-  reportLocality: 'Salt Lake, Sector V',
-  reportCity: 'Kolkata, West Bengal',
+  reportDescription: "",
+  reportLocation: "Salt Lake, Sector V, Kolkata",
+  reportLocality: "Salt Lake, Sector V",
+  reportCity: "Kolkata, West Bengal",
   reportCoords: { lat: 22.5735, lon: 88.4331, accuracy: 10 },
-  reportDepth: '15–30 cm',
-  reportTimestamp: 'Just now',
+  reportDepth: "15–30 cm",
+  reportTimestamp: "Just now",
   isReportSubmitted: false,
   reportVerificationStage: 0, // 0 = idle, 1..5 = stages
   isReportVerified: false,
@@ -215,86 +222,114 @@ export const useKWIStore = create((set, get) => ({
 
   // Fetch the current user's reports from the backend (server-side ownership enforced).
   fetchMyReports: async () => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('kwi_token') : null
-    if (!token) return
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
+    if (!token) return;
     try {
-      const reports = await api.get('/reports', token)
-      set({ myReports: reports || [], reportsLoaded: true, reportsError: null })
+      const reports = await api.get("/reports", token);
+      set({
+        myReports: reports || [],
+        reportsLoaded: true,
+        reportsError: null,
+      });
     } catch (err) {
-      set({ reportsError: err?.message || 'Unable to load your reports.' })
+      set({ reportsError: err?.message || "Unable to load your reports." });
     }
   },
 
   submitCitizenReport: () => {
-    const now = formatTime12Hour(new Date())
+    const now = formatTime12Hour(new Date());
     set({
       isReportSubmitted: true,
       reportVerificationStage: 1,
       isReportVerified: false,
       reportTimestamp: now,
-    })
+    });
     setTimeout(() => {
-      set({ reportVerificationStage: 2 })
-    }, 600)
+      set({ reportVerificationStage: 2 });
+    }, 600);
     setTimeout(() => {
-      set({ reportVerificationStage: 3 })
-    }, 1200)
+      set({ reportVerificationStage: 3 });
+    }, 1200);
     setTimeout(() => {
-      set({ reportVerificationStage: 4 })
-    }, 1800)
+      set({ reportVerificationStage: 4 });
+    }, 1800);
     setTimeout(() => {
-      set({ reportVerificationStage: 5, isReportVerified: true })
-    }, 2400)
+      set({ reportVerificationStage: 5, isReportVerified: true });
+    }, 2400);
 
     // Persist to the backend so the report appears in "My Submitted Reports"
     // with the exact original photo. Runs alongside the local animation.
-    const token = typeof window !== 'undefined' ? localStorage.getItem('kwi_token') : null
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
 
-    const s = get()
-    const form = new FormData()
-    form.append('location', s.reportLocation || '')
-    form.append('latitude', String(s.reportCoords?.lat ?? 0))
-    form.append('longitude', String(s.reportCoords?.lon ?? 0))
-    form.append('issueType', 'Waterlogging')
-    form.append('description', s.reportDescription || '')
+    const s = get();
+    const form = new FormData();
+    form.append("location", s.reportLocation || "");
+    form.append("latitude", String(s.reportCoords?.lat ?? 0));
+    form.append("longitude", String(s.reportCoords?.lon ?? 0));
+    form.append("issueType", "Waterlogging");
+    form.append("description", s.reportDescription || "");
     // Convert the reportDepth display string "15–30 cm" into a numeric estimate.
-    const depthMatch = String(s.reportDepth || '').match(/(\d+(?:\.\d+)?)/)
-    form.append('waterDepth', String(depthMatch ? parseFloat(depthMatch[1]) : 0))
+    const depthMatch = String(s.reportDepth || "").match(/(\d+(?:\.\d+)?)/);
+    form.append(
+      "waterDepth",
+      String(depthMatch ? parseFloat(depthMatch[1]) : 0),
+    );
 
     const dispatchSubmission = (pForm) => {
       api
-        .postForm('/reports', pForm, token)
+        .postForm("/reports", pForm, token)
         .then((report) => {
-          console.log('[KWI] Report successfully saved to database with jurisdiction:', report)
+          console.log(
+            "[KWI] Report successfully saved to database with jurisdiction:",
+            report,
+          );
           if (report) {
             set((state) => ({
-              myReports: [report, ...state.myReports.filter((r) => r.report_id !== report.report_id)],
+              myReports: [
+                report,
+                ...state.myReports.filter(
+                  (r) => r.report_id !== report.report_id,
+                ),
+              ],
               reportsLoaded: true,
-            }))
+            }));
           }
         })
         .catch((err) => {
-          console.warn('[KWI] Report submission notification:', err?.message || err)
-        })
-    }
+          console.warn(
+            "[KWI] Report submission notification:",
+            err?.message || err,
+          );
+        });
+    };
 
     // Include the original photo (lossless data-URL → File) so the exact image is stored.
-    if (s.reportPhoto && typeof s.reportPhoto === 'string' && s.reportPhoto.startsWith('data:')) {
+    if (
+      s.reportPhoto &&
+      typeof s.reportPhoto === "string" &&
+      s.reportPhoto.startsWith("data:")
+    ) {
       fetch(s.reportPhoto)
         .then((r) => r.blob())
         .then((blob) => {
-          const file = new File([blob], s.reportPhotoName || 'waterlogging-report.jpg', {
-            type: blob.type || 'image/jpeg',
-          })
-          form.append('image', file, file.name)
-          dispatchSubmission(form)
+          const file = new File(
+            [blob],
+            s.reportPhotoName || "waterlogging-report.jpg",
+            {
+              type: blob.type || "image/jpeg",
+            },
+          );
+          form.append("image", file, file.name);
+          dispatchSubmission(form);
         })
         .catch(() => {
-          dispatchSubmission(form)
-        })
+          dispatchSubmission(form);
+        });
     } else {
       // No photo captured; submit the report metadata without an image.
-      dispatchSubmission(form)
+      dispatchSubmission(form);
     }
   },
 
@@ -305,36 +340,39 @@ export const useKWIStore = create((set, get) => ({
       isReportVerified: false,
       reportPhoto: null,
       reportPhotoName: null,
-      reportDescription: '',
-    })
+      reportDescription: "",
+    });
   },
 
   setActiveSection: (section) => {
     const routeMap = {
-      HOME: '/',
-      DASHBOARD: '/dashboard',
-      ADMIN_DASHBOARD: '/dashboard',
-      LIVE_MAP: '/live-city',
-      REPORT: '/reports',
-      MY_REPORTS: '/my-reports',
-      SIMULATE: '/simulate',
-      RESPOND: '/action-center',
-      LOGIN: '/login',
+      HOME: "/",
+      DASHBOARD: "/dashboard",
+      ADMIN_DASHBOARD: "/dashboard",
+      LIVE_MAP: "/live-city",
+      REPORT: "/reports",
+      MY_REPORTS: "/my-reports",
+      SIMULATE: "/simulate",
+      RESPOND: "/action-center",
+      LOGIN: "/login",
       // backward compatibility aliases
-      CITY: '/live-city',
-      INCIDENTS: '/live-city',
-      FORECAST: '/live-city',
-      INTELLIGENCE: '/live-city',
-      PREDICT: '/live-city',
-      REPORTS: '/reports',
-      ACTIONS: '/action-center',
-      AUTH: '/login',
+      CITY: "/live-city",
+      INCIDENTS: "/live-city",
+      FORECAST: "/live-city",
+      INTELLIGENCE: "/live-city",
+      PREDICT: "/live-city",
+      REPORTS: "/reports",
+      ACTIONS: "/action-center",
+      AUTH: "/login",
+    };
+    const targetRoute = routeMap[section] || "/";
+    if (
+      typeof window !== "undefined" &&
+      window.location.pathname !== targetRoute
+    ) {
+      window.history.pushState({}, "", targetRoute);
     }
-    const targetRoute = routeMap[section] || '/'
-    if (typeof window !== 'undefined' && window.location.pathname !== targetRoute) {
-      window.history.pushState({}, '', targetRoute)
-    }
-    set({ activeSection: section, currentRoute: targetRoute })
+    set({ activeSection: section, currentRoute: targetRoute });
   },
 
   // Map Operational Layers
@@ -362,14 +400,15 @@ export const useKWIStore = create((set, get) => ({
     })),
 
   // 2D / 3D Map Mode & Camera Action Triggers
-  mapMode: '3D', // '3D' | '2D'
+  mapMode: "3D", // '3D' | '2D'
   setMapMode: (mode) => set({ mapMode: mode }),
   toggleMapMode: () =>
-    set((state) => ({ mapMode: state.mapMode === '3D' ? '2D' : '3D' })),
+    set((state) => ({ mapMode: state.mapMode === "3D" ? "2D" : "3D" })),
 
   zoomTrigger: 0,
   triggerZoomIn: () => set((state) => ({ zoomTrigger: state.zoomTrigger + 1 })),
-  triggerZoomOut: () => set((state) => ({ zoomTrigger: state.zoomTrigger - 1 })),
+  triggerZoomOut: () =>
+    set((state) => ({ zoomTrigger: state.zoomTrigger - 1 })),
 
   resetCameraTrigger: 0,
   triggerResetCamera: () =>
@@ -423,74 +462,87 @@ export const useKWIStore = create((set, get) => ({
   // UI state for drawers & menus
   askKolkataOpen: false,
   setAskKolkataOpen: (open) => set({ askKolkataOpen: open }),
-  toggleAskKolkata: () => set((state) => ({ askKolkataOpen: !state.askKolkataOpen })),
+  toggleAskKolkata: () =>
+    set((state) => ({ askKolkataOpen: !state.askKolkataOpen })),
 
   // Login & Authentication state
   isLoginModalOpen: false,
   openLoginModal: () => set({ isLoginModalOpen: true }),
   closeLoginModal: () => set({ isLoginModalOpen: false }),
-  toggleLoginModal: () => set((state) => ({ isLoginModalOpen: !state.isLoginModalOpen })),
+  toggleLoginModal: () =>
+    set((state) => ({ isLoginModalOpen: !state.isLoginModalOpen })),
 
   // Real user identity — hydrated from localStorage cache only if a token also exists
-  currentUser: typeof window !== 'undefined' && localStorage.getItem('kwi_token') && localStorage.getItem('kwi_user')
-    ? JSON.parse(localStorage.getItem('kwi_user'))
-    : null,
+  currentUser:
+    typeof window !== "undefined" &&
+    localStorage.getItem("kwi_token") &&
+    localStorage.getItem("kwi_user")
+      ? JSON.parse(localStorage.getItem("kwi_user"))
+      : null,
 
   // Helper: normalize a backend UserResponse into the frontend profile shape,
   // preserving any local-only fields (institution, username) not served by the API.
   mapBackendUser: (be) => {
-    const cached = get().currentUser || {}
-    const email = be.email || cached.email || ''
+    const cached = get().currentUser || {};
+    const email = be.email || cached.email || "";
     return {
-      ...cached,                       // keep local-only fields (institution, username)
+      ...cached, // keep local-only fields (institution, username)
       id: be.id || cached.id || null,
-      name: be.name || be.full_name || cached.name || '',
-      username: cached.username || email.split('@')[0] || '',
+      name: be.name || be.full_name || cached.name || "",
+      username: cached.username || email.split("@")[0] || "",
       email,
-      phone: be.phone ?? cached.phone ?? '',
-      location: be.location ?? cached.location ?? '',
-      institution: cached.institution ?? '',
-      department: be.department || cached.department || '',
-      bio: be.bio ?? cached.bio ?? '',
+      phone: be.phone ?? cached.phone ?? "",
+      location: be.location ?? cached.location ?? "",
+      institution: cached.institution ?? "",
+      department: be.department || cached.department || "",
+      bio: be.bio ?? cached.bio ?? "",
       avatarUrl: be.avatar_url ?? cached.avatarUrl ?? null,
-      role: be.role || cached.role || (be.portal === 'admin' ? 'Admin' : 'User'),
-      badgeId: be.badgeId || be.badge_id || cached.badgeId || '',
-      clearance: be.clearance || cached.clearance || '',
+      role:
+        be.role || cached.role || (be.portal === "admin" ? "Admin" : "User"),
+      badgeId: be.badgeId || be.badge_id || cached.badgeId || "",
+      clearance: be.clearance || cached.clearance || "",
       createdAt: be.created_at || cached.createdAt || null,
-      portal: be.portal || (be.badgeId || be.badge_id || String(be.id || '').startsWith('ADM-') ? 'admin' : (cached.portal || 'user')),
-      status: be.status || cached.status || 'active',
-    }
+      portal:
+        be.portal ||
+        (be.badgeId || be.badge_id || String(be.id || "").startsWith("ADM-")
+          ? "admin"
+          : cached.portal || "user"),
+      status: be.status || cached.status || "active",
+    };
   },
 
   // Persist a hydrated/authenticated user.
   setCurrentUser: (userData) => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       if (userData) {
-        localStorage.setItem('kwi_user', JSON.stringify(userData))
+        localStorage.setItem("kwi_user", JSON.stringify(userData));
       } else {
-        localStorage.removeItem('kwi_user')
+        localStorage.removeItem("kwi_user");
       }
     }
-    set({ currentUser: userData })
+    set({ currentUser: userData });
   },
 
   // On app mount: refresh the profile from the backend ONLY if a stored JWT exists.
   initUser: async () => {
-    if (typeof window === 'undefined') return
-    const token = localStorage.getItem('kwi_token')
+    if (typeof window === "undefined") return;
+    const token = localStorage.getItem("kwi_token");
     if (!token) {
-      set({ currentUser: null })
-      return
+      set({ currentUser: null });
+      return;
     }
     try {
-      const me = await api.get('/auth/me', token)
-      get().setCurrentUser(get().mapBackendUser(me))
+      const me = await api.get("/auth/me", token);
+      get().setCurrentUser(get().mapBackendUser(me));
     } catch (err) {
       // Unauthorized / invalid token → drop the stale session.
-      if (err?.message && /unauthorized|invalid|expired|not found|inactive/i.test(err.message)) {
-        localStorage.removeItem('kwi_token')
-        localStorage.removeItem('kwi_user')
-        set({ currentUser: null })
+      if (
+        err?.message &&
+        /unauthorized|invalid|expired|not found|inactive/i.test(err.message)
+      ) {
+        localStorage.removeItem("kwi_token");
+        localStorage.removeItem("kwi_user");
+        set({ currentUser: null });
       }
       // Otherwise (backend offline) keep the cached localStorage user.
     }
@@ -498,65 +550,75 @@ export const useKWIStore = create((set, get) => ({
 
   // Persist a login/signup result: JWT token + normalized user.
   loginUser: (userData) => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       if (userData?.access_token) {
-        localStorage.setItem('kwi_token', userData.access_token)
+        localStorage.setItem("kwi_token", userData.access_token);
       }
     }
-    const user = get().mapBackendUser(userData?.user || userData || {})
-    get().setCurrentUser(user)
-    set({ isLoginModalOpen: false })
+    const user = get().mapBackendUser(userData?.user || userData || {});
+    get().setCurrentUser(user);
+    set({ isLoginModalOpen: false });
   },
 
   // Merge local edits into state + localStorage, and best-effort sync to backend.
   updateUserProfile: (profileData) => {
-    const merged = { ...(get().currentUser || {}), ...profileData }
-    get().setCurrentUser(merged)
+    const merged = { ...(get().currentUser || {}), ...profileData };
+    get().setCurrentUser(merged);
     // Best-effort backend sync (non-blocking; ignore failures when server is down).
-    const token = typeof window !== 'undefined' ? localStorage.getItem('kwi_token') : null
-    if (!token) return
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
+    if (!token) return;
     api
       .patch(
-        '/auth/me',
+        "/auth/me",
         {
           fullName: merged.name ?? undefined,
           department: merged.department ?? undefined,
-          phone: merged.phone ?? '',
-          location: merged.location ?? '',
-          bio: merged.bio ?? '',
-          avatar_url: merged.avatarUrl ?? '',
+          phone: merged.phone ?? "",
+          location: merged.location ?? "",
+          bio: merged.bio ?? "",
+          avatar_url: merged.avatarUrl ?? "",
         },
-        token
+        token,
       )
       .then((me) => {
         // Refresh with any server-normalized values (e.g. full name).
-        get().setCurrentUser(get().mapBackendUser({ ...me, ...merged }))
+        get().setCurrentUser(get().mapBackendUser({ ...me, ...merged }));
       })
       .catch(() => {
         // Keep local state; the next successful sync covers the difference.
-      })
+      });
   },
 
   logoutUser: () => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('kwi_token') : null
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
     if (token) {
-      api.post('/auth/logout', {}, token).catch(() => { })
+      api.post("/auth/logout", {}, token).catch(() => {});
     }
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('kwi_user')
-      localStorage.removeItem('kwi_token')
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("kwi_user");
+      localStorage.removeItem("kwi_token");
     }
-    set({ currentUser: null, myReports: [], reportsLoaded: false, reportsError: null, postLoginRedirect: null })
-    get().navigate('/')
+    set({
+      currentUser: null,
+      myReports: [],
+      reportsLoaded: false,
+      reportsError: null,
+      postLoginRedirect: null,
+    });
+    get().navigate("/");
   },
 
   unreadNotificationsCount: 3,
-  setUnreadNotificationsCount: (count) => set({ unreadNotificationsCount: count }),
+  setUnreadNotificationsCount: (count) =>
+    set({ unreadNotificationsCount: count }),
   clearNotifications: () => set({ unreadNotificationsCount: 0 }),
 
   adminMenuOpen: false,
   setAdminMenuOpen: (open) => set({ adminMenuOpen: open }),
-  toggleAdminMenu: () => set((state) => ({ adminMenuOpen: !state.adminMenuOpen })),
+  toggleAdminMenu: () =>
+    set((state) => ({ adminMenuOpen: !state.adminMenuOpen })),
 
   mobileMenuOpen: false,
   setMobileMenuOpen: (open) => set({ mobileMenuOpen: open }),
@@ -565,13 +627,13 @@ export const useKWIStore = create((set, get) => ({
   isLiveCityConnected: true,
   lastUpdated: formatTime12Hour(new Date()),
   hooghlyTideLevel: 3.42, // meters
-  hooghlyTideTrend: 'RISING', // 'RISING' | 'FALLING' | 'STABLE'
+  hooghlyTideTrend: "RISING", // 'RISING' | 'FALLING' | 'STABLE'
 
   // Real GIS Municipal Stats (as requested)
   highRiskZonesCount: 7,
   criticalIncidentsCount: 3,
-  rainfallDisplay: '74 mm / 3 hr',
-  rainfallIntensity: 'HEAVY',
+  rainfallDisplay: "74 mm / 3 hr",
+  rainfallIntensity: "HEAVY",
   pumpsAtCapacityCount: 2,
   activePumps: 78,
   totalPumps: 84,
@@ -579,79 +641,79 @@ export const useKWIStore = create((set, get) => ({
   // Incidents Dataset
   incidents: [
     {
-      id: '#SV-024',
-      ward: 'Ward 31',
-      borough: 'Bidhannagar MC',
-      location: 'Sector V / Salt Lake (College More & Ring Rd)',
-      waterLevel: '28 cm',
+      id: "#SV-024",
+      ward: "Ward 31",
+      borough: "Bidhannagar MC",
+      location: "Sector V / Salt Lake (College More & Ring Rd)",
+      waterLevel: "28 cm",
       waterLevelCm: 28.0,
-      rainfall: '74 mm / 3 hr',
+      rainfall: "74 mm / 3 hr",
       verifiedReports: 18,
-      affectedArea: '12,400 m²',
-      riskScore: '82 / 100',
-      connectedDrainage: 'Sector V Main Trunk',
-      nearestPump: 'PS-07',
-      probableCause: 'Rainfall exceeding local drainage capacity.',
-      severity: 'CRITICAL',
-      status: 'ACTIVE',
-      reportedAt: '12 mins ago',
+      affectedArea: "12,400 m²",
+      riskScore: "82 / 100",
+      connectedDrainage: "Sector V Main Trunk",
+      nearestPump: "PS-07",
+      probableCause: "Rainfall exceeding local drainage capacity.",
+      severity: "CRITICAL",
+      status: "ACTIVE",
+      reportedAt: "12 mins ago",
       position: [6.2, 0.25, -1.6],
     },
     {
-      id: '#BH-019',
-      ward: 'Ward 122',
-      borough: 'Borough XIII',
-      location: 'Behala Chowrasta / Diamond Harbour Rd',
-      waterLevel: '19.8 cm',
+      id: "#BH-019",
+      ward: "Ward 122",
+      borough: "Borough XIII",
+      location: "Behala Chowrasta / Diamond Harbour Rd",
+      waterLevel: "19.8 cm",
       waterLevelCm: 19.8,
-      rainfall: '68 mm / 3 hr',
+      rainfall: "68 mm / 3 hr",
       verifiedReports: 14,
-      affectedArea: '15,200 m²',
-      riskScore: '78 / 100',
-      connectedDrainage: 'Keorapukur Khal Outfall',
-      nearestPump: 'PS-09',
-      probableCause: 'Culvert blockage near Metro construction pier P-142.',
-      severity: 'CRITICAL',
-      status: 'ACTIVE',
-      reportedAt: '24 mins ago',
+      affectedArea: "15,200 m²",
+      riskScore: "78 / 100",
+      connectedDrainage: "Keorapukur Khal Outfall",
+      nearestPump: "PS-09",
+      probableCause: "Culvert blockage near Metro construction pier P-142.",
+      severity: "CRITICAL",
+      status: "ACTIVE",
+      reportedAt: "24 mins ago",
       position: [-2.5, 0.25, 5.0],
     },
     {
-      id: '#PS-032',
-      ward: 'Ward 63',
-      borough: 'Borough VII',
-      location: 'Park Street & Chowringhee Intersection',
-      waterLevel: '14.5 cm',
+      id: "#PS-032",
+      ward: "Ward 63",
+      borough: "Borough VII",
+      location: "Park Street & Chowringhee Intersection",
+      waterLevel: "14.5 cm",
       waterLevelCm: 14.5,
-      rainfall: '55 mm / 3 hr',
+      rainfall: "55 mm / 3 hr",
       verifiedReports: 9,
-      affectedArea: '7,800 m²',
-      riskScore: '64 / 100',
-      connectedDrainage: 'Camac St Box Drain to Palmer Bridge',
-      nearestPump: 'PS-02',
-      probableCause: 'Grate clogging from surface stormwater debris.',
-      severity: 'MODERATE',
-      status: 'ACTIVE',
-      reportedAt: '38 mins ago',
+      affectedArea: "7,800 m²",
+      riskScore: "64 / 100",
+      connectedDrainage: "Camac St Box Drain to Palmer Bridge",
+      nearestPump: "PS-02",
+      probableCause: "Grate clogging from surface stormwater debris.",
+      severity: "MODERATE",
+      status: "ACTIVE",
+      reportedAt: "38 mins ago",
       position: [0.1, 0.25, 0.8],
     },
     {
-      id: 'INC-2026-089',
-      ward: 'Ward 49',
-      borough: 'Borough V',
-      location: 'Thanthania Kali Bari & College St Intersection',
-      waterLevel: '28.4 cm',
+      id: "INC-2026-089",
+      ward: "Ward 49",
+      borough: "Borough V",
+      location: "Thanthania Kali Bari & College St Intersection",
+      waterLevel: "28.4 cm",
       waterLevelCm: 28.4,
-      rainfall: '81 mm / 3 hr',
+      rainfall: "81 mm / 3 hr",
       verifiedReports: 22,
-      affectedArea: '9,800 m²',
-      riskScore: '89 / 100',
-      connectedDrainage: 'Circular Canal Outfall',
-      nearestPump: 'PS-01',
-      probableCause: 'High silt accumulation obstructing gravity outfall.',
-      severity: 'CRITICAL',
-      status: 'ACTIVE',
-      reportedAt: '15 mins ago',
+      affectedArea: "9,800 m²",
+      riskScore: "89 / 100",
+      connectedDrainage: "Circular Canal Outfall",
+      nearestPump: "PS-01",
+      probableCause: "High silt accumulation obstructing gravity outfall.",
+      severity: "CRITICAL",
+      status: "ACTIVE",
+      reportedAt: "15 mins ago",
       position: [-0.3, 0.25, -2.4],
     },
   ],
@@ -659,54 +721,54 @@ export const useKWIStore = create((set, get) => ({
   // Pumping Stations
   pumpingStations: [
     {
-      id: 'PS-07',
-      name: 'PS-07 Sector V Booster Station',
+      id: "PS-07",
+      name: "PS-07 Sector V Booster Station",
       position: [5.6, 0.15, -1.2],
-      status: 'AT CAPACITY',
-      capacity: '100%',
-      pumpsRunning: '3/3',
-      dischargeRate: '85 cusecs',
-      connectedCanal: 'Bagjola Canal Outfall',
-      ward: 'Sector V IT Corridor',
+      status: "AT CAPACITY",
+      capacity: "100%",
+      pumpsRunning: "3/3",
+      dischargeRate: "85 cusecs",
+      connectedCanal: "Bagjola Canal Outfall",
+      ward: "Sector V IT Corridor",
       loadPct: 100,
       critical: true,
     },
     {
-      id: 'PS-02',
-      name: 'PS-02 Palmer Bridge Drainage Station',
+      id: "PS-02",
+      name: "PS-02 Palmer Bridge Drainage Station",
       position: [1.8, 0.15, 0.2],
-      status: 'ACTIVE',
-      capacity: '80%',
-      pumpsRunning: '4/5',
-      dischargeRate: '140 cusecs',
-      connectedCanal: 'Palmer Bridge Outfall',
-      ward: 'Borough VII',
+      status: "ACTIVE",
+      capacity: "80%",
+      pumpsRunning: "4/5",
+      dischargeRate: "140 cusecs",
+      connectedCanal: "Palmer Bridge Outfall",
+      ward: "Borough VII",
       loadPct: 80,
       critical: false,
     },
     {
-      id: 'PS-04',
-      name: 'PS-04 Ballygunge Drainage Station',
+      id: "PS-04",
+      name: "PS-04 Ballygunge Drainage Station",
       position: [1.8, 0.15, 2.8],
-      status: 'AT CAPACITY',
-      capacity: '100%',
-      pumpsRunning: '3/3',
-      dischargeRate: '120 cusecs',
-      connectedCanal: 'Ballygunge Trunk Outfall',
-      ward: 'Borough VIII',
+      status: "AT CAPACITY",
+      capacity: "100%",
+      pumpsRunning: "3/3",
+      dischargeRate: "120 cusecs",
+      connectedCanal: "Ballygunge Trunk Outfall",
+      ward: "Borough VIII",
       loadPct: 100,
       critical: true,
     },
     {
-      id: 'PS-09',
-      name: 'PS-09 Mominpore / Behala Booster',
+      id: "PS-09",
+      name: "PS-09 Mominpore / Behala Booster",
       position: [-2.6, 0.15, 4.2],
-      status: 'ACTIVE',
-      capacity: '75%',
-      pumpsRunning: '3/4',
-      dischargeRate: '95 cusecs',
-      connectedCanal: 'Keorapukur Khal',
-      ward: 'Borough XIII',
+      status: "ACTIVE",
+      capacity: "75%",
+      pumpsRunning: "3/4",
+      dischargeRate: "95 cusecs",
+      connectedCanal: "Keorapukur Khal",
+      ward: "Borough XIII",
       loadPct: 75,
       critical: false,
     },
@@ -715,108 +777,108 @@ export const useKWIStore = create((set, get) => ({
   // Risk Zones Dataset
   riskZones: [
     {
-      id: 'risk_sector_v',
-      name: 'SECTOR V // SALT LAKE',
-      level: 'HIGH',
-      color: '#f97316',
+      id: "risk_sector_v",
+      name: "SECTOR V // SALT LAKE",
+      level: "HIGH",
+      color: "#f97316",
       center: [6.2, -1.6],
       radiusX: 0.95,
       radiusZ: 0.75,
-      affectedArea: '12,400 m²',
-      rainfall: '74 mm / 3 hr',
-      drainageLoad: '94%',
-      waterDepth: '28 cm',
-      riskScore: '82 / 100',
-      connectedIncidentId: '#SV-024',
+      affectedArea: "12,400 m²",
+      rainfall: "74 mm / 3 hr",
+      drainageLoad: "94%",
+      waterDepth: "28 cm",
+      riskScore: "82 / 100",
+      connectedIncidentId: "#SV-024",
     },
     {
-      id: 'risk_college_st',
-      name: 'THANTHANIA // COLLEGE STREET',
-      level: 'CRITICAL',
-      color: '#ef4444',
+      id: "risk_college_st",
+      name: "THANTHANIA // COLLEGE STREET",
+      level: "CRITICAL",
+      color: "#ef4444",
       center: [-0.3, -2.4],
       radiusX: 0.65,
       radiusZ: 0.55,
-      affectedArea: '9,800 m²',
-      rainfall: '81 mm / 3 hr',
-      drainageLoad: '98%',
-      waterDepth: '28.4 cm',
-      riskScore: '89 / 100',
-      connectedIncidentId: 'INC-2026-089',
+      affectedArea: "9,800 m²",
+      rainfall: "81 mm / 3 hr",
+      drainageLoad: "98%",
+      waterDepth: "28.4 cm",
+      riskScore: "89 / 100",
+      connectedIncidentId: "INC-2026-089",
     },
     {
-      id: 'risk_behala',
-      name: 'BEHALA CHOWRASTA',
-      level: 'HIGH',
-      color: '#f97316',
+      id: "risk_behala",
+      name: "BEHALA CHOWRASTA",
+      level: "HIGH",
+      color: "#f97316",
       center: [-2.5, 5.0],
       radiusX: 0.8,
       radiusZ: 0.65,
-      affectedArea: '15,200 m²',
-      rainfall: '68 mm / 3 hr',
-      drainageLoad: '92%',
-      waterDepth: '19.8 cm',
-      riskScore: '78 / 100',
-      connectedIncidentId: '#BH-019',
+      affectedArea: "15,200 m²",
+      rainfall: "68 mm / 3 hr",
+      drainageLoad: "92%",
+      waterDepth: "19.8 cm",
+      riskScore: "78 / 100",
+      connectedIncidentId: "#BH-019",
     },
     {
-      id: 'risk_park_circus',
-      name: 'PARK CIRCUS 7-POINT',
-      level: 'MODERATE',
-      color: '#f59e0b',
+      id: "risk_park_circus",
+      name: "PARK CIRCUS 7-POINT",
+      level: "MODERATE",
+      color: "#f59e0b",
       center: [1.4, 0.8],
       radiusX: 0.6,
       radiusZ: 0.5,
-      affectedArea: '8,600 m²',
-      rainfall: '62 mm / 3 hr',
-      drainageLoad: '76%',
-      waterDepth: '14.5 cm',
-      riskScore: '64 / 100',
-      connectedIncidentId: '#PS-032',
+      affectedArea: "8,600 m²",
+      rainfall: "62 mm / 3 hr",
+      drainageLoad: "76%",
+      waterDepth: "14.5 cm",
+      riskScore: "64 / 100",
+      connectedIncidentId: "#PS-032",
     },
     {
-      id: 'risk_maidan',
-      name: 'THE MAIDAN / ESPLANADE',
-      level: 'LOW',
-      color: '#10b981',
+      id: "risk_maidan",
+      name: "THE MAIDAN / ESPLANADE",
+      level: "LOW",
+      color: "#10b981",
       center: [-1.3, 0.6],
       radiusX: 0.75,
       radiusZ: 0.9,
-      affectedArea: '4,200 m²',
-      rainfall: '35 mm / 3 hr',
-      drainageLoad: '42%',
-      waterDepth: '5 cm',
-      riskScore: '28 / 100',
+      affectedArea: "4,200 m²",
+      rainfall: "35 mm / 3 hr",
+      drainageLoad: "42%",
+      waterDepth: "5 cm",
+      riskScore: "28 / 100",
       connectedIncidentId: null,
     },
     {
-      id: 'risk_new_town',
-      name: 'NEW TOWN ACTION AREA I',
-      level: 'MODERATE',
-      color: '#f59e0b',
+      id: "risk_new_town",
+      name: "NEW TOWN ACTION AREA I",
+      level: "MODERATE",
+      color: "#f59e0b",
       center: [8.2, -4.0],
       radiusX: 0.8,
       radiusZ: 0.6,
-      affectedArea: '6,100 m²',
-      rainfall: '45 mm / 3 hr',
-      drainageLoad: '68%',
-      waterDepth: '8 cm',
-      riskScore: '45 / 100',
+      affectedArea: "6,100 m²",
+      rainfall: "45 mm / 3 hr",
+      drainageLoad: "68%",
+      waterDepth: "8 cm",
+      riskScore: "45 / 100",
       connectedIncidentId: null,
     },
     {
-      id: 'risk_ultadanga',
-      name: 'ULTADANGA UNDERPASS',
-      level: 'LOW',
-      color: '#10b981',
+      id: "risk_ultadanga",
+      name: "ULTADANGA UNDERPASS",
+      level: "LOW",
+      color: "#10b981",
       center: [3.0, -5.0],
       radiusX: 0.5,
       radiusZ: 0.4,
-      affectedArea: '3,400 m²',
-      rainfall: '30 mm / 3 hr',
-      drainageLoad: '48%',
-      waterDepth: '4 cm',
-      riskScore: '32 / 100',
+      affectedArea: "3,400 m²",
+      rainfall: "30 mm / 3 hr",
+      drainageLoad: "48%",
+      waterDepth: "4 cm",
+      riskScore: "32 / 100",
       connectedIncidentId: null,
     },
   ],
@@ -825,50 +887,87 @@ export const useKWIStore = create((set, get) => ({
   resolveIncident: (id) =>
     set((state) => ({
       incidents: state.incidents.map((inc) =>
-        inc.id === id ? { ...inc, severity: 'RESOLVED', status: 'RESOLVED', waterLevel: '2.0 cm' } : inc
+        inc.id === id
+          ? {
+              ...inc,
+              severity: "RESOLVED",
+              status: "RESOLVED",
+              waterLevel: "2.0 cm",
+            }
+          : inc,
       ),
     })),
 
   getCriticalCount: () => {
-    return get().incidents.filter((inc) => inc.severity === 'CRITICAL').length
+    return get().incidents.filter((inc) => inc.severity === "CRITICAL").length;
   },
 
   // Copilot Ask Kolkata state
-  copilotQuery: '',
+  copilotQuery: "",
   setCopilotQuery: (q) => set({ copilotQuery: q }),
   chatMessages: [
     {
-      sender: 'system',
-      text: 'NIVARA Copilot online. Telemetry synchronized with KMC Drainage Department, Hooghly River Sluice Grid, and 84 municipal pumping stations.',
-      timestamp: '01:00 PM',
+      sender: "system",
+      text: "NIVARA Copilot online. Telemetry synchronized with KMC Drainage Department, Hooghly River Sluice Grid, and 84 municipal pumping stations.",
+      timestamp: "01:00 PM",
     },
   ],
   sendCopilotMessage: (text) => {
-    if (!text.trim()) return
-    const userMsg = { sender: 'user', text, timestamp: formatTime12Hour(new Date()) }
+    if (!text.trim()) return;
+    const userMsg = {
+      sender: "user",
+      text,
+      timestamp: formatTime12Hour(new Date()),
+    };
 
-    let reply
-    const lower = text.toLowerCase()
+    let reply;
+    const lower = text.toLowerCase();
 
-    if (lower.includes('sector v') || lower.includes('sv-024') || lower.includes('ps-07')) {
-      reply = "Sector V Incident #SV-024: 28cm water depth at College More. 74 mm/3 hr rainfall recorded. PS-07 booster station operating at 100% capacity discharging 85 cusecs into Bagjola Canal."
-    } else if (lower.includes('critical') || lower.includes('incident') || lower.includes('waterlog')) {
-      reply = "There are currently 3 CRITICAL waterlogging incidents: Sector V (#SV-024, 28cm), Thanthania Kali Bari (Ward 49, 28.4cm), and Behala Chowrasta (#BH-019, 19.8cm). 2 pump stations (PS-07 and PS-04) are running at 100% capacity."
-    } else if (lower.includes('tide') || lower.includes('hooghly') || lower.includes('river') || lower.includes('sluice')) {
-      reply = "Hooghly River tidal gauge at Princep Ghat reports 3.42m (RISING). Lock gates at Circular Canal and Palmer Bridge are currently throttled to prevent river backflow into city storm drains."
-    } else if (lower.includes('pump') || lower.includes('palmer') || lower.includes('ballygunge')) {
-      reply = "78 of 84 major KMC pumping units are active. PS-07 and PS-04 are at 100% capacity. Palmer Bridge is running 4/5 pumps discharging 140 cusecs."
-    } else if (lower.includes('forecast') || lower.includes('rain')) {
-      reply = "Monsoon squall band over Alipore & Central Kolkata is depositing 74 mm / 3 hr. Intensity is HEAVY, with high runoff entering Sector V Main Trunk and Circular Canal."
+    if (
+      lower.includes("sector v") ||
+      lower.includes("sv-024") ||
+      lower.includes("ps-07")
+    ) {
+      reply =
+        "Sector V Incident #SV-024: 28cm water depth at College More. 74 mm/3 hr rainfall recorded. PS-07 booster station operating at 100% capacity discharging 85 cusecs into Bagjola Canal.";
+    } else if (
+      lower.includes("critical") ||
+      lower.includes("incident") ||
+      lower.includes("waterlog")
+    ) {
+      reply =
+        "There are currently 3 CRITICAL waterlogging incidents: Sector V (#SV-024, 28cm), Thanthania Kali Bari (Ward 49, 28.4cm), and Behala Chowrasta (#BH-019, 19.8cm). 2 pump stations (PS-07 and PS-04) are running at 100% capacity.";
+    } else if (
+      lower.includes("tide") ||
+      lower.includes("hooghly") ||
+      lower.includes("river") ||
+      lower.includes("sluice")
+    ) {
+      reply =
+        "Hooghly River tidal gauge at Princep Ghat reports 3.42m (RISING). Lock gates at Circular Canal and Palmer Bridge are currently throttled to prevent river backflow into city storm drains.";
+    } else if (
+      lower.includes("pump") ||
+      lower.includes("palmer") ||
+      lower.includes("ballygunge")
+    ) {
+      reply =
+        "78 of 84 major KMC pumping units are active. PS-07 and PS-04 are at 100% capacity. Palmer Bridge is running 4/5 pumps discharging 140 cusecs.";
+    } else if (lower.includes("forecast") || lower.includes("rain")) {
+      reply =
+        "Monsoon squall band over Alipore & Central Kolkata is depositing 74 mm / 3 hr. Intensity is HEAVY, with high runoff entering Sector V Main Trunk and Circular Canal.";
     } else {
-      reply = `Telemetry check for "${text}": All sensor networks in Boroughs I through XVI are transmitting valid hydraulic pressure and depth data.`
+      reply = `Telemetry check for "${text}": All sensor networks in Boroughs I through XVI are transmitting valid hydraulic pressure and depth data.`;
     }
 
-    const botMsg = { sender: 'bot', text: reply, timestamp: formatTime12Hour(new Date()) }
+    const botMsg = {
+      sender: "bot",
+      text: reply,
+      timestamp: formatTime12Hour(new Date()),
+    };
 
     set((state) => ({
       chatMessages: [...state.chatMessages, userMsg, botMsg],
-      copilotQuery: '',
-    }))
+      copilotQuery: "",
+    }));
   },
-}))
+}));

@@ -200,27 +200,43 @@ const GovIdIcon = () => (
   </svg>
 );
 
-// 4 Feature Cards matching the second reference image
+// 4 Feature Cards with distinctive colors matching the municipal domains
 const FEATURE_CARDS = [
   {
     icon: Droplets,
     title: "Real-time\nMonitoring",
-    desc: "Track water levels, blockages and flood risks.",
+    desc: "Track water levels, blockages and flood risks across Kolkata.",
+    color: "text-cyan-400",
+    glow: "drop-shadow-[0_0_12px_rgba(6,182,212,0.65)]",
+    hoverBorder: "hover:border-cyan-400/50",
+    hoverShadow: "hover:shadow-[0_18px_40px_rgba(6,182,212,0.22)]",
   },
   {
     icon: BarChart3,
     title: "Predictive\nAnalytics",
-    desc: "AI-driven insights for proactive decisions.",
+    desc: "Hydrological AI models for proactive civic decision making.",
+    color: "text-violet-400",
+    glow: "drop-shadow-[0_0_12px_rgba(168,85,247,0.65)]",
+    hoverBorder: "hover:border-violet-400/50",
+    hoverShadow: "hover:shadow-[0_18px_40px_rgba(168,85,247,0.22)]",
   },
   {
     icon: ShieldCheck,
     title: "Healthier\nCommunities",
-    desc: "Safer neighborhoods for a better tomorrow.",
+    desc: "Safer, better prepared neighborhoods for citizen well-being.",
+    color: "text-amber-400",
+    glow: "drop-shadow-[0_0_12px_rgba(245,158,11,0.65)]",
+    hoverBorder: "hover:border-amber-400/50",
+    hoverShadow: "hover:shadow-[0_18px_40px_rgba(245,158,11,0.22)]",
   },
   {
     icon: Leaf,
     title: "Sustainable\nKolkata",
-    desc: "Cleaner. Greener. More resilient.",
+    desc: "Cleaner, greener, and more resilient urban water systems.",
+    color: "text-emerald-400",
+    glow: "drop-shadow-[0_0_12px_rgba(16,185,129,0.65)]",
+    hoverBorder: "hover:border-emerald-400/50",
+    hoverShadow: "hover:shadow-[0_18px_40px_rgba(16,185,129,0.22)]",
   },
 ];
 
@@ -667,7 +683,7 @@ export default function AIUnleashedAuth() {
 
       setAuthError(
         err?.message ||
-        "Failed to dispatch verification code. Please check your credentials.",
+          "Failed to dispatch verification code. Please check your credentials.",
       );
       if (audioEngine) audioEngine.playUiChirp(420);
     } finally {
@@ -805,7 +821,7 @@ export default function AIUnleashedAuth() {
       setTimeout(() => setIsShaking(false), 500);
       setAuthError(
         err?.message ||
-        "Invalid or expired verification code. Please check your code and try again.",
+          "Invalid or expired verification code. Please check your code and try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -813,20 +829,27 @@ export default function AIUnleashedAuth() {
   };
 
   // Demo Fill Handler
-  const handleDemoFill = (e) => {
-    if (e) e.preventDefault();
-    if (selectedPortal === "user") {
-      setEmail("anirban.chatterjee@kolkata.org");
-      setPassword("Citizen@2026");
-      setFullName("Anirban Chatterjee");
-      setPhoneNumber("+91 98301 54321");
+  const handleDemoFill = (roleOrEvent) => {
+    let portal = selectedPortal;
+    if (typeof roleOrEvent === "string") {
+      portal = roleOrEvent;
+      setSelectedPortal(roleOrEvent);
+    } else if (roleOrEvent && roleOrEvent.preventDefault) {
+      roleOrEvent.preventDefault();
+    }
+    if (portal === "user") {
+      setEmail("");
+      setPassword("");
+      setFullName("");
+      setPhoneNumber("");
     } else {
-      setEmail("admin@kolkata-water.gov.in");
-      setPassword("Kolkata@Water2026");
-      setFullName("Administrator");
-      setPhoneNumber("9830012345");
+      setEmail("");
+      setPassword("");
+      setFullName("");
+      setPhoneNumber("");
     }
     setPhoneError("");
+    setAuthError("");
     setIsOtpStep(false);
     setOtpDigits(["", "", "", "", "", ""]);
     if (audioEngine) audioEngine.playUiChirp(1040);
@@ -902,8 +925,8 @@ export default function AIUnleashedAuth() {
               </p>
             </div>
 
-            {/* Bottom 4 Feature Cards (Substantial, tall, prominent cards) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-8 lg:mt-30 max-w-[640px]">
+            {/* Bottom 4 Feature Cards (Clean, sleek, distinctive glowing icons) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mt-8 lg:mt-24 max-w-[660px]">
               {FEATURE_CARDS.map((card, idx) => {
                 const Icon = card.icon;
                 return (
@@ -917,16 +940,18 @@ export default function AIUnleashedAuth() {
                       ease: [0.16, 1, 0.3, 1],
                     }}
                     whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                    className="rounded-2xl bg-[#0c1f3d]/50 backdrop-blur-xl border border-white/20 hover:border-cyan-400/50 p-4 sm:p-5 flex flex-col justify-between min-h-[175px] sm:min-h-[195px] shadow-[0_15px_35px_rgba(0,0,0,0.35)] hover:shadow-[0_18px_40px_rgba(0,180,240,0.25)] transition-all duration-300"
+                    className={`rounded-2xl bg-[#0c1f3d]/50 hover:bg-[#0f284e]/70 backdrop-blur-xl border border-white/20 ${card.hoverBorder} p-4 sm:p-5 flex flex-col justify-between min-h-[175px] sm:min-h-[195px] shadow-[0_15px_35px_rgba(0,0,0,0.35)] ${card.hoverShadow} transition-all duration-300 cursor-default text-left group`}
                   >
-                    <div className="text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.6)] mb-3">
+                    <div
+                      className={`${card.color} ${card.glow} mb-3 transition-transform duration-200 group-hover:scale-110`}
+                    >
                       <Icon className="w-7 h-7 sm:w-8 sm:h-8" />
                     </div>
                     <div>
                       <h3 className="text-white font-bold text-[13.5px] sm:text-[15px] leading-snug whitespace-pre-line">
                         {card.title}
                       </h3>
-                      <p className="text-slate-300/80 text-[11px] sm:text-[12px] leading-relaxed mt-1.5">
+                      <p className="text-slate-300/80 text-[11px] sm:text-[12px] leading-relaxed mt-1.5 font-normal">
                         {card.desc}
                       </p>
                     </div>
@@ -946,30 +971,44 @@ export default function AIUnleashedAuth() {
             className="lg:col-span-5 flex flex-col justify-center w-full"
           >
             <div
-              className={`w-full mx-auto lg:ml-auto bg-[#0a1936]/85 backdrop-blur-2xl border border-cyan-400/25 rounded-[32px] text-left transition-all duration-300 relative overflow-hidden shadow-[0_30px_70px_rgba(0,10,30,0.7),0_0_45px_rgba(2,132,199,0.18)] ${isOtpStep
-                ? "max-w-[460px] p-6 sm:p-8 min-h-0"
-                : "max-w-[570px] xl:max-w-[570px] min-h-[950px] p-5 sm:p-6 xl:p-7"
-                }`}
+              className={`w-full mx-auto lg:ml-auto bg-[#0a172e]/95 backdrop-blur-2xl border border-white/10 rounded-[28px] text-left transition-all duration-300 relative overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] ${
+                isOtpStep
+                  ? "max-w-[450px] p-6 sm:p-7 min-h-0"
+                  : "max-w-[460px] p-6 sm:p-7 min-h-0"
+              }`}
             >
-              {/* Top KMC Emblem Header (Only on credentials step) */}
+              {/* Subtle top specular accent line */}
+              <div className="absolute top-0 inset-x-8 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+
+              {/* Top NIVARA Header */}
               {!isOtpStep && (
-                <>
-                  <div className="flex items-center gap-4 mb-4">
-                    <KMCEmblem />
-                    <div>
-                      <h2 className="text-[19px] sm:text-[20px] font-bold text-white tracking-tight leading-tight m-0">
-                        Kolkata
-                      </h2>
-                      <div className="text-[14px] sm:text-[15px] font-semibold text-slate-200 leading-tight mt-0.5">
-                        Water Intelligence
-                      </div>
-                      <div className="text-[11.5px] font-medium text-cyan-400 tracking-wide mt-1">
-                        Cleaner City · Safer Tomorrow
-                      </div>
+                <div className="flex items-center gap-3.5 mb-4">
+                  <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-white border border-white/20 shadow-sm flex items-center justify-center p-0.5 shrink-0">
+                    <img
+                      src="/textures/NIVARA_LOGO.png"
+                      alt="NIVARA Logo"
+                      className="w-full h-full object-contain rounded-lg mix-blend-multiply"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[17px] font-extrabold tracking-[0.14em] uppercase text-white leading-none">
+                        NIVARA
+                      </span>
+                      <span className="text-[9.5px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/35 text-amber-300">
+                        {selectedPortal === "admin"
+                          ? "OFFICIAL LOGIN"
+                          : "CITIZEN LOGIN"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                      <span className="text-xs text-slate-300 font-medium tracking-wide">
+                        Water Intelligence Network
+                      </span>
                     </div>
                   </div>
-                  <div className="w-full h-px bg-white/10 mb-4" />
-                </>
+                </div>
               )}
 
               <AnimatePresence mode="wait">
@@ -1005,7 +1044,9 @@ export default function AIUnleashedAuth() {
                       </button>
 
                       <span className="text-[11px] font-semibold tracking-wider uppercase text-cyan-400/90 bg-cyan-950/60 border border-cyan-500/20 px-2.5 py-0.5 rounded-full">
-                        {selectedPortal === "admin" ? "Admin Clearance" : "User Verification"}
+                        {selectedPortal === "admin"
+                          ? "Admin Clearance"
+                          : "User Verification"}
                       </span>
                     </div>
 
@@ -1015,8 +1056,11 @@ export default function AIUnleashedAuth() {
                         Let's verify your {email ? "email" : "number"}
                       </h3>
                       <p className="text-zinc-400 text-[13.5px] sm:text-[14px] mt-2 max-w-[310px] mx-auto leading-relaxed">
-                        We've sent a 6-digit code to your {email ? "email" : "phone"}.<br />
-                        <span className="text-zinc-300 font-medium">It'll auto-verify once entered.</span>
+                        We've sent a 6-digit code to your{" "}
+                        {email ? "email" : "phone"}.<br />
+                        <span className="text-zinc-300 font-medium">
+                          It'll auto-verify once entered.
+                        </span>
                       </p>
 
                       {/* Destination Email / Phone Chip */}
@@ -1047,7 +1091,11 @@ export default function AIUnleashedAuth() {
                     >
                       {/* 6 Digit Input Keypad with Shake Animation & Glowing Active Slot */}
                       <motion.div
-                        animate={isShaking ? { x: [-12, 12, -8, 8, -4, 4, 0] } : { x: 0 }}
+                        animate={
+                          isShaking
+                            ? { x: [-12, 12, -8, 8, -4, 4, 0] }
+                            : { x: 0 }
+                        }
                         transition={{ duration: 0.4 }}
                         className="relative my-4"
                       >
@@ -1061,11 +1109,15 @@ export default function AIUnleashedAuth() {
                           maxLength={6}
                           value={otpDigits.join("")}
                           onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                            const val = e.target.value
+                              .replace(/\D/g, "")
+                              .slice(0, 6);
                             const newArr = ["", "", "", "", "", ""];
-                            for (let i = 0; i < val.length; i++) newArr[i] = val[i];
+                            for (let i = 0; i < val.length; i++)
+                              newArr[i] = val[i];
                             setOtpDigits(newArr);
-                            if (audioEngine) audioEngine.playUiChirp(1040 + val.length * 35);
+                            if (audioEngine)
+                              audioEngine.playUiChirp(1040 + val.length * 35);
                             if (authError) setAuthError("");
                           }}
                           className="absolute inset-0 opacity-0 z-30 cursor-text w-full h-full"
@@ -1075,35 +1127,48 @@ export default function AIUnleashedAuth() {
                         {/* 6 Squircle Visual Slots with Neon Focused Outline from Pinterest */}
                         <div className="flex justify-center items-center gap-2.5 sm:gap-3 select-none">
                           {otpDigits.map((digit, idx) => {
-                            const firstEmptyIdx = otpDigits.findIndex((d) => d === "");
+                            const firstEmptyIdx = otpDigits.findIndex(
+                              (d) => d === "",
+                            );
                             const isFilled = Boolean(digit);
-                            const isFocused = !isFilled && ((firstEmptyIdx === -1 && idx === 5) || firstEmptyIdx === idx);
+                            const isFocused =
+                              !isFilled &&
+                              ((firstEmptyIdx === -1 && idx === 5) ||
+                                firstEmptyIdx === idx);
 
                             return (
                               <motion.div
                                 key={idx}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className={`w-11 h-14 sm:w-13 sm:h-16 flex items-center justify-center text-2xl sm:text-3xl font-mono font-bold rounded-2xl transition-all duration-200 ${isFilled
-                                  ? "bg-[#151a24] border-2 border-white/25 text-white shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
-                                  : isFocused
-                                    ? "bg-[#121826] border-2 border-[#00f0ff] shadow-[0_0_22px_rgba(0,240,255,0.45)] ring-2 ring-cyan-400/25"
-                                    : "bg-[#0d121c]/80 border-2 border-white/10 text-transparent"
-                                  }`}
+                                className={`w-11 h-14 sm:w-13 sm:h-16 flex items-center justify-center text-2xl sm:text-3xl font-mono font-bold rounded-2xl transition-all duration-200 ${
+                                  isFilled
+                                    ? "bg-[#151a24] border-2 border-white/25 text-white shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
+                                    : isFocused
+                                      ? "bg-[#121826] border-2 border-[#00f0ff] shadow-[0_0_22px_rgba(0,240,255,0.45)] ring-2 ring-cyan-400/25"
+                                      : "bg-[#0d121c]/80 border-2 border-white/10 text-transparent"
+                                }`}
                               >
                                 {isFilled ? (
                                   <motion.span
                                     key={`digit-${digit}-${idx}`}
                                     initial={{ scale: 0.5, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
-                                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                                    transition={{
+                                      type: "spring",
+                                      stiffness: 500,
+                                      damping: 25,
+                                    }}
                                   >
                                     {digit}
                                   </motion.span>
                                 ) : isFocused ? (
                                   <motion.span
                                     animate={{ opacity: [1, 0, 1] }}
-                                    transition={{ repeat: Infinity, duration: 0.8 }}
+                                    transition={{
+                                      repeat: Infinity,
+                                      duration: 0.8,
+                                    }}
                                     className="w-0.5 h-6 bg-cyan-400 rounded-full"
                                   />
                                 ) : null}
@@ -1118,7 +1183,10 @@ export default function AIUnleashedAuth() {
                         <span>Didn't receive the code? </span>
                         {otpCountdown > 0 ? (
                           <span className="text-zinc-300 font-medium">
-                            Resend in <strong className="text-cyan-400 font-mono">{otpCountdown}s</strong>
+                            Resend in{" "}
+                            <strong className="text-cyan-400 font-mono">
+                              {otpCountdown}s
+                            </strong>
                           </span>
                         ) : (
                           <button
@@ -1134,7 +1202,8 @@ export default function AIUnleashedAuth() {
 
                       {/* Delivery Guidance Notice */}
                       <div className="text-center text-[11.5px] text-zinc-500 leading-tight">
-                        📬 Check your <strong>Inbox & Spam / Junk</strong> folder (Gmail may filter security codes).
+                        📬 Check your <strong>Inbox & Spam / Junk</strong>{" "}
+                        folder (Gmail may filter security codes).
                       </div>
 
                       {/* Alerts (Smooth animated appearance) */}
@@ -1172,11 +1241,11 @@ export default function AIUnleashedAuth() {
                         transition={{ duration: 0.15, ease: "easeInOut" }}
                         type="submit"
                         disabled={isSubmitting || otpDigits.join("").length < 6}
-                        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-[15px] flex items-center justify-center gap-2 cursor-pointer shadow-[0_8px_25px_rgba(6,182,212,0.4)] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed mt-2"
+                        className="w-full py-3.5 rounded-xl bg-white hover:bg-slate-100 text-slate-950 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_14px_rgba(0,0,0,0.35),0_0_10px_rgba(255,255,255,0.08)] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed mt-3"
                       >
                         {isSubmitting ? (
                           <>
-                            <Loader2 className="w-4 h-4 animate-spin text-white" />
+                            <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
                             <span>Verifying code...</span>
                           </>
                         ) : (
@@ -1186,7 +1255,7 @@ export default function AIUnleashedAuth() {
                                 ? "Verify & Sign In"
                                 : "Verify & Complete Registration"}
                             </span>
-                            <ArrowRight className="w-4 h-4" />
+                            <ArrowRight className="w-4 h-4 text-slate-950" />
                           </>
                         )}
                       </motion.button>
@@ -1194,132 +1263,121 @@ export default function AIUnleashedAuth() {
                   </motion.div>
                 ) : (
                   /* ========================================================= */
-                  /* CREDENTIALS ENTRY SCREEN                                  */
+                  /* CREDENTIALS ENTRY SCREEN (EXACT MATCH TO SCREENSHOT)      */
                   /* ========================================================= */
                   <motion.div
                     key="credentials-panel"
-                    initial={{ opacity: 0, x: -24 }}
+                    initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 24 }}
-                    transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                   >
-                    {/* Sign In / Create Account Wide Segmented Control */}
-                    <div className="relative flex bg-[#061022]/75 rounded-2xl p-1.5 mb-4 border border-white/10">
+                    {/* Sign In / Create Account Segmented Pill Tabs */}
+                    <div className="bg-[#050c18]/90 border border-white/10 rounded-full p-1 flex mb-3.5 relative">
                       <button
                         type="button"
                         onClick={() => handleTabChange("signin")}
-                        className={`flex-1 text-center py-2 text-[13px] font-bold border-none bg-transparent cursor-pointer relative z-10 transition-colors duration-200 ${activeTab === "signin"
-                          ? "text-white"
-                          : "text-slate-400 hover:text-white"
-                          }`}
+                        className={`flex-1 text-center py-1.5 text-xs font-bold rounded-full transition-all duration-200 cursor-pointer ${
+                          activeTab === "signin"
+                            ? "bg-white text-slate-950 shadow-sm"
+                            : "text-slate-400 hover:text-white"
+                        }`}
                       >
                         Sign In
                       </button>
                       <button
                         type="button"
                         onClick={() => handleTabChange("create")}
-                        className={`flex-1 text-center py-2 text-[13px] font-bold border-none bg-transparent cursor-pointer relative z-10 transition-colors duration-200 ${activeTab === "create"
-                          ? "text-white"
-                          : "text-slate-400 hover:text-white"
-                          }`}
+                        className={`flex-1 text-center py-1.5 text-xs font-bold rounded-full transition-all duration-200 cursor-pointer ${
+                          activeTab === "create"
+                            ? "bg-white text-slate-950 shadow-sm"
+                            : "text-slate-400 hover:text-white"
+                        }`}
                       >
                         Create Account
                       </button>
-
-                      {/* Animated Gradient Tab Indicator */}
-                      <motion.div
-                        layoutId="authTabSlider"
-                        className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] rounded-xl bg-gradient-to-r from-[#0284c7] to-[#2563eb] shadow-[0_2px_12px_rgba(2,132,199,0.4)]"
-                        style={{
-                          left:
-                            activeTab === "signin" ? "6px" : "calc(50% + 0px)",
-                        }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 38,
-                        }}
-                      />
                     </div>
 
-                    {/* Select Access Portal Section (User / Admin) */}
-                    <div className="mb-4">
-                      <div className="text-center text-slate-300 text-[12px] sm:text-[12.5px] font-semibold uppercase tracking-wider mb-2.5">
-                        Select Access Portal
-                      </div>
-                      <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-                        {/* User Portal */}
+                    {/* PORTAL TIER Row */}
+                    <div className="flex items-center justify-between mb-3 px-0.5">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.14em]">
+                        PORTAL TIER
+                      </span>
+                      <div className="bg-[#050c18]/90 border border-white/10 rounded-full p-0.5 flex gap-1">
                         <button
                           type="button"
                           onClick={() => handlePortalSelect("user")}
-                          className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${selectedPortal === "user"
-                            ? "bg-gradient-to-b from-[#0070f3] to-[#0055d4] text-white border-cyan-400/80 shadow-[0_0_22px_rgba(0,112,243,0.5)]"
-                            : "bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border-white/10 hover:border-white/20"
-                            }`}
+                          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${
+                            selectedPortal === "user"
+                              ? "bg-white text-slate-950 shadow-sm"
+                              : "text-slate-400 hover:text-white"
+                          }`}
                         >
-                          <User className="w-6 h-6 mb-1.5 text-inherit" />
-                          <span className="text-[13px] font-bold leading-tight">
-                            User
-                          </span>
+                          <User className="w-3 h-3" />
+                          <span>Citizen</span>
                         </button>
-
-                        {/* Admin Portal */}
                         <button
                           type="button"
                           onClick={() => handlePortalSelect("admin")}
-                          className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${selectedPortal === "admin"
-                            ? "bg-gradient-to-b from-[#0070f3] to-[#0055d4] text-white border-cyan-400/80 shadow-[0_0_22px_rgba(0,112,243,0.5)]"
-                            : "bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border-white/10 hover:border-white/20"
-                            }`}
+                          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${
+                            selectedPortal === "admin"
+                              ? "bg-white text-slate-950 shadow-sm"
+                              : "text-slate-400 hover:text-white"
+                          }`}
                         >
-                          <Shield className="w-6 h-6 mb-1.5 text-inherit" />
-                          <span className="text-[13px] font-bold leading-tight">
-                            Admin
-                          </span>
+                          <Shield className="w-3 h-3" />
+                          <span>Official</span>
                         </button>
                       </div>
                     </div>
 
-                    {/* Divider: Login to Continue */}
-                    <div className="flex items-center gap-3 text-slate-400 text-[12px] my-4">
-                      <span className="flex-1 h-px bg-white/15" />
-                      <span>
-                        {activeTab === "signin"
-                          ? "Login to Continue"
-                          : "Register to Continue"}
-                      </span>
-                      <span className="flex-1 h-px bg-white/15" />
+                    {/* Secondary Authentication SSO */}
+                    <div className="grid grid-cols-2 gap-2.5 mb-3">
+                      <button
+                        type="button"
+                        onClick={() => handleCredentialSubmit()}
+                        className="flex items-center justify-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl py-2 px-3 text-slate-200 text-xs font-semibold cursor-pointer transition-all duration-200"
+                      >
+                        <GoogleIcon />
+                        <span>Google SSO</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleCredentialSubmit()}
+                        className="flex items-center justify-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl py-2 px-3 text-slate-200 text-xs font-semibold cursor-pointer transition-all duration-200"
+                      >
+                        <GovIdIcon />
+                        <span>Gov ID Token</span>
+                      </button>
                     </div>
 
-                    {/* Form Fields */}
+                    {/* Divider: or credentials */}
+                    <div className="flex items-center gap-2.5 text-slate-500 text-[10.5px] font-medium my-2.5">
+                      <span className="flex-1 h-px bg-white/10" />
+                      <span>or credentials</span>
+                      <span className="flex-1 h-px bg-white/10" />
+                    </div>
+
+                    {/* Form Fields with Dark Rounded Input Style */}
                     <form
                       onSubmit={handleCredentialSubmit}
-                      className="space-y-3.5"
+                      className="space-y-2.5"
                     >
-                      {/* Full Name Field (Appears smoothly on Create Account tab) */}
+                      {/* Full Name (if create) */}
                       <AnimatePresence>
                         {activeTab === "create" && (
                           <motion.div
-                            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                            animate={{
-                              opacity: 1,
-                              height: "auto",
-                              marginBottom: 14,
-                            }}
-                            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                            transition={{
-                              duration: 0.28,
-                              ease: [0.16, 1, 0.3, 1],
-                            }}
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
                             className="overflow-hidden"
                           >
-                            <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
-                              Full name
+                            <label className="block text-[10.5px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                              FULL NAME
                             </label>
-                            <div className="relative">
-                              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
-                                <User className="w-4 h-4" />
-                              </div>
+                            <div className="relative rounded-xl bg-black/40 border border-white/10 focus-within:border-cyan-400/70 focus-within:bg-black/60 transition-all flex items-center px-3.5 py-2.5 gap-2.5">
+                              <User className="w-4 h-4 text-slate-400 shrink-0" />
                               <input
                                 type="text"
                                 value={fullName}
@@ -1329,28 +1387,26 @@ export default function AIUnleashedAuth() {
                                 }}
                                 placeholder={
                                   selectedPortal === "admin"
-                                    ? "e.g. Administrator"
-                                    : "e.g. Sourav Roy"
+                                    ? "Administrator"
+                                    : "Sourav Roy"
                                 }
                                 required={activeTab === "create"}
-                                className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
+                                className="w-full bg-transparent border-none text-white text-[13.5px] placeholder-slate-500 outline-none"
                               />
                             </div>
                           </motion.div>
                         )}
                       </AnimatePresence>
 
-                      {/* Official Email / Registered Identifier */}
+                      {/* Official Email or Badge ID */}
                       <div>
-                        <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
+                        <label className="block text-[10.5px] font-bold uppercase tracking-wider text-slate-400 mb-1">
                           {selectedPortal === "admin" && activeTab === "signin"
-                            ? "Email Address or Phone"
-                            : "Email Address"}
+                            ? "OFFICIAL EMAIL OR BADGE ID"
+                            : "EMAIL ADDRESS"}
                         </label>
-                        <div className="relative">
-                          <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
-                            <Mail className="w-4 h-4" />
-                          </div>
+                        <div className="relative rounded-xl bg-black/40 border border-white/10 focus-within:border-cyan-400/70 focus-within:bg-black/60 transition-all flex items-center px-3.5 py-2.5 gap-2.5">
+                          <Mail className="w-4 h-4 text-slate-400 shrink-0" />
                           <input
                             type="text"
                             value={email}
@@ -1361,23 +1417,34 @@ export default function AIUnleashedAuth() {
                             placeholder={
                               selectedPortal === "admin"
                                 ? "admin@kolkata-water.gov.in"
-                                : "souravroy@gmail.com"
+                                : "citizen@kolkata.gov.in"
                             }
                             required
-                            className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
+                            className="w-full bg-transparent border-none text-white text-[13.5px] placeholder-slate-500 outline-none"
                           />
                         </div>
                       </div>
 
                       {/* Password */}
                       <div>
-                        <label className="block text-[12.5px] font-semibold text-slate-200 mb-1.5">
-                          Password
-                        </label>
-                        <div className="relative">
-                          <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
-                            <Lock className="w-4 h-4" />
-                          </div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-[10.5px] font-bold uppercase tracking-wider text-slate-400">
+                            PASSWORD
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              alert(
+                                `Password reset instructions sent to: ${email || "your registered email"}`,
+                              )
+                            }
+                            className="text-cyan-400 hover:text-cyan-300 text-xs font-semibold cursor-pointer transition-colors"
+                          >
+                            Forgot password?
+                          </button>
+                        </div>
+                        <div className="relative rounded-xl bg-black/40 border border-white/10 focus-within:border-cyan-400/70 focus-within:bg-black/60 transition-all flex items-center px-3.5 py-2.5 gap-2.5">
+                          <Lock className="w-4 h-4 text-slate-400 shrink-0" />
                           <input
                             type={showPassword ? "text" : "password"}
                             value={password}
@@ -1385,15 +1452,14 @@ export default function AIUnleashedAuth() {
                               setPassword(e.target.value);
                               if (authError) setAuthError("");
                             }}
-                            placeholder="Enter Password"
-                            minLength={3}
+                            placeholder="••••••••••••••••"
                             required
-                            className="w-full bg-[#0e203f]/75 border border-white/20 focus:border-cyan-400 focus:bg-[#11274d] focus:ring-2 focus:ring-cyan-400/25 rounded-2xl py-3 pl-11 pr-11 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200"
+                            className="w-full bg-transparent border-none text-white text-[13.5px] placeholder-slate-500 outline-none"
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer p-1 transition-colors duration-150"
+                            className="text-slate-400 hover:text-white cursor-pointer p-0.5"
                           >
                             {showPassword ? (
                               <EyeOff className="w-4 h-4" />
@@ -1404,39 +1470,20 @@ export default function AIUnleashedAuth() {
                         </div>
                       </div>
 
-                      {/* Phone Number Field (Appears on Create Account tab) */}
+                      {/* Phone Number (if create) */}
                       <AnimatePresence>
                         {activeTab === "create" && (
                           <motion.div
-                            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                            animate={{
-                              opacity: 1,
-                              height: "auto",
-                              marginBottom: 14,
-                            }}
-                            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                            transition={{
-                              duration: 0.28,
-                              ease: [0.16, 1, 0.3, 1],
-                            }}
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
                             className="overflow-hidden"
                           >
-                            <div className="flex items-center justify-between mb-1.5">
-                              <label className="block text-[12.5px] font-semibold text-slate-200">
-                                Phone Number
-                                {selectedPortal === "admin" && (
-                                  <span className="text-slate-400 font-normal ml-1">
-                                    (for SMS OTP)
-                                  </span>
-                                )}
-                              </label>                            </div>
-                            <div className="relative">
-                              <div
-                                className={`absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-200 ${phoneError ? "text-rose-400" : "text-cyan-400"
-                                  }`}
-                              >
-                                <Phone className="w-4 h-4" />
-                              </div>
+                            <label className="block text-[10.5px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                              MOBILE NUMBER (10 DIGITS)
+                            </label>
+                            <div className="relative rounded-xl bg-black/40 border border-white/10 focus-within:border-cyan-400/70 focus-within:bg-black/60 transition-all flex items-center px-3.5 py-2.5 gap-2.5">
+                              <Phone className="w-4 h-4 text-slate-400 shrink-0" />
                               <input
                                 type="tel"
                                 value={phoneNumber}
@@ -1445,223 +1492,109 @@ export default function AIUnleashedAuth() {
                                   if (phoneError) setPhoneError("");
                                   if (authError) setAuthError("");
                                 }}
-                                onBlur={() => {
-                                  if (phoneNumber.trim()) {
-                                    const err = validatePhoneNumber(phoneNumber);
-                                    setPhoneError(err || "");
-                                  }
-                                }}
-                                placeholder={
-                                  selectedPortal === "admin"
-                                    ? "98300 12345"
-                                    : "+91 98301 54321"
-                                }
+                                placeholder="98300 12345"
                                 required={activeTab === "create"}
-                                aria-required="true"
-                                className={`w-full bg-[#0e203f]/75 border ${phoneError
-                                  ? "border-rose-500/80 focus:border-rose-400 focus:ring-2 focus:ring-rose-400/25"
-                                  : "border-white/20 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/25"
-                                  } focus:bg-[#11274d] rounded-2xl py-3 pl-11 pr-4 text-white placeholder-slate-400 text-[13.5px] outline-none transition-all duration-200`}
+                                className="w-full bg-transparent border-none text-white text-[13.5px] placeholder-slate-500 outline-none"
                               />
                             </div>
                             {phoneError && (
-                              <motion.p
-                                initial={{ opacity: 0, y: -4 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="text-rose-400 text-[11.5px] mt-1.5 font-medium flex items-center gap-1.5"
-                              >
-                                <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0" />
-                                <span>{phoneError}</span>
-                              </motion.p>
+                              <p className="text-[11px] text-rose-400 mt-1">
+                                {phoneError}
+                              </p>
                             )}
                           </motion.div>
                         )}
                       </AnimatePresence>
 
-                      {/* Remember me & Reset passcode */}
-                      <div className="flex items-center justify-between text-[12.5px] pt-0.5">
-                        <label className="flex items-center gap-2 text-slate-300 cursor-pointer font-medium select-none">
-                          <input
-                            type="checkbox"
-                            checked={rememberSession}
-                            onChange={(e) =>
-                              setRememberSession(e.target.checked)
-                            }
-                            className="rounded accent-cyan-500 cursor-pointer"
-                          />
-                          <span>Remember me</span>
-                        </label>
+                      {/* Remember session toggle */}
+                      <div className="flex items-center gap-2.5 pt-1 pb-0.5">
                         <button
                           type="button"
-                          onClick={() =>
-                            alert(
-                              `Password reset instructions sent to: ${email || "your registered email"}`,
-                            )
-                          }
-                          className="text-cyan-400 hover:text-cyan-300 hover:underline font-semibold cursor-pointer transition-colors duration-150"
+                          onClick={() => setRememberSession(!rememberSession)}
+                          className={`w-9 h-5 rounded-full transition-colors relative cursor-pointer ${
+                            rememberSession ? "bg-white" : "bg-white/20"
+                          }`}
                         >
-                          Forgot password?
+                          <span
+                            className={`block w-4 h-4 rounded-full bg-slate-950 transition-transform absolute top-0.5 ${
+                              rememberSession ? "left-4.5" : "left-0.5"
+                            }`}
+                          />
                         </button>
+                        <span
+                          onClick={() => setRememberSession(!rememberSession)}
+                          className="text-xs text-slate-300 font-medium cursor-pointer select-none"
+                        >
+                          Remember session
+                        </span>
                       </div>
 
-                      {/* Success / Error Alerts */}
+                      {/* Alerts */}
                       <AnimatePresence>
-                        {successMessage && (
-                          <motion.div
-                            key="auth-ok"
-                            initial={{ opacity: 0, y: -6, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                            transition={{ duration: 0.25, ease: "easeOut" }}
-                            className="flex items-center gap-2 p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-medium"
-                          >
-                            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-                            <span>{successMessage}</span>
-                          </motion.div>
-                        )}
-
                         {authError && (
                           <motion.div
-                            key="auth-err"
-                            initial={{ opacity: 0, y: -6, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                            transition={{ duration: 0.25, ease: "easeOut" }}
-                            className="flex items-start gap-2 p-3 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-medium"
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            className="flex items-start gap-2 p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-medium"
                           >
                             <Shield className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
                             <span>{authError}</span>
                           </motion.div>
                         )}
+                        {successMessage && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-medium"
+                          >
+                            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                            <span>{successMessage}</span>
+                          </motion.div>
+                        )}
                       </AnimatePresence>
 
-                      {/* Submit Button */}
+                      {/* PRIMARY ACTION BUTTON - WITH CONTROLLED DECREASED GLOW */}
                       <motion.button
                         whileHover={{ scale: 1.012 }}
-                        whileTap={{ scale: 0.985 }}
-                        transition={{ duration: 0.15, ease: "easeInOut" }}
+                        whileTap={{ scale: 0.988 }}
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#0070f3] via-[#0080ff] to-[#0099ff] hover:from-[#0060df] hover:to-[#0088ee] text-white font-bold text-[15px] flex items-center justify-center gap-2 cursor-pointer shadow-[0_6px_28px_rgba(0,112,243,0.5)] hover:shadow-[0_8px_32px_rgba(0,112,243,0.6)] transition-all duration-200 disabled:opacity-60"
+                        className="w-full py-3.5 rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-950 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_14px_rgba(0,0,0,0.35),0_0_10px_rgba(255,255,255,0.08)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.4),0_0_14px_rgba(255,255,255,0.12)] transition-all duration-200 disabled:opacity-60 mt-2"
                       >
                         {isSubmitting ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin text-white" />
+                          <div className="flex items-center justify-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
                             <span>
                               {selectedPortal === "admin"
-                                ? "Dispatching 2FA SMS Code..."
-                                : "Verifying clearance..."}
+                                ? "Verifying Municipal Clearance..."
+                                : "Connecting..."}
                             </span>
-                          </>
+                          </div>
                         ) : (
                           <>
                             <span>
                               {selectedPortal === "admin"
-                                ? activeTab === "signin"
-                                  ? "Continue with 2FA Verification"
-                                  : "Generate OTP & Continue"
+                                ? "CONTINUE WITH 2FA CLEARANCE"
                                 : activeTab === "signin"
-                                  ? "Login"
-                                  : "Create Account"}
+                                  ? "SIGN IN TO NIVARA"
+                                  : "CREATE NIVARA ACCOUNT"}
                             </span>
-                            <ArrowRight className="w-4 h-4" />
+                            <ArrowRight className="w-4 h-4 text-slate-950" />
                           </>
                         )}
                       </motion.button>
                     </form>
 
-                    {/* Quick Mode Toggle Link between Sign In and Create Account */}
-                    <div className="text-center text-[12.5px] text-slate-300 pt-3">
-                      {activeTab === "signin" ? (
-                        <span>
-                          Don't have an account?{" "}
-                          <button
-                            type="button"
-                            onClick={() => handleTabChange("create")}
-                            className="text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-2 ml-1 cursor-pointer transition-colors"
-                          >
-                            Create Account
-                          </button>
-                        </span>
-                      ) : (
-                        <span>
-                          Already have an account?{" "}
-                          <button
-                            type="button"
-                            onClick={() => handleTabChange("signin")}
-                            className="text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-2 ml-1 cursor-pointer transition-colors"
-                          >
-                            Sign In
-                          </button>
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Secondary Authentication SSO */}
-                    <div className="flex items-center gap-3 text-slate-400 text-[11.5px] my-3.5">
-                      <span className="flex-1 h-px bg-white/10" />
-                      <span>or authenticate via</span>
-                      <span className="flex-1 h-px bg-white/10" />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2.5 mb-3">
-                      <motion.button
-                        whileHover={{ scale: 1.015, y: -1 }}
-                        whileTap={{ scale: 0.985 }}
-                        transition={{ duration: 0.15 }}
-                        type="button"
-                        onClick={() => handleCredentialSubmit()}
-                        className="flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.09] border border-white/15 rounded-xl py-2.5 text-slate-200 text-[12.5px] font-semibold cursor-pointer transition-all duration-200"
-                      >
-                        <GoogleIcon />
-                        <span>Google SSO</span>
-                      </motion.button>
-
-                      <motion.button
-                        whileHover={{ scale: 1.015, y: -1 }}
-                        whileTap={{ scale: 0.985 }}
-                        transition={{ duration: 0.15 }}
-                        type="button"
-                        onClick={() => handleCredentialSubmit()}
-                        className="flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.09] border border-white/15 rounded-xl py-2.5 text-slate-200 text-[12.5px] font-semibold cursor-pointer transition-all duration-200"
-                      >
-                        <GovIdIcon />
-                        <span>Gov ID token</span>
-                      </motion.button>
-                    </div>
-
-                    {/* Demo Fill */}
-                    <div className="text-center pt-2 border-t border-white/10 mb-4">
-                      <button
-                        type="button"
-                        onClick={handleDemoFill}
-                        className="text-center text-[12.5px] text-cyan-400 hover:text-cyan-300 font-semibold cursor-pointer inline-flex items-center gap-1.5 transition-colors duration-150"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                        <span>
-                          Fill demo{" "}
-                          {selectedPortal === "admin" ? "admin" : "user"}{" "}
-                          credentials
-                        </span>
-                      </button>
+                    {/* Bottom Security Footer */}
+                    <div className="text-[10.5px] text-emerald-400/90 font-medium flex items-center justify-center gap-1.5 pt-3.5 mt-3.5 border-t border-white/[0.08]">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Encrypted Civic Gateway • 256-bit SSL</span>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-
-              {/* Bottom Kolkata Skyline Vector Art & Typography (Only on credentials step) */}
-              {!isOtpStep && (
-                <div className="pt-3 border-t border-white/10 text-center">
-                  <KolkataSkylineArt />
-                  <div className="text-cyan-300/90 text-[11.5px] font-bold tracking-[0.32em] uppercase mt-2.5">
-                    K O L K A T A
-                  </div>
-                  <div className="text-slate-400 text-[10px] font-medium tracking-wider uppercase mt-0.5">
-                    Cleaner City · Safer Tomorrow
-                  </div>
-                  <div className="w-14 h-1 bg-cyan-400/70 rounded-full mx-auto mt-2.5 shadow-[0_0_10px_rgba(6,182,212,0.6)]" />
-                </div>
-              )}
             </div>
           </motion.div>
         </div>

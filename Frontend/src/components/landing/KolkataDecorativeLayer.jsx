@@ -68,7 +68,8 @@ export function KolkataDecorativeLayer() {
           <span>HOWRAH BRIDGE</span>
         </div>
         <div className="text-[9px] text-slate-600 font-semibold tracking-wider pl-3 leading-tight mt-0.5">
-          22.5958° N<br />88.2636° E
+          22.5958° N<br />
+          88.2636° E
         </div>
       </div>
 
@@ -78,7 +79,8 @@ export function KolkataDecorativeLayer() {
           VICTORIA MEMORIAL
         </div>
         <div className="text-[9px] text-slate-600 font-semibold tracking-wider leading-tight mt-0.5">
-          22.5448° N<br />88.3426° E
+          22.5448° N<br />
+          88.3426° E
         </div>
       </div>
 
@@ -88,7 +90,8 @@ export function KolkataDecorativeLayer() {
           WRITERS' BUILDING
         </div>
         <div className="text-[9px] text-slate-600 font-semibold tracking-wider leading-tight mt-0.5">
-          22.5784° N<br />88.3466° E
+          22.5784° N<br />
+          88.3466° E
         </div>
       </div>
 
@@ -99,7 +102,10 @@ export function KolkataDecorativeLayer() {
         className="absolute top-2 left-1/4 w-[380px] h-[180px] pointer-events-none opacity-[0.14] hidden xl:block"
         style={{ animation: "cloudDriftSlowLeft 48s ease-in-out infinite" }}
       >
-        <svg viewBox="0 0 400 200" className="w-full h-full [filter:blur(24px)]">
+        <svg
+          viewBox="0 0 400 200"
+          className="w-full h-full [filter:blur(24px)]"
+        >
           <ellipse cx="200" cy="100" rx="170" ry="60" fill="#ffffff" />
           <ellipse cx="140" cy="90" rx="100" ry="45" fill="#cbd5e1" />
         </svg>
@@ -109,7 +115,10 @@ export function KolkataDecorativeLayer() {
         className="absolute top-2 right-1/4 w-[380px] h-[180px] pointer-events-none opacity-[0.14] hidden xl:block"
         style={{ animation: "cloudDriftSlowRight 54s ease-in-out infinite" }}
       >
-        <svg viewBox="0 0 400 200" className="w-full h-full [filter:blur(24px)]">
+        <svg
+          viewBox="0 0 400 200"
+          className="w-full h-full [filter:blur(24px)]"
+        >
           <ellipse cx="200" cy="100" rx="170" ry="60" fill="#ffffff" />
           <ellipse cx="260" cy="90" rx="100" ry="45" fill="#cbd5e1" />
         </svg>

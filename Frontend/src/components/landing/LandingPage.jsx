@@ -18,7 +18,10 @@ import { useKWIStore, isUserAdmin } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
 import { CitizenReportingSection } from "./CitizenReportingSection";
 import { KolkataDecorativeLayer } from "./KolkataDecorativeLayer";
-import { RobotPipelineStepping, KWI_PIPELINE_STAGES } from "./RobotPipelineStepping";
+import {
+  RobotPipelineStepping,
+  KWI_PIPELINE_STAGES,
+} from "./RobotPipelineStepping";
 import { ACTIVE_INCIDENTS } from "../gis/kolkataCartographicData";
 import AccordionGallery from "../views/AccordionGallery";
 import SplitText from "../views/SplitText";
@@ -27,11 +30,11 @@ import MoltenMetal from "../views/MoltenMetal";
 // Hotspot locality photographs corresponding to real Kolkata intersections
 const HOTSPOT_PHOTOS = [
   "/images/kolkata_waterlog_sector_v.jpg", // #SV-024: College More & Ring Road, Salt Lake Sector V
-  "/images/hotspot_behala.jpg",            // #BH-019: Behala Chowrasta / Diamond Harbour Rd
-  "/images/hotspot_park_street.jpg",       // #PS-032: Park Street & Chowringhee Intersection
-  "/images/hotspot_thanthania.jpg",        // #TK-089: Thanthania Kalibari
-  "/images/hotspot_hastings.jpg",          // #HS-001: Hastings
-  "/images/hotspot_kalighat.jpg",          // #KG-001: Kalighat
+  "/images/hotspot_behala.jpg", // #BH-019: Behala Chowrasta / Diamond Harbour Rd
+  "/images/hotspot_park_street.jpg", // #PS-032: Park Street & Chowringhee Intersection
+  "/images/hotspot_thanthania.jpg", // #TK-089: Thanthania Kalibari
+  "/images/hotspot_hastings.jpg", // #HS-001: Hastings
+  "/images/hotspot_kalighat.jpg", // #KG-001: Kalighat
 ];
 
 // 4 Final Impact Statistics (System Impact)
@@ -49,8 +52,9 @@ const IMPACT_STATS = [
           <div
             key={i}
             style={{ height: `${h}%` }}
-            className={`w-1.5 rounded-t-sm transition-all duration-500 ${i >= 8 ? "bg-cyan-500" : "bg-cyan-200/80"
-              }`}
+            className={`w-1.5 rounded-t-sm transition-all duration-500 ${
+              i >= 8 ? "bg-cyan-500" : "bg-cyan-200/80"
+            }`}
           />
         ))}
       </div>
@@ -134,8 +138,6 @@ const IMPACT_STATS = [
   },
 ];
 
-
-
 const PIPELINE_PROGRESS_PERCENT = [14, 29, 43, 57, 71, 86, 100];
 
 const STEP_TELEMETRY = [
@@ -198,11 +200,7 @@ const STEP_TELEMETRY = [
 ];
 
 export function LandingPage() {
-  const {
-    navigate,
-    currentUser,
-    setSelectedIncident,
-  } = useKWIStore();
+  const { navigate, currentUser, setSelectedIncident } = useKWIStore();
   const isAdmin = isUserAdmin(currentUser);
   const isCitizenUser = Boolean(currentUser && !isAdmin);
   const [isSectionVisible, setIsSectionVisible] = useState(false);
@@ -362,7 +360,9 @@ export function LandingPage() {
               }}
               className="px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-700 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold text-sm shadow-[0_4px_20px_rgba(6,182,212,0.36)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2"
             >
-              <span>{isCitizenUser ? "Report an Issue" : "Explore Live City"}</span>
+              <span>
+                {isCitizenUser ? "Report an Issue" : "Explore Live City"}
+              </span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
@@ -442,12 +442,13 @@ export function LandingPage() {
                 rootMargin="-100px"
                 textAlign="center"
                 tag="h2"
-                onLetterAnimationComplete={() => { }}
+                onLetterAnimationComplete={() => {}}
                 showCallback
               />
             </div>
             <p className="text-sm text-black mt-2 leading-relaxed">
-              Live field data, citizen reports and sensor streams to identify and respond faster.
+              Live field data, citizen reports and sensor streams to identify
+              and respond faster.
             </p>
             <div className="mt-3.5 flex items-center justify-center">
               <button

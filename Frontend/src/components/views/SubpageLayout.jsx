@@ -16,7 +16,8 @@ export function SubpageLayout({ children }) {
   const isSimulateRoute = currentRoute === "/simulate";
   const isRespondRoute =
     currentRoute === "/action-center" || currentRoute === "/respond";
-  const isFullWidth = isProfileRoute || isReportsRoute || isSimulateRoute || isDashboardRoute;
+  const isFullWidth =
+    isProfileRoute || isReportsRoute || isSimulateRoute || isDashboardRoute;
 
   return (
     <div

@@ -1,81 +1,87 @@
-import { motion } from 'framer-motion'
-import { useKWIStore } from '../store/useKWIStore'
-import { audioEngine } from '../utils/audioEngine'
+import { motion } from "framer-motion";
+import { useKWIStore } from "../store/useKWIStore";
+import { audioEngine } from "../utils/audioEngine";
 
 const GithubIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
     <path d="M12 .7a11.3 11.3 0 0 0-3.57 22c.57.1.78-.25.78-.55v-2.1c-3.18.69-3.85-1.35-3.85-1.35-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.68 1.24 3.33.95.1-.74.4-1.24.73-1.53-2.54-.29-5.21-1.27-5.21-5.65 0-1.25.45-2.27 1.18-3.07-.12-.29-.51-1.45.11-3.02 0 0 .96-.31 3.12 1.17a10.8 10.8 0 0 1 5.68 0c2.16-1.48 3.12-1.17 3.12-1.17.62 1.57.23 2.73.11 3.02.73.8 1.18 1.82 1.18 3.07 0 4.39-2.68 5.35-5.23 5.64.41.35.78 1.05.78 2.12v3.13c0 .3.2.66.79.55A11.3 11.3 0 0 0 12 .7Z" />
   </svg>
-)
+);
 
 const LinkedinIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
     <path d="M5.1 3.6a2.1 2.1 0 1 1 0 4.2 2.1 2.1 0 0 1 0-4.2ZM3.3 9h3.6v11.5H3.3V9Zm5.8 0h3.4v1.57h.05c.47-.9 1.62-1.85 3.34-1.85 3.58 0 4.24 2.36 4.24 5.43v6.35h-3.55v-5.63c0-1.34-.03-3.06-1.87-3.06-1.87 0-2.16 1.46-2.16 2.96v5.73H9.1V9Z" />
   </svg>
-)
+);
 
 const XIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
   </svg>
-)
+);
 
 const InstagramIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    className="w-3.5 h-3.5"
+  >
     <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
     <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
     <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
   </svg>
-)
+);
 
 const ChevronRightIcon = () => (
   <span className="text-white/30 text-xs group-hover:text-cyan-400 group-hover:translate-x-1 transition-all duration-150 font-mono">
     &gt;
   </span>
-)
+);
 
 const NAV_COLUMNS = [
   {
-    title: 'PLATFORM',
+    title: "PLATFORM",
     links: [
-      { label: 'City Intelligence', path: '/live-city' },
-      { label: 'Incidents', path: '/incidents' },
-      { label: 'Simulate', path: '/simulate' },
+      { label: "City Intelligence", path: "/live-city" },
+      { label: "Incidents", path: "/incidents" },
+      { label: "Simulate", path: "/simulate" },
     ],
   },
   {
-    title: 'INTELLIGENCE',
+    title: "INTELLIGENCE",
     links: [
-      { label: 'Water Network', path: '/live-city' },
-      { label: 'Live Systems', path: '/live-city' },
-      { label: 'Reports', path: '/reports' },
-      { label: 'Data Insights', path: '/live-city' },
+      { label: "Water Network", path: "/live-city" },
+      { label: "Live Systems", path: "/live-city" },
+      { label: "Reports", path: "/reports" },
+      { label: "Data Insights", path: "/live-city" },
     ],
   },
   {
-    title: 'COMMAND',
+    title: "COMMAND",
     links: [
-      { label: 'Actions', path: '/action-center' },
-      { label: 'Ask Kolkata', isAskKolkata: true },
-      { label: 'Sign Up / Join', path: '/signup' },
-      { label: 'System Status', path: '/live-city' },
+      { label: "Actions", path: "/action-center" },
+      { label: "Ask Kolkata", isAskKolkata: true },
+      { label: "Sign Up / Join", path: "/signup" },
+      { label: "System Status", path: "/live-city" },
     ],
   },
-]
+];
 
 export default function Footer() {
-  const { navigate, toggleAskKolkata, openLoginModal } = useKWIStore()
+  const { navigate, toggleAskKolkata, openLoginModal } = useKWIStore();
 
   const handleLinkClick = (linkItem) => {
-    if (audioEngine) audioEngine.playUiChirp(920)
+    if (audioEngine) audioEngine.playUiChirp(920);
     if (linkItem.isAskKolkata) {
-      toggleAskKolkata()
+      toggleAskKolkata();
     } else if (linkItem.isLogin) {
-      openLoginModal()
+      openLoginModal();
     } else if (linkItem.path) {
-      navigate(linkItem.path)
+      navigate(linkItem.path);
     }
-  }
+  };
 
   return (
     <footer className="relative w-full overflow-hidden isolate text-white select-none font-sans">
@@ -86,7 +92,7 @@ export default function Footer() {
         className="absolute top-0 inset-x-0 h-40 sm:h-48 lg:h-56 z-0 pointer-events-none"
         style={{
           background:
-            'linear-gradient(to bottom, #ffffff 0%, rgba(255,255,255,0.75) 20%, rgba(255,255,255,0.45) 40%, rgba(255,255,255,0.22) 60%, rgba(255,255,255,0.08) 80%, rgba(255,255,255,0.04) 90%, rgba(255,255,255,0) 100%)',
+            "linear-gradient(to bottom, #ffffff 0%, rgba(255,255,255,0.75) 20%, rgba(255,255,255,0.45) 40%, rgba(255,255,255,0.22) 60%, rgba(255,255,255,0.08) 80%, rgba(255,255,255,0.04) 90%, rgba(255,255,255,0) 100%)",
         }}
         aria-hidden="true"
       />
@@ -140,8 +146,8 @@ export default function Footer() {
             <button
               type="button"
               onClick={() => {
-                if (audioEngine) audioEngine.playUiChirp(920)
-                navigate('/')
+                if (audioEngine) audioEngine.playUiChirp(920);
+                navigate("/");
               }}
               className="flex items-center gap-3.5 mb-4 text-left cursor-pointer group focus:outline-none"
             >
@@ -180,31 +186,32 @@ export default function Footer() {
 
             {/* Tagline Description */}
             <p className="text-[15px] leading-[1.6] text-slate-200/95 max-w-[340px] mb-6 font-normal">
-              Empowering Kolkata with real-time water intelligence, predictive insights, and rapid
-              response systems for a resilient, flood-safe future.
+              Empowering Kolkata with real-time water intelligence, predictive
+              insights, and rapid response systems for a resilient, flood-safe
+              future.
             </p>
 
             {/* Social Pill Buttons */}
             <div className="flex items-center gap-3">
               {[
                 {
-                  href: 'https://github.com',
-                  label: 'GitHub',
+                  href: "https://github.com",
+                  label: "GitHub",
                   icon: <GithubIcon />,
                 },
                 {
-                  href: 'https://linkedin.com',
-                  label: 'LinkedIn',
+                  href: "https://linkedin.com",
+                  label: "LinkedIn",
                   icon: <LinkedinIcon />,
                 },
                 {
-                  href: 'https://x.com',
-                  label: 'X',
+                  href: "https://x.com",
+                  label: "X",
                   icon: <XIcon />,
                 },
                 {
-                  href: 'https://instagram.com',
-                  label: 'Instagram',
+                  href: "https://instagram.com",
+                  label: "Instagram",
                   icon: <InstagramIcon />,
                 },
               ].map((item) => (
@@ -300,18 +307,27 @@ export default function Footer() {
 
           {/* Legal Links */}
           <div className="flex items-center gap-6 sm:gap-8">
-            <a href="#privacy" className="hover:text-cyan-300 transition-colors duration-150">
+            <a
+              href="#privacy"
+              className="hover:text-cyan-300 transition-colors duration-150"
+            >
               PRIVACY POLICY
             </a>
-            <a href="#terms" className="hover:text-cyan-300 transition-colors duration-150">
+            <a
+              href="#terms"
+              className="hover:text-cyan-300 transition-colors duration-150"
+            >
               TERMS OF SERVICE
             </a>
-            <a href="#contact" className="hover:text-cyan-300 transition-colors duration-150">
+            <a
+              href="#contact"
+              className="hover:text-cyan-300 transition-colors duration-150"
+            >
               CONTACT
             </a>
           </div>
         </div>
       </div>
     </footer>
-  )
+  );
 }

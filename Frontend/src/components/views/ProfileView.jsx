@@ -1,13 +1,58 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  User, Lock, Bell, LogOut, Camera, MapPin, CheckCircle2, Key,
-  ShieldCheck, AlertTriangle, Activity, Clock, TrendingUp,
-  Smartphone, Pencil, Mail, Phone, Building2, BookOpen, FileText,
-  ChevronRight, ChevronDown, Eye, EyeOff, Palette, Sun, Moon, Monitor,
-  MessageSquare, Globe, BarChart2, BarChart3, Leaf, ArrowRight, Settings,
-  Zap, RefreshCw, Image as ImageIcon, Shield, Users, Droplet, Waves,
-  Compass, ExternalLink, X, Navigation
+  User,
+  Lock,
+  Bell,
+  LogOut,
+  Camera,
+  MapPin,
+  CheckCircle2,
+  Key,
+  ShieldCheck,
+  AlertTriangle,
+  Activity,
+  Clock,
+  TrendingUp,
+  Smartphone,
+  Pencil,
+  Mail,
+  Phone,
+  Building2,
+  BookOpen,
+  FileText,
+  ChevronRight,
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Palette,
+  Sun,
+  Moon,
+  Monitor,
+  MessageSquare,
+  Globe,
+  BarChart2,
+  BarChart3,
+  Leaf,
+  ArrowRight,
+  Settings,
+  Zap,
+  RefreshCw,
+  Image as ImageIcon,
+  Shield,
+  Users,
+  Droplet,
+  Waves,
+  Compass,
+  ExternalLink,
+  X,
+  Navigation,
 } from "lucide-react";
 import { useKWIStore } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
@@ -76,11 +121,15 @@ export function ProfileView() {
   const stats = useMemo(() => {
     const created = new Date(profile.createdAt || "2026-08-15");
     const now = new Date();
-    const calculatedDays = Math.max(1, Math.ceil((now - created) / (1000 * 60 * 60 * 24)));
+    const calculatedDays = Math.max(
+      1,
+      Math.ceil((now - created) / (1000 * 60 * 60 * 24)),
+    );
     return {
       reportsSubmitted: currentUser?.reportsSubmitted ?? 8,
       alertsReceived: currentUser?.alertsReceived ?? 3,
-      daysActive: currentUser?.daysActive ?? (calculatedDays > 1 ? calculatedDays : 24),
+      daysActive:
+        currentUser?.daysActive ?? (calculatedDays > 1 ? calculatedDays : 24),
     };
   }, [currentUser, profile.createdAt]);
 
@@ -89,7 +138,12 @@ export function ProfileView() {
 
   // Keep activeTab in sync with store's profileActiveTab
   useEffect(() => {
-    if (profileActiveTab && ["overview", "personal", "preferences", "security"].includes(profileActiveTab)) {
+    if (
+      profileActiveTab &&
+      ["overview", "personal", "preferences", "security"].includes(
+        profileActiveTab,
+      )
+    ) {
       setActiveTab(profileActiveTab);
     }
   }, [profileActiveTab]);
@@ -124,7 +178,9 @@ export function ProfileView() {
 
   /* ── Computed Values ── */
   const userInitials = useMemo(() => {
-    const clean = (profile.fullName || currentUser?.name || "KWI User").replace(/[^a-zA-Z0-9]/g, " ").trim();
+    const clean = (profile.fullName || currentUser?.name || "KWI User")
+      .replace(/[^a-zA-Z0-9]/g, " ")
+      .trim();
     const parts = clean.split(/\s+/).filter(Boolean);
     if (parts.length >= 2) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
@@ -157,22 +213,26 @@ export function ProfileView() {
   }, []);
 
   /* ── Handlers ── */
-  const handleImageChange = useCallback((e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return;
-    if (file.size > 4 * 1024 * 1024) return;
-    setImageUploading(true);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setProfile((p) => ({ ...p, profileImage: reader.result }));
-      setEditDraft((d) => ({ ...d, profileImage: reader.result }));
-      updateUserProfile?.({ avatarUrl: reader.result });
-      setImageUploading(false);
-      audioEngine?.playUiChirp(1020);
-    };
-    reader.readAsDataURL(file);
-  }, [updateUserProfile]);
+  const handleImageChange = useCallback(
+    (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type))
+        return;
+      if (file.size > 4 * 1024 * 1024) return;
+      setImageUploading(true);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfile((p) => ({ ...p, profileImage: reader.result }));
+        setEditDraft((d) => ({ ...d, profileImage: reader.result }));
+        updateUserProfile?.({ avatarUrl: reader.result });
+        setImageUploading(false);
+        audioEngine?.playUiChirp(1020);
+      };
+      reader.readAsDataURL(file);
+    },
+    [updateUserProfile],
+  );
 
   const handleRemoveImage = useCallback(() => {
     setProfile((p) => ({ ...p, profileImage: null }));
@@ -193,41 +253,52 @@ export function ProfileView() {
     audioEngine?.playUiChirp(750);
   }, []);
 
-  const handleSaveProfile = useCallback((e) => {
-    if (e) e.preventDefault();
-    setIsSaving(true);
-    audioEngine?.playStationLock();
+  const handleSaveProfile = useCallback(
+    (e) => {
+      if (e) e.preventDefault();
+      setIsSaving(true);
+      audioEngine?.playStationLock();
 
-    setTimeout(() => {
-      const updated = { ...editDraft };
-      setProfile(updated);
-      updateUserProfile?.({
-        name: updated.fullName,
-        username: updated.username,
-        email: updated.email,
-        phone: updated.phone,
-        location: updated.location,
-        institution: updated.institution,
-        department: updated.department,
-        bio: updated.bio,
-        avatarUrl: updated.profileImage,
-      });
-      setIsSaving(false);
-      setIsEditModalOpen(false);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    }, 500);
-  }, [editDraft, updateUserProfile]);
+      setTimeout(() => {
+        const updated = { ...editDraft };
+        setProfile(updated);
+        updateUserProfile?.({
+          name: updated.fullName,
+          username: updated.username,
+          email: updated.email,
+          phone: updated.phone,
+          location: updated.location,
+          institution: updated.institution,
+          department: updated.department,
+          bio: updated.bio,
+          avatarUrl: updated.profileImage,
+        });
+        setIsSaving(false);
+        setIsEditModalOpen(false);
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+      }, 500);
+    },
+    [editDraft, updateUserProfile],
+  );
 
-  const handleSecuritySave = useCallback((e) => {
-    e.preventDefault();
-    if (!security.currentPassword || !security.newPassword) return;
-    if (security.newPassword !== security.confirmPassword) return;
-    audioEngine?.playStationLock();
-    setSecuritySuccess(true);
-    setSecurity((s) => ({ ...s, currentPassword: "", newPassword: "", confirmPassword: "" }));
-    setTimeout(() => setSecuritySuccess(false), 3000);
-  }, [security]);
+  const handleSecuritySave = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (!security.currentPassword || !security.newPassword) return;
+      if (security.newPassword !== security.confirmPassword) return;
+      audioEngine?.playStationLock();
+      setSecuritySuccess(true);
+      setSecurity((s) => ({
+        ...s,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
+      setTimeout(() => setSecuritySuccess(false), 3000);
+    },
+    [security],
+  );
 
   const handleSignOut = useCallback(() => {
     audioEngine?.playStationLock();
@@ -237,7 +308,11 @@ export function ProfileView() {
 
   /* ── Tab Definitions ── */
   const tabs = [
-    { id: "overview", label: "Overview", icon: <LayoutDashboardIcon size={16} /> },
+    {
+      id: "overview",
+      label: "Overview",
+      icon: <LayoutDashboardIcon size={16} />,
+    },
     { id: "personal", label: "Personal Details", icon: <User size={16} /> },
     { id: "preferences", label: "Preferences", icon: <Settings size={16} /> },
     { id: "security", label: "Security", icon: <Lock size={16} /> },
@@ -299,8 +374,8 @@ export function ProfileView() {
           {/* Left Side: Serif Hero Heading & Subtitle */}
           <div className="kwi-hero-left">
             <h1 className="kwi-hero-title">
-              A Cleaner Kolkata<br />
-              A Healthier Tomorrow
+              A Cleaner Kolkata
+              <br />A Healthier Tomorrow
             </h1>
             <p className="kwi-hero-subtitle">Data. People. Cleaner Water.</p>
           </div>
@@ -308,7 +383,8 @@ export function ProfileView() {
           {/* Right Side: Elegant City Quote */}
           <div className="kwi-hero-right hidden md:flex flex-col items-end text-right">
             <blockquote className="kwi-hero-quote">
-              “For a healthier city,<br />
+              “For a healthier city,
+              <br />
               flowing with possibilities.”
             </blockquote>
             <div className="kwi-hero-quote-line" />
@@ -343,7 +419,11 @@ export function ProfileView() {
               title="Change profile picture"
               disabled={imageUploading}
             >
-              {imageUploading ? <RefreshCw size={11} className="animate-spin" /> : <Camera size={11} />}
+              {imageUploading ? (
+                <RefreshCw size={11} className="animate-spin" />
+              ) : (
+                <Camera size={11} />
+              )}
             </button>
           </div>
 
@@ -390,8 +470,10 @@ export function ProfileView() {
                 <Leaf size={15} className="text-emerald-600" />
               </div>
               <p className="kwi-quote-text">
-                “Small actions<br />
-                create a cleaner,<br />
+                “Small actions
+                <br />
+                create a cleaner,
+                <br />
                 healthier Kolkata.”
               </p>
             </div>
@@ -419,7 +501,12 @@ export function ProfileView() {
               >
                 <span className="kwi-tab-icon">{tab.icon}</span>
                 <span className="kwi-tab-label">{tab.label}</span>
-                {isActive && <motion.div layoutId="kwi-tab-underline" className="kwi-tab-underline" />}
+                {isActive && (
+                  <motion.div
+                    layoutId="kwi-tab-underline"
+                    className="kwi-tab-underline"
+                  />
+                )}
               </button>
             );
           })}
@@ -448,7 +535,9 @@ export function ProfileView() {
               className="kwi-save-toast mb-5 flex items-center gap-2 p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-semibold shadow-xs"
             >
               <CheckCircle2 size={16} className="text-emerald-700 shrink-0" />
-              <span>Profile information synchronized and saved successfully!</span>
+              <span>
+                Profile information synchronized and saved successfully!
+              </span>
             </motion.div>
           )}
 
@@ -488,7 +577,9 @@ export function ProfileView() {
                   </div>
                   <div className="kwi-stat-body">
                     <div className="kwi-stat-val-row">
-                      <span className="kwi-stat-num">{stats.reportsSubmitted}</span>
+                      <span className="kwi-stat-num">
+                        {stats.reportsSubmitted}
+                      </span>
                       <span className="kwi-badge-trend green">↑ 33%</span>
                     </div>
                     <div className="kwi-stat-label">Reports Submitted</div>
@@ -503,7 +594,9 @@ export function ProfileView() {
                   </div>
                   <div className="kwi-stat-body">
                     <div className="kwi-stat-val-row">
-                      <span className="kwi-stat-num">{stats.alertsReceived}</span>
+                      <span className="kwi-stat-num">
+                        {stats.alertsReceived}
+                      </span>
                       <span className="kwi-badge-trend red">↓ 25%</span>
                     </div>
                     <div className="kwi-stat-label">Alerts Received</div>
@@ -546,9 +639,7 @@ export function ProfileView() {
                     </div>
 
                     <div className="p-5">
-                      <p className="kwi-about-text">
-                        {profile.bio}
-                      </p>
+                      <p className="kwi-about-text">{profile.bio}</p>
 
                       <div className="mt-5 space-y-3.5">
                         {/* Email */}
@@ -557,9 +648,7 @@ export function ProfileView() {
                             <Mail size={16} />
                           </div>
                           <div className="min-w-0">
-                            <div className="kwi-field-label-tag">
-                              Email
-                            </div>
+                            <div className="kwi-field-label-tag">Email</div>
                             <div className="kwi-field-val-text truncate">
                               {profile.email || "user@kolkata-water.gov.in"}
                             </div>
@@ -572,9 +661,7 @@ export function ProfileView() {
                             <Phone size={16} />
                           </div>
                           <div className="min-w-0">
-                            <div className="kwi-field-label-tag">
-                              Phone
-                            </div>
+                            <div className="kwi-field-label-tag">Phone</div>
                             <div className="kwi-field-val-text">
                               {profile.phone || "Not added"}
                             </div>
@@ -587,9 +674,7 @@ export function ProfileView() {
                             <MapPin size={16} />
                           </div>
                           <div className="min-w-0">
-                            <div className="kwi-field-label-tag">
-                              Location
-                            </div>
+                            <div className="kwi-field-label-tag">Location</div>
                             <div className="kwi-field-val-text">
                               {profile.location || "Kolkata, West Bengal"}
                             </div>
@@ -648,10 +733,11 @@ export function ProfileView() {
                                   setIsDropdownOpen(false);
                                   audioEngine?.playUiChirp(880);
                                 }}
-                                className={`w-full text-left px-3 py-1.5 text-xs font-medium cursor-pointer ${contribTimeRange === opt.val
-                                  ? "bg-blue-50 text-[#1677ff] font-semibold"
-                                  : "text-[#14213D] hover:bg-slate-50"
-                                  }`}
+                                className={`w-full text-left px-3 py-1.5 text-xs font-medium cursor-pointer ${
+                                  contribTimeRange === opt.val
+                                    ? "bg-blue-50 text-[#1677ff] font-semibold"
+                                    : "text-[#14213D] hover:bg-slate-50"
+                                }`}
                               >
                                 {opt.label}
                               </button>
@@ -674,7 +760,8 @@ export function ProfileView() {
                               >
                                 {/* Tooltip */}
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none absolute -top-8 px-2 py-1 bg-[#0F1F3D] text-white text-[10.5px] font-semibold rounded shadow-md whitespace-nowrap z-20">
-                                  {item.date}: {Math.round(item.val / 10)} actions
+                                  {item.date}: {Math.round(item.val / 10)}{" "}
+                                  actions
                                 </div>
                                 <div
                                   className="w-full rounded-t-md transition-all duration-300 group-hover:brightness-110"
@@ -712,7 +799,9 @@ export function ProfileView() {
                             <div className="text-[15px] font-bold text-[#0F1F3D] dark:text-white leading-tight">
                               {stats.reportsSubmitted}
                             </div>
-                            <div className="text-[11px] font-semibold text-[#52627A]">Reports</div>
+                            <div className="text-[11px] font-semibold text-[#52627A]">
+                              Reports
+                            </div>
                           </div>
                         </div>
 
@@ -724,7 +813,9 @@ export function ProfileView() {
                             <div className="text-[15px] font-bold text-[#0F1F3D] dark:text-white leading-tight">
                               {stats.alertsReceived}
                             </div>
-                            <div className="text-[11px] font-semibold text-[#52627A]">Alerts</div>
+                            <div className="text-[11px] font-semibold text-[#52627A]">
+                              Alerts
+                            </div>
                           </div>
                         </div>
 
@@ -736,7 +827,9 @@ export function ProfileView() {
                             <div className="text-[15px] font-bold text-[#0F1F3D] dark:text-white leading-tight">
                               {stats.daysActive}
                             </div>
-                            <div className="text-[11px] font-semibold text-[#52627A]">Days Active</div>
+                            <div className="text-[11px] font-semibold text-[#52627A]">
+                              Days Active
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -749,7 +842,8 @@ export function ProfileView() {
                     <div
                       className="absolute inset-0 bg-cover bg-no-repeat pointer-events-none transition-transform duration-700 ease-out"
                       style={{
-                        backgroundImage: "url('/images/water_droplet_ripple.jpg')",
+                        backgroundImage:
+                          "url('/images/water_droplet_ripple.jpg')",
                         backgroundPosition: "72% 40%",
                       }}
                     />
@@ -771,11 +865,13 @@ export function ProfileView() {
                         KWI INTELLIGENCE
                       </span>
                       <h4 className="text-[19px] sm:text-[21px] font-bold leading-snug text-white font-['Space_Grotesk'] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
-                        Your contribution<br />
+                        Your contribution
+                        <br />
                         builds a cleaner, safer Kolkata.
                       </h4>
                       <p className="text-[12.5px] text-white/95 leading-relaxed mt-2 font-normal drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
-                        Every report and alert helps us understand, monitor, and improve the city's water infrastructure.
+                        Every report and alert helps us understand, monitor, and
+                        improve the city's water infrastructure.
                       </p>
                       <button
                         type="button"
@@ -815,7 +911,10 @@ export function ProfileView() {
                             Update your profile picture
                           </div>
                         </div>
-                        <ChevronRight size={16} className="text-[#596A82] group-hover:text-[#1677ff] group-hover:translate-x-0.5 transition-all" />
+                        <ChevronRight
+                          size={16}
+                          className="text-[#596A82] group-hover:text-[#1677ff] group-hover:translate-x-0.5 transition-all"
+                        />
                       </button>
 
                       {/* Action 2: Update Password */}
@@ -823,7 +922,8 @@ export function ProfileView() {
                         type="button"
                         onClick={() => {
                           setActiveTab("security");
-                          if (setProfileActiveTab) setProfileActiveTab("security");
+                          if (setProfileActiveTab)
+                            setProfileActiveTab("security");
                           audioEngine?.playUiChirp(860);
                         }}
                         className="w-full flex items-center gap-3.5 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors text-left group cursor-pointer"
@@ -839,7 +939,10 @@ export function ProfileView() {
                             Keep your account secure
                           </div>
                         </div>
-                        <ChevronRight size={16} className="text-[#596A82] group-hover:text-[#d97706] group-hover:translate-x-0.5 transition-all" />
+                        <ChevronRight
+                          size={16}
+                          className="text-[#596A82] group-hover:text-[#d97706] group-hover:translate-x-0.5 transition-all"
+                        />
                       </button>
 
                       {/* Action 3: Manage Preferences */}
@@ -847,7 +950,8 @@ export function ProfileView() {
                         type="button"
                         onClick={() => {
                           setActiveTab("preferences");
-                          if (setProfileActiveTab) setProfileActiveTab("preferences");
+                          if (setProfileActiveTab)
+                            setProfileActiveTab("preferences");
                           audioEngine?.playUiChirp(860);
                         }}
                         className="w-full flex items-center gap-3.5 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors text-left group cursor-pointer"
@@ -863,7 +967,10 @@ export function ProfileView() {
                             Customize your experience
                           </div>
                         </div>
-                        <ChevronRight size={16} className="text-[#596A82] group-hover:text-[#059669] group-hover:translate-x-0.5 transition-all" />
+                        <ChevronRight
+                          size={16}
+                          className="text-[#596A82] group-hover:text-[#059669] group-hover:translate-x-0.5 transition-all"
+                        />
                       </button>
                     </div>
                   </div>
@@ -875,13 +982,16 @@ export function ProfileView() {
                         <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                           <Leaf size={15} />
                         </div>
-                        <h4 className="text-[14px] font-bold">Your Next Contribution</h4>
+                        <h4 className="text-[14px] font-bold">
+                          Your Next Contribution
+                        </h4>
                       </div>
                       <MapPin size={16} className="text-[#1677ff] shrink-0" />
                     </div>
 
                     <p className="text-[12.5px] text-[#334155] dark:text-slate-200 mt-2.5 leading-relaxed font-medium">
-                      There are 3 unresolved water reports near your monitored areas.
+                      There are 3 unresolved water reports near your monitored
+                      areas.
                     </p>
 
                     <button
@@ -925,14 +1035,48 @@ export function ProfileView() {
                 <div className="p-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
-                      { label: "FULL NAME", val: profile.fullName, icon: <User size={15} className="text-[#1677ff]" /> },
-                      { label: "USERNAME", val: profile.username, icon: <Users size={15} className="text-[#1677ff]" /> },
-                      { label: "EMAIL ADDRESS", val: profile.email, icon: <Mail size={15} className="text-[#1677ff]" /> },
-                      { label: "PHONE NUMBER", val: profile.phone || "Not added", icon: <Phone size={15} className="text-[#059669]" /> },
-                      { label: "LOCATION / JURISDICTION", val: profile.location, icon: <MapPin size={15} className="text-[#d97706]" /> },
-                      { label: "INSTITUTION / ORGANIZATION", val: profile.institution || "Not added", icon: <Building2 size={15} className="text-[#7c3aed]" /> },
-                      { label: "DEPARTMENT", val: profile.department, icon: <BookOpen size={15} className="text-[#1677ff]" /> },
-                      { label: "ACCOUNT CREATED", val: accountCreatedAtFormatted, icon: <Clock size={15} className="text-[#52627A]" /> },
+                      {
+                        label: "FULL NAME",
+                        val: profile.fullName,
+                        icon: <User size={15} className="text-[#1677ff]" />,
+                      },
+                      {
+                        label: "USERNAME",
+                        val: profile.username,
+                        icon: <Users size={15} className="text-[#1677ff]" />,
+                      },
+                      {
+                        label: "EMAIL ADDRESS",
+                        val: profile.email,
+                        icon: <Mail size={15} className="text-[#1677ff]" />,
+                      },
+                      {
+                        label: "PHONE NUMBER",
+                        val: profile.phone || "Not added",
+                        icon: <Phone size={15} className="text-[#059669]" />,
+                      },
+                      {
+                        label: "LOCATION / JURISDICTION",
+                        val: profile.location,
+                        icon: <MapPin size={15} className="text-[#d97706]" />,
+                      },
+                      {
+                        label: "INSTITUTION / ORGANIZATION",
+                        val: profile.institution || "Not added",
+                        icon: (
+                          <Building2 size={15} className="text-[#7c3aed]" />
+                        ),
+                      },
+                      {
+                        label: "DEPARTMENT",
+                        val: profile.department,
+                        icon: <BookOpen size={15} className="text-[#1677ff]" />,
+                      },
+                      {
+                        label: "ACCOUNT CREATED",
+                        val: accountCreatedAtFormatted,
+                        icon: <Clock size={15} className="text-[#52627A]" />,
+                      },
                     ].map((item, idx) => {
                       const isNotAdded = item.val === "Not added";
                       return (
@@ -942,12 +1086,17 @@ export function ProfileView() {
                         >
                           <div className="flex items-center gap-2 text-[#52627A] dark:text-slate-400 text-xs font-bold mb-1.5">
                             {item.icon}
-                            <span className="tracking-wider text-[11px] uppercase">{item.label}</span>
+                            <span className="tracking-wider text-[11px] uppercase">
+                              {item.label}
+                            </span>
                           </div>
-                          <div className={`text-[14.5px] font-bold ${isNotAdded
-                            ? "text-[#64748b] italic font-normal"
-                            : "text-[#0F1F3D] dark:text-white"
-                            }`}>
+                          <div
+                            className={`text-[14.5px] font-bold ${
+                              isNotAdded
+                                ? "text-[#64748b] italic font-normal"
+                                : "text-[#0F1F3D] dark:text-white"
+                            }`}
+                          >
                             {item.val}
                           </div>
                         </div>
@@ -958,7 +1107,9 @@ export function ProfileView() {
                   <div className="mt-5 p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs">
                     <div className="flex items-center gap-2 text-[#52627A] dark:text-slate-400 text-xs font-bold mb-2">
                       <BookOpen size={15} className="text-[#1677ff]" />
-                      <span className="tracking-wider text-[11px] uppercase">BIOGRAPHY</span>
+                      <span className="tracking-wider text-[11px] uppercase">
+                        BIOGRAPHY
+                      </span>
                     </div>
                     <p className="text-[13.5px] text-[#14213D] dark:text-slate-200 leading-relaxed font-normal">
                       {profile.bio}
@@ -993,9 +1144,21 @@ export function ProfileView() {
                   </h4>
                   <div className="flex flex-wrap gap-3">
                     {[
-                      { id: "light", label: "Light Mode", icon: <Sun size={15} /> },
-                      { id: "dark", label: "Dark Mode", icon: <Moon size={15} /> },
-                      { id: "system", label: "System Sync", icon: <Monitor size={15} /> },
+                      {
+                        id: "light",
+                        label: "Light Mode",
+                        icon: <Sun size={15} />,
+                      },
+                      {
+                        id: "dark",
+                        label: "Dark Mode",
+                        icon: <Moon size={15} />,
+                      },
+                      {
+                        id: "system",
+                        label: "System Sync",
+                        icon: <Monitor size={15} />,
+                      },
                     ].map((opt) => (
                       <button
                         key={opt.id}
@@ -1003,12 +1166,15 @@ export function ProfileView() {
                         onClick={() => {
                           setTheme(opt.id);
                           setPreferences((p) => ({ ...p, theme: opt.id }));
-                          audioEngine?.playUiChirp(opt.id === "dark" ? 720 : 960);
+                          audioEngine?.playUiChirp(
+                            opt.id === "dark" ? 720 : 960,
+                          );
                         }}
-                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${theme === opt.id
-                          ? "bg-blue-50 border-[#1677ff] text-[#1677ff] font-bold"
-                          : "bg-white dark:bg-slate-800 border-slate-300 text-[#14213D] dark:text-slate-200 hover:bg-slate-50"
-                          }`}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
+                          theme === opt.id
+                            ? "bg-blue-50 border-[#1677ff] text-[#1677ff] font-bold"
+                            : "bg-white dark:bg-slate-800 border-slate-300 text-[#14213D] dark:text-slate-200 hover:bg-slate-50"
+                        }`}
                       >
                         {opt.icon}
                         <span>{opt.label}</span>
@@ -1036,7 +1202,10 @@ export function ProfileView() {
                       desc: "Summary report of drainage activity, pump status, and community reports.",
                     },
                   ].map((item) => (
-                    <div key={item.key} className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white border border-slate-200 dark:bg-slate-900/60 dark:border-slate-800 shadow-2xs">
+                    <div
+                      key={item.key}
+                      className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white border border-slate-200 dark:bg-slate-900/60 dark:border-slate-800 shadow-2xs"
+                    >
                       <div>
                         <div className="text-[13.5px] font-bold text-[#0F1F3D] dark:text-white">
                           {item.title}
@@ -1049,7 +1218,10 @@ export function ProfileView() {
                         type="checkbox"
                         checked={preferences[item.key]}
                         onChange={(e) =>
-                          setPreferences((p) => ({ ...p, [item.key]: e.target.checked }))
+                          setPreferences((p) => ({
+                            ...p,
+                            [item.key]: e.target.checked,
+                          }))
                         }
                         className="w-4 h-4 text-[#1677ff] rounded cursor-pointer shrink-0 accent-[#1677ff]"
                       />
@@ -1074,7 +1246,10 @@ export function ProfileView() {
             >
               {securitySuccess && (
                 <div className="flex items-center gap-2 p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-semibold">
-                  <CheckCircle2 size={16} className="text-emerald-700 shrink-0" />
+                  <CheckCircle2
+                    size={16}
+                    className="text-emerald-700 shrink-0"
+                  />
                   <span>Security credentials updated successfully!</span>
                 </div>
               )}
@@ -1096,7 +1271,10 @@ export function ProfileView() {
                         type="password"
                         value={security.currentPassword}
                         onChange={(e) =>
-                          setSecurity((s) => ({ ...s, currentPassword: e.target.value }))
+                          setSecurity((s) => ({
+                            ...s,
+                            currentPassword: e.target.value,
+                          }))
                         }
                         placeholder="Enter current password"
                         className="w-full px-3.5 py-2.5 rounded-xl text-xs font-medium text-[#0F1F3D] placeholder:text-[#64748b] border border-slate-300 bg-white focus:outline-none focus:border-[#1677ff]"
@@ -1111,7 +1289,10 @@ export function ProfileView() {
                         type="password"
                         value={security.newPassword}
                         onChange={(e) =>
-                          setSecurity((s) => ({ ...s, newPassword: e.target.value }))
+                          setSecurity((s) => ({
+                            ...s,
+                            newPassword: e.target.value,
+                          }))
                         }
                         placeholder="Minimum 10 characters"
                         className="w-full px-3.5 py-2.5 rounded-xl text-xs font-medium text-[#0F1F3D] placeholder:text-[#64748b] border border-slate-300 bg-white focus:outline-none focus:border-[#1677ff]"
@@ -1126,7 +1307,10 @@ export function ProfileView() {
                         type="password"
                         value={security.confirmPassword}
                         onChange={(e) =>
-                          setSecurity((s) => ({ ...s, confirmPassword: e.target.value }))
+                          setSecurity((s) => ({
+                            ...s,
+                            confirmPassword: e.target.value,
+                          }))
                         }
                         placeholder="Re-enter new password"
                         className="w-full px-3.5 py-2.5 rounded-xl text-xs font-medium text-[#0F1F3D] placeholder:text-[#64748b] border border-slate-300 bg-white focus:outline-none focus:border-[#1677ff]"
@@ -1175,7 +1359,9 @@ export function ProfileView() {
                         <div className="font-bold text-[#0F1F3D] dark:text-white text-[13px]">
                           Chrome · Kolkata, Sector V
                         </div>
-                        <div className="text-[11.5px] text-[#52627A] dark:text-slate-300 mt-0.5">Current Session · TLS 1.3</div>
+                        <div className="text-[11.5px] text-[#52627A] dark:text-slate-300 mt-0.5">
+                          Current Session · TLS 1.3
+                        </div>
                       </div>
                       <span className="text-[10.5px] font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-md">
                         Active
@@ -1234,7 +1420,8 @@ export function ProfileView() {
                   Edit Profile Information
                 </h3>
                 <p className="text-xs text-[#52627A]">
-                  Update your display credentials, jurisdictional ward, and biography.
+                  Update your display credentials, jurisdictional ward, and
+                  biography.
                 </p>
               </div>
 
@@ -1287,7 +1474,10 @@ export function ProfileView() {
                       type="text"
                       value={editDraft.fullName || ""}
                       onChange={(e) =>
-                        setEditDraft((d) => ({ ...d, fullName: e.target.value }))
+                        setEditDraft((d) => ({
+                          ...d,
+                          fullName: e.target.value,
+                        }))
                       }
                       required
                       className="w-full px-3 py-2 rounded-xl text-xs font-medium text-[#0F1F3D] border border-slate-300 focus:outline-none focus:border-[#1677ff]"
@@ -1301,7 +1491,10 @@ export function ProfileView() {
                       type="text"
                       value={editDraft.department || ""}
                       onChange={(e) =>
-                        setEditDraft((d) => ({ ...d, department: e.target.value }))
+                        setEditDraft((d) => ({
+                          ...d,
+                          department: e.target.value,
+                        }))
                       }
                       required
                       className="w-full px-3 py-2 rounded-xl text-xs font-medium text-[#0F1F3D] border border-slate-300 focus:outline-none focus:border-[#1677ff]"
@@ -1332,7 +1525,10 @@ export function ProfileView() {
                       type="text"
                       value={editDraft.location || ""}
                       onChange={(e) =>
-                        setEditDraft((d) => ({ ...d, location: e.target.value }))
+                        setEditDraft((d) => ({
+                          ...d,
+                          location: e.target.value,
+                        }))
                       }
                       placeholder="e.g. Kolkata, West Bengal"
                       className="w-full px-3 py-2 rounded-xl text-xs font-medium text-[#0F1F3D] border border-slate-300 focus:outline-none focus:border-[#1677ff]"

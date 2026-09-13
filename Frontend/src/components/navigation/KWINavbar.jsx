@@ -19,10 +19,21 @@ import { audioEngine } from "../../utils/audioEngine";
 import { CommandProfileDropdown } from "./CommandProfileDropdown";
 
 export function KWINavbar() {
-  const { currentRoute, navigate, toggleAskKolkata, openLoginModal, currentUser, logoutUser, theme, setTheme } = useKWIStore();
+  const {
+    currentRoute,
+    navigate,
+    toggleAskKolkata,
+    openLoginModal,
+    currentUser,
+    logoutUser,
+    theme,
+    setTheme,
+  } = useKWIStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [systemPref, setSystemPref] = useState(() =>
-    typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches
+  const [systemPref, setSystemPref] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches,
   );
 
   // Keep OS preference in sync so 'system' themes follow hardware live
@@ -80,7 +91,9 @@ export function KWINavbar() {
           label: "Dashboard",
           icon: LayoutDashboard,
           path: "/dashboard",
-          isActive: currentRoute === "/dashboard" || currentRoute === "/admin-dashboard",
+          isActive:
+            currentRoute === "/dashboard" ||
+            currentRoute === "/admin-dashboard",
         },
         {
           key: "LIVE_MAP",
@@ -119,9 +132,7 @@ export function KWINavbar() {
           label: "Field Report",
           icon: FileText,
           path: "/reports",
-          isActive:
-            currentRoute === "/reports" ||
-            currentRoute === "/report",
+          isActive: currentRoute === "/reports" || currentRoute === "/report",
         },
         {
           key: "MY_REPORTS",
@@ -180,7 +191,10 @@ export function KWINavbar() {
       {/* ===================================================== */}
       <div className="relative pointer-events-auto max-w-[1380px] mx-auto p-[1.5px] rounded-[30px] group/nav shadow-[0_14px_45px_rgba(0,0,0,0.08)]">
         {/* Border Glow Beam Container - Isolated with overflow-hidden so it never clips dropdowns */}
-        <div className="absolute inset-0 rounded-[30px] overflow-hidden pointer-events-none" aria-hidden="true">
+        <div
+          className="absolute inset-0 rounded-[30px] overflow-hidden pointer-events-none"
+          aria-hidden="true"
+        >
           {/* 1. Animated Outer Bloom Layer (Soft Neon Aura) */}
           <div
             className="absolute -inset-[180%] animate-[spin_7s_linear_infinite] opacity-70 blur-[15px]"
@@ -202,10 +216,11 @@ export function KWINavbar() {
         {/* LIQUID GLASS MAIN CAPSULE CONTAINER                   */}
         {/* ===================================================== */}
         <div
-          className={`relative rounded-[28.5px] px-4 sm:px-6 py-2.5 backdrop-blur-3xl backdrop-saturate-[180%] transition-all duration-300 ${isDarkMode
-            ? "border border-white/10 text-white"
-            : "border border-white/70 text-slate-900"
-            }`}
+          className={`relative rounded-[28.5px] px-4 sm:px-6 py-2.5 backdrop-blur-3xl backdrop-saturate-[180%] transition-all duration-300 ${
+            isDarkMode
+              ? "border border-white/10 text-white"
+              : "border border-white/70 text-slate-900"
+          }`}
           style={{
             background: isDarkMode
               ? "linear-gradient(135deg, rgba(15, 23, 42, 0.88) 0%, rgba(10, 15, 30, 0.78) 45%, rgba(15, 23, 42, 0.90) 100%)"
@@ -243,8 +258,9 @@ export function KWINavbar() {
                 <div>
                   <div className="flex items-center gap-2">
                     <div
-                      className={`text-[15px] sm:text-[17px] font-extrabold tracking-[0.18em] uppercase font-sans leading-none transition-all duration-300 flex items-baseline ${isDarkMode ? "text-white" : "text-slate-900"
-                        }`}
+                      className={`text-[15px] sm:text-[17px] font-extrabold tracking-[0.18em] uppercase font-sans leading-none transition-all duration-300 flex items-baseline ${
+                        isDarkMode ? "text-white" : "text-slate-900"
+                      }`}
                     >
                       <span className="relative">
                         NIV
@@ -264,10 +280,11 @@ export function KWINavbar() {
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500 dark:bg-cyan-400" />
                     </span>
                     <span
-                      className={`text-[9.5px] font-medium tracking-wide uppercase leading-tight transition-colors truncate max-w-[210px] sm:max-w-none ${isDarkMode
+                      className={`text-[9.5px] font-medium tracking-wide uppercase leading-tight transition-colors truncate max-w-[210px] sm:max-w-none ${
+                        isDarkMode
                           ? "text-slate-400 group-hover:text-slate-300"
                           : "text-slate-500 group-hover:text-slate-700"
-                        }`}
+                      }`}
                     >
                       Predict. Prepare. Prevent.
                     </span>
@@ -279,10 +296,13 @@ export function KWINavbar() {
             {/* ================================================= */}
             {/* CENTER NAVIGATION (Spacious Glass Tabs)           */}
             {/* ================================================= */}
-            <nav className={`hidden lg:flex items-center ${!isAdmin && currentUser
-              ? "gap-7 xl:gap-11 2xl:gap-14"
-              : "gap-3.5 xl:gap-5 2xl:gap-7"
-              }`}>
+            <nav
+              className={`hidden lg:flex items-center ${
+                !isAdmin && currentUser
+                  ? "gap-7 xl:gap-11 2xl:gap-14"
+                  : "gap-3.5 xl:gap-5 2xl:gap-7"
+              }`}
+            >
               {NAV_ITEMS.map((item) => {
                 const isItemActive = item.isActive;
                 const isUserLayout = !isAdmin && currentUser;
@@ -291,37 +311,41 @@ export function KWINavbar() {
                     key={item.key}
                     type="button"
                     onClick={() => handleNavClick(item.path)}
-                    className={`relative rounded-2xl flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${isUserLayout
-                      ? "px-5 py-2 xl:px-6 xl:py-2.5 min-w-[76px] xl:min-w-[88px]"
-                      : "px-4 py-1.5 xl:px-4.5 xl:py-2 min-w-[68px] xl:min-w-[74px]"
-                      } ${isItemActive
+                    className={`relative rounded-2xl flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${
+                      isUserLayout
+                        ? "px-5 py-2 xl:px-6 xl:py-2.5 min-w-[76px] xl:min-w-[88px]"
+                        : "px-4 py-1.5 xl:px-4.5 xl:py-2 min-w-[68px] xl:min-w-[74px]"
+                    } ${
+                      isItemActive
                         ? isDarkMode
                           ? "bg-gradient-to-b from-blue-950/80 to-indigo-950/70 border border-blue-500/40 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
                           : "bg-gradient-to-b from-[#f0f6ff] to-[#e6f0ff] border border-blue-200/90 shadow-xs text-blue-600"
                         : isDarkMode
                           ? "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent group"
                           : "text-slate-500 hover:text-slate-900 hover:bg-slate-50/90 border border-transparent group"
-                      }`}
+                    }`}
                   >
                     <item.icon
-                      className={`w-4 h-4 mb-0.5 transition-colors ${isItemActive
-                        ? isDarkMode
-                          ? "text-cyan-400"
-                          : "text-blue-600"
-                        : isDarkMode
-                          ? "text-slate-400 group-hover:text-white"
-                          : "text-slate-500 group-hover:text-slate-800"
-                        }`}
+                      className={`w-4 h-4 mb-0.5 transition-colors ${
+                        isItemActive
+                          ? isDarkMode
+                            ? "text-cyan-400"
+                            : "text-blue-600"
+                          : isDarkMode
+                            ? "text-slate-400 group-hover:text-white"
+                            : "text-slate-500 group-hover:text-slate-800"
+                      }`}
                     />
                     <span
-                      className={`text-[11.5px] xl:text-[12px] leading-none whitespace-nowrap transition-colors ${isItemActive
-                        ? isDarkMode
-                          ? "font-semibold text-cyan-300"
-                          : "font-semibold text-blue-700"
-                        : isDarkMode
-                          ? "font-medium text-slate-300 group-hover:text-white"
-                          : "font-medium text-slate-600 group-hover:text-slate-900"
-                        }`}
+                      className={`text-[11.5px] xl:text-[12px] leading-none whitespace-nowrap transition-colors ${
+                        isItemActive
+                          ? isDarkMode
+                            ? "font-semibold text-cyan-300"
+                            : "font-semibold text-blue-700"
+                          : isDarkMode
+                            ? "font-medium text-slate-300 group-hover:text-white"
+                            : "font-medium text-slate-600 group-hover:text-slate-900"
+                      }`}
                     >
                       {item.label}
                     </span>
@@ -347,42 +371,53 @@ export function KWINavbar() {
                   type="button"
                   onClick={() => {
                     audioEngine.playUiChirp(960);
-                    navigate('/signup');
+                    navigate("/signup");
                   }}
-                  className={`relative px-3.5 py-1.5 rounded-2xl flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${currentRoute === '/signup' || currentRoute === '/login' || currentRoute === '/auth'
-                    ? isDarkMode
-                      ? "bg-gradient-to-b from-blue-950/80 to-indigo-950/70 border border-blue-500/40 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)] min-w-[62px]"
-                      : "bg-gradient-to-b from-[#f0f6ff] to-[#e6f0ff] border border-blue-200/90 shadow-xs text-blue-600 min-w-[62px]"
-                    : isDarkMode
-                      ? "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent min-w-[56px] group"
-                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-50/90 border border-transparent min-w-[56px] group"
-                    }`}
+                  className={`relative px-3.5 py-1.5 rounded-2xl flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${
+                    currentRoute === "/signup" ||
+                    currentRoute === "/login" ||
+                    currentRoute === "/auth"
+                      ? isDarkMode
+                        ? "bg-gradient-to-b from-blue-950/80 to-indigo-950/70 border border-blue-500/40 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)] min-w-[62px]"
+                        : "bg-gradient-to-b from-[#f0f6ff] to-[#e6f0ff] border border-blue-200/90 shadow-xs text-blue-600 min-w-[62px]"
+                      : isDarkMode
+                        ? "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent min-w-[56px] group"
+                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-50/90 border border-transparent min-w-[56px] group"
+                  }`}
                 >
                   <User
-                    className={`w-4 h-4 mb-0.5 transition-colors ${currentRoute === '/signup' || currentRoute === '/login' || currentRoute === '/auth'
-                      ? isDarkMode
-                        ? "text-cyan-400"
-                        : "text-blue-600"
-                      : isDarkMode
-                        ? "text-slate-400 group-hover:text-white"
-                        : "text-slate-500 group-hover:text-slate-800"
-                      }`}
+                    className={`w-4 h-4 mb-0.5 transition-colors ${
+                      currentRoute === "/signup" ||
+                      currentRoute === "/login" ||
+                      currentRoute === "/auth"
+                        ? isDarkMode
+                          ? "text-cyan-400"
+                          : "text-blue-600"
+                        : isDarkMode
+                          ? "text-slate-400 group-hover:text-white"
+                          : "text-slate-500 group-hover:text-slate-800"
+                    }`}
                   />
                   <span
-                    className={`text-[11px] leading-none transition-colors ${currentRoute === '/signup' || currentRoute === '/login' || currentRoute === '/auth'
-                      ? isDarkMode
-                        ? "font-semibold text-cyan-300"
-                        : "font-semibold text-blue-700"
-                      : isDarkMode
-                        ? "font-medium text-slate-300 group-hover:text-white"
-                        : "font-medium text-slate-600 group-hover:text-slate-900"
-                      }`}
+                    className={`text-[11px] leading-none transition-colors ${
+                      currentRoute === "/signup" ||
+                      currentRoute === "/login" ||
+                      currentRoute === "/auth"
+                        ? isDarkMode
+                          ? "font-semibold text-cyan-300"
+                          : "font-semibold text-blue-700"
+                        : isDarkMode
+                          ? "font-medium text-slate-300 group-hover:text-white"
+                          : "font-medium text-slate-600 group-hover:text-slate-900"
+                    }`}
                   >
                     Sign Up
                   </span>
 
                   {/* Glowing Indicator Dot when on Signup page */}
-                  {(currentRoute === '/signup' || currentRoute === '/login' || currentRoute === '/auth') && (
+                  {(currentRoute === "/signup" ||
+                    currentRoute === "/login" ||
+                    currentRoute === "/auth") && (
                     <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
                   )}
                 </button>
@@ -397,11 +432,14 @@ export function KWINavbar() {
               <button
                 type="button"
                 onClick={toggleTheme}
-                aria-label={isDarkMode ? "Switch to Light mode" : "Switch to Dark mode"}
-                className={`relative w-[114px] h-[38px] rounded-full p-[3px] flex items-center cursor-pointer transition-all duration-500 select-none overflow-hidden group shadow-md border ${isDarkMode
-                  ? "justify-between border-slate-700/60"
-                  : "justify-between border-slate-300/60"
-                  }`}
+                aria-label={
+                  isDarkMode ? "Switch to Light mode" : "Switch to Dark mode"
+                }
+                className={`relative w-[114px] h-[38px] rounded-full p-[3px] flex items-center cursor-pointer transition-all duration-500 select-none overflow-hidden group shadow-md border ${
+                  isDarkMode
+                    ? "justify-between border-slate-700/60"
+                    : "justify-between border-slate-300/60"
+                }`}
                 style={{
                   background: isDarkMode
                     ? "linear-gradient(135deg, #18191c 0%, #1f2025 50%, #18191c 100%)"
@@ -434,8 +472,9 @@ export function KWINavbar() {
                 >
                   {/* Glass Specular Rim Ring */}
                   <span
-                    className={`absolute inset-[1.5px] rounded-full border pointer-events-none ${isDarkMode ? "border-white/20" : "border-white/60"
-                      }`}
+                    className={`absolute inset-[1.5px] rounded-full border pointer-events-none ${
+                      isDarkMode ? "border-white/20" : "border-white/60"
+                    }`}
                   />
 
                   {/* Icon inside 3D Glass Sphere */}
@@ -489,10 +528,11 @@ export function KWINavbar() {
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className={`lg:hidden p-2 rounded-xl transition-colors cursor-pointer ${isDarkMode
-                  ? "text-slate-300 hover:text-white hover:bg-white/10"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                  }`}
+                className={`lg:hidden p-2 rounded-xl transition-colors cursor-pointer ${
+                  isDarkMode
+                    ? "text-slate-300 hover:text-white hover:bg-white/10"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
                 aria-label="Toggle navigation menu"
               >
                 {mobileMenuOpen ? (
@@ -512,8 +552,9 @@ export function KWINavbar() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className={`lg:hidden pt-3 mt-3 border-t space-y-1 ${isDarkMode ? "border-white/10" : "border-slate-100"
-                }`}
+              className={`lg:hidden pt-3 mt-3 border-t space-y-1 ${
+                isDarkMode ? "border-white/10" : "border-slate-100"
+              }`}
             >
               {NAV_ITEMS.map((item) => {
                 const isItemActive = item.isActive;
@@ -522,14 +563,15 @@ export function KWINavbar() {
                     key={item.key}
                     type="button"
                     onClick={() => handleNavClick(item.path)}
-                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition-colors cursor-pointer ${isItemActive
-                      ? isDarkMode
-                        ? "text-cyan-400 font-semibold bg-blue-950/60"
-                        : "text-blue-600 font-semibold bg-blue-50/90"
-                      : isDarkMode
-                        ? "text-slate-300 hover:text-white hover:bg-white/5"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                      }`}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition-colors cursor-pointer ${
+                      isItemActive
+                        ? isDarkMode
+                          ? "text-cyan-400 font-semibold bg-blue-950/60"
+                          : "text-blue-600 font-semibold bg-blue-50/90"
+                        : isDarkMode
+                          ? "text-slate-300 hover:text-white hover:bg-white/5"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                    }`}
                   >
                     <item.icon className="w-4 h-4" />
                     <span>{item.label}</span>
@@ -544,7 +586,7 @@ export function KWINavbar() {
                     type="button"
                     onClick={() => {
                       setMobileMenuOpen(false);
-                      navigate('/signup');
+                      navigate("/signup");
                     }}
                     className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-700 via-cyan-600 to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,240,255,0.3)]"
                   >
@@ -554,10 +596,16 @@ export function KWINavbar() {
                 ) : (
                   <div className="p-2.5 rounded-xl bg-white/5 border border-emerald-500/30 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-base">{currentUser.avatar || "👨‍✈️"}</span>
+                      <span className="text-base">
+                        {currentUser.avatar || "👨‍✈️"}
+                      </span>
                       <div>
-                        <div className="text-xs font-bold text-white">{currentUser.name}</div>
-                        <div className="text-[10px] font-mono text-emerald-400">{currentUser.badgeId}</div>
+                        <div className="text-xs font-bold text-white">
+                          {currentUser.name}
+                        </div>
+                        <div className="text-[10px] font-mono text-emerald-400">
+                          {currentUser.badgeId}
+                        </div>
                       </div>
                     </div>
                     <button
