@@ -406,11 +406,10 @@ const IMPACT_METRICS = [
               <div
                 key={i}
                 style={{ height: `${h}%` }}
-                className={`w-1.5 rounded-t-sm transition-all duration-500 ${
-                  isLit
-                    ? "bg-cyan-500 dark:bg-[#00E5FF] dark:shadow-[0_0_8px_rgba(0,229,255,0.7)]"
-                    : "bg-cyan-200/80 dark:bg-[#10313E]"
-                }`}
+                className={`w-1.5 rounded-t-sm transition-all duration-500 ${isLit
+                  ? "bg-cyan-500 dark:bg-[#00E5FF] dark:shadow-[0_0_8px_rgba(0,229,255,0.7)]"
+                  : "bg-cyan-200/80 dark:bg-[#10313E]"
+                  }`}
               />
             );
           })}
@@ -748,9 +747,7 @@ export function LandingPage() {
               className="px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-700 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold text-sm shadow-[0_4px_20px_rgba(6,182,212,0.36)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2"
             >
               <span>
-                {isCitizenUser
-                  ? "File a Field Report"
-                  : "Launch Intelligence Platform"}
+                {isCitizenUser ? "Report an Issue" : "Explore Live City"}
               </span>
               <ArrowRight className="w-4 h-4" />
             </button>
@@ -758,15 +755,15 @@ export function LandingPage() {
               type="button"
               onClick={() => {
                 audioEngine.playUiChirp(950);
-                setSimActive(true);
-                navigate("/simulate");
+                const s = document.getElementById("how-it-works");
+                if (s) s.scrollIntoView({ behavior: "smooth" });
               }}
               className="px-6 py-2.5 rounded-full bg-white dark:bg-[#10313E] hover:bg-slate-50 dark:hover:bg-[#163F4E] text-slate-800 dark:text-[#F2FBFD] border border-slate-200/90 dark:border-[rgba(94,183,201,0.16)] font-semibold text-sm shadow-xs hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2"
             >
               <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-[#0B2430] flex items-center justify-center text-cyan-600 dark:text-[#00E5FF]">
                 <Play className="w-2.5 h-2.5 fill-current ml-0.5" />
               </span>
-              <span>Run Scenario Simulation</span>
+              <span>See How It Works</span>
             </button>
           </motion.div>
         </div>
@@ -831,7 +828,7 @@ export function LandingPage() {
                 rootMargin="-100px"
                 textAlign="center"
                 tag="h2"
-                onLetterAnimationComplete={() => {}}
+                onLetterAnimationComplete={() => { }}
                 showCallback
               />
             </div>
@@ -909,11 +906,10 @@ export function LandingPage() {
                       audioEngine.playUiChirp(920);
                       setSelectedScenario(scen.id);
                     }}
-                    className={`flex-1 min-w-[110px] px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-                      isActive
-                        ? "bg-white dark:bg-[#163F4E] text-cyan-900 dark:text-[#00E5FF] shadow-sm border border-slate-200/90 dark:border-[rgba(0,229,255,0.4)]"
-                        : "text-slate-500 dark:text-[#6D949D] hover:text-slate-900 dark:hover:text-[#F2FBFD] hover:bg-white/50 dark:hover:bg-[#10313E]"
-                    }`}
+                    className={`flex-1 min-w-[110px] px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${isActive
+                      ? "bg-white dark:bg-[#163F4E] text-cyan-900 dark:text-[#00E5FF] shadow-sm border border-slate-200/90 dark:border-[rgba(0,229,255,0.4)]"
+                      : "text-slate-500 dark:text-[#6D949D] hover:text-slate-900 dark:hover:text-[#F2FBFD] hover:bg-white/50 dark:hover:bg-[#10313E]"
+                      }`}
                   >
                     <IconComp
                       className={`w-3.5 h-3.5 ${isActive ? "text-cyan-600 dark:text-[#00E5FF]" : "text-slate-400 dark:text-slate-500"}`}
@@ -1033,11 +1029,10 @@ export function LandingPage() {
                         audioEngine.playUiChirp(1040);
                         setSelectedStatId(metric.id);
                       }}
-                      className={`group relative p-6 rounded-[22px] cursor-pointer transition-all duration-300 flex flex-col justify-between ${
-                        isSelected
-                          ? "bg-white dark:bg-[#10313E]/90 border-cyan-500/60 dark:border-[#00E5FF] shadow-[0_12px_40px_rgba(32,197,216,0.18)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.6),0_0_24px_rgba(0,229,255,0.22)] -translate-y-1"
-                          : "bg-white/85 dark:bg-[#061820]/80 backdrop-blur-2xl border-white/70 dark:border-[rgba(94,183,201,0.16)] shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.1)] hover:border-white dark:hover:border-[rgba(0,229,255,0.4)] dark:hover:bg-[#10313E]/85 hover:-translate-y-0.5"
-                      } border`}
+                      className={`group relative p-6 rounded-[22px] cursor-pointer transition-all duration-300 flex flex-col justify-between ${isSelected
+                        ? "bg-white dark:bg-[#10313E]/90 border-cyan-500/60 dark:border-[#00E5FF] shadow-[0_12px_40px_rgba(32,197,216,0.18)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.6),0_0_24px_rgba(0,229,255,0.22)] -translate-y-1"
+                        : "bg-white/85 dark:bg-[#061820]/80 backdrop-blur-2xl border-white/70 dark:border-[rgba(94,183,201,0.16)] shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.1)] hover:border-white dark:hover:border-[rgba(0,229,255,0.4)] dark:hover:bg-[#10313E]/85 hover:-translate-y-0.5"
+                        } border`}
                     >
                       {/* Top glass glow line for dark mode */}
                       <div
@@ -1163,27 +1158,27 @@ export function LandingPage() {
                     {TELEMETRY_SCENARIOS[selectedScenario]?.stats[
                       selectedStatId
                     ]?.subMetrics && (
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full pt-3 border-t border-slate-200/60 dark:border-[rgba(94,183,201,0.16)]">
-                        {TELEMETRY_SCENARIOS[selectedScenario].stats[
-                          selectedStatId
-                        ].subMetrics.map((sub, sIdx) => (
-                          <div
-                            key={sIdx}
-                            className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50/80 dark:bg-[#030F14]/80 border border-slate-200/60 dark:border-[rgba(94,183,201,0.16)] text-xs font-mono"
-                          >
-                            <span className="text-slate-500 dark:text-[#B2D2D9] text-[11px] truncate">
-                              {sub.label}
-                            </span>
-                            <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                              <span className="font-bold text-slate-900 dark:text-[#F2FBFD]">
-                                {sub.value}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full pt-3 border-t border-slate-200/60 dark:border-[rgba(94,183,201,0.16)]">
+                          {TELEMETRY_SCENARIOS[selectedScenario].stats[
+                            selectedStatId
+                          ].subMetrics.map((sub, sIdx) => (
+                            <div
+                              key={sIdx}
+                              className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50/80 dark:bg-[#030F14]/80 border border-slate-200/60 dark:border-[rgba(94,183,201,0.16)] text-xs font-mono"
+                            >
+                              <span className="text-slate-500 dark:text-[#B2D2D9] text-[11px] truncate">
+                                {sub.label}
                               </span>
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-pulse" />
+                              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                <span className="font-bold text-slate-900 dark:text-[#F2FBFD]">
+                                  {sub.value}
+                                </span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-pulse" />
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                          ))}
+                        </div>
+                      )}
                   </motion.div>
                 )}
               </AnimatePresence>
