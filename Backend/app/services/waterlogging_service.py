@@ -39,7 +39,7 @@ class WaterloggingService:
     async def run_prediction_cycle(
         cls,
         db: Optional[AsyncSession] = None,
-        force_weather_refresh: bool = True,
+        force_weather_refresh: bool = False,
     ) -> Dict[str, Any]:
         """Executes one complete waterlogging prediction cycle for all Kolkata locations."""
         cycle_start = utc_now()

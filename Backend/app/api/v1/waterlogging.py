@@ -60,7 +60,7 @@ async def get_waterlogging_summary(
 )
 async def trigger_prediction_refresh(
     force_weather_refresh: bool = Query(
-        True,
+        False,
         description="If True, forces an immediate live HTTP fetch from Open-Meteo API",
     ),
     db: AsyncSession = Depends(get_db),

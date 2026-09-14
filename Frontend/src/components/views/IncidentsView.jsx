@@ -1,26 +1,52 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useKWIStore } from "../../store/useKWIStore";
 import { ArrowRight, CheckCircle2, ShieldAlert } from "lucide-react";
 import { CardSpotlight } from "../ui/CardSpotlight";
 import { BorderBeam } from "../ui/BorderBeam";
-import { ACTIVE_INCIDENTS } from "../gis/kolkataCartographicData";
-
+import { aggregateIncidentsFromReports } from "../../utils/incidentAggregator";
 
 export function IncidentsView() {
-  const { selectedIncident, setSelectedIncident, navigate } = useKWIStore();
+  const {
+    selectedIncident,
+    setSelectedIncident,
+    navigate,
+    allReports,
+    myReports,
+    fetchAllReports,
+  } = useKWIStore();
+
+  useEffect(() => {
+    fetchAllReports?.().catch(() => {});
+  }, [fetchAllReports]);
+
+  const combinedReports = useMemo(() => {
+    return [
+      ...(allReports || []),
+      ...(myReports || []).filter(
+        (mr) => !(allReports || []).some((ar) => ar.report_id === mr.report_id)
+      ),
+    ];
+  }, [allReports, myReports]);
+
+  const dynamicIncidents = useMemo(() => {
+    return aggregateIncidentsFromReports(combinedReports);
+  }, [combinedReports]);
+
   const [selectedId, setSelectedId] = useState(
-    selectedIncident?.id || ACTIVE_INCIDENTS[0].id
+    selectedIncident?.id || dynamicIncidents[0]?.id || ""
   );
 
   useEffect(() => {
     if (selectedIncident?.id) {
       setSelectedId(selectedIncident.id);
+    } else if (!selectedId && dynamicIncidents.length > 0) {
+      setSelectedId(dynamicIncidents[0].id);
     }
-  }, [selectedIncident]);
+  }, [selectedIncident, selectedId, dynamicIncidents]);
 
   const activeIncident =
-    ACTIVE_INCIDENTS.find((i) => i.id === selectedId) || ACTIVE_INCIDENTS[0];
+    dynamicIncidents.find((i) => i.id === selectedId) || dynamicIncidents[0] || null;
 
   const handleViewOnMap = (inc) => {
     setSelectedIncident(inc);
@@ -53,7 +79,7 @@ export function IncidentsView() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Incidents List */}
         <div className="lg:col-span-6 space-y-3.5">
-          {ACTIVE_INCIDENTS.map((inc) => {
+          {dynamicIncidents.map((inc) => {
             const isSelected = inc.id === selectedId;
             const isCrit =
               inc.severity === "HIGH" || inc.severity === "CRITICAL";

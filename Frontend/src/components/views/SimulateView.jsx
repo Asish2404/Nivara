@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Play,
@@ -16,9 +16,27 @@ import {
   Info,
   Waves,
   ArrowRight,
+  MapPin,
+  Gauge,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import { useKWIStore } from "../../store/useKWIStore";
+import {
+  aggregateIncidentsFromReports,
+  parseWaterDepthCm,
+  getSeverityRank,
+} from "../../utils/incidentAggregator";
 import { audioEngine } from "../../utils/audioEngine";
+import { calculateHydraulicSimulation } from "../../utils/hydraulicEngine";
+
+const SEVERITY_BADGE_STYLE = {
+  CRITICAL: "text-rose-700 bg-rose-50 border-rose-200 dark:text-rose-400 dark:bg-rose-950/40 dark:border-rose-800/60",
+  HIGH: "text-orange-700 bg-orange-50 border-orange-200 dark:text-orange-400 dark:bg-orange-950/40 dark:border-orange-800/60",
+  MODERATE: "text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/40 dark:border-amber-800/60",
+  LOW: "text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/40 dark:border-emerald-800/60",
+  MONITORING: "text-cyan-700 bg-cyan-50 border-cyan-200 dark:text-cyan-400 dark:bg-cyan-950/40 dark:border-cyan-800/60",
+};
 
 /* ── Premium Custom Toggle with Cyan Glow ───────────────────────── */
 function Toggle({ checked, onChange }) {
@@ -28,14 +46,16 @@ function Toggle({ checked, onChange }) {
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative w-11 h-6 rounded-full transition-all duration-300 focus:outline-none shrink-0 cursor-pointer ${checked
-          ? "bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_12px_rgba(6,182,212,0.45)]"
-          : "bg-slate-200"
-        }`}
+      className={`relative w-11 h-6 rounded-full transition-all duration-300 focus:outline-none shrink-0 cursor-pointer ${
+      checked
+        ? "bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_12px_rgba(6,182,212,0.45)]"
+        : "bg-slate-200"
+    }`}
     >
       <span
-        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full shadow-sm transition-transform duration-300 ${checked ? "translate-x-5 bg-white" : "translate-x-0 bg-white"
-          }`}
+        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full shadow-sm transition-transform duration-300 ${
+          checked ? "translate-x-5 bg-white" : "translate-x-0 bg-white"
+        }`}
       />
     </button>
   );
@@ -46,12 +66,13 @@ function TimelineStep({ num, label, sublabel, active, done, isSimulating }) {
   return (
     <div className="flex items-center gap-3 flex-1 min-w-0">
       <div
-        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs border transition-all duration-300 shrink-0 ${done
+        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs border transition-all duration-300 shrink-0 ${
+          done
             ? "bg-emerald-600 border-emerald-600 text-white font-medium shadow-xs"
             : active
               ? "bg-blue-50 border-blue-600 text-blue-700 font-semibold ring-2 ring-blue-100 shadow-xs"
               : "bg-slate-50 border-slate-200 text-slate-500 font-medium"
-          }`}
+        }`}
       >
         {done ? (
           <CheckCircle2 className="w-4 h-4 text-white stroke-[2.5]" />
@@ -63,12 +84,13 @@ function TimelineStep({ num, label, sublabel, active, done, isSimulating }) {
       </div>
       <div className="min-w-0">
         <div
-          className={`text-[12.5px] truncate ${done
+          className={`text-[12.5px] truncate ${
+            done
               ? "text-emerald-700 font-semibold"
               : active
                 ? "text-blue-700 font-semibold"
                 : "text-slate-700 font-medium"
-            }`}
+          }`}
         >
           {label}
         </div>
@@ -82,7 +104,187 @@ function TimelineStep({ num, label, sublabel, active, done, isSimulating }) {
 
 /* ── Main Component ─────────────────────────────────────────────── */
 export function SimulateView() {
-  const { navigate } = useKWIStore();
+  const {
+    navigate,
+    incidents,
+    allReports,
+    myReports,
+    fetchAllReports,
+    pumpingStations,
+    hooghlyTideLevel,
+    hooghlyTideTrend,
+    activeSimulationIncidentId,
+    setActiveSimulationIncidentId,
+    selectedIncident,
+    dispatchSimulationToWorkOrder,
+    setLatestSimulationOutcome,
+    dispatchedHotspotIds,
+    createWorkOrder,
+    resetDispatchedHotspots,
+  } = useKWIStore();
+
+  // Load municipal reports on mount
+  useEffect(() => {
+    fetchAllReports?.().catch(() => {});
+  }, [fetchAllReports]);
+
+  // Combine citizen reports from database & local preview
+  const combinedReports = useMemo(() => {
+    return [
+      ...(allReports || []),
+      ...(myReports || []).filter(
+        (mr) => !(allReports || []).some((ar) => ar.report_id === mr.report_id)
+      ),
+    ];
+  }, [allReports, myReports]);
+
+  // Sort incidents strictly in decreasing order from reports table
+  const sortedIncidents = useMemo(() => {
+    return aggregateIncidentsFromReports(combinedReports);
+  }, [combinedReports]);
+
+  // Available incidents: filter out any that have been dispatched (popped)
+  const availableIncidents = useMemo(() => {
+    const dispatchedSet = new Set(
+      (dispatchedHotspotIds || []).map((id) =>
+        String(id).trim().replace(/^#/, "").toUpperCase()
+      )
+    );
+    return (sortedIncidents || []).filter((inc) => {
+      const cleanId = String(inc.id || "").trim().replace(/^#/, "").toUpperCase();
+      const cleanConn = String(inc.connectedIncidentId || "").trim().replace(/^#/, "").toUpperCase();
+      return !dispatchedSet.has(cleanId) && !dispatchedSet.has(cleanConn);
+    });
+  }, [sortedIncidents, dispatchedHotspotIds]);
+
+  // Active Hotspot Selection (defaults to top available hotspot from reports table)
+  const [selectedIncidentId, setSelectedIncidentId] = useState(() => {
+    return (
+      selectedIncident?.id ||
+      activeSimulationIncidentId ||
+      ""
+    );
+  });
+
+  // Custom 5-item scrollable dropdown state & outside click handler
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setIsDropdownOpen(false);
+      }
+    }
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [isDropdownOpen]);
+
+  // Isolate wheel scrolling to the dropdown so it never leaks to the parent page or triggers Lenis
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el || !isDropdownOpen) return;
+
+    const handleWheel = (e) => {
+      e.stopPropagation();
+      const { deltaY } = e;
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      const maxScroll = scrollHeight - clientHeight;
+
+      if (maxScroll > 0) {
+        // Prevent default page scroll leakage when scrolling inside the dropdown
+        e.preventDefault();
+        el.scrollTop += deltaY;
+      }
+    };
+
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      el.removeEventListener("wheel", handleWheel);
+    };
+  }, [isDropdownOpen]);
+
+  // Auto-select top available hotspot from reports table when loaded or after a pop
+  useEffect(() => {
+    if (availableIncidents.length > 0) {
+      const exists = availableIncidents.some(
+        (i) => i.id === selectedIncidentId || i.connectedIncidentId === selectedIncidentId
+      );
+      if (!exists || !selectedIncidentId) {
+        setSelectedIncidentId(availableIncidents[0].id);
+        setActiveSimulationIncidentId(availableIncidents[0].id);
+      }
+    }
+  }, [availableIncidents, selectedIncidentId, setActiveSimulationIncidentId]);
+
+  // Sync if selected incident from Live City changes
+  useEffect(() => {
+    if (selectedIncident?.id) {
+      setSelectedIncidentId(selectedIncident.id);
+      setActiveSimulationIncidentId(selectedIncident.id);
+    }
+  }, [selectedIncident, setActiveSimulationIncidentId]);
+
+  // Retrieve current active incident data from real reports table incidents
+  const activeIncident = useMemo(() => {
+    if (availableIncidents.length === 0) {
+      return {
+        id: "#ALL-CLEAR",
+        connectedIncidentId: "CLEAR",
+        ward: "Kolkata Drainage Area",
+        location: "All Hotspots Dispatched · Rapid Response Units Active",
+        waterLevel: "0 cm",
+        waterLevelCm: 0,
+        rainfall: "0 mm / 3 hr",
+        affectedArea: "0 m²",
+        riskScore: "10 / 100",
+        nearestPump: "PS-07",
+        probableCause: "All municipal hotspots have been dispatched to field crews.",
+        severity: "MONITORING",
+        isAllClear: true,
+      };
+    }
+
+    return (
+      availableIncidents.find(
+        (i) =>
+          i.id === selectedIncidentId ||
+          i.aliasId === selectedIncidentId ||
+          i.connectedIncidentId === selectedIncidentId ||
+          (selectedIncidentId && (i.id.includes(selectedIncidentId) || selectedIncidentId.includes(i.id)))
+      ) || availableIncidents[0]
+    );
+  }, [availableIncidents, selectedIncidentId]);
+
+  // Retrieve nearest pumping station for the active incident with safe fallback
+  const activeStation = useMemo(() => {
+    const stationId = activeIncident?.nearestPump;
+    const matched = (pumpingStations || []).find((p) => p.id === stationId);
+    if (matched) return matched;
+    return (
+      (pumpingStations && pumpingStations[0]) || {
+        id: "PS-07",
+        name: "PS-07 Sector V Booster Station",
+        dischargeRate: "85 cusecs",
+        loadPct: 100,
+        critical: true,
+      }
+    );
+  }, [pumpingStations, activeIncident]);
+
+  // Intervention Control States
   const [pumpCapacity, setPumpCapacity] = useState(100);
   const [crewDispatched, setCrewDispatched] = useState(true);
   const [extraPumpUnit, setExtraPumpUnit] = useState(true);
@@ -90,18 +292,168 @@ export function SimulateView() {
   // Simulation Timeline State: 'CURRENT' | 'SIMULATING' | 'RESULT'
   const [simState, setSimState] = useState("CURRENT");
 
+  // Extracted Baseline Numeric Values with Complete Mathematical Safety (No NaN / Divide-by-Zero)
+  const baselineDepthCm = useMemo(() => {
+    const parsed = activeIncident?.waterLevelCm ?? parseWaterDepthCm(activeIncident?.waterDepth);
+    return typeof parsed === "number" && !isNaN(parsed) && parsed > 0 ? parsed : 15.0;
+  }, [activeIncident]);
+
+  const baselineRiskScore = useMemo(() => {
+    if (!activeIncident?.riskScore) return 65;
+    const match = String(activeIncident.riskScore).match(/(\d+)/);
+    const val = match ? parseInt(match[1], 10) : 65;
+    return !isNaN(val) && val >= 10 && val <= 100 ? val : 65;
+  }, [activeIncident]);
+
+  const baselineAreaM2 = useMemo(() => {
+    if (!activeIncident?.affectedArea) return 8500;
+    const clean = String(activeIncident.affectedArea).replace(/[^0-9]/g, "");
+    const val = clean ? parseInt(clean, 10) : 8500;
+    return !isNaN(val) && val > 0 ? val : 8500;
+  }, [activeIncident]);
+
+  const baselineDrainageLoad = useMemo(() => {
+    const load = activeStation?.loadPct;
+    return typeof load === "number" && !isNaN(load) && load > 0 ? load : 80;
+  }, [activeStation]);
+
+  const stationCapacityCusecs = useMemo(() => {
+    if (!activeStation?.dischargeRate) return 85;
+    const match = String(activeStation.dischargeRate).match(/(\d+)/);
+    const val = match ? parseInt(match[1], 10) : 85;
+    return !isNaN(val) && val > 0 ? val : 85;
+  }, [activeStation]);
+
+  // Dynamic Physical Hydraulic Simulation Result
+  const simulationResult = useMemo(() => {
+    return calculateHydraulicSimulation({
+      baselineDepthCm,
+      baselineAreaM2,
+      baselineRiskScore,
+      baselineDrainageLoad,
+      stationMaxDischargeCusecs: stationCapacityCusecs,
+      pumpCapacity,
+      crewDispatched,
+      extraPumpUnit,
+      hooghlyTideLevel: hooghlyTideLevel || 3.42,
+    });
+  }, [
+    baselineDepthCm,
+    baselineAreaM2,
+    baselineRiskScore,
+    baselineDrainageLoad,
+    stationCapacityCusecs,
+    pumpCapacity,
+    crewDispatched,
+    extraPumpUnit,
+    hooghlyTideLevel,
+  ]);
+
+  // Handle hotspot selection change
+  const handleSelectIncident = (newId) => {
+    audioEngine.playUiChirp(1000);
+    setSelectedIncidentId(newId);
+    setActiveSimulationIncidentId(newId);
+    setSimState("CURRENT"); // reset timeline to re-evaluate new baseline
+    setIsDropdownOpen(false);
+  };
+
+  // Run Simulation Handler
   const handleRunSimulation = () => {
     audioEngine.playUiChirp(1200);
     setSimState("SIMULATING");
     setTimeout(() => {
       audioEngine.playUiChirp(1500);
       setSimState("RESULT");
+      setLatestSimulationOutcome({
+        ticketId: `WO-2026-${(selectedIncidentId || "001").replace(/[^a-zA-Z0-9]/g, "")}`,
+        incidentId: selectedIncidentId,
+        location: activeIncident.location,
+        ...simulationResult,
+      });
     }, 850);
   };
 
   const handleReset = () => {
     audioEngine.playUiChirp(800);
     setSimState("CURRENT");
+  };
+
+  const handleCreateWorkOrder = () => {
+    audioEngine.playUiChirp(1300);
+
+    // 1. Determine index of current incident in available list before popping
+    const currentIndex = availableIncidents.findIndex(
+      (inc) =>
+        inc.id === activeIncident.id ||
+        inc.connectedIncidentId === activeIncident.connectedIncidentId ||
+        inc.id === selectedIncidentId
+    );
+
+    // 2. Prepare remaining hotspots after this location is popped
+    const remaining = availableIncidents.filter(
+      (inc) =>
+        inc.id !== activeIncident.id &&
+        inc.connectedIncidentId !== activeIncident.connectedIncidentId &&
+        inc.id !== selectedIncidentId
+    );
+
+    // 3. Determine next location to display in Target Hotspot section
+    let nextIncident = null;
+    if (remaining.length > 0) {
+      const nextIndex = currentIndex >= 0 && currentIndex < remaining.length ? currentIndex : 0;
+      nextIncident = remaining[nextIndex];
+    }
+
+    // 4. Construct high-fidelity Work Order payload matching reference image
+    const rawConnectedId = activeIncident.connectedIncidentId || String(activeIncident.id || "0041").replace(/^#/, "");
+    const cleanTicketNum = rawConnectedId.replace(/[^a-zA-Z0-9]/g, "");
+    const ticketKey = `WO-${cleanTicketNum}`;
+    const workOrderId = `WO-2026-0323-${cleanTicketNum}`;
+
+    const assignedEquipmentList = [
+      extraPumpUnit ? "20 HP Godwin High-Head Unit" : "25 HP Godwin High-Head Unit",
+      crewDispatched ? "Unit 04 Inlet Desilting Unit" : "High-Volume Suction Desilter",
+    ];
+
+    const locClean = activeIncident.location ? activeIncident.location.split("(")[0].trim() : "Municipal Ward";
+    const locShort = locClean.split(",")[0].trim();
+
+    const orderPayload = {
+      id: workOrderId,
+      ticketKey,
+      incidentRef: activeIncident.id || `#${rawConnectedId}`,
+      incidentId: activeIncident.id,
+      location: locClean,
+      lat: activeIncident.latitude ? `${Number(activeIncident.latitude).toFixed(4)}° N` : "22.5802° N",
+      lng: activeIncident.longitude ? `${Number(activeIncident.longitude).toFixed(4)}° E` : "88.3685° E",
+      borough: activeIncident.subdivision || activeIncident.ward || "KMC Borough V",
+      priority: activeIncident.severity || "CRITICAL",
+      status: "Dispatched",
+      stage: 1, // Step 2: Dispatched (matching exact reference screenshot)
+      riskScore: `${activeIncident.riskScore ? String(activeIncident.riskScore).replace(/[^\d/]/g, '').trim() : `${baselineRiskScore} / 100`}`,
+      expectedImpact: `-${simulationResult.depthReductionCm ?? 14} cm depth`,
+      assignedNode: `${activeStation.id} ${activeStation.name ? activeStation.name.split(" ").slice(0, 3).join(" ") : "Booster Station"}`,
+      assignedCrew: "Central Rapid Sluice Taskforce 01",
+      chief: "Er. K. Bhattacharya",
+      radio: "CH-01-TAC",
+      equipment: assignedEquipmentList,
+      eta: "12 minutes",
+      trigger: simulationResult.dispatchSummary
+        ? `Severe ${baselineDepthCm} cm street inundation at ${locShort}; ${simulationResult.dispatchSummary}`
+        : `Severe ${baselineDepthCm} cm street inundation at ${locShort}; silt throttling circular gravity outfall.`,
+      targetLabel: locShort,
+    };
+
+    // 5. Advance simulator target hotspot to next location & reset timeline
+    if (nextIncident) {
+      setSelectedIncidentId(nextIncident.id);
+      setActiveSimulationIncidentId(nextIncident.id);
+    }
+    setSimState("CURRENT"); // Ready for next location's baseline evaluation
+
+    // 6. Push work order to store, pop dispatched hotspot, and navigate to respond page
+    createWorkOrder(orderPayload);
   };
 
   const stagger = {
@@ -116,6 +468,13 @@ export function SimulateView() {
       transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] },
     },
   };
+
+  // Baseline Gauge SVG Dash Offset
+  const baselineDashOffset = 251.2 * (1 - Math.min(1, Math.max(0.12, baselineDepthCm / 36)));
+
+  // Simulated Outcome Gauge SVG Dash Offset
+  const simulatedDashOffset =
+    251.2 * (1 - Math.min(1, Math.max(0.06, simulationResult.simulatedDepthCm / 36)));
 
   return (
     /*
@@ -169,14 +528,180 @@ export function SimulateView() {
             <span className="text-blue-600 dark:text-cyan-400 font-semibold">Scenario Simulator</span>
           </div>
 
-          <h1 className="text-3xl sm:text-[35px] font-bold tracking-[-0.025em] text-[#0a325c] dark:text-white mb-2 leading-tight drop-shadow-[0_0_24px_rgba(59,130,246,0.45)] dark:drop-shadow-[0_0_30px_rgba(6,182,212,0.6)]">
-            Simulate Drainage Interventions
-          </h1>
-          <p className="text-[13.5px] text-[#1c4774] dark:text-cyan-100/90 max-w-2xl leading-relaxed font-medium drop-shadow-[0_0_12px_rgba(59,130,246,0.25)]">
-            Test pumping station boosts, inlet desilting crews, and mobile
-            submersible units to predict flood reduction before dispatching
-            field teams.
-          </p>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <h1 className="text-3xl sm:text-[35px] font-bold tracking-[-0.025em] text-[#0a325c] dark:text-white mb-2 leading-tight drop-shadow-[0_0_24px_rgba(59,130,246,0.45)] dark:drop-shadow-[0_0_30px_rgba(6,182,212,0.6)]">
+                Simulate Drainage Interventions
+              </h1>
+              <p className="text-[13.5px] text-[#1c4774] dark:text-cyan-100/90 max-w-2xl leading-relaxed font-medium drop-shadow-[0_0_12px_rgba(59,130,246,0.25)]">
+                Test pumping station boosts, inlet desilting crews, and mobile
+                submersible units to predict flood reduction before dispatching
+                field teams.
+              </p>
+            </div>
+
+            {/* Target Hotspot & Incident Selector with 5-item scrollable dropdown */}
+            <div ref={dropdownRef} className="relative shrink-0 z-30">
+              <button
+                type="button"
+                id="hotspot-dropdown-trigger"
+                onClick={() => {
+                  audioEngine.playUiChirp(isDropdownOpen ? 700 : 950);
+                  setIsDropdownOpen((prev) => !prev);
+                }}
+                className="flex items-center gap-3 p-2.5 px-3.5 rounded-2xl bg-white/95 dark:bg-[#131d31]/95 border border-slate-200/90 dark:border-slate-700/80 shadow-xs hover:border-slate-300 dark:hover:border-slate-600 transition-all text-left backdrop-blur-md cursor-pointer group max-w-[360px] sm:max-w-[440px]"
+                aria-expanded={isDropdownOpen}
+                aria-haspopup="listbox"
+              >
+                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0 group-hover:scale-105 transition-transform">
+                  <MapPin className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 leading-tight">
+                    TARGET HOTSPOT
+                  </div>
+                  <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate flex items-center gap-1.5 mt-0.5">
+                    <span className="font-mono text-blue-600 dark:text-blue-400 font-bold shrink-0">
+                      {activeIncident?.id || "#--"}
+                    </span>
+                    <span className="truncate">
+                      {activeIncident?.location ? activeIncident.location.split("(")[0].trim() : "Select Hotspot"}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 flex items-center gap-1.5 font-normal">
+                    <span>
+                      {activeIncident?.waterLevel ||
+                        (activeIncident?.waterDepth && !String(activeIncident.waterDepth).includes("Pending")
+                          ? activeIncident.waterDepth
+                          : "Telemetry Pending")}
+                    </span>
+                    <span>•</span>
+                    <span>
+                      {activeIncident?.verifiedReports ?? 0} {(activeIncident?.verifiedReports ?? 0) === 1 ? "report" : "reports"}
+                    </span>
+                    <span className={`text-[9.5px] font-bold font-mono px-1.5 py-0.2 rounded border ${SEVERITY_BADGE_STYLE[activeIncident?.severity] || SEVERITY_BADGE_STYLE.MONITORING}`}>
+                      {activeIncident?.severity || "MONITORING"}
+                    </span>
+                  </div>
+                </div>
+                <ChevronDown
+                  className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-200 shrink-0 ml-1 ${
+                    isDropdownOpen ? "rotate-180 text-blue-600 dark:text-blue-400" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Dropdown Menu Panel: exactly 5 results visible, rest accessed using scrollbar */}
+              <AnimatePresence>
+                {isDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                    transition={{ duration: 0.16, ease: "easeOut" }}
+                    data-lenis-prevent="true"
+                    data-lenis-prevent-wheel="true"
+                    className="absolute right-0 top-full mt-2 w-[340px] sm:w-[420px] md:w-[460px] max-w-[94vw] bg-white dark:bg-[#131d31] border border-slate-200/90 dark:border-slate-700/80 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.14)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden backdrop-blur-xl"
+                  >
+                    {/* Header with count & scroll indicator */}
+                    <div className="flex items-center justify-between px-3.5 py-2 bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-700/60 text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                      <span className="font-semibold text-slate-700 dark:text-slate-300 tracking-wider uppercase">
+                        HOTSPOTS ({availableIncidents.length})
+                      </span>
+                      <span className="text-[10.5px] text-blue-600 dark:text-blue-400 font-sans font-medium">
+                        {availableIncidents.length > 5 ? "5 visible • Scroll for more" : `${availableIncidents.length} available`}
+                      </span>
+                    </div>
+
+                    {/* Scrollable list strictly calibrated for exactly 5 visible items with custom high-contrast scrollbar */}
+                    <div
+                      ref={scrollContainerRef}
+                      data-lenis-prevent="true"
+                      data-lenis-prevent-wheel="true"
+                      className="kwi-dropdown-scroll divide-y divide-slate-100 dark:divide-slate-800/70"
+                      style={{
+                        maxHeight: "340px",
+                        height: availableIncidents.length === 0 ? "auto" : "340px",
+                      }}
+                    >
+                      {availableIncidents.length === 0 ? (
+                        <div className="p-6 text-center text-xs text-slate-500 space-y-3">
+                          <div className="font-semibold text-slate-700 dark:text-slate-300">
+                            All municipal hotspots have been dispatched!
+                          </div>
+                          <p className="text-[11px] text-slate-400 leading-relaxed">
+                            Work orders are currently active on the Respond desk.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              resetDispatchedHotspots();
+                              setIsDropdownOpen(false);
+                            }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 dark:bg-blue-950/60 dark:text-cyan-400 hover:bg-blue-100 transition-colors cursor-pointer"
+                          >
+                            Reset Dispatched Hotspots
+                          </button>
+                        </div>
+                      ) : (
+                        availableIncidents.map((inc) => {
+                          const isSelected = inc.id === (activeIncident?.id || selectedIncidentId);
+                          const depthDisplay =
+                            inc.waterLevel ||
+                            (inc.waterDepth && !String(inc.waterDepth).includes("Pending")
+                              ? inc.waterDepth
+                              : "Telemetry Pending");
+                          const reports = inc.verifiedReports ?? 0;
+                          const cleanLoc = inc.location ? inc.location.split("(")[0].trim() : "Incident Hotspot";
+                          const badgeClass = SEVERITY_BADGE_STYLE[inc.severity] || SEVERITY_BADGE_STYLE.MONITORING;
+
+                          return (
+                            <button
+                              key={inc.id}
+                              type="button"
+                              onClick={() => handleSelectIncident(inc.id)}
+                              className={`w-full text-left px-3.5 py-2 transition-colors flex items-center justify-between gap-3 cursor-pointer select-none ${
+                                isSelected
+                                  ? "bg-blue-500/15 dark:bg-blue-600/20 text-blue-900 dark:text-blue-100"
+                                  : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-800 dark:text-slate-200"
+                              }`}
+                              style={{ minHeight: "68px", height: "68px" }}
+                            >
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <span className="font-mono text-xs font-bold text-sky-600 dark:text-sky-400">
+                                    {inc.id}
+                                  </span>
+                                  <span className={`text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded border ${badgeClass}`}>
+                                    {inc.severity || "MONITORING"}
+                                  </span>
+                                  <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                                    {depthDisplay}
+                                  </span>
+                                </div>
+                                <div className="text-[12.5px] font-semibold text-slate-900 dark:text-slate-100 truncate">
+                                  {cleanLoc}
+                                </div>
+                                <div className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                  {reports} verified {reports === 1 ? "report" : "reports"}
+                                </div>
+                              </div>
+
+                              {isSelected && (
+                                <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                  <Check className="w-3 h-3 stroke-[3]" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
         </motion.div>
 
         {/* ── 2. Redesigned 3-Step Progress Stepper ──────────────────── */}
@@ -191,10 +716,11 @@ export function SimulateView() {
               isSimulating={false}
             />
             <div
-              className={`h-[2px] w-8 sm:w-16 mx-2 rounded-full transition-all duration-500 ${simState === "SIMULATING" || simState === "RESULT"
+              className={`h-[2px] w-8 sm:w-16 mx-2 rounded-full transition-all duration-500 ${
+                simState === "SIMULATING" || simState === "RESULT"
                   ? "bg-blue-600"
                   : "bg-slate-200"
-                }`}
+              }`}
             />
             <TimelineStep
               num="2"
@@ -205,10 +731,11 @@ export function SimulateView() {
               isSimulating={simState === "SIMULATING"}
             />
             <div
-              className={`h-[2px] w-8 sm:w-16 mx-2 rounded-full transition-all duration-500 ${simState === "RESULT"
+              className={`h-[2px] w-8 sm:w-16 mx-2 rounded-full transition-all duration-500 ${
+                simState === "RESULT"
                   ? "bg-emerald-600"
                   : "bg-slate-200"
-                }`}
+              }`}
             />
             <TimelineStep
               num="3"
@@ -244,7 +771,7 @@ export function SimulateView() {
                 </div>
               </div>
               <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/80">
-                Station PS-07
+                Station {activeStation.id}
               </span>
             </div>
 
@@ -253,10 +780,10 @@ export function SimulateView() {
               <div className="flex justify-between items-center mb-3">
                 <div>
                   <span className="text-[13px] font-medium text-slate-900 block">
-                    Station PS-07 Turbine Load
+                    Station {activeStation.id} Turbine Load
                   </span>
                   <span className="text-[11.5px] text-slate-500 font-normal">
-                    Discharge pump control
+                    Discharge pump control ({simulationResult.pumpDischargeCusecs} cusecs)
                   </span>
                 </div>
                 <span className="text-[26px] font-semibold tracking-tight text-blue-600 tabular-nums">
@@ -279,8 +806,8 @@ export function SimulateView() {
                 }}
               />
               <div className="flex justify-between text-[11px] text-slate-500 mt-1.5 font-normal">
-                <span>50% (42 cusecs)</span>
-                <span>100% (85 cusecs)</span>
+                <span>50% ({Math.round(stationCapacityCusecs * 0.5)} cusecs)</span>
+                <span>100% ({stationCapacityCusecs} cusecs)</span>
               </div>
             </div>
 
@@ -295,7 +822,7 @@ export function SimulateView() {
                     Inlet Desilting Mobile Unit
                   </span>
                   <span className="text-[11.5px] text-slate-500 font-normal">
-                    Deploy Rapid Action Unit 04
+                    Deploy Rapid Action Unit 04 (+22% culvert draw)
                   </span>
                 </div>
               </div>
@@ -319,7 +846,7 @@ export function SimulateView() {
                     Mobile Submersible Pump
                   </span>
                   <span className="text-[11.5px] text-slate-500 font-normal">
-                    20 HP Godwin high-head unit
+                    20 HP Godwin high-head unit (+19% relief)
                   </span>
                 </div>
               </div>
@@ -332,7 +859,21 @@ export function SimulateView() {
               />
             </div>
 
-            {/* Run Hydraulic Simulation Button (Functionality 100% preserved) */}
+            {/* Hooghly River Tide Indicator */}
+            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-600">
+              <div className="flex items-center gap-1.5">
+                <Gauge className="w-3.5 h-3.5 text-blue-600" />
+                <span>Hooghly Tide:</span>
+                <span className="font-semibold text-slate-900">
+                  {hooghlyTideLevel || 3.42}m ({hooghlyTideTrend || "RISING"})
+                </span>
+              </div>
+              <span className="text-[10px] text-slate-500 font-mono">
+                {hooghlyTideLevel > 3.2 ? "Sluice Throttled" : "Sluice Open"}
+              </span>
+            </div>
+
+            {/* Run Hydraulic Simulation Button */}
             <div className="flex items-center gap-2.5 pt-1">
               <button
                 type="button"
@@ -391,7 +932,7 @@ export function SimulateView() {
                 </div>
               </div>
               <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200">
-                Critical
+                {activeIncident.severity || "Critical"}
               </span>
             </div>
 
@@ -415,9 +956,10 @@ export function SimulateView() {
                     stroke="url(#roseGradient)"
                     strokeWidth="6"
                     strokeDasharray="251.2"
-                    strokeDashoffset="62.8"
+                    strokeDashoffset={baselineDashOffset}
                     strokeLinecap="round"
                     fill="none"
+                    className="transition-all duration-700"
                   />
                   <defs>
                     <linearGradient id="roseGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -428,22 +970,28 @@ export function SimulateView() {
                 </svg>
                 {/* Center Value */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-[38px] font-semibold tracking-tight text-rose-600 leading-none tabular-nums">
-                    18
+                  <span className="text-[34px] font-semibold tracking-tight text-rose-600 leading-none tabular-nums">
+                    {baselineDepthCm}
                   </span>
-                  <span className="text-[11.5px] font-medium text-rose-500 mt-0.5">
+                  <span className="text-[11px] font-medium text-rose-500 mt-0.5">
                     cm
                   </span>
                 </div>
               </div>
 
               <div className="text-[13.5px] font-semibold text-slate-900 mt-2.5">
-                Severe Street Inundation
+                {baselineDepthCm >= 20
+                  ? "Severe Street Inundation"
+                  : baselineDepthCm >= 12
+                    ? "Moderate Waterlogging"
+                    : "Surface Water Accumulation"}
               </div>
               <div className="text-[11.5px] text-slate-600 mt-0.5 flex items-center gap-1.5 font-normal">
-                <span>2 arterial lanes blocked</span>
+                <span>{activeIncident?.ward || activeIncident?.subdivision?.split("//")[0]?.trim() || "Kolkata Grid"}</span>
                 <span className="text-slate-300">·</span>
-                <span className="font-medium text-rose-700">College More</span>
+                <span className="font-medium text-rose-700 truncate max-w-[200px]">
+                  {activeIncident?.location ? activeIncident.location.split("(")[0].trim() : "Hotspot"}
+                </span>
               </div>
             </div>
 
@@ -457,11 +1005,14 @@ export function SimulateView() {
                     Drainage Load
                   </span>
                   <span className="font-semibold text-slate-900 tabular-nums">
-                    62%
+                    {baselineDrainageLoad}%
                   </span>
                 </div>
                 <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                  <div className="h-full rounded-full bg-amber-400 w-[62%] transition-all duration-700" />
+                  <div
+                    className="h-full rounded-full bg-amber-400 transition-all duration-700"
+                    style={{ width: `${baselineDrainageLoad}%` }}
+                  />
                 </div>
               </div>
 
@@ -473,11 +1024,14 @@ export function SimulateView() {
                     Risk Score
                   </span>
                   <span className="font-semibold text-slate-900 tabular-nums">
-                    82 / 100
+                    {baselineRiskScore} / 100
                   </span>
                 </div>
                 <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                  <div className="h-full rounded-full bg-rose-500 w-[82%] transition-all duration-700" />
+                  <div
+                    className="h-full rounded-full bg-rose-500 transition-all duration-700"
+                    style={{ width: `${baselineRiskScore}%` }}
+                  />
                 </div>
               </div>
 
@@ -489,11 +1043,14 @@ export function SimulateView() {
                     Affected Area
                   </span>
                   <span className="font-semibold text-slate-900 tabular-nums">
-                    12,400 m²
+                    {baselineAreaM2.toLocaleString()} m²
                   </span>
                 </div>
                 <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                  <div className="h-full rounded-full bg-rose-400 w-[74%] transition-all duration-700" />
+                  <div
+                    className="h-full rounded-full bg-rose-400 transition-all duration-700"
+                    style={{ width: `${Math.min(100, Math.round((baselineAreaM2 / 16000) * 100))}%` }}
+                  />
                 </div>
               </div>
             </div>
@@ -501,7 +1058,9 @@ export function SimulateView() {
             {/* Subtle Risk Warning Panel */}
             <div className="rounded-xl bg-amber-50/90 border border-amber-200/80 px-3.5 py-2 text-[11.5px] text-amber-900 flex items-center gap-2 font-normal">
               <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-              <span>High risk of further inundation if no intervention is taken.</span>
+              <span className="truncate">
+                {activeIncident.probableCause || "High risk of further inundation if no intervention is taken."}
+              </span>
             </div>
           </div>
 
@@ -511,10 +1070,11 @@ export function SimulateView() {
             <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all duration-300 shadow-xs ${simState === "RESULT"
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all duration-300 shadow-xs ${
+                    simState === "RESULT"
                       ? "bg-emerald-50 border-emerald-200 text-emerald-600"
                       : "bg-blue-50 border-blue-100 text-blue-600"
-                    }`}
+                  }`}
                 >
                   <TrendingDown className="w-4 h-4" />
                 </div>
@@ -530,21 +1090,23 @@ export function SimulateView() {
                 </div>
               </div>
               <span
-                className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border transition-all duration-300 ${simState === "RESULT"
+                className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border transition-all duration-300 ${
+                  simState === "RESULT"
                     ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                     : "bg-slate-100 border-slate-200 text-slate-600"
-                  }`}
+                }`}
               >
                 {simState === "RESULT" ? "Verified" : "Pending"}
               </span>
             </div>
 
-            {/* Empty / Simulating / Result State Center Area */}
+            {/* Center Visual Area */}
             <div
-              className={`rounded-2xl border p-5 flex flex-col items-center justify-center text-center gap-2 transition-all duration-300 min-h-[175px] ${simState === "RESULT"
+              className={`rounded-2xl border p-5 flex flex-col items-center justify-center text-center gap-2 transition-all duration-300 min-h-[175px] ${
+                simState === "RESULT"
                   ? "bg-gradient-to-b from-emerald-50/70 via-emerald-50/30 to-white/40 border-emerald-200/80"
                   : "bg-slate-50/70 border-slate-100"
-                }`}
+              }`}
             >
               <AnimatePresence mode="wait">
                 {simState === "SIMULATING" ? (
@@ -563,7 +1125,7 @@ export function SimulateView() {
                       Solving Hydraulic PDE Grid…
                     </div>
                     <div className="text-[11.5px] text-slate-500 font-normal">
-                      Running transient flow solver
+                      Running transient flow solver for {activeIncident.id}
                     </div>
                   </motion.div>
                 ) : simState === "RESULT" ? (
@@ -573,20 +1135,46 @@ export function SimulateView() {
                     animate={{ opacity: 1, scale: 1 }}
                     className="flex flex-col items-center gap-2"
                   >
-                    <div className="w-22 h-22 rounded-full bg-white border-2 border-emerald-400 shadow-sm flex flex-col items-center justify-center">
-                      <span className="text-[38px] font-semibold tracking-tight text-emerald-600 leading-none tabular-nums">
-                        7
-                      </span>
-                      <span className="text-[11.5px] font-medium text-emerald-500 mt-0.5">
-                        cm
-                      </span>
+                    {/* Simulated Depth Circular Indicator */}
+                    <div className="relative w-22 h-22 flex items-center justify-center">
+                      <svg className="w-22 h-22 -rotate-90" viewBox="0 0 100 100">
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          stroke="#d1fae5"
+                          strokeWidth="6"
+                          fill="none"
+                        />
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          stroke="#10b981"
+                          strokeWidth="6"
+                          strokeDasharray="251.2"
+                          strokeDashoffset={simulatedDashOffset}
+                          strokeLinecap="round"
+                          fill="none"
+                          className="transition-all duration-700"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-[34px] font-semibold tracking-tight text-emerald-600 leading-none tabular-nums">
+                          {simulationResult.simulatedDepthCm}
+                        </span>
+                        <span className="text-[11px] font-medium text-emerald-500 mt-0.5">
+                          cm
+                        </span>
+                      </div>
                     </div>
+
                     <div>
                       <div className="text-[13.5px] font-semibold text-slate-900 mt-1">
-                        Safe Vehicular Clearance
+                        {simulationResult.clearanceStatus}
                       </div>
                       <div className="text-[11.5px] text-emerald-700 font-medium mt-0.5">
-                        61% water depth reduction achieved
+                        {simulationResult.depthReductionPct}% water depth reduction ({simulationResult.depthReductionCm} cm relief)
                       </div>
                     </div>
                   </motion.div>
@@ -625,14 +1213,16 @@ export function SimulateView() {
                     className={`font-semibold tabular-nums ${simState === "RESULT" ? "text-blue-700" : "text-slate-400"
                       }`}
                   >
-                    {simState === "RESULT" ? "87%" : "—"}
+                    {simState === "RESULT" ? `${simulationResult.simulatedDrainageLoad}%` : "—"}
                   </span>
                 </div>
                 <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
                   <motion.div
                     className="h-full rounded-full bg-blue-600"
                     initial={{ width: 0 }}
-                    animate={{ width: simState === "RESULT" ? "87%" : "0%" }}
+                    animate={{
+                      width: simState === "RESULT" ? `${simulationResult.simulatedDrainageLoad}%` : "0%",
+                    }}
                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                   />
                 </div>
@@ -649,14 +1239,16 @@ export function SimulateView() {
                     className={`font-semibold tabular-nums ${simState === "RESULT" ? "text-emerald-700" : "text-slate-400"
                       }`}
                   >
-                    {simState === "RESULT" ? "54 / 100" : "—"}
+                    {simState === "RESULT" ? `${simulationResult.simulatedRiskScore} / 100` : "—"}
                   </span>
                 </div>
                 <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
                   <motion.div
                     className="h-full rounded-full bg-emerald-600"
                     initial={{ width: 0 }}
-                    animate={{ width: simState === "RESULT" ? "54%" : "0%" }}
+                    animate={{
+                      width: simState === "RESULT" ? `${simulationResult.simulatedRiskScore}%` : "0%",
+                    }}
                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                   />
                 </div>
@@ -673,14 +1265,19 @@ export function SimulateView() {
                     className={`font-semibold tabular-nums ${simState === "RESULT" ? "text-teal-700" : "text-slate-400"
                       }`}
                   >
-                    {simState === "RESULT" ? "4,100 m²" : "—"}
+                    {simState === "RESULT" ? `${simulationResult.simulatedAreaM2.toLocaleString()} m²` : "—"}
                   </span>
                 </div>
                 <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
                   <motion.div
                     className="h-full rounded-full bg-teal-500"
                     initial={{ width: 0 }}
-                    animate={{ width: simState === "RESULT" ? "33%" : "0%" }}
+                    animate={{
+                      width:
+                        simState === "RESULT"
+                          ? `${Math.min(100, Math.round((simulationResult.simulatedAreaM2 / 16000) * 100))}%`
+                          : "0%",
+                    }}
                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                   />
                 </div>
@@ -690,7 +1287,11 @@ export function SimulateView() {
             {/* Footer Message Strip */}
             <div className="rounded-xl bg-slate-50 border border-slate-100 px-3.5 py-2 text-[11.5px] text-slate-500 flex items-center gap-1.5 font-normal">
               <Info className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-              <span>Results will appear after simulation is completed.</span>
+              <span className="truncate">
+                {simState === "RESULT"
+                  ? `Evacuation completes ~${simulationResult.clearanceHours} hrs ahead of flood crest.`
+                  : "Results will appear after simulation is completed."}
+              </span>
             </div>
           </div>
         </motion.div>
@@ -714,15 +1315,14 @@ export function SimulateView() {
                     Intervention Verified · Ready for Immediate KMC Dispatch
                   </div>
                   <div className="text-[12px] text-slate-500 mt-0.5 font-normal">
-                    Staging Godwin pump + Unit 04 desilting restores traffic
-                    clearance 3.6 hours ahead of flood crest.
+                    {simulationResult.dispatchSummary}
                   </div>
                 </div>
               </div>
 
               <button
                 type="button"
-                onClick={() => navigate("/action-center")}
+                onClick={handleCreateWorkOrder}
                 className="relative overflow-hidden px-5 py-2.5 rounded-xl font-medium text-[13px] text-white shrink-0 cursor-pointer transition-all active:scale-[0.98] group shadow-[0_2px_12px_rgba(5,150,105,0.25)] hover:shadow-[0_4px_16px_rgba(5,150,105,0.35)]"
                 style={{
                   background:

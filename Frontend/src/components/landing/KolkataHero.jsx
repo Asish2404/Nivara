@@ -4,8 +4,8 @@ import { useKWIStore } from '../../store/useKWIStore'
 import { GEOGRAPHIC_DISTRICTS, ACTIVE_INCIDENTS } from '../gis/kolkataCartographicData'
 
 export function KolkataHero({ selectedDistrict, onSelectDistrict, onResetFocus }) {
-  const { setActiveSection, navigate } = useKWIStore()
-  const heroIncident = ACTIVE_INCIDENTS[0] // #SV-024
+  const { setActiveSection, navigate, incidents } = useKWIStore()
+  const heroIncident = incidents?.[0] || ACTIVE_INCIDENTS[0]
 
   const handleEnterLiveCity = () => {
     setActiveSection('CITY')

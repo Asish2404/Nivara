@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, status, UploadFile, File, Form, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -49,14 +49,23 @@ async def create_report(
 @router.get(
     "/reports",
     response_model=List[ReportResponse],
-    summary="List the current user's submitted reports (newest first)",
+    summary="List submitted citizen reports (newest first)",
 )
 async def list_my_reports(
+    all_reports: bool = Query(False, description="If True, return all municipal reports across the city"),
     current_user: User = Depends(get_current_user_or_default),
     db: AsyncSession = Depends(get_db),
 ):
-    """Returns only reports owned by the requesting user (server-side isolation)."""
-    reports = await ReportService.get_user_reports(db, current_user.id)
+    """Returns citizen reports. If all_reports is True (or for municipal admins), returns city-wide reports."""
+    is_admin = (
+        getattr(current_user, "portal", "") == "admin"
+        or "admin" in (getattr(current_user, "role", "") or "").lower()
+        or "officer" in (getattr(current_user, "role", "") or "").lower()
+    )
+    if all_reports or is_admin:
+        reports = await ReportService.get_all_reports(db)
+    else:
+        reports = await ReportService.get_user_reports(db, current_user.id)
     return [ReportResponse.model_validate(r) for r in reports]
 
 

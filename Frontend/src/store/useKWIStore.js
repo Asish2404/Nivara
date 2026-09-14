@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { api } from "../utils/api.js";
 import { formatTime12Hour } from "../utils/dateTimeUtils.js";
+import { aggregateIncidentsFromReports } from "../utils/incidentAggregator.js";
+
 
 // Helper to check public routes
 export const isPublicRoute = (path) => {
@@ -215,10 +217,25 @@ export const useKWIStore = create((set, get) => ({
   setReportCoords: (coords) => set({ reportCoords: coords }),
   setReportDepth: (depth) => set({ reportDepth: depth }),
 
-  // ---- "My Submitted Reports" persistent, user-scoped history ----
+  // ---- "My Submitted Reports" and City-Wide Municipal Reports ----
   myReports: [],
+  allReports: [],
   reportsLoaded: false,
   reportsError: null,
+
+  // Fetch all municipal reports across Kolkata (with status aging)
+  fetchAllReports: async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('kwi_token') : null
+    try {
+      const reports = await api.get('/reports?all_reports=true', token)
+      if (Array.isArray(reports)) {
+        set({ allReports: reports, reportsLoaded: true, reportsError: null })
+        get().refreshDynamicIncidents()
+      }
+    } catch (err) {
+      console.warn('[KWI] fetchAllReports notice:', err?.message || err)
+    }
+  },
 
   // Fetch the current user's reports from the backend (server-side ownership enforced).
   fetchMyReports: async () => {
@@ -232,9 +249,24 @@ export const useKWIStore = create((set, get) => ({
         reportsLoaded: true,
         reportsError: null,
       });
+      get().refreshDynamicIncidents();
     } catch (err) {
       set({ reportsError: err?.message || "Unable to load your reports." });
     }
+  },
+
+  // Dynamically derive active incidents strictly from reports table
+  refreshDynamicIncidents: () => {
+    const s = get();
+    const combined = [
+      ...(s.allReports || []),
+      ...(s.myReports || []).filter(
+        (mr) => !(s.allReports || []).some((ar) => ar.report_id === mr.report_id),
+      ),
+    ];
+    const dynamic = aggregateIncidentsFromReports(combined);
+    set({ incidents: dynamic });
+    return dynamic;
   },
 
   submitCitizenReport: () => {
@@ -258,24 +290,39 @@ export const useKWIStore = create((set, get) => ({
       set({ reportVerificationStage: 5, isReportVerified: true });
     }, 2400);
 
+    const s = get();
+    const depthMatch = String(s.reportDepth || "").match(/(\d+(?:\.\d+)?)/);
+    const parsedDepth = depthMatch ? parseFloat(depthMatch[1]) : 15;
+
+    // Instantly generate a local preview report so the new hotspot card immediately appears
+    const localReport = {
+      report_id: `RPT-LOC-${Date.now()}`,
+      location: s.reportLocation || "Kolkata Waterlogging Site",
+      latitude: s.reportCoords?.lat ?? 0,
+      longitude: s.reportCoords?.lon ?? 0,
+      issue_type: "Waterlogging",
+      description: s.reportDescription || "",
+      water_depth: parsedDepth,
+      submitted_at: new Date().toISOString(),
+      status: "Under Review",
+    };
+
+    set((state) => ({
+      myReports: [localReport, ...(state.myReports || [])],
+      allReports: [localReport, ...(state.allReports || [])],
+    }));
+    get().refreshDynamicIncidents();
+
     // Persist to the backend so the report appears in "My Submitted Reports"
-    // with the exact original photo. Runs alongside the local animation.
     const token =
       typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
-
-    const s = get();
     const form = new FormData();
     form.append("location", s.reportLocation || "");
     form.append("latitude", String(s.reportCoords?.lat ?? 0));
     form.append("longitude", String(s.reportCoords?.lon ?? 0));
     form.append("issueType", "Waterlogging");
     form.append("description", s.reportDescription || "");
-    // Convert the reportDepth display string "15–30 cm" into a numeric estimate.
-    const depthMatch = String(s.reportDepth || "").match(/(\d+(?:\.\d+)?)/);
-    form.append(
-      "waterDepth",
-      String(depthMatch ? parseFloat(depthMatch[1]) : 0),
-    );
+    form.append("waterDepth", String(parsedDepth));
 
     const dispatchSubmission = (pForm) => {
       api
@@ -290,11 +337,22 @@ export const useKWIStore = create((set, get) => ({
               myReports: [
                 report,
                 ...state.myReports.filter(
-                  (r) => r.report_id !== report.report_id,
+                  (r) =>
+                    r.report_id !== report.report_id &&
+                    r.report_id !== localReport.report_id,
+                ),
+              ],
+              allReports: [
+                report,
+                ...(state.allReports || []).filter(
+                  (r) =>
+                    r.report_id !== report.report_id &&
+                    r.report_id !== localReport.report_id,
                 ),
               ],
               reportsLoaded: true,
             }));
+            get().refreshDynamicIncidents();
           }
         })
         .catch((err) => {
@@ -523,9 +581,11 @@ export const useKWIStore = create((set, get) => ({
     set({ currentUser: userData });
   },
 
-  // On app mount: refresh the profile from the backend ONLY if a stored JWT exists.
+  // On app mount: refresh the profile and municipal reports from the backend
   initUser: async () => {
     if (typeof window === "undefined") return;
+    // Always fetch municipal reports and compute dynamic incidents on app load
+    get().fetchAllReports().catch(() => {});
     const token = localStorage.getItem("kwi_token");
     if (!token) {
       set({ currentUser: null });
@@ -534,6 +594,7 @@ export const useKWIStore = create((set, get) => ({
     try {
       const me = await api.get("/auth/me", token);
       get().setCurrentUser(get().mapBackendUser(me));
+      get().fetchMyReports().catch(() => {});
     } catch (err) {
       // Unauthorized / invalid token → drop the stale session.
       if (
@@ -638,85 +699,8 @@ export const useKWIStore = create((set, get) => ({
   activePumps: 78,
   totalPumps: 84,
 
-  // Incidents Dataset
-  incidents: [
-    {
-      id: "#SV-024",
-      ward: "Ward 31",
-      borough: "Bidhannagar MC",
-      location: "Sector V / Salt Lake (College More & Ring Rd)",
-      waterLevel: "28 cm",
-      waterLevelCm: 28.0,
-      rainfall: "74 mm / 3 hr",
-      verifiedReports: 18,
-      affectedArea: "12,400 m²",
-      riskScore: "82 / 100",
-      connectedDrainage: "Sector V Main Trunk",
-      nearestPump: "PS-07",
-      probableCause: "Rainfall exceeding local drainage capacity.",
-      severity: "CRITICAL",
-      status: "ACTIVE",
-      reportedAt: "12 mins ago",
-      position: [6.2, 0.25, -1.6],
-    },
-    {
-      id: "#BH-019",
-      ward: "Ward 122",
-      borough: "Borough XIII",
-      location: "Behala Chowrasta / Diamond Harbour Rd",
-      waterLevel: "19.8 cm",
-      waterLevelCm: 19.8,
-      rainfall: "68 mm / 3 hr",
-      verifiedReports: 14,
-      affectedArea: "15,200 m²",
-      riskScore: "78 / 100",
-      connectedDrainage: "Keorapukur Khal Outfall",
-      nearestPump: "PS-09",
-      probableCause: "Culvert blockage near Metro construction pier P-142.",
-      severity: "CRITICAL",
-      status: "ACTIVE",
-      reportedAt: "24 mins ago",
-      position: [-2.5, 0.25, 5.0],
-    },
-    {
-      id: "#PS-032",
-      ward: "Ward 63",
-      borough: "Borough VII",
-      location: "Park Street & Chowringhee Intersection",
-      waterLevel: "14.5 cm",
-      waterLevelCm: 14.5,
-      rainfall: "55 mm / 3 hr",
-      verifiedReports: 9,
-      affectedArea: "7,800 m²",
-      riskScore: "64 / 100",
-      connectedDrainage: "Camac St Box Drain to Palmer Bridge",
-      nearestPump: "PS-02",
-      probableCause: "Grate clogging from surface stormwater debris.",
-      severity: "MODERATE",
-      status: "ACTIVE",
-      reportedAt: "38 mins ago",
-      position: [0.1, 0.25, 0.8],
-    },
-    {
-      id: "INC-2026-089",
-      ward: "Ward 49",
-      borough: "Borough V",
-      location: "Thanthania Kali Bari & College St Intersection",
-      waterLevel: "28.4 cm",
-      waterLevelCm: 28.4,
-      rainfall: "81 mm / 3 hr",
-      verifiedReports: 22,
-      affectedArea: "9,800 m²",
-      riskScore: "89 / 100",
-      connectedDrainage: "Circular Canal Outfall",
-      nearestPump: "PS-01",
-      probableCause: "High silt accumulation obstructing gravity outfall.",
-      severity: "CRITICAL",
-      status: "ACTIVE",
-      reportedAt: "15 mins ago",
-      position: [-0.3, 0.25, -2.4],
-    },
-  ],
+  // Active Incidents Dataset (Derived dynamically from reports table)
+  incidents: [],
 
   // Pumping Stations
   pumpingStations: [
@@ -787,39 +771,39 @@ export const useKWIStore = create((set, get) => ({
       affectedArea: "12,400 m²",
       rainfall: "74 mm / 3 hr",
       drainageLoad: "94%",
-      waterDepth: "28 cm",
-      riskScore: "82 / 100",
-      connectedIncidentId: "#SV-024",
+      waterDepth: "30 cm",
+      riskScore: "85 / 100",
+      connectedIncidentId: "#SA-754",
     },
     {
       id: "risk_college_st",
-      name: "THANTHANIA // COLLEGE STREET",
-      level: "CRITICAL",
-      color: "#ef4444",
-      center: [-0.3, -2.4],
+      name: "COLLEGE MORE // WARD 32",
+      level: "MODERATE",
+      color: "#f59e0b",
+      center: [6.99, 0.0],
       radiusX: 0.65,
       radiusZ: 0.55,
-      affectedArea: "9,800 m²",
-      rainfall: "81 mm / 3 hr",
-      drainageLoad: "98%",
-      waterDepth: "28.4 cm",
-      riskScore: "89 / 100",
-      connectedIncidentId: "INC-2026-089",
+      affectedArea: "6,400 m²",
+      rainfall: "57 mm / 3 hr",
+      drainageLoad: "82%",
+      waterDepth: "30 cm",
+      riskScore: "61 / 100",
+      connectedIncidentId: "#CO-493",
     },
     {
       id: "risk_behala",
       name: "BEHALA CHOWRASTA",
-      level: "HIGH",
-      color: "#f97316",
-      center: [-2.5, 5.0],
+      level: "LOW",
+      color: "#10b981",
+      center: [-4.69, 8.2],
       radiusX: 0.8,
       radiusZ: 0.65,
-      affectedArea: "15,200 m²",
-      rainfall: "68 mm / 3 hr",
-      drainageLoad: "92%",
-      waterDepth: "19.8 cm",
-      riskScore: "78 / 100",
-      connectedIncidentId: "#BH-019",
+      affectedArea: "5,300 m²",
+      rainfall: "51 mm / 3 hr",
+      drainageLoad: "65%",
+      waterDepth: "Telemetry Pending",
+      riskScore: "53 / 100",
+      connectedIncidentId: "#BE-819",
     },
     {
       id: "risk_park_circus",
@@ -923,38 +907,16 @@ export const useKWIStore = create((set, get) => ({
     let reply;
     const lower = text.toLowerCase();
 
-    if (
-      lower.includes("sector v") ||
-      lower.includes("sv-024") ||
-      lower.includes("ps-07")
-    ) {
-      reply =
-        "Sector V Incident #SV-024: 28cm water depth at College More. 74 mm/3 hr rainfall recorded. PS-07 booster station operating at 100% capacity discharging 85 cusecs into Bagjola Canal.";
-    } else if (
-      lower.includes("critical") ||
-      lower.includes("incident") ||
-      lower.includes("waterlog")
-    ) {
-      reply =
-        "There are currently 3 CRITICAL waterlogging incidents: Sector V (#SV-024, 28cm), Thanthania Kali Bari (Ward 49, 28.4cm), and Behala Chowrasta (#BH-019, 19.8cm). 2 pump stations (PS-07 and PS-04) are running at 100% capacity.";
-    } else if (
-      lower.includes("tide") ||
-      lower.includes("hooghly") ||
-      lower.includes("river") ||
-      lower.includes("sluice")
-    ) {
-      reply =
-        "Hooghly River tidal gauge at Princep Ghat reports 3.42m (RISING). Lock gates at Circular Canal and Palmer Bridge are currently throttled to prevent river backflow into city storm drains.";
-    } else if (
-      lower.includes("pump") ||
-      lower.includes("palmer") ||
-      lower.includes("ballygunge")
-    ) {
-      reply =
-        "78 of 84 major KMC pumping units are active. PS-07 and PS-04 are at 100% capacity. Palmer Bridge is running 4/5 pumps discharging 140 cusecs.";
-    } else if (lower.includes("forecast") || lower.includes("rain")) {
-      reply =
-        "Monsoon squall band over Alipore & Central Kolkata is depositing 74 mm / 3 hr. Intensity is HEAVY, with high runoff entering Sector V Main Trunk and Circular Canal.";
+    if (lower.includes('sector v') || lower.includes('sa-754') || lower.includes('ps-07')) {
+      reply = "Salt Lake Sector V Incident #SA-754: 30cm water depth logged. PS-07 booster station operating discharging into Bagjola Canal."
+    } else if (lower.includes('critical') || lower.includes('incident') || lower.includes('waterlog')) {
+      reply = "Active waterlogging incidents from municipal reports include Salt Lake Sector V (#SA-754, 30cm), College More (#CO-493, 30cm), and Maniktala (#MA-979, 15cm)."
+    } else if (lower.includes('tide') || lower.includes('hooghly') || lower.includes('river') || lower.includes('sluice')) {
+      reply = "Hooghly River tidal gauge at Princep Ghat reports 3.42m (RISING). Lock gates at Circular Canal and Palmer Bridge are currently throttled to prevent river backflow into city storm drains."
+    } else if (lower.includes('pump') || lower.includes('palmer') || lower.includes('ballygunge')) {
+      reply = "78 of 84 major KMC pumping units are active. PS-07 and PS-04 are at 100% capacity. Palmer Bridge is running 4/5 pumps discharging 140 cusecs."
+    } else if (lower.includes('forecast') || lower.includes('rain')) {
+      reply = "Monsoon squall band over Alipore & Central Kolkata is depositing 74 mm / 3 hr. Intensity is HEAVY, with high runoff entering Sector V Main Trunk and Circular Canal."
     } else {
       reply = `Telemetry check for "${text}": All sensor networks in Boroughs I through XVI are transmitting valid hydraulic pressure and depth data.`;
     }
@@ -970,4 +932,101 @@ export const useKWIStore = create((set, get) => ({
       copilotQuery: "",
     }));
   },
-}));
+
+  // Dispatched hotspots list (popped from simulation)
+  dispatchedHotspotIds: [],
+  markHotspotDispatched: (incidentId) => {
+    if (!incidentId) return
+    set((state) => {
+      const setIds = new Set([...state.dispatchedHotspotIds, incidentId])
+      const cleanId = String(incidentId).replace(/^#/, '')
+      setIds.add(cleanId)
+      setIds.add(`#${cleanId}`)
+      return { dispatchedHotspotIds: Array.from(setIds) }
+    })
+  },
+  resetDispatchedHotspots: () => set({ dispatchedHotspotIds: [] }),
+
+  // Work Orders Store
+  workOrders: {},
+
+  // Hydraulic Scenario Simulation State & Action Center Bridge
+  activeSimulationIncidentId: '#SA-754',
+  setActiveSimulationIncidentId: (id) => set({ activeSimulationIncidentId: id }),
+  activeWorkOrderTicketId: null,
+  setActiveWorkOrderTicketId: (ticketId) => set({ activeWorkOrderTicketId: ticketId }),
+  latestSimulationOutcome: null,
+  setLatestSimulationOutcome: (outcome) => set({ latestSimulationOutcome: outcome }),
+
+  createWorkOrder: (newOrder) => {
+    const rawRef = newOrder.incidentRef || newOrder.incidentId || '0041'
+    const cleanRef = String(rawRef).replace(/^#/, '').replace(/[^a-zA-Z0-9]/g, '')
+    const ticketKey = newOrder.ticketKey || `WO-${cleanRef}`
+    const fullId = newOrder.id || `WO-2026-0323-${cleanRef}`
+
+    const finalizedOrder = {
+      ...newOrder,
+      id: fullId,
+      ticketKey,
+      incidentRef: newOrder.incidentRef || (newOrder.incidentId ? `#${String(newOrder.incidentId).replace(/^#/, '')}` : '#TK-089'),
+      status: newOrder.status || 'Dispatched',
+      stage: typeof newOrder.stage === 'number' ? newOrder.stage : 1, // Stage 1 = Dispatched (Step 2)
+    }
+
+    set((state) => {
+      // Also mark as dispatched
+      const setIds = new Set([...state.dispatchedHotspotIds])
+      if (newOrder.incidentId) {
+        setIds.add(newOrder.incidentId)
+        setIds.add(String(newOrder.incidentId).replace(/^#/, ''))
+        setIds.add(`#${String(newOrder.incidentId).replace(/^#/, '')}`)
+      }
+      if (newOrder.incidentRef) {
+        setIds.add(newOrder.incidentRef)
+        setIds.add(String(newOrder.incidentRef).replace(/^#/, ''))
+        setIds.add(`#${String(newOrder.incidentRef).replace(/^#/, '')}`)
+      }
+
+      return {
+        workOrders: {
+          [ticketKey]: finalizedOrder,
+          ...state.workOrders,
+        },
+        activeWorkOrderTicketId: ticketKey,
+        latestSimulationOutcome: finalizedOrder,
+        dispatchedHotspotIds: Array.from(setIds),
+      }
+    })
+
+    get().navigate('/action-center')
+    return ticketKey
+  },
+
+  advanceWorkOrderStatus: (ticketKey) => {
+    set((state) => {
+      const key = ticketKey || state.activeWorkOrderTicketId
+      const existing = state.workOrders[key]
+      if (!existing) return state
+      const nextStage = Math.min(3, (existing.stage ?? 1) + 1)
+      const STAGE_NAMES = ['Recommended', 'Dispatched', 'In Progress', 'Resolved']
+      return {
+        workOrders: {
+          ...state.workOrders,
+          [key]: {
+            ...existing,
+            stage: nextStage,
+            status: STAGE_NAMES[nextStage],
+          },
+        },
+      }
+    })
+  },
+
+  dispatchSimulationToWorkOrder: (ticketId, outcome) => {
+    set({
+      activeWorkOrderTicketId: ticketId || null,
+      latestSimulationOutcome: outcome || null,
+    })
+    get().navigate('/action-center')
+  },
+}))
