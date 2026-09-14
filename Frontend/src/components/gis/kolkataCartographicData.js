@@ -1296,11 +1296,14 @@ export const GEOGRAPHIC_DISTRICTS = [
 export const KOLKATA_CENTER_GEO = [88.3639, 22.5726] // [lng, lat]
 
 export function kmToGeoCoord(kmX, kmY) {
+  if (kmX === undefined || kmX === null || isNaN(Number(kmX)) || kmY === undefined || kmY === null || isNaN(Number(kmY))) {
+    return [KOLKATA_CENTER_GEO[0], KOLKATA_CENTER_GEO[1]];
+  }
   // 1 deg lat = 111.13 km
   // 1 deg lng at 22.57° N = 102.6 km
-  const lat = KOLKATA_CENTER_GEO[1] - kmY / 111.13
-  const lng = KOLKATA_CENTER_GEO[0] + kmX / 102.6
-  return [Number(lng.toFixed(6)), Number(lat.toFixed(6))]
+  const lat = KOLKATA_CENTER_GEO[1] - Number(kmY) / 111.13;
+  const lng = KOLKATA_CENTER_GEO[0] + Number(kmX) / 102.6;
+  return [Number(lng.toFixed(6)), Number(lat.toFixed(6))];
 }
 
 // Authenticated Kolkata Geographic Anchors for Navigation & Reference Labels

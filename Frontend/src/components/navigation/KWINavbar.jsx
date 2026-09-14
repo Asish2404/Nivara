@@ -186,52 +186,30 @@ export function KWINavbar() {
   return (
     <header className="sticky top-0 z-50 w-full pt-3.5 pb-2 px-3 sm:px-6 pointer-events-none select-none transition-all">
       {/* ===================================================== */}
-      {/* REACT BITS ANIMATED BORDER GLOW WRAPPER               */}
+      {/* SEAMLESS LIQUID GLASS NAVBAR CONTAINER                */}
       {/* ===================================================== */}
-      <div className="relative pointer-events-auto max-w-[1380px] mx-auto p-[1.5px] rounded-[30px] group/nav shadow-[0_14px_45px_rgba(0,0,0,0.08)]">
-        {/* Border Glow Beam Container - Isolated with overflow-hidden so it never clips dropdowns */}
-        <div
-          className="absolute inset-0 rounded-[30px] overflow-hidden pointer-events-none"
-          aria-hidden="true"
-        >
-          {/* 1. Animated Outer Bloom Layer (Soft Neon Aura) */}
-          <div
-            className="absolute -inset-[180%] animate-[spin_7s_linear_infinite] opacity-70 blur-[15px]"
-            style={{
-              background: `conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 155deg, #00f0ff 172deg, #3b82f6 185deg, #a855f7 198deg, transparent 215deg, transparent 360deg)`,
-            }}
-          />
-
-          {/* 2. Sharp Traveling Conic Beam (React Bits Border Glow: coneSpread=26) */}
-          <div
-            className="absolute -inset-[180%] animate-[spin_7s_linear_infinite]"
-            style={{
-              background: `conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 160deg, #00f0ff 174deg, #38bdf8 185deg, #a855f7 196deg, transparent 210deg, transparent 360deg)`,
-            }}
-          />
-        </div>
-
+      <div className="relative pointer-events-auto max-w-[1380px] mx-auto rounded-[30px] group/nav shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_14px_45px_rgba(0,0,0,0.35)]">
         {/* ===================================================== */}
         {/* LIQUID GLASS MAIN CAPSULE CONTAINER                   */}
         {/* ===================================================== */}
         <div
-          className={`relative rounded-[28.5px] px-4 sm:px-6 py-2.5 backdrop-blur-3xl backdrop-saturate-[180%] transition-all duration-300 ${
+          className={`relative rounded-[30px] px-4 sm:px-6 py-2.5 backdrop-blur-3xl backdrop-saturate-[180%] transition-all duration-300 ${
             isDarkMode
               ? "border border-[rgba(94,183,201,0.18)] text-[#F2FBFD]"
-              : "border border-white/70 text-slate-900"
+              : "border border-white/80 text-slate-900"
           }`}
           style={{
             background: isDarkMode
               ? "linear-gradient(135deg, rgba(6, 32, 66, 0.94) 0%, rgba(4, 20, 44, 0.90) 45%, rgba(10, 42, 82, 0.94) 100%)"
-              : "linear-gradient(135deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.55) 45%, rgba(255, 255, 255, 0.75) 100%)",
+              : "linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.65) 45%, rgba(255, 255, 255, 0.82) 100%)",
             boxShadow: isDarkMode
               ? "inset 0 1px 1.5px rgba(255, 255, 255, 0.15), inset 0 -1px 2px rgba(0, 0, 0, 0.8), 0 20px 50px rgba(4, 20, 44, 0.75)"
-              : "inset 0 1.5px 2px rgba(255, 255, 255, 0.9), inset 0 -1px 2px rgba(0, 0, 0, 0.04), 0 20px 50px rgba(0, 180, 255, 0.10)",
+              : "inset 0 1.5px 2px rgba(255, 255, 255, 0.9), inset 0 -1px 2px rgba(0, 0, 0, 0.04), 0 20px 50px rgba(0, 180, 255, 0.08)",
           }}
         >
           {/* Internal Refractive Glass Caustic Sheen */}
           <div
-            className="absolute inset-0 rounded-[28.5px] bg-gradient-to-tr from-white/[0.12] via-transparent to-white/[0.22] pointer-events-none"
+            className="absolute inset-0 rounded-[30px] bg-gradient-to-tr from-white/[0.12] via-transparent to-white/[0.22] pointer-events-none"
             aria-hidden="true"
           />
 

@@ -877,41 +877,57 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
     if (!map) return;
 
     if (selectedIncident) {
-      const coords = kmToGeoCoord(selectedIncident.x, selectedIncident.y);
-      map.flyTo({
-        center: coords,
-        zoom: 14.5,
-        pitch: is3DMode ? 42 : 0,
-        duration: 1100,
-      });
+      let coords = null;
+      if (selectedIncident.longitude && selectedIncident.latitude && !isNaN(Number(selectedIncident.longitude)) && !isNaN(Number(selectedIncident.latitude))) {
+        coords = [Number(selectedIncident.longitude), Number(selectedIncident.latitude)];
+      } else if (selectedIncident.lng && selectedIncident.lat && !isNaN(Number(selectedIncident.lng)) && !isNaN(Number(selectedIncident.lat))) {
+        coords = [Number(selectedIncident.lng), Number(selectedIncident.lat)];
+      } else if (selectedIncident.x !== undefined && selectedIncident.y !== undefined && Math.abs(Number(selectedIncident.x)) < 50 && Math.abs(Number(selectedIncident.y)) < 50) {
+        coords = kmToGeoCoord(selectedIncident.x, selectedIncident.y);
+      } else {
+        coords = KOLKATA_CENTER_GEO;
+      }
+
+      if (coords && !isNaN(coords[0]) && !isNaN(coords[1])) {
+        map.flyTo({
+          center: coords,
+          zoom: 14.5,
+          pitch: is3DMode ? 42 : 0,
+          duration: 1100,
+        });
+      }
       return;
     }
 
     if (selectedPumpStation) {
       const coords = kmToGeoCoord(selectedPumpStation.x, selectedPumpStation.y);
-      map.flyTo({
-        center: coords,
-        zoom: 14.5,
-        pitch: is3DMode ? 40 : 0,
-        duration: 1100,
-      });
+      if (coords && !isNaN(coords[0]) && !isNaN(coords[1])) {
+        map.flyTo({
+          center: coords,
+          zoom: 14.5,
+          pitch: is3DMode ? 40 : 0,
+          duration: 1100,
+        });
+      }
       return;
     }
 
     if (selectedRiskZone && selectedRiskZone.center) {
       const coords = kmToGeoCoord(selectedRiskZone.center[0], selectedRiskZone.center[1]);
-      map.flyTo({
-        center: coords,
-        zoom: 13.8,
-        pitch: is3DMode ? 35 : 0,
-        duration: 1100,
-      });
+      if (coords && !isNaN(coords[0]) && !isNaN(coords[1])) {
+        map.flyTo({
+          center: coords,
+          zoom: 13.8,
+          pitch: is3DMode ? 35 : 0,
+          duration: 1100,
+        });
+      }
       return;
     }
 
     if (selectedDistrict) {
       const landmark = REAL_KOLKATA_LANDMARKS.find((item) => item.id === selectedDistrict);
-      if (landmark) {
+      if (landmark && landmark.coordinates && !isNaN(landmark.coordinates[0]) && !isNaN(landmark.coordinates[1])) {
         map.flyTo({
           center: landmark.coordinates,
           zoom: 14,
