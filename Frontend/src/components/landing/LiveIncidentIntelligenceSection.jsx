@@ -181,23 +181,23 @@ export function LiveIncidentIntelligenceSection() {
         <div>
 
           {/* Eyebrow */}
-          <div className="inline-flex items-center gap-2 text-[11px] font-mono font-bold tracking-[0.2em] uppercase text-cyan-700 dark:text-cyan-400 mb-1">
+          <div className="inline-flex items-center gap-2 text-[11px] font-mono font-bold tracking-[0.2em] uppercase text-cyan-700 dark:text-[#00E5FF] mb-1">
             <span>LIVE INCIDENT INTELLIGENCE</span>
           </div>
 
           {/* Supporting Text */}
-          <p className="text-sm sm:text-[15px] font-semibold text-slate-800 dark:text-slate-200 tracking-tight">
+          <p className="text-sm sm:text-[15px] font-semibold text-slate-800 dark:text-[#F2FBFD] tracking-tight">
             Ground reports requiring attention
           </p>
 
         </div>
 
         {/* Dynamic Active Count Pill */}
-        <div className="self-start sm:self-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 dark:bg-[#131d31]/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 shadow-[0_2px_12px_rgba(15,23,42,0.03)] font-mono text-xs text-slate-700 dark:text-slate-300">
+        <div className="self-start sm:self-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 dark:bg-[#10313E]/90 backdrop-blur-md border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_2px_12px_rgba(15,23,42,0.03)] font-mono text-xs text-slate-700 dark:text-[#F2FBFD]">
 
           <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
 
-          <span className="font-bold text-slate-900 dark:text-slate-100 tracking-wider">
+          <span className="font-bold text-slate-900 dark:text-[#F2FBFD] tracking-wider">
             {formattedActiveCount} ACTIVE
           </span>
 
@@ -289,7 +289,7 @@ export function LiveIncidentIntelligenceSection() {
                       setHoveredIncidentId(null);
                     }}
 
-                    className={`group relative flex flex-col justify-between p-5 sm:p-6 rounded-[18px] bg-white/90 dark:bg-[#111a2e]/90 backdrop-blur-xl border border-sky-300/50 dark:border-sky-500/30 ${config.accentBorder} shadow-[0_4px_20px_rgba(56,189,248,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.25)] hover:shadow-[0_12px_36px_rgba(56,189,248,0.22)] hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-default`}
+                    className={`group relative flex flex-col justify-between p-5 sm:p-6 rounded-[18px] bg-white/90 dark:bg-[#10313E]/90 backdrop-blur-xl border border-sky-300/50 dark:border-[rgba(94,183,201,0.16)] ${config.accentBorder} shadow-[0_4px_20px_rgba(56,189,248,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.25)] hover:shadow-[0_12px_36px_rgba(56,189,248,0.22)] hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-default`}
                   >
 
                     {/* Animated Light Blue Border Beam Effect */}
@@ -347,37 +347,37 @@ export function LiveIncidentIntelligenceSection() {
 
                         </div>
 
-                        <span className="text-[11px] font-mono font-semibold text-slate-400 dark:text-slate-500 tracking-tight">
+                        <span className="text-[11px] font-mono font-semibold text-slate-400 dark:text-[#6D949D] tracking-tight">
                           {incident.id}
                         </span>
 
                       </div>
 
                       {/* Incident Location Headline */}
-                      <h3 className="text-base sm:text-[17px] font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-snug line-clamp-2 mb-4 group-hover:text-cyan-700 dark:group-hover:text-cyan-400 transition-colors">
+                      <h3 className="text-base sm:text-[17px] font-bold text-slate-900 dark:text-[#F2FBFD] tracking-tight leading-snug line-clamp-2 mb-4 group-hover:text-cyan-700 dark:group-hover:text-[#00E5FF] transition-colors">
                         {incident.location}
                       </h3>
 
                     </div>
 
                     {/* Card Middle: Minimalist Telemetry Subset */}
-                    <div className="space-y-2 pt-3 border-t border-slate-100/90 dark:border-slate-800/80">
+                    <div className="space-y-2 pt-3 border-t border-slate-100/90 dark:border-[rgba(94,183,201,0.16)]">
 
                       {/* Water Depth */}
-                      <div className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
+                      <div className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-[#B2D2D9]">
 
-                        <Droplets className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
+                        <Droplets className="w-3.5 h-3.5 text-cyan-600 dark:text-[#00E5FF] shrink-0" />
 
-                        <span className="font-semibold text-slate-900 dark:text-slate-100 font-mono">
+                        <span className="font-semibold text-slate-900 dark:text-[#F2FBFD] font-mono">
                           {displayDepth}
                         </span>
 
                       </div>
 
                       {/* Verified Reports */}
-                      <div className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-400">
+                      <div className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-[#6D949D]">
 
-                        <CheckCircle2 className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-slate-400 dark:text-[#6D949D] shrink-0" />
 
                         <span>
                           {displayReports}
@@ -388,9 +388,9 @@ export function LiveIncidentIntelligenceSection() {
                     </div>
 
                     {/* Card Bottom: Inspect Action */}
-                    <div className="pt-3.5 mt-3 border-t border-slate-100/90 dark:border-slate-800/80 flex items-center justify-between">
+                    <div className="pt-3.5 mt-3 border-t border-slate-100/90 dark:border-[rgba(94,183,201,0.16)] flex items-center justify-between">
 
-                      <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">
+                      <span className="text-[11px] font-mono text-slate-400 dark:text-[#6D949D]">
                         {incident.subdivision ||
                           "KOLKATA GRID"}
                       </span>
@@ -400,7 +400,7 @@ export function LiveIncidentIntelligenceSection() {
                         onClick={() =>
                           handleInspect(incident)
                         }
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors cursor-pointer group/inspect"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-600 hover:text-cyan-700 dark:text-[#00E5FF] dark:hover:text-[#38BDF8] transition-colors cursor-pointer group/inspect"
                         title={`Inspect details for ${incident.id}`}
                       >
 
@@ -436,7 +436,7 @@ export function LiveIncidentIntelligenceSection() {
           <button
             type="button"
             onClick={toggleShowMore}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/85 dark:bg-[#111a2e]/85 hover:bg-slate-50 dark:hover:bg-[#16223d] text-slate-700 dark:text-slate-300 hover:text-cyan-700 dark:hover:text-cyan-400 border border-slate-200/90 dark:border-slate-700/90 font-mono text-xs font-bold tracking-wider uppercase shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer active:scale-98"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/85 dark:bg-[#10313E]/85 hover:bg-slate-50 dark:hover:bg-[#163F4E] text-slate-700 dark:text-[#F2FBFD] hover:text-cyan-700 dark:hover:text-[#00E5FF] border border-slate-200/90 dark:border-[rgba(94,183,201,0.16)] font-mono text-xs font-bold tracking-wider uppercase shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer active:scale-98"
           >
 
             {showAll ? (

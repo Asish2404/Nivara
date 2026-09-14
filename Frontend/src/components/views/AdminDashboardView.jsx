@@ -355,32 +355,43 @@ export function AdminDashboardView() {
   });
 
   return (
-    <div className="w-full min-h-screen bg-[#e8f1f8] dark:bg-[#070c14] text-slate-900 dark:text-slate-100 transition-colors duration-300 pb-16 font-sans relative">
+    <div className="w-full min-h-screen bg-[#e8f1f8] dark:bg-[#0A1E3B] text-slate-900 dark:text-[#F0F9FA] transition-colors duration-300 pb-16 font-sans relative">
       
       {/* ========================================================================= */}
       {/* EXACT PANORAMIC HERITAGE HEADER BANNER (EXTREME WIDE ZOOMED OUT VIEW)     */}
       {/* ========================================================================= */}
-      <div className="relative w-full overflow-hidden bg-[#e8f1f8] dark:bg-[#070c14]">
+      <div className="relative w-full overflow-hidden bg-[#e8f1f8] dark:bg-[#0A1E3B]">
         
         {/* Full-bleed Extreme Zoomed-out Heritage Intersection Panorama with Taxis */}
         <div className="absolute inset-0 z-0 overflow-hidden">
+          {/* Light Theme Image */}
           <img
             src="/images/kolkata_heritage_street_extreme_wide.jpg"
             alt="Kolkata Heritage Metropolitan Architecture and Esplanade Crossing"
-            className="w-full h-full object-cover object-[center_35%] sm:object-[center_32%] filter contrast-[1.03] brightness-[1.01]"
+            className="w-full h-full object-cover object-[center_35%] sm:object-[center_32%] filter contrast-[1.03] brightness-[1.01] dark:hidden"
             onError={(e) => {
               e.currentTarget.src = "/images/kolkata_heritage_wide_ultra.jpg";
             }}
           />
 
+          {/* Dark Theme Image (Ultra Dark Heritage Panorama) */}
+          <img
+            src="/images/kolkata_heritage_wide_ultra_dark.png"
+            alt="Kolkata Heritage Metropolitan Architecture Ultra Dark"
+            className="w-full h-full object-cover object-[center_35%] sm:object-[center_32%] filter contrast-[1.05] brightness-[1.0] hidden dark:block"
+            onError={(e) => {
+              e.currentTarget.src = "/images/kolkata_heritage_street_extreme_wide.jpg";
+            }}
+          />
+
           {/* Top Atmospheric Blend (Seamlessly fades upperside into navbar) */}
-          <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#e8f1f8] via-[#e8f1f8]/60 to-transparent dark:from-[#070c14] dark:via-[#070c14]/70 pointer-events-none" />
+          <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#e8f1f8] via-[#e8f1f8]/60 to-transparent dark:from-[#0A1E3B] dark:via-[#0A1E3B]/70 pointer-events-none" />
 
           {/* Left Atmospheric Mist Gradient (Smooth natural fade across text area with zero hard edges) */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#e8f1f8] via-[#e8f1f8]/85 via-28% md:via-38% to-transparent to-72% dark:from-[#070c14] dark:via-[#070c14]/88 dark:via-28% md:dark:via-38% dark:to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#e8f1f8] via-[#e8f1f8]/85 via-28% md:via-38% to-transparent to-72% dark:from-[#0A1E3B] dark:via-[#0A1E3B]/88 dark:via-28% md:dark:via-38% dark:to-transparent pointer-events-none" />
           
           {/* Bottom Ground Level Blend */}
-          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#e8f1f8] via-[#e8f1f8]/40 to-transparent dark:from-[#070c14] dark:via-[#070c14]/40 pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#e8f1f8] via-[#e8f1f8]/40 to-transparent dark:from-[#0A1E3B] dark:via-[#0A1E3B]/40 pointer-events-none" />
         </div>
 
         {/* Content Container (Header Text & Floating Weather Card) */}
@@ -394,20 +405,20 @@ export function AdminDashboardView() {
             className="relative space-y-2 max-w-xl"
           >
             {/* Ambient Cyan/Blue Glow Light behind Title */}
-            <div className="absolute -left-10 -top-8 w-80 h-44 bg-gradient-to-br from-blue-500/20 via-cyan-400/15 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+            <div className="absolute -left-10 -top-8 w-80 h-44 bg-gradient-to-br from-blue-500/20 via-cyan-400/15 to-transparent dark:from-[#00E5FF]/20 dark:via-[#38BDF8]/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
             {/* Glowing Tag Pill */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-cyan-500/15 border border-blue-400/40 dark:border-cyan-400/50 text-[11px] sm:text-xs font-bold tracking-[0.2em] text-blue-700 dark:text-cyan-300 uppercase shadow-[0_0_15px_rgba(59,130,246,0.3)] dark:shadow-[0_0_20px_rgba(6,182,212,0.4)] backdrop-blur-xs">
-              <span className="w-2 h-2 rounded-full bg-blue-500 dark:bg-cyan-400 animate-pulse shadow-[0_0_10px_rgba(59,130,246,1)]" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-[#00E5FF]/15 border border-blue-400/40 dark:border-[#00E5FF]/50 text-[11px] sm:text-xs font-bold tracking-[0.2em] text-blue-700 dark:text-[#00E5FF] uppercase shadow-[0_0_15px_rgba(59,130,246,0.3)] dark:shadow-[0_0_20px_rgba(0,229,255,0.4)] backdrop-blur-xs">
+              <span className="w-2 h-2 rounded-full bg-blue-500 dark:bg-[#00E5FF] animate-pulse shadow-[0_0_10px_rgba(59,130,246,1)]" />
               ADMIN DASHBOARD
             </div>
 
             {/* Glowing Headline */}
-            <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-black text-[#082038] dark:text-white tracking-tight leading-none drop-shadow-[0_4px_24px_rgba(59,130,246,0.25)] dark:drop-shadow-[0_4px_30px_rgba(6,182,212,0.4)]">
+            <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-black text-[#082038] dark:text-[#F2FBFD] tracking-tight leading-none drop-shadow-[0_4px_24px_rgba(59,130,246,0.25)] dark:drop-shadow-[0_4px_30px_rgba(0,229,255,0.35)]">
               City Response Center
             </h1>
 
-            <p className="text-sm sm:text-base text-[#385675] dark:text-slate-300 font-medium pt-0.5">
+            <p className="text-sm sm:text-base text-[#385675] dark:text-[#B2D2D9] font-medium pt-0.5">
               Monitor reports, prioritize risk areas, and track resolution.
             </p>
           </motion.div>
@@ -417,7 +428,7 @@ export function AdminDashboardView() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ 
               opacity: 1, 
-              scale: 1,
+              scale: 1, 
               y: [0, -6, 0]
             }}
             transition={{ 
@@ -426,29 +437,29 @@ export function AdminDashboardView() {
               y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
             }}
             whileHover={{ y: -8, scale: 1.02 }}
-            className="self-start md:self-center flex items-center gap-3.5 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border border-white/90 dark:border-cyan-500/35 px-4 py-2.5 rounded-2xl shadow-[0_14px_34px_-6px_rgba(15,23,42,0.16),0_6px_20px_rgba(59,130,246,0.22)] dark:shadow-[0_14px_34px_-6px_rgba(0,0,0,0.5),0_0_25px_rgba(6,182,212,0.25)] hover:shadow-[0_18px_40px_-6px_rgba(59,130,246,0.3)] transition-shadow duration-300 cursor-default select-none"
+            className="self-start md:self-center flex items-center gap-3.5 bg-white/85 dark:bg-[#10313E]/85 backdrop-blur-xl border border-white/90 dark:border-[rgba(94,183,201,0.2)] px-4 py-2.5 rounded-2xl shadow-[0_14px_34px_-6px_rgba(15,23,42,0.16),0_6px_20px_rgba(59,130,246,0.22)] dark:shadow-[0_14px_34px_-6px_rgba(0,0,0,0.6),0_0_25px_rgba(0,229,255,0.22)] hover:shadow-[0_18px_40px_-6px_rgba(59,130,246,0.3)] transition-shadow duration-300 cursor-default select-none"
           >
-            <div className="text-blue-600 dark:text-cyan-400 filter drop-shadow-[0_0_10px_rgba(59,130,246,0.6)]">
+            <div className="text-blue-600 dark:text-[#00E5FF] filter drop-shadow-[0_0_10px_rgba(0,229,255,0.6)]">
               <CloudSun className="w-6 h-6 stroke-[1.75]" />
             </div>
 
-            <div className="flex items-center gap-3.5 border-l border-slate-200/80 dark:border-slate-700/80 pl-3.5">
+            <div className="flex items-center gap-3.5 border-l border-slate-200/80 dark:border-[rgba(94,183,201,0.2)] pl-3.5">
               <div>
-                <div className="text-base font-bold text-slate-800 dark:text-white font-mono leading-none">
+                <div className="text-base font-bold text-slate-800 dark:text-[#F2FBFD] font-mono leading-none">
                   28°C
                 </div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                <div className="text-[10px] text-slate-500 dark:text-[#B2D2D9] font-medium mt-0.5">
                   Kolkata
                 </div>
               </div>
 
-              <div className="w-px h-7 bg-slate-200 dark:bg-slate-700" />
+              <div className="w-px h-7 bg-slate-200 dark:bg-[#163F4E]" />
 
               <div className="text-right space-y-0.5">
-                <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+                <div className="text-[11px] font-semibold text-slate-700 dark:text-[#F2FBFD]">
                   {currentTime.date}
                 </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono font-medium">
+                <div className="text-[11px] text-slate-500 dark:text-[#B2D2D9] font-mono font-medium">
                   {currentTime.time}
                 </div>
               </div>
@@ -474,7 +485,7 @@ export function AdminDashboardView() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: idx * 0.06 }}
-                className="relative bg-white dark:bg-[#111827] rounded-xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-[0_8px_25px_rgba(59,130,246,0.15)] dark:hover:shadow-[0_0_25px_rgba(6,182,212,0.18)] hover:border-blue-400/50 dark:hover:border-cyan-500/40 transition-all duration-200 group overflow-hidden"
+                className="relative bg-white dark:bg-[#10313E] rounded-xl p-4 sm:p-5 border border-slate-200 dark:border-[rgba(94,183,201,0.16)] shadow-sm hover:shadow-[0_8px_25px_rgba(59,130,246,0.15)] dark:hover:shadow-[0_0_25px_rgba(0,229,255,0.18)] hover:border-blue-400/50 dark:hover:border-[rgba(0,229,255,0.45)] transition-all duration-200 group overflow-hidden"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -482,10 +493,10 @@ export function AdminDashboardView() {
                       <Icon className="w-5 h-5" />
                     </div>
                     <div>
-                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                      <span className="text-xs font-medium text-slate-500 dark:text-[#B2D2D9]">
                         {stat.label}
                       </span>
-                      <div className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white font-mono mt-0.5">
+                      <div className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-[#F2FBFD] font-mono mt-0.5">
                         {stat.value}
                       </div>
                     </div>
@@ -493,13 +504,13 @@ export function AdminDashboardView() {
                 </div>
 
                 {/* Bottom Row: Trend Pill & Sparkline */}
-                <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-[rgba(94,183,201,0.16)] flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className="inline-flex items-center gap-0.5 text-xs font-semibold font-mono text-emerald-600 dark:text-emerald-400">
                       <ArrowUpRight className="w-3.5 h-3.5" />
                       {stat.change}
                     </span>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                    <span className="text-[11px] text-slate-400 dark:text-[#6D949D]">
                       {stat.subtitle}
                     </span>
                   </div>
@@ -535,7 +546,7 @@ export function AdminDashboardView() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
-            className="lg:col-span-6 bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 sm:p-6 flex flex-col"
+            className="lg:col-span-6 bg-white dark:bg-[#10313E] rounded-2xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] shadow-sm p-5 sm:p-6 flex flex-col"
           >
             {/* Card Header */}
             <div className="flex items-start justify-between mb-3.5">
@@ -544,10 +555,10 @@ export function AdminDashboardView() {
                   <Flame className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                  <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-[#F2FBFD]">
                     Priority Risk Areas
                   </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-slate-500 dark:text-[#B2D2D9]">
                     Areas ranked by number of reports submitted.
                   </p>
                 </div>
@@ -555,7 +566,7 @@ export function AdminDashboardView() {
 
               <button
                 onClick={() => navigate("/live-city")}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 transition-colors"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-[#00E5FF] hover:text-blue-700 dark:hover:text-[#2BEBFF] transition-colors"
               >
                 View All <ChevronRight className="w-3.5 h-3.5" />
               </button>
@@ -574,18 +585,18 @@ export function AdminDashboardView() {
                   }}
                   className={`flex items-center justify-between p-2.5 rounded-xl border transition-all duration-200 cursor-pointer ${
                     selectedHotspot?.rank === area.rank
-                      ? "bg-blue-50/70 dark:bg-blue-950/40 border-blue-400 dark:border-blue-600 shadow-xs"
-                      : "bg-slate-50/70 dark:bg-slate-800/40 border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                      ? "bg-blue-50/70 dark:bg-[#163F4E] border-blue-400 dark:border-[#00E5FF] shadow-xs"
+                      : "bg-slate-50/70 dark:bg-[#0B2430]/75 border-slate-100 dark:border-[rgba(94,183,201,0.16)] hover:border-slate-300 dark:hover:border-[rgba(0,229,255,0.45)]"
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Rank Number */}
-                    <span className="w-4 text-center text-sm font-bold text-slate-400 dark:text-slate-500 font-mono flex-shrink-0">
+                    <span className="w-4 text-center text-sm font-bold text-slate-400 dark:text-[#6D949D] font-mono flex-shrink-0">
                       {area.rank}
                     </span>
 
                     {/* Area Thumbnail */}
-                    <div className="w-11 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-slate-200 dark:bg-slate-700 border border-slate-200 dark:border-slate-700">
+                    <div className="w-11 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-slate-200 dark:bg-[#163F4E] border border-slate-200 dark:border-[rgba(94,183,201,0.16)]">
                       <img
                         src={area.image}
                         alt={area.name}
@@ -598,10 +609,10 @@ export function AdminDashboardView() {
 
                     {/* Area Name & Zone */}
                     <div className="min-w-0">
-                      <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-snug truncate">
+                      <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-[#F2FBFD] leading-snug truncate">
                         {area.name}
                       </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                      <div className="text-[11px] text-slate-500 dark:text-[#B2D2D9] font-medium truncate">
                         {area.zone}
                       </div>
                     </div>
@@ -610,10 +621,10 @@ export function AdminDashboardView() {
                   {/* Progress Bar & Reports Count */}
                   <div className="flex items-center gap-2.5 flex-shrink-0 pl-2">
                     <div className="text-right hidden sm:block">
-                      <div className="text-xs font-bold font-mono text-slate-800 dark:text-slate-200">
-                        {area.reports} <span className="text-[10px] font-normal text-slate-500">reports</span>
+                      <div className="text-xs font-bold font-mono text-slate-800 dark:text-[#F2FBFD]">
+                        {area.reports} <span className="text-[10px] font-normal text-slate-500 dark:text-[#B2D2D9]">reports</span>
                       </div>
-                      <div className="w-16 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mt-1">
+                      <div className="w-16 h-1.5 bg-slate-200 dark:bg-[#163F4E] rounded-full overflow-hidden mt-1">
                         <div
                           className={`h-full rounded-full ${area.barColor}`}
                           style={{ width: `${Math.min(100, (area.reports / area.maxReports) * 100)}%` }}
@@ -636,16 +647,16 @@ export function AdminDashboardView() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.25 }}
-            className="lg:col-span-6 bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 sm:p-6 flex flex-col"
+            className="lg:col-span-6 bg-white dark:bg-[#10313E] rounded-2xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] shadow-sm p-5 sm:p-6 flex flex-col"
           >
             {/* Card Header */}
             <div className="flex items-center justify-between mb-3.5">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-[#20C5D8]">
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                  <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-[#F0F9FA]">
                     Risk Area Map
                   </h2>
                 </div>
@@ -656,7 +667,7 @@ export function AdminDashboardView() {
                 <select
                   value={timeRange}
                   onChange={(e) => setTimeRange(e.target.value)}
-                  className="text-xs font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                  className="text-xs font-medium bg-slate-100 dark:bg-[#10313E] border border-slate-200 dark:border-[rgba(94,183,201,0.16)] rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-[#F0F9FA] focus:outline-none focus:ring-1 focus:ring-[#20C5D8] cursor-pointer"
                 >
                   <option value="30d">Reports (Last 30 Days)</option>
                   <option value="7d">Reports (Last 7 Days)</option>
@@ -666,7 +677,7 @@ export function AdminDashboardView() {
             </div>
 
             {/* Map Canvas Visualizer - Flex-1 to naturally occupy the entire card without void */}
-            <div className="relative w-full flex-1 min-h-[300px] sm:min-h-[330px] rounded-xl overflow-hidden bg-[#e0f2fe]/40 dark:bg-[#0b1626] border border-slate-200 dark:border-slate-800">
+            <div className="relative w-full flex-1 min-h-[300px] sm:min-h-[330px] rounded-xl overflow-hidden bg-[#e0f2fe]/40 dark:bg-[#061820] border border-slate-200 dark:border-[rgba(94,183,201,0.16)]">
               <svg
                 viewBox="0 0 500 320"
                 preserveAspectRatio="none"
@@ -794,8 +805,8 @@ export function AdminDashboardView() {
               </svg>
 
               {/* Floating Top 5 Summary Panel on Map Right */}
-              <div className="absolute top-3 right-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl p-3 border border-slate-200/80 dark:border-slate-800 shadow-md max-w-[170px] space-y-1.5">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <div className="absolute top-3 right-3 bg-white/95 dark:bg-[#10313E]/95 backdrop-blur-md rounded-xl p-3 border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-md max-w-[170px] space-y-1.5">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#A8C5C9]">
                   Top 5 Areas by Reports
                 </div>
                 <div className="space-y-1 text-xs font-mono">
@@ -810,8 +821,8 @@ export function AdminDashboardView() {
                         i === 0 ? "text-rose-600 dark:text-rose-400 font-bold" :
                         i === 1 ? "text-orange-600 dark:text-orange-400 font-semibold" :
                         i === 2 ? "text-amber-600 dark:text-amber-400" :
-                        i === 3 ? "text-blue-600 dark:text-blue-400" :
-                        "text-sky-600 dark:text-sky-400"
+                        i === 3 ? "text-blue-600 dark:text-[#20C5D8]" :
+                        "text-sky-600 dark:text-[#38BDF8]"
                       }`}
                     >
                       <span className="truncate max-w-[105px]">{i + 1}. {area.name.split(" ")[0]}</span>
@@ -824,9 +835,9 @@ export function AdminDashboardView() {
               {/* Interactive Map Controls Overlay */}
               <button
                 onClick={() => navigate("/live-city")}
-                className="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-1.5 cursor-pointer"
+                className="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-[#10313E] text-slate-800 dark:text-[#F2FBFD] border border-slate-200 dark:border-[rgba(94,183,201,0.16)] shadow-sm hover:bg-slate-50 dark:hover:bg-[#163F4E] transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <ExternalLink className="w-3.5 h-3.5 text-blue-500" />
+                <ExternalLink className="w-3.5 h-3.5 text-blue-500 dark:text-[#00E5FF]" />
                 Open Live Telemetry Map
               </button>
             </div>
@@ -841,20 +852,20 @@ export function AdminDashboardView() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
-            className="lg:col-span-7 bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 sm:p-6 flex flex-col justify-between"
+            className="lg:col-span-7 bg-white dark:bg-[#10313E] rounded-2xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] shadow-sm p-5 sm:p-6 flex flex-col justify-between"
           >
             <div>
               {/* Table Header */}
               <div className="flex items-center justify-between mb-3.5">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                  <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-[#00E5FF]">
                     <Wrench className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                    <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-[#F2FBFD]">
                       Active Work Orders
                     </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-slate-500 dark:text-[#B2D2D9]">
                       Ongoing and recently assigned work orders.
                     </p>
                   </div>
@@ -862,7 +873,7 @@ export function AdminDashboardView() {
 
                 <button
                   onClick={() => navigate("/action-center")}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 transition-colors"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-[#00E5FF] hover:text-blue-700 dark:hover:text-[#2BEBFF] transition-colors"
                 >
                   View All <ChevronRight className="w-3.5 h-3.5" />
                 </button>
@@ -872,7 +883,7 @@ export function AdminDashboardView() {
               <div className="w-full overflow-hidden">
                 <table className="w-full text-left border-collapse table-fixed">
                   <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    <tr className="border-b border-slate-100 dark:border-[rgba(94,183,201,0.16)] text-[11px] font-bold text-slate-400 dark:text-[#6D949D] uppercase tracking-wider">
                       <th className="py-2.5 px-2 w-[14%] font-mono">#</th>
                       <th className="py-2.5 px-2 w-[28%]">Issue</th>
                       <th className="py-2.5 px-2 w-[23%]">Location</th>
@@ -880,30 +891,30 @@ export function AdminDashboardView() {
                       <th className="py-2.5 px-2 w-[15%] text-right">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
+                  <tbody className="divide-y divide-slate-100 dark:divide-[rgba(94,183,201,0.12)] text-xs">
                     {filteredWorkOrders.map((wo) => (
                       <tr
                         key={wo.id}
-                        className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                        className="hover:bg-slate-50/80 dark:hover:bg-[#163F4E]/60 transition-colors cursor-pointer"
                         onClick={() => navigate("/action-center")}
                       >
                         {/* Work Order ID */}
-                        <td className="py-2.5 px-2 font-mono font-bold text-slate-900 dark:text-slate-200">
+                        <td className="py-2.5 px-2 font-mono font-bold text-slate-900 dark:text-[#F2FBFD]">
                           {wo.id}
                         </td>
 
                         {/* Issue (Wrapped & Clean) */}
-                        <td className="py-2.5 px-2 font-medium text-slate-800 dark:text-slate-200 break-words leading-tight">
+                        <td className="py-2.5 px-2 font-medium text-slate-800 dark:text-[#F2FBFD] break-words leading-tight">
                           {wo.issue}
                         </td>
 
                         {/* Location */}
-                        <td className="py-2.5 px-2 text-slate-600 dark:text-slate-400 break-words leading-tight">
+                        <td className="py-2.5 px-2 text-slate-600 dark:text-[#B2D2D9] break-words leading-tight">
                           {wo.location}
                         </td>
 
                         {/* Assigned To */}
-                        <td className="py-2.5 px-2 text-slate-600 dark:text-slate-400 break-words leading-tight">
+                        <td className="py-2.5 px-2 text-slate-600 dark:text-[#B2D2D9] break-words leading-tight">
                           {wo.assignedTo}
                         </td>
 
@@ -924,20 +935,20 @@ export function AdminDashboardView() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.35 }}
-            className="lg:col-span-5 bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 sm:p-6 flex flex-col justify-between"
+            className="lg:col-span-5 bg-white dark:bg-[#10313E] rounded-2xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] shadow-sm p-5 sm:p-6 flex flex-col justify-between"
           >
             <div>
               {/* Feed Header */}
               <div className="flex items-center justify-between mb-3.5">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                  <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-[#00E5FF]">
                     <Clock className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                    <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-[#F2FBFD]">
                       Recent Activity
                     </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-slate-500 dark:text-[#B2D2D9]">
                       Latest updates across reports, risk areas, and work orders.
                     </p>
                   </div>
@@ -945,37 +956,37 @@ export function AdminDashboardView() {
 
                 <button
                   onClick={() => navigate("/action-center")}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 transition-colors"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-[#00E5FF] hover:text-blue-700 dark:hover:text-[#2BEBFF] transition-colors"
                 >
                   View All <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
 
               {/* Timeline Feed List */}
-              <div className="relative pl-6 space-y-3.5 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-800">
+              <div className="relative pl-6 space-y-3.5 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 dark:before:bg-[#163F4E]">
                 {recentActivities.map((act) => {
                   const Icon = act.icon;
                   return (
                     <div key={act.id} className="relative flex items-start justify-between gap-3 group">
                       {/* Activity Dot Icon */}
                       <div
-                        className={`absolute -left-6 top-0.5 p-1 rounded-full ${act.iconBg} ${act.iconColor} ring-4 ring-white dark:ring-[#111827]`}
+                        className={`absolute -left-6 top-0.5 p-1 rounded-full ${act.iconBg} ${act.iconColor} ring-4 ring-white dark:ring-[#10313E]`}
                       >
                         <Icon className="w-3.5 h-3.5" />
                       </div>
 
                       {/* Content */}
                       <div className="space-y-0.5 pl-1 min-w-0">
-                        <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        <div className="text-xs font-bold text-slate-900 dark:text-[#F2FBFD] truncate">
                           {act.title}
                         </div>
-                        <div className="text-[11px] text-slate-600 dark:text-slate-400 leading-tight">
+                        <div className="text-[11px] text-slate-600 dark:text-[#B2D2D9] leading-tight">
                           {act.description}
                         </div>
                       </div>
 
                       {/* Timestamp */}
-                      <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500 flex-shrink-0 pt-0.5">
+                      <span className="text-[11px] font-mono text-slate-400 dark:text-[#6D949D] flex-shrink-0 pt-0.5">
                         {act.time}
                       </span>
                     </div>

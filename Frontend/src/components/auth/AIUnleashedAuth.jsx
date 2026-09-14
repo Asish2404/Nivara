@@ -963,7 +963,7 @@ export default function AIUnleashedAuth() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#070e1c] text-white flex flex-col justify-between font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden relative">
+    <div className="min-h-screen w-full bg-[#070e1c] dark:bg-[#0A1E3B] text-white flex flex-col justify-between font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden relative transition-colors duration-300">
       {/* ========================================================= */}
       {/* 1. EXACT FULL-SCREEN BACKGROUND: LoginPage_bg.png         */}
       {/* ========================================================= */}
@@ -980,8 +980,8 @@ export default function AIUnleashedAuth() {
           }}
         />
         {/* Subtle, delicate gradient overlay only where needed for readability without darkening */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#070e1c]/70 via-transparent to-[#070e1c]/40" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#040814]/60 via-transparent to-[#040814]/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#070e1c]/70 dark:from-[#030F14]/80 via-transparent to-[#070e1c]/40 dark:to-[#030F14]/50" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#040814]/60 dark:from-[#030F14]/70 via-transparent to-[#040814]/30 dark:to-[#030F14]/40" />
       </div>
 
       {/* Global Navigation Bar */}
@@ -1047,7 +1047,7 @@ export default function AIUnleashedAuth() {
                       ease: [0.16, 1, 0.3, 1],
                     }}
                     whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                    className={`rounded-2xl bg-[#0c1f3d]/50 hover:bg-[#0f284e]/70 backdrop-blur-xl border border-white/20 ${card.hoverBorder} p-4 sm:p-5 flex flex-col justify-between min-h-[175px] sm:min-h-[195px] shadow-[0_15px_35px_rgba(0,0,0,0.35)] ${card.hoverShadow} transition-all duration-300 cursor-default text-left group`}
+                    className={`rounded-2xl bg-[#0c1f3d]/50 dark:bg-[#061820]/70 hover:bg-[#0f284e]/70 dark:hover:bg-[#10313E]/80 backdrop-blur-xl border border-white/20 dark:border-[rgba(94,183,201,0.16)] ${card.hoverBorder} p-4 sm:p-5 flex flex-col justify-between min-h-[175px] sm:min-h-[195px] shadow-[0_15px_35px_rgba(0,0,0,0.35)] ${card.hoverShadow} transition-all duration-300 cursor-default text-left group`}
                   >
                     <div
                       className={`${card.color} ${card.glow} mb-3 transition-transform duration-200 group-hover:scale-110`}
@@ -1078,7 +1078,7 @@ export default function AIUnleashedAuth() {
             className="lg:col-span-5 flex flex-col justify-center w-full"
           >
             <div
-              className={`w-full mx-auto lg:ml-auto bg-[#0a172e]/95 backdrop-blur-2xl border border-white/10 rounded-[28px] text-left transition-all duration-300 relative overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] ${
+              className={`w-full mx-auto lg:ml-auto bg-[#0a172e]/95 dark:bg-[#061820]/95 backdrop-blur-2xl border border-white/10 dark:border-[rgba(94,183,201,0.16)] rounded-[28px] text-left transition-all duration-300 relative overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] ${
                 isOtpStep
                   ? "max-w-[450px] p-6 sm:p-7 min-h-0"
                   : "max-w-[460px] p-6 sm:p-7 min-h-0"
@@ -1250,10 +1250,10 @@ export default function AIUnleashedAuth() {
                                 whileTap={{ scale: 0.98 }}
                                 className={`w-11 h-14 sm:w-13 sm:h-16 flex items-center justify-center text-2xl sm:text-3xl font-mono font-bold rounded-2xl transition-all duration-200 ${
                                   isFilled
-                                    ? "bg-[#151a24] border-2 border-white/25 text-white shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
+                                    ? "bg-[#151a24] dark:bg-[#10313E] border-2 border-white/25 dark:border-cyan-400/40 text-white shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
                                     : isFocused
-                                      ? "bg-[#121826] border-2 border-[#00f0ff] shadow-[0_0_22px_rgba(0,240,255,0.45)] ring-2 ring-cyan-400/25"
-                                      : "bg-[#0d121c]/80 border-2 border-white/10 text-transparent"
+                                      ? "bg-[#121826] dark:bg-[#163F4E] border-2 border-[#00f0ff] shadow-[0_0_22px_rgba(0,240,255,0.45)] ring-2 ring-cyan-400/25"
+                                      : "bg-[#0d121c]/80 dark:bg-[#0B2430] border-2 border-white/10 dark:border-[rgba(94,183,201,0.16)] text-transparent"
                                 }`}
                               >
                                 {isFilled ? (
@@ -1380,7 +1380,7 @@ export default function AIUnleashedAuth() {
                     transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                   >
                     {/* Sign In / Create Account Segmented Pill Tabs */}
-                    <div className="bg-[#050c18]/90 border border-white/10 rounded-full p-1 flex mb-3.5 relative">
+                    <div className="bg-[#050c18]/90 dark:bg-[#0B2430] border border-white/10 dark:border-[rgba(94,183,201,0.16)] rounded-full p-1 flex mb-3.5 relative">
                       <button
                         type="button"
                         onClick={() => handleTabChange("signin")}
@@ -1410,7 +1410,7 @@ export default function AIUnleashedAuth() {
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.14em]">
                         PORTAL TIER
                       </span>
-                      <div className="bg-[#050c18]/90 border border-white/10 rounded-full p-0.5 flex gap-1">
+                      <div className="bg-[#050c18]/90 dark:bg-[#0B2430] border border-white/10 dark:border-[rgba(94,183,201,0.16)] rounded-full p-0.5 flex gap-1">
                         <button
                           type="button"
                           onClick={() => handlePortalSelect("user")}
@@ -1450,7 +1450,7 @@ export default function AIUnleashedAuth() {
                               window.google.accounts.id.prompt();
                             }
                           }}
-                          className="w-full flex items-center justify-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl py-2 px-3 text-slate-200 text-xs font-semibold cursor-pointer transition-all duration-200 disabled:opacity-50"
+                          className="w-full flex items-center justify-center gap-2 bg-white/[0.04] dark:bg-[#10313E] hover:bg-white/[0.08] dark:hover:bg-[#163F4E] border border-white/10 dark:border-[rgba(94,183,201,0.16)] rounded-xl py-2 px-3 text-slate-200 text-xs font-semibold cursor-pointer transition-all duration-200 disabled:opacity-50"
                         >
                           {isGoogleLoading ? (
                             <>
@@ -1490,7 +1490,7 @@ export default function AIUnleashedAuth() {
                             "Gov ID Token: Municipal Digital ID infrastructure integration ready. For production clearance, please authenticate via Official Portal or Google SSO."
                           );
                         }}
-                        className="flex items-center justify-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl py-2 px-3 text-slate-200 text-xs font-semibold cursor-pointer transition-all duration-200"
+                        className="flex items-center justify-center gap-2 bg-white/[0.04] dark:bg-[#10313E] hover:bg-white/[0.08] dark:hover:bg-[#163F4E] border border-white/10 dark:border-[rgba(94,183,201,0.16)] rounded-xl py-2 px-3 text-slate-200 text-xs font-semibold cursor-pointer transition-all duration-200"
                         title="Gov ID Token (Municipal Clearance Integration Ready)"
                       >
                         <GovIdIcon />
@@ -1500,9 +1500,9 @@ export default function AIUnleashedAuth() {
 
                     {/* Divider: or credentials */}
                     <div className="flex items-center gap-2.5 text-slate-500 text-[10.5px] font-medium my-2.5">
-                      <span className="flex-1 h-px bg-white/10" />
+                      <span className="flex-1 h-px bg-white/10 dark:bg-[rgba(94,183,201,0.16)]" />
                       <span>or credentials</span>
-                      <span className="flex-1 h-px bg-white/10" />
+                      <span className="flex-1 h-px bg-white/10 dark:bg-[rgba(94,183,201,0.16)]" />
                     </div>
 
                     {/* Form Fields with Dark Rounded Input Style */}
@@ -1522,7 +1522,7 @@ export default function AIUnleashedAuth() {
                             <label className="block text-[10.5px] font-bold uppercase tracking-wider text-slate-400 mb-1">
                               FULL NAME
                             </label>
-                            <div className="relative rounded-xl bg-black/40 border border-white/10 focus-within:border-cyan-400/70 focus-within:bg-black/60 transition-all flex items-center px-3.5 py-2.5 gap-2.5">
+                            <div className="relative rounded-xl bg-black/40 dark:bg-[#10313E] border border-white/10 dark:border-[rgba(94,183,201,0.16)] focus-within:border-cyan-400/70 focus-within:bg-black/60 dark:focus-within:bg-[#163F4E] transition-all flex items-center px-3.5 py-2.5 gap-2.5">
                               <User className="w-4 h-4 text-slate-400 shrink-0" />
                               <input
                                 type="text"
@@ -1551,7 +1551,7 @@ export default function AIUnleashedAuth() {
                             ? "OFFICIAL EMAIL OR BADGE ID"
                             : "EMAIL ADDRESS"}
                         </label>
-                        <div className="relative rounded-xl bg-black/40 border border-white/10 focus-within:border-cyan-400/70 focus-within:bg-black/60 transition-all flex items-center px-3.5 py-2.5 gap-2.5">
+                        <div className="relative rounded-xl bg-black/40 dark:bg-[#10313E] border border-white/10 dark:border-[rgba(94,183,201,0.16)] focus-within:border-cyan-400/70 focus-within:bg-black/60 dark:focus-within:bg-[#163F4E] transition-all flex items-center px-3.5 py-2.5 gap-2.5">
                           <Mail className="w-4 h-4 text-slate-400 shrink-0" />
                           <input
                             type="text"
@@ -1589,7 +1589,7 @@ export default function AIUnleashedAuth() {
                             Forgot password?
                           </button>
                         </div>
-                        <div className="relative rounded-xl bg-black/40 border border-white/10 focus-within:border-cyan-400/70 focus-within:bg-black/60 transition-all flex items-center px-3.5 py-2.5 gap-2.5">
+                        <div className="relative rounded-xl bg-black/40 dark:bg-[#10313E] border border-white/10 dark:border-[rgba(94,183,201,0.16)] focus-within:border-cyan-400/70 focus-within:bg-black/60 dark:focus-within:bg-[#163F4E] transition-all flex items-center px-3.5 py-2.5 gap-2.5">
                           <Lock className="w-4 h-4 text-slate-400 shrink-0" />
                           <input
                             type={showPassword ? "text" : "password"}
@@ -1628,7 +1628,7 @@ export default function AIUnleashedAuth() {
                             <label className="block text-[10.5px] font-bold uppercase tracking-wider text-slate-400 mb-1">
                               MOBILE NUMBER (10 DIGITS)
                             </label>
-                            <div className="relative rounded-xl bg-black/40 border border-white/10 focus-within:border-cyan-400/70 focus-within:bg-black/60 transition-all flex items-center px-3.5 py-2.5 gap-2.5">
+                            <div className="relative rounded-xl bg-black/40 dark:bg-[#10313E] border border-white/10 dark:border-[rgba(94,183,201,0.16)] focus-within:border-cyan-400/70 focus-within:bg-black/60 dark:focus-within:bg-[#163F4E] transition-all flex items-center px-3.5 py-2.5 gap-2.5">
                               <Phone className="w-4 h-4 text-slate-400 shrink-0" />
                               <input
                                 type="tel"

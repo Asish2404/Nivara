@@ -70,14 +70,14 @@ const NAV_COLUMNS = [
 ];
 
 export default function Footer() {
-  const { navigate, toggleAskKolkata, openLoginModal } = useKWIStore();
+  const { navigate, toggleAskKolkata } = useKWIStore();
 
   const handleLinkClick = (linkItem) => {
     if (audioEngine) audioEngine.playUiChirp(920);
     if (linkItem.isAskKolkata) {
       toggleAskKolkata();
     } else if (linkItem.isLogin) {
-      openLoginModal();
+      navigate('/login');
     } else if (linkItem.path) {
       navigate(linkItem.path);
     }
@@ -86,13 +86,23 @@ export default function Footer() {
   return (
     <footer className="relative w-full overflow-hidden isolate text-white select-none font-sans">
       {/* ===================================================== */}
-      {/* TOP EDGE — BLEND FOOTER INTO WHITE PAGE              */}
+      {/* TOP EDGE — BLEND FOOTER INTO PAGE BACKGROUND          */}
       {/* ===================================================== */}
+      {/* Light Mode Edge Blend */}
       <div
-        className="absolute top-0 inset-x-0 h-40 sm:h-48 lg:h-56 z-0 pointer-events-none"
+        className="absolute top-0 inset-x-0 h-40 sm:h-48 lg:h-56 z-0 pointer-events-none block dark:hidden"
         style={{
           background:
             "linear-gradient(to bottom, #ffffff 0%, rgba(255,255,255,0.75) 20%, rgba(255,255,255,0.45) 40%, rgba(255,255,255,0.22) 60%, rgba(255,255,255,0.08) 80%, rgba(255,255,255,0.04) 90%, rgba(255,255,255,0) 100%)",
+        }}
+        aria-hidden="true"
+      />
+      {/* Dark Mode Edge Blend (Abyssal Marine Canvas #030F14) */}
+      <div
+        className="absolute top-0 inset-x-0 h-40 sm:h-48 lg:h-56 z-0 pointer-events-none hidden dark:block"
+        style={{
+          background:
+            "linear-gradient(to bottom, #030F14 0%, rgba(3,15,20,0.85) 20%, rgba(3,15,20,0.55) 40%, rgba(3,15,20,0.25) 60%, rgba(3,15,20,0.10) 80%, rgba(3,15,20,0.04) 90%, rgba(3,15,20,0) 100%)",
         }}
         aria-hidden="true"
       />
