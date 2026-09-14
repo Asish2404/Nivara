@@ -790,7 +790,7 @@ export default function AIUnleashedAuth() {
 
       setAuthError(
         err?.message ||
-          "Failed to dispatch verification code. Please check your credentials.",
+        "Failed to dispatch verification code. Please check your credentials.",
       );
       if (audioEngine) audioEngine.playUiChirp(420);
     } finally {
@@ -928,7 +928,7 @@ export default function AIUnleashedAuth() {
       setTimeout(() => setIsShaking(false), 500);
       setAuthError(
         err?.message ||
-          "Invalid or expired verification code. Please check your code and try again.",
+        "Invalid or expired verification code. Please check your code and try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -1078,11 +1078,10 @@ export default function AIUnleashedAuth() {
             className="lg:col-span-5 flex flex-col justify-center w-full"
           >
             <div
-              className={`w-full mx-auto lg:ml-auto bg-[#0a172e]/95 backdrop-blur-2xl border border-white/10 rounded-[28px] text-left transition-all duration-300 relative overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] ${
-                isOtpStep
+              className={`w-full mx-auto lg:ml-auto bg-[#0a172e]/95 backdrop-blur-2xl border border-white/10 rounded-[28px] text-left transition-all duration-300 relative overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] ${isOtpStep
                   ? "max-w-[450px] p-6 sm:p-7 min-h-0"
                   : "max-w-[460px] p-6 sm:p-7 min-h-0"
-              }`}
+                }`}
             >
               {/* Subtle top specular accent line */}
               <div className="absolute top-0 inset-x-8 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
@@ -1248,13 +1247,12 @@ export default function AIUnleashedAuth() {
                                 key={idx}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className={`w-11 h-14 sm:w-13 sm:h-16 flex items-center justify-center text-2xl sm:text-3xl font-mono font-bold rounded-2xl transition-all duration-200 ${
-                                  isFilled
+                                className={`w-11 h-14 sm:w-13 sm:h-16 flex items-center justify-center text-2xl sm:text-3xl font-mono font-bold rounded-2xl transition-all duration-200 ${isFilled
                                     ? "bg-[#151a24] border-2 border-white/25 text-white shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
                                     : isFocused
                                       ? "bg-[#121826] border-2 border-[#00f0ff] shadow-[0_0_22px_rgba(0,240,255,0.45)] ring-2 ring-cyan-400/25"
                                       : "bg-[#0d121c]/80 border-2 border-white/10 text-transparent"
-                                }`}
+                                  }`}
                               >
                                 {isFilled ? (
                                   <motion.span
@@ -1384,22 +1382,20 @@ export default function AIUnleashedAuth() {
                       <button
                         type="button"
                         onClick={() => handleTabChange("signin")}
-                        className={`flex-1 text-center py-1.5 text-xs font-bold rounded-full transition-all duration-200 cursor-pointer ${
-                          activeTab === "signin"
+                        className={`flex-1 text-center py-1.5 text-xs font-bold rounded-full transition-all duration-200 cursor-pointer ${activeTab === "signin"
                             ? "bg-white text-slate-950 shadow-sm"
                             : "text-slate-400 hover:text-white"
-                        }`}
+                          }`}
                       >
                         Sign In
                       </button>
                       <button
                         type="button"
                         onClick={() => handleTabChange("create")}
-                        className={`flex-1 text-center py-1.5 text-xs font-bold rounded-full transition-all duration-200 cursor-pointer ${
-                          activeTab === "create"
+                        className={`flex-1 text-center py-1.5 text-xs font-bold rounded-full transition-all duration-200 cursor-pointer ${activeTab === "create"
                             ? "bg-white text-slate-950 shadow-sm"
                             : "text-slate-400 hover:text-white"
-                        }`}
+                          }`}
                       >
                         Create Account
                       </button>
@@ -1414,11 +1410,10 @@ export default function AIUnleashedAuth() {
                         <button
                           type="button"
                           onClick={() => handlePortalSelect("user")}
-                          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${
-                            selectedPortal === "user"
+                          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${selectedPortal === "user"
                               ? "bg-white text-slate-950 shadow-sm"
                               : "text-slate-400 hover:text-white"
-                          }`}
+                            }`}
                         >
                           <User className="w-3 h-3" />
                           <span>Citizen</span>
@@ -1426,11 +1421,10 @@ export default function AIUnleashedAuth() {
                         <button
                           type="button"
                           onClick={() => handlePortalSelect("admin")}
-                          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${
-                            selectedPortal === "admin"
+                          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${selectedPortal === "admin"
                               ? "bg-white text-slate-950 shadow-sm"
                               : "text-slate-400 hover:text-white"
-                          }`}
+                            }`}
                         >
                           <Shield className="w-3 h-3" />
                           <span>Official</span>
@@ -1563,7 +1557,7 @@ export default function AIUnleashedAuth() {
                             placeholder={
                               selectedPortal === "admin"
                                 ? "admin@kolkata-water.gov.in"
-                                : "citizen@kolkata.gov.in"
+                                : "citizen@gmail.com"
                             }
                             required
                             className="w-full bg-transparent border-none text-white text-[13.5px] placeholder-slate-500 outline-none"
@@ -1598,7 +1592,7 @@ export default function AIUnleashedAuth() {
                               setPassword(e.target.value);
                               if (authError) setAuthError("");
                             }}
-                            placeholder="••••••••••••••••"
+                            placeholder="Enter Password"
                             required
                             className="w-full bg-transparent border-none text-white text-[13.5px] placeholder-slate-500 outline-none"
                           />
@@ -1657,14 +1651,12 @@ export default function AIUnleashedAuth() {
                         <button
                           type="button"
                           onClick={() => setRememberSession(!rememberSession)}
-                          className={`w-9 h-5 rounded-full transition-colors relative cursor-pointer ${
-                            rememberSession ? "bg-white" : "bg-white/20"
-                          }`}
+                          className={`w-9 h-5 rounded-full transition-colors relative cursor-pointer ${rememberSession ? "bg-white" : "bg-white/20"
+                            }`}
                         >
                           <span
-                            className={`block w-4 h-4 rounded-full bg-slate-950 transition-transform absolute top-0.5 ${
-                              rememberSession ? "left-4.5" : "left-0.5"
-                            }`}
+                            className={`block w-4 h-4 rounded-full bg-slate-950 transition-transform absolute top-0.5 ${rememberSession ? "left-4.5" : "left-0.5"
+                              }`}
                           />
                         </button>
                         <span

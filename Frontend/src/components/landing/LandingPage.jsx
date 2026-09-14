@@ -420,9 +420,9 @@ export function LandingPage() {
       </section>
 
       {/* ======================================================== */}
-      {/* SECTION: CITIZEN REPORTING + AI VERIFICATION (Citizen/Guest only) */}
+      {/* SECTION: CITIZEN REPORTING + AI VERIFICATION (Logged-in Citizen only) */}
       {/* ======================================================== */}
-      {!isAdmin && <CitizenReportingSection />}
+      {isCitizenUser && <CitizenReportingSection />}
 
       {/* ========================================================================= */}
       {/* SECTION: FIELD SENSOR STREAM & CENTERED HOTSPOT HEADING                    */}
