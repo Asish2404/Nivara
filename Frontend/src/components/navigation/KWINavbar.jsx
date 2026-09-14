@@ -23,7 +23,6 @@ export function KWINavbar() {
     currentRoute,
     navigate,
     toggleAskKolkata,
-    openLoginModal,
     currentUser,
     logoutUser,
     theme,
@@ -218,15 +217,15 @@ export function KWINavbar() {
         <div
           className={`relative rounded-[28.5px] px-4 sm:px-6 py-2.5 backdrop-blur-3xl backdrop-saturate-[180%] transition-all duration-300 ${
             isDarkMode
-              ? "border border-white/10 text-white"
+              ? "border border-[rgba(94,183,201,0.18)] text-[#F2FBFD]"
               : "border border-white/70 text-slate-900"
           }`}
           style={{
             background: isDarkMode
-              ? "linear-gradient(135deg, rgba(15, 23, 42, 0.88) 0%, rgba(10, 15, 30, 0.78) 45%, rgba(15, 23, 42, 0.90) 100%)"
+              ? "linear-gradient(135deg, rgba(6, 32, 66, 0.94) 0%, rgba(4, 20, 44, 0.90) 45%, rgba(10, 42, 82, 0.94) 100%)"
               : "linear-gradient(135deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.55) 45%, rgba(255, 255, 255, 0.75) 100%)",
             boxShadow: isDarkMode
-              ? "inset 0 1px 1.5px rgba(255, 255, 255, 0.2), inset 0 -1px 2px rgba(0, 0, 0, 0.6), 0 20px 50px rgba(0, 0, 0, 0.45)"
+              ? "inset 0 1px 1.5px rgba(255, 255, 255, 0.15), inset 0 -1px 2px rgba(0, 0, 0, 0.8), 0 20px 50px rgba(4, 20, 44, 0.75)"
               : "inset 0 1.5px 2px rgba(255, 255, 255, 0.9), inset 0 -1px 2px rgba(0, 0, 0, 0.04), 0 20px 50px rgba(0, 180, 255, 0.10)",
           }}
         >
@@ -259,14 +258,14 @@ export function KWINavbar() {
                   <div className="flex items-center gap-2">
                     <div
                       className={`text-[15px] sm:text-[17px] font-extrabold tracking-[0.18em] uppercase font-sans leading-none transition-all duration-300 flex items-baseline ${
-                        isDarkMode ? "text-white" : "text-slate-900"
+                        isDarkMode ? "text-[#F2FBFD]" : "text-slate-900"
                       }`}
                     >
                       <span className="relative">
                         NIV
                         <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       </span>
-                      <span className="bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-400 dark:from-cyan-300 dark:via-sky-300 dark:to-teal-300 bg-clip-text text-transparent font-black ml-[1.5px] drop-shadow-[0_0_12px_rgba(0,240,255,0.35)]">
+                      <span className="bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-400 dark:from-[#00E5FF] dark:via-[#38BDF8] dark:to-teal-300 bg-clip-text text-transparent font-black ml-[1.5px] drop-shadow-[0_0_12px_rgba(0,229,255,0.45)]">
                         ARA
                       </span>
                     </div>
@@ -277,12 +276,12 @@ export function KWINavbar() {
                   <div className="flex items-center gap-1.5 mt-1">
                     <span className="relative flex h-1.5 w-1.5 shrink-0">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500 dark:bg-cyan-400" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500 dark:bg-[#00E5FF]" />
                     </span>
                     <span
                       className={`text-[9.5px] font-medium tracking-wide uppercase leading-tight transition-colors truncate max-w-[210px] sm:max-w-none ${
                         isDarkMode
-                          ? "text-slate-400 group-hover:text-slate-300"
+                          ? "text-[#B2D2D9] group-hover:text-[#F2FBFD]"
                           : "text-slate-500 group-hover:text-slate-700"
                       }`}
                     >
@@ -318,10 +317,10 @@ export function KWINavbar() {
                     } ${
                       isItemActive
                         ? isDarkMode
-                          ? "bg-gradient-to-b from-blue-950/80 to-indigo-950/70 border border-blue-500/40 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                          ? "bg-gradient-to-b from-[#061820] to-[#0B2430] border border-[#00E5FF]/45 text-[#00E5FF] shadow-[0_0_18px_rgba(0,229,255,0.22)]"
                           : "bg-gradient-to-b from-[#f0f6ff] to-[#e6f0ff] border border-blue-200/90 shadow-xs text-blue-600"
                         : isDarkMode
-                          ? "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent group"
+                          ? "text-[#B2D2D9] hover:text-[#F2FBFD] hover:bg-[#10313E]/50 border border-transparent group"
                           : "text-slate-500 hover:text-slate-900 hover:bg-slate-50/90 border border-transparent group"
                     }`}
                   >
@@ -329,10 +328,10 @@ export function KWINavbar() {
                       className={`w-4 h-4 mb-0.5 transition-colors ${
                         isItemActive
                           ? isDarkMode
-                            ? "text-cyan-400"
+                            ? "text-[#00E5FF]"
                             : "text-blue-600"
                           : isDarkMode
-                            ? "text-slate-400 group-hover:text-white"
+                            ? "text-[#6D949D] group-hover:text-[#F2FBFD]"
                             : "text-slate-500 group-hover:text-slate-800"
                       }`}
                     />
@@ -340,10 +339,10 @@ export function KWINavbar() {
                       className={`text-[11.5px] xl:text-[12px] leading-none whitespace-nowrap transition-colors ${
                         isItemActive
                           ? isDarkMode
-                            ? "font-semibold text-cyan-300"
+                            ? "font-semibold text-[#00E5FF]"
                             : "font-semibold text-blue-700"
                           : isDarkMode
-                            ? "font-medium text-slate-300 group-hover:text-white"
+                            ? "font-medium text-[#B2D2D9] group-hover:text-[#F2FBFD]"
                             : "font-medium text-slate-600 group-hover:text-slate-900"
                       }`}
                     >
@@ -352,7 +351,7 @@ export function KWINavbar() {
 
                     {/* Glowing Indicator Dot on Active Tab */}
                     {isItemActive && (
-                      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
+                      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_8px_#00E5FF]" />
                     )}
                   </button>
                 );
@@ -378,10 +377,10 @@ export function KWINavbar() {
                     currentRoute === "/login" ||
                     currentRoute === "/auth"
                       ? isDarkMode
-                        ? "bg-gradient-to-b from-blue-950/80 to-indigo-950/70 border border-blue-500/40 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)] min-w-[62px]"
+                        ? "bg-gradient-to-b from-[#061820] to-[#0B2430] border border-[#00E5FF]/45 text-[#00E5FF] shadow-[0_0_18px_rgba(0,229,255,0.22)] min-w-[62px]"
                         : "bg-gradient-to-b from-[#f0f6ff] to-[#e6f0ff] border border-blue-200/90 shadow-xs text-blue-600 min-w-[62px]"
                       : isDarkMode
-                        ? "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent min-w-[56px] group"
+                        ? "text-[#B2D2D9] hover:text-[#F2FBFD] hover:bg-[#10313E]/50 border border-transparent min-w-[56px] group"
                         : "text-slate-500 hover:text-slate-900 hover:bg-slate-50/90 border border-transparent min-w-[56px] group"
                   }`}
                 >
@@ -391,10 +390,10 @@ export function KWINavbar() {
                       currentRoute === "/login" ||
                       currentRoute === "/auth"
                         ? isDarkMode
-                          ? "text-cyan-400"
+                          ? "text-[#00E5FF]"
                           : "text-blue-600"
                         : isDarkMode
-                          ? "text-slate-400 group-hover:text-white"
+                          ? "text-[#6D949D] group-hover:text-[#F2FBFD]"
                           : "text-slate-500 group-hover:text-slate-800"
                     }`}
                   />
@@ -404,10 +403,10 @@ export function KWINavbar() {
                       currentRoute === "/login" ||
                       currentRoute === "/auth"
                         ? isDarkMode
-                          ? "font-semibold text-cyan-300"
+                          ? "font-semibold text-[#00E5FF]"
                           : "font-semibold text-blue-700"
                         : isDarkMode
-                          ? "font-medium text-slate-300 group-hover:text-white"
+                          ? "font-medium text-[#B2D2D9] group-hover:text-[#F2FBFD]"
                           : "font-medium text-slate-600 group-hover:text-slate-900"
                     }`}
                   >
@@ -418,7 +417,7 @@ export function KWINavbar() {
                   {(currentRoute === "/signup" ||
                     currentRoute === "/login" ||
                     currentRoute === "/auth") && (
-                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
+                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_8px_#00E5FF]" />
                   )}
                 </button>
               ) : (
@@ -553,7 +552,7 @@ export function KWINavbar() {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               className={`lg:hidden pt-3 mt-3 border-t space-y-1 ${
-                isDarkMode ? "border-white/10" : "border-slate-100"
+                isDarkMode ? "border-[rgba(94,183,201,0.16)]" : "border-slate-100"
               }`}
             >
               {NAV_ITEMS.map((item) => {
@@ -566,10 +565,10 @@ export function KWINavbar() {
                     className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition-colors cursor-pointer ${
                       isItemActive
                         ? isDarkMode
-                          ? "text-cyan-400 font-semibold bg-blue-950/60"
+                          ? "text-[#00E5FF] font-semibold bg-[#10313E]"
                           : "text-blue-600 font-semibold bg-blue-50/90"
                         : isDarkMode
-                          ? "text-slate-300 hover:text-white hover:bg-white/5"
+                          ? "text-[#B2D2D9] hover:text-[#F2FBFD] hover:bg-[#163F4E]/60"
                           : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                     }`}
                   >

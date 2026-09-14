@@ -93,7 +93,7 @@ export function ProfileView() {
     department: currentUser?.department || "NIVARA",
     bio:
       currentUser?.bio ||
-      "Computer Science student with a strong interest in technology, data-driven solutions, and building impactful applications. Contributing to a safer and smarter Kolkata.",
+      "Write your motto here please!",
     profileImage: currentUser?.avatarUrl || null,
     createdAt: currentUser?.createdAt || null,
   });
@@ -429,24 +429,24 @@ export function ProfileView() {
 
           {/* ZONE 2: Middle Identity & Metadata */}
           <div className="kwi-profile-identity flex-1 min-w-0">
-            <div className="text-[12px] font-semibold text-[#596A82] tracking-tight">
+            <div className="text-[12px] font-semibold text-[#596A82] dark:text-[#94a3b8] tracking-tight">
               {timeGreeting}
             </div>
             <div className="flex items-baseline gap-2.5 flex-wrap">
               <h2 className="kwi-profile-name">{profile.fullName}</h2>
             </div>
-            <div className="text-[12px] font-bold text-[#1677ff] mt-0.5 tracking-tight">
+            <div className="text-[12px] font-bold text-[#1677ff] dark:text-[#38bdf8] mt-0.5 tracking-tight">
               {profile.department}
             </div>
             <p className="kwi-profile-bio">{profile.bio}</p>
 
-            <div className="kwi-profile-meta-row flex items-center gap-5 mt-2.5 text-[12px] text-[#475569] font-medium">
-              <span className="flex items-center gap-1.5 text-[#334155]">
-                <MapPin size={13} className="text-[#1677ff]" />
+            <div className="kwi-profile-meta-row flex items-center gap-5 mt-2.5 text-[12px] font-medium text-[#475569] dark:text-slate-400">
+              <span className="flex items-center gap-1.5 text-[#334155] dark:text-slate-200">
+                <MapPin size={13} className="text-[#1677ff] dark:text-cyan-400 shrink-0" />
                 {profile.location || "Kolkata, West Bengal"}
               </span>
-              <span className="flex items-center gap-1.5 text-[#334155]">
-                <Clock size={13} className="text-[#1677ff]" />
+              <span className="flex items-center gap-1.5 text-[#334155] dark:text-slate-200">
+                <Clock size={13} className="text-[#1677ff] dark:text-cyan-400 shrink-0" />
                 Registered: {accountCreatedAtFormatted}
               </span>
             </div>
@@ -1618,7 +1618,7 @@ const KWI_TARGET_STYLES = `
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   }
   .dark .kwi-profile-container {
-    background: #0b1220;
+    background: #0A1E3B;
   }
 
   /* ── 1. Hero Section ── */
@@ -1648,10 +1648,10 @@ const KWI_TARGET_STYLES = `
   .dark .kwi-hero-overlay {
     background: linear-gradient(
       180deg,
-      rgba(9, 32, 64, 0.65) 0%,
-      rgba(11, 18, 32, 0.45) 50%,
-      rgba(11, 18, 32, 0.9) 90%,
-      rgba(11, 18, 32, 1) 100%
+      rgba(10, 30, 59, 0.65) 0%,
+      rgba(14, 38, 72, 0.45) 50%,
+      rgba(10, 30, 59, 0.9) 90%,
+      rgba(10, 30, 59, 1) 100%
     );
   }
 
@@ -1720,9 +1720,9 @@ const KWI_TARGET_STYLES = `
     box-shadow: 0 12px 36px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
   }
   .dark .kwi-profile-card {
-    background: rgba(15, 23, 42, 0.94);
-    border-color: rgba(51, 65, 85, 0.7);
-    box-shadow: 0 16px 40px -4px rgba(0, 0, 0, 0.4);
+    background: rgba(16, 49, 62, 0.95);
+    border-color: rgba(94, 183, 201, 0.16);
+    box-shadow: 0 16px 40px -4px rgba(3, 15, 20, 0.65);
   }
 
   /* Avatar */
@@ -1743,7 +1743,7 @@ const KWI_TARGET_STYLES = `
     overflow: hidden;
   }
   .dark .kwi-avatar-circle {
-    border-color: #0f172a;
+    border-color: #0A1E3B;
   }
   .kwi-avatar-initials {
     font-family: 'Space Grotesk', sans-serif;
@@ -1764,7 +1764,7 @@ const KWI_TARGET_STYLES = `
     box-shadow: 0 1px 3px rgba(0,0,0,0.15);
   }
   .dark .kwi-avatar-status {
-    border-color: #0f172a;
+    border-color: #0A1E3B;
   }
   .kwi-avatar-cambadge {
     position: absolute;
@@ -1797,7 +1797,7 @@ const KWI_TARGET_STYLES = `
     margin: 0;
   }
   .dark .kwi-profile-name {
-    color: #f8fafc;
+    color: #F2FBFD;
   }
   .kwi-profile-bio {
     font-size: 12.5px;
@@ -1812,7 +1812,13 @@ const KWI_TARGET_STYLES = `
     overflow: hidden;
   }
   .dark .kwi-profile-bio {
-    color: #cbd5e1;
+    color: #CBD5E1;
+  }
+  .dark .kwi-profile-meta-row span {
+    color: #CBD5E1 !important;
+  }
+  .dark .kwi-profile-meta-row svg {
+    color: #38BDF8 !important;
   }
 
   /* Edit Button & Quote Box */
@@ -1835,9 +1841,9 @@ const KWI_TARGET_STYLES = `
     border-color: #69b1ff;
   }
   .dark .kwi-edit-profile-btn {
-    background: rgba(22, 119, 255, 0.15);
-    border-color: rgba(22, 119, 255, 0.4);
-    color: #60a5fa;
+    background: rgba(0, 229, 255, 0.12);
+    border-color: rgba(0, 229, 255, 0.45);
+    color: #00E5FF;
   }
 
   .kwi-quote-panel {
@@ -1851,8 +1857,8 @@ const KWI_TARGET_STYLES = `
     max-width: 195px;
   }
   .dark .kwi-quote-panel {
-    background: rgba(15, 23, 42, 0.6);
-    border-color: rgba(51, 65, 85, 0.5);
+    background: rgba(16, 49, 62, 0.6);
+    border-color: rgba(94, 183, 201, 0.16);
   }
   .kwi-quote-leaf {
     width: 22px;
@@ -1871,7 +1877,7 @@ const KWI_TARGET_STYLES = `
     font-weight: 600;
   }
   .dark .kwi-quote-text {
-    color: #e2e8f0;
+    color: #F2FBFD;
   }
 
   /* ── 3. Tabs Bar ── */
@@ -1892,11 +1898,18 @@ const KWI_TARGET_STYLES = `
   .kwi-tab-button:hover {
     color: #0F1F3D;
   }
+  .dark .kwi-tab-button {
+    color: #B2D2D9;
+  }
   .dark .kwi-tab-button:hover {
-    color: #f8fafc;
+    color: #F2FBFD;
   }
   .kwi-tab-button.active {
     color: #1677ff;
+    font-weight: 700;
+  }
+  .dark .kwi-tab-button.active {
+    color: #00E5FF;
     font-weight: 700;
   }
   .kwi-tab-underline {
@@ -1907,6 +1920,9 @@ const KWI_TARGET_STYLES = `
     height: 2.5px;
     background: #1677ff;
     border-radius: 2px;
+  }
+  .dark .kwi-tab-underline {
+    background: #00E5FF;
   }
 
   /* ── 4. Summary Stat Cards ── */
@@ -1927,8 +1943,8 @@ const KWI_TARGET_STYLES = `
     box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
   }
   .dark .kwi-stat-card {
-    background: #0f172a;
-    border-color: rgba(51, 65, 85, 0.6);
+    background: #10313E;
+    border-color: rgba(94, 183, 201, 0.16);
   }
   .kwi-stat-icon-wrap {
     width: 44px;
@@ -1956,7 +1972,7 @@ const KWI_TARGET_STYLES = `
     line-height: 1;
   }
   .dark .kwi-stat-num {
-    color: #f8fafc;
+    color: #F2FBFD;
   }
   .kwi-badge-trend {
     font-size: 10.5px;
@@ -1981,12 +1997,15 @@ const KWI_TARGET_STYLES = `
     margin-top: 3px;
   }
   .dark .kwi-stat-label {
-    color: #e2e8f0;
+    color: #F2FBFD;
   }
   .kwi-stat-sub {
     font-size: 11px;
     color: #596A82;
     font-weight: 500;
+  }
+  .dark .kwi-stat-sub {
+    color: #6D949D;
   }
 
   /* ── 5. Three-Column Main Grid (Proportions 1 : 1.55 : 1) ── */
@@ -2009,8 +2028,8 @@ const KWI_TARGET_STYLES = `
     overflow: hidden;
   }
   .dark .kwi-box-card {
-    background: #0f172a;
-    border-color: rgba(51, 65, 85, 0.6);
+    background: #10313E;
+    border-color: rgba(94, 183, 201, 0.16);
   }
   .kwi-box-header {
     display: flex;
@@ -2020,7 +2039,7 @@ const KWI_TARGET_STYLES = `
     border-bottom: 1px solid rgba(226, 232, 240, 0.9);
   }
   .dark .kwi-box-header {
-    border-bottom-color: rgba(51, 65, 85, 0.5);
+    border-bottom-color: rgba(94, 183, 201, 0.16);
   }
   .kwi-box-title {
     font-family: 'Space Grotesk', sans-serif;
@@ -2030,7 +2049,7 @@ const KWI_TARGET_STYLES = `
     margin: 0;
   }
   .dark .kwi-box-title {
-    color: #f8fafc;
+    color: #F2FBFD;
   }
   .kwi-box-edit-btn {
     display: flex;
@@ -2049,6 +2068,11 @@ const KWI_TARGET_STYLES = `
   .kwi-box-edit-btn:hover {
     background: #e1effe;
   }
+  .dark .kwi-box-edit-btn {
+    background: rgba(0, 229, 255, 0.12);
+    border-color: rgba(0, 229, 255, 0.35);
+    color: #00E5FF;
+  }
 
   /* High-Contrast About Me & Field Styling */
   .kwi-about-text {
@@ -2058,7 +2082,7 @@ const KWI_TARGET_STYLES = `
     font-weight: 450;
   }
   .dark .kwi-about-text {
-    color: #cbd5e1;
+    color: #B2D2D9;
   }
   .kwi-field-label-tag {
     font-size: 11px;
@@ -2068,7 +2092,7 @@ const KWI_TARGET_STYLES = `
     color: #596A82;
   }
   .dark .kwi-field-label-tag {
-    color: #94a3b8;
+    color: #6D949D;
   }
   .kwi-field-val-text {
     font-size: 13.5px;
@@ -2076,13 +2100,30 @@ const KWI_TARGET_STYLES = `
     color: #0F1F3D;
   }
   .dark .kwi-field-val-text {
-    color: #f8fafc;
+    color: #F2FBFD;
   }
 
   /* Intelligence Promotional Banner */
   .kwi-intelligence-banner {
-    background-color: #061b3b;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background-color: #061820;
+    border: 1px solid rgba(94, 183, 201, 0.16);
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .kwi-profile-card {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 20px;
+    }
+    .kwi-profile-actions-zone {
+      align-items: flex-start;
+      width: 100%;
+    }
+    .kwi-quote-panel {
+      max-width: 100%;
+      width: 100%;
+    }
   }
 
   /* Responsive Adjustments */

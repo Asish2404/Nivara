@@ -14,23 +14,61 @@
     monospace;
   --font-sora: "Sora", sans-serif;
   --font-manrope: "Manrope", sans-serif;
+
+  /* NIVARA Semantic Theme Tokens for Tailwind v4 */
+  --color-nivara-bg-primary: var(--nivara-bg-primary);
+  --color-nivara-bg-secondary: var(--nivara-bg-secondary);
+  --color-nivara-bg-section: var(--nivara-bg-section);
+  --color-nivara-surface: var(--nivara-surface);
+  --color-nivara-surface-elevated: var(--nivara-surface-elevated);
+  --color-nivara-text-primary: var(--nivara-text-primary);
+  --color-nivara-text-secondary: var(--nivara-text-secondary);
+  --color-nivara-text-muted: var(--nivara-text-muted);
+  --color-nivara-accent-primary: var(--nivara-accent-primary);
+  --color-nivara-accent-secondary: var(--nivara-accent-secondary);
+  --color-nivara-success: var(--nivara-success);
+  --color-nivara-warning: var(--nivara-warning);
+  --color-nivara-danger: var(--nivara-danger);
+  --color-nivara-border: var(--nivara-border);
+  --color-nivara-border-hover: var(--nivara-border-hover);
 }
 
 @layer base {
   :root {
-    --bg-main: #ffffff;
-    --bg-subtle: #f8fafc;
-    --bg-card: #ffffff;
-    --border-subtle: #e2e8f0;
-    --border-hover: #cbd5e1;
+    /* NIVARA LIGHT THEME (MASTER DESIGN REFERENCE) */
+    --nivara-bg-primary: #ffffff;
+    --nivara-bg-secondary: #f8fafc;
+    --nivara-bg-section: #f1f5f9;
+    --nivara-surface: #ffffff;
+    --nivara-surface-elevated: #f8fafc;
+
+    --nivara-text-primary: #0f172a;
+    --nivara-text-secondary: #334155;
+    --nivara-text-muted: #64748b;
+
+    --nivara-accent-primary: #0284c7;
+    --nivara-accent-secondary: #0ea5e9;
+    --nivara-success: #16a34a;
+    --nivara-warning: #d97706;
+    --nivara-danger: #dc2626;
+
+    --nivara-border: rgba(226, 232, 240, 0.9);
+    --nivara-border-hover: rgba(14, 165, 233, 0.4);
+
+    /* Legacy compatibility variables mapped to semantic tokens */
+    --bg-main: var(--nivara-bg-primary);
+    --bg-subtle: var(--nivara-bg-secondary);
+    --bg-card: var(--nivara-surface);
+    --border-subtle: var(--nivara-border);
+    --border-hover: var(--nivara-border-hover);
 
     --brand-blue: #2563eb;
     --brand-blue-hover: #1d4ed8;
     --brand-blue-light: #eff6ff;
 
-    --text-navy: #0f172a;
-    --text-slate: #475569;
-    --text-muted: #64748b;
+    --text-navy: var(--nivara-text-primary);
+    --text-slate: var(--nivara-text-secondary);
+    --text-muted: var(--nivara-text-muted);
     --text-subtle: #94a3b8;
 
     --status-safe: #16a34a;
@@ -46,33 +84,66 @@
     --status-critical-border: #fecaca;
   }
 
-  /* Dark theme — flips the semantic palette. Mirrors the App.css vars too. */
+  /* NIVARA MIDNIGHT SKY DARK THEME (SOURCE OF TRUTH) */
   .dark {
-    --bg-main: #0b1220;
-    --bg-subtle: #0f172a;
-    --bg-card: #111a2e;
-    --bg-primary: #0b1220;
-    --bg-surface: #101a2e;
-    --border-subtle: #1e293b;
-    --border-hover: #334155;
+    /* LEVEL 1: Main Application Background - Exact Night Sky */
+    --nivara-bg-primary: #0A1E3B;
 
-    --text-main: #e2e8f0;
-    --text-navy: #f1f5f9;
-    --text-slate: #cbd5e1;
-    --text-muted: #94a3b8;
-    --text-subtle: #64748b;
+    /* LEVEL 2: Major Content Areas & Panels */
+    --nivara-bg-secondary: #0E2648;
 
-    --status-safe: #22c55e;
-    --status-safe-bg: rgba(34, 197, 94, 0.12);
-    --status-safe-border: rgba(34, 197, 94, 0.35);
+    /* LEVEL 3: Separated Sections & Dashboard Regions */
+    --nivara-bg-section: #122F56;
 
-    --status-warning: #f59e0b;
-    --status-warning-bg: rgba(245, 158, 11, 0.12);
-    --status-warning-border: rgba(245, 158, 11, 0.35);
+    /* LEVEL 4: Cards, Panels, Forms, Inputs, Tables */
+    --nivara-surface: #163864;
 
-    --status-critical: #f87171;
-    --status-critical-bg: rgba(248, 113, 113, 0.12);
-    --status-critical-border: rgba(248, 113, 113, 0.35);
+    /* LEVEL 5: Hover States, Elevated Cards, Modals */
+    --nivara-surface-elevated: #1C467C;
+
+    /* Typography */
+    --nivara-text-primary: #F2FBFD;
+    --nivara-text-secondary: #B2D2D9;
+    --nivara-text-muted: #6D949D;
+
+    /* Accents & Status */
+    --nivara-accent-primary: #00E5FF;
+    --nivara-accent-hover: #2BEBFF;
+    --nivara-accent-secondary: #38BDF8;
+    --nivara-success: #35D39E;
+    --nivara-warning: #F6B84C;
+    --nivara-danger: #F06B6B;
+
+    /* Borders */
+    --nivara-border: rgba(94, 183, 201, 0.16);
+    --nivara-border-hover: rgba(0, 229, 255, 0.45);
+
+    /* Compatibility variables mapped to Abyssal Marine */
+    --bg-main: var(--nivara-bg-primary);
+    --bg-subtle: var(--nivara-bg-secondary);
+    --bg-card: var(--nivara-surface);
+    --bg-primary: var(--nivara-bg-primary);
+    --bg-surface: var(--nivara-surface);
+    --border-subtle: var(--nivara-border);
+    --border-hover: var(--nivara-border-hover);
+
+    --text-main: var(--nivara-text-primary);
+    --text-navy: var(--nivara-text-primary);
+    --text-slate: var(--nivara-text-secondary);
+    --text-muted: var(--nivara-text-muted);
+    --text-subtle: #507882;
+
+    --status-safe: var(--nivara-success);
+    --status-safe-bg: rgba(53, 211, 158, 0.14);
+    --status-safe-border: rgba(53, 211, 158, 0.35);
+
+    --status-warning: var(--nivara-warning);
+    --status-warning-bg: rgba(246, 184, 76, 0.14);
+    --status-warning-border: rgba(246, 184, 76, 0.35);
+
+    --status-critical: var(--nivara-danger);
+    --status-critical-bg: rgba(240, 107, 107, 0.14);
+    --status-critical-border: rgba(240, 107, 107, 0.35);
   }
 
   * {
@@ -86,18 +157,19 @@
     min-height: 100%;
     margin: 0;
     padding: 0;
-    background-color: var(--bg-main);
-    color: var(--text-navy);
+    background-color: var(--nivara-bg-primary);
+    color: var(--nivara-text-primary);
     font-family: var(--font-sans);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     letter-spacing: -0.011em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 180ms ease, color 180ms ease;
   }
 
   html.dark body {
-    background-color: var(--bg-main);
-    color: var(--text-main);
+    background-color: var(--nivara-bg-primary);
+    color: var(--nivara-text-primary);
   }
 
   input,
@@ -127,50 +199,51 @@
   }
 }
 
-/* Dark-mode scrollbar */
+/* Dark-mode scrollbar with NIVARA Midnight Sky Palette */
 html.dark ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #0A1E3B;
 }
 
 html.dark ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #163864;
+  border-radius: 4px;
 }
 
 html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #1C467C;
 }
 
 /* Dark overrides for the shared fixed navbar chrome */
 html.dark .kwi-navbar-card {
-  background: rgba(11, 18, 32, 0.94);
-  border-color: rgba(51, 65, 85, 0.6);
+  background: rgba(6, 24, 32, 0.94);
+  border-color: rgba(94, 183, 201, 0.18);
 }
 
 html.dark .kwi-signal-line {
-  background: #1e293b;
+  background: #0B2430;
 }
 
 html.dark .kwi-nav-item-btn {
-  color: #94a3b8;
-  background: rgba(11, 18, 32, 0.95);
+  color: #B2D2D9;
+  background: rgba(6, 24, 32, 0.95);
 }
 
 html.dark .kwi-nav-item-btn:hover {
-  color: #f1f5f9;
-  background: #1e293b;
+  color: #F2FBFD;
+  background: #10313E;
 }
 
 html.dark .kwi-nav-item-btn.active {
-  color: #f1f5f9;
-  background: #16213a;
-  border-color: rgba(71, 85, 105, 0.6);
+  color: #00E5FF;
+  background: rgba(0, 229, 255, 0.10);
+  border-color: rgba(0, 229, 255, 0.45);
 }
 
 html.dark .kwi-admin-btn,
 html.dark .kwi-critical-btn {
-  background: #16213a;
-  border-color: #334155;
-  color: #cbd5e1;
+  background: #10313E;
+  border-color: rgba(94, 183, 201, 0.25);
+  color: #F2FBFD;
 }
 
 /* Restrained Minimalist Scrollbar */

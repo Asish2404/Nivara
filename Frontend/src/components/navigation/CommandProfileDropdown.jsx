@@ -116,7 +116,7 @@ export function CommandProfileDropdown({ isDarkMode }) {
           aria-expanded={isOpen}
           aria-haspopup="true"
           className={`group relative flex items-center gap-2.5 px-3 py-1.5 rounded-full cursor-pointer select-none transition-all duration-200 border ${isDarkMode
-            ? "bg-[#0b1220]/95 hover:bg-[#121c32] text-slate-100 border-slate-700/80 shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
+            ? "bg-[#10313E] hover:bg-[#163F4E] text-[#F2FBFD] border-[rgba(94,183,201,0.18)] shadow-[0_2px_12px_rgba(3,15,20,0.6)]"
             : "bg-white/95 hover:bg-slate-50 text-slate-900 border-slate-200/90 shadow-[0_1px_4px_rgba(15,23,42,0.06)]"
             }`}
         >
@@ -129,14 +129,14 @@ export function CommandProfileDropdown({ isDarkMode }) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-[#0284c7] via-[#2563eb] to-[#0891a8] flex items-center justify-center font-bold text-[11px] text-white">
+              <div className="w-full h-full bg-gradient-to-br from-[#00E5FF] via-[#0284c7] to-[#0891a8] flex items-center justify-center font-bold text-[11px] text-white">
                 {userInitials}
               </div>
             )}
           </div>
 
           {/* User Name */}
-          <span className="text-[13px] font-semibold tracking-tight truncate max-w-[130px] sm:max-w-[160px] text-slate-900 dark:text-slate-100">
+          <span className="text-[13px] font-semibold tracking-tight truncate max-w-[130px] sm:max-w-[160px] text-slate-900 dark:text-[#F2FBFD]">
             {userName}
           </span>
 
@@ -144,7 +144,7 @@ export function CommandProfileDropdown({ isDarkMode }) {
           <motion.div
             animate={{ rotate: isOpen ? 180 : 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="flex items-center justify-center text-slate-400 group-hover:text-[#0284c7] transition-colors"
+            className="flex items-center justify-center text-slate-400 group-hover:text-[#00E5FF] transition-colors"
           >
             <ChevronDown className="w-3.5 h-3.5" />
           </motion.div>
@@ -163,18 +163,18 @@ export function CommandProfileDropdown({ isDarkMode }) {
               style={{
                 transformOrigin: "top right",
                 boxShadow: isDarkMode
-                  ? "0 20px 45px -10px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08)"
+                  ? "0 20px 45px -10px rgba(3, 15, 20, 0.95), 0 0 0 1px rgba(94, 183, 201, 0.16)"
                   : "0 20px 45px -12px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.05)",
               }}
               className={`absolute right-0 top-full mt-2 w-[300px] sm:w-[320px] rounded-2xl overflow-hidden z-50 pointer-events-auto backdrop-blur-xl ${isDarkMode
-                ? "bg-[#0b1220]/95 border border-slate-700/80 text-slate-100"
+                ? "bg-[#061820]/98 border border-[rgba(94,183,201,0.18)] text-[#F2FBFD]"
                 : "bg-white/95 border border-slate-200/90 text-slate-900"
                 }`}
             >
               {/* PROFILE HEADER (Real Avatar, Name, Org) */}
               <div
                 className={`p-5 flex flex-col items-center text-center border-b ${isDarkMode
-                  ? "border-slate-800 bg-slate-900/30"
+                  ? "border-[rgba(94,183,201,0.16)] bg-[#0B2430]/75"
                   : "border-slate-100 bg-slate-50/50"
                   }`}
               >
@@ -185,7 +185,7 @@ export function CommandProfileDropdown({ isDarkMode }) {
                   className="relative group mb-3 cursor-pointer rounded-full focus:outline-none"
                   title="Click to view or edit profile picture"
                 >
-                  <div className="w-[68px] h-[68px] rounded-full overflow-hidden border-2 border-[#0284c7]/30 group-hover:border-[#0284c7] transition-all duration-200 shadow-sm">
+                  <div className="w-[68px] h-[68px] rounded-full overflow-hidden border-2 border-[#00E5FF]/40 group-hover:border-[#00E5FF] transition-all duration-200 shadow-sm">
                     {avatarUrl ? (
                       <img
                         src={avatarUrl}
@@ -193,7 +193,7 @@ export function CommandProfileDropdown({ isDarkMode }) {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-[#0284c7] via-[#2563eb] to-[#0891a8] flex items-center justify-center font-bold text-[19px] text-white">
+                      <div className="w-full h-full bg-gradient-to-br from-[#00E5FF] via-[#0284c7] to-[#0891a8] flex items-center justify-center font-bold text-[19px] text-white">
                         {userInitials}
                       </div>
                     )}
@@ -201,12 +201,12 @@ export function CommandProfileDropdown({ isDarkMode }) {
                 </button>
 
                 {/* User Name */}
-                <h3 className="text-[15px] font-bold text-slate-900 dark:text-white m-0 tracking-tight leading-snug">
+                <h3 className="text-[15px] font-bold text-slate-900 dark:text-[#F2FBFD] m-0 tracking-tight leading-snug">
                   {userName}
                 </h3>
 
                 {/* Organization */}
-                <p className="text-[12px] text-slate-500 dark:text-slate-400 m-0 mt-0.5 font-medium">
+                <p className="text-[12px] text-slate-500 dark:text-[#B2D2D9] m-0 mt-0.5 font-medium">
                   {userOrg}
                 </p>
               </div>
@@ -223,30 +223,30 @@ export function CommandProfileDropdown({ isDarkMode }) {
                       })
                     }
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${isDarkMode
-                      ? "hover:bg-cyan-950/30 text-slate-200"
+                      ? "hover:bg-[#10313E] text-[#B2D2D9]"
                       : "hover:bg-blue-50/70 text-slate-800"
                       }`}
                   >
                     <div
                       className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${isDarkMode
-                        ? "text-slate-400 group-hover:text-cyan-400"
+                        ? "text-[#6D949D] group-hover:text-[#00E5FF]"
                         : "text-slate-500 group-hover:text-[#0284c7]"
                         }`}
                     >
                       <LayoutDashboard className="w-[17px] h-[17px]" strokeWidth={1.75} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-[#F2FBFD] flex items-center gap-1.5">
                         <span>Admin Dashboard</span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
+                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-100 text-blue-700 dark:bg-[#10313E] dark:text-[#00E5FF] border border-transparent dark:border-[rgba(0,229,255,0.3)]">
                           ADMIN
                         </span>
                       </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                      <div className="text-[11px] text-slate-500 dark:text-[#6D949D] truncate mt-0.5">
                         City Response Center &amp; Ops
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#0284c7] group-hover:translate-x-0.5 transition-all duration-150" />
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#00E5FF] group-hover:translate-x-0.5 transition-all duration-150" />
                   </button>
                 )}
 
@@ -260,27 +260,27 @@ export function CommandProfileDropdown({ isDarkMode }) {
                     })
                   }
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${isDarkMode
-                    ? "hover:bg-cyan-950/30 text-slate-200"
+                    ? "hover:bg-[#10313E] text-[#B2D2D9]"
                     : "hover:bg-blue-50/70 text-slate-800"
                     }`}
                 >
                   <div
                     className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${isDarkMode
-                      ? "text-slate-400 group-hover:text-cyan-400"
+                      ? "text-[#6D949D] group-hover:text-[#00E5FF]"
                       : "text-slate-500 group-hover:text-[#0284c7]"
                       }`}
                   >
                     <User className="w-[17px] h-[17px]" strokeWidth={1.75} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-white">
+                    <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-[#F2FBFD]">
                       My Profile
                     </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                    <div className="text-[11px] text-slate-500 dark:text-[#6D949D] truncate mt-0.5">
                       Manage your account and profile
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#0284c7] group-hover:translate-x-0.5 transition-all duration-150" />
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#00E5FF] group-hover:translate-x-0.5 transition-all duration-150" />
                 </button>
 
                 {/* 2. Notifications */}
@@ -292,29 +292,29 @@ export function CommandProfileDropdown({ isDarkMode }) {
                     })
                   }
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${isDarkMode
-                    ? "hover:bg-cyan-950/30 text-slate-200"
+                    ? "hover:bg-[#10313E] text-[#B2D2D9]"
                     : "hover:bg-blue-50/70 text-slate-800"
                     }`}
                 >
                   <div
                     className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${isDarkMode
-                      ? "text-slate-400 group-hover:text-cyan-400"
+                      ? "text-[#6D949D] group-hover:text-[#00E5FF]"
                       : "text-slate-500 group-hover:text-[#0284c7]"
                       }`}
                   >
                     <Bell className="w-[17px] h-[17px]" strokeWidth={1.75} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-white">
+                    <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-[#F2FBFD]">
                       Notifications
                     </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                    <div className="text-[11px] text-slate-500 dark:text-[#6D949D] truncate mt-0.5">
                       Alerts and system updates
                     </div>
                   </div>
                   {/* Real Dynamic Unread Badge */}
                   {unreadNotificationsCount > 0 && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-[#0284c7] bg-blue-50 dark:bg-cyan-950/60 dark:text-cyan-300 border border-blue-200/80 dark:border-cyan-500/30">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-[#0284c7] bg-blue-50 dark:bg-[#10313E] dark:text-[#00E5FF] border border-blue-200/80 dark:border-[rgba(0,229,255,0.35)]">
                       {unreadNotificationsCount} NEW
                     </span>
                   )}
@@ -330,27 +330,27 @@ export function CommandProfileDropdown({ isDarkMode }) {
                     })
                   }
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${isDarkMode
-                    ? "hover:bg-cyan-950/30 text-slate-200"
+                    ? "hover:bg-[#10313E] text-[#B2D2D9]"
                     : "hover:bg-blue-50/70 text-slate-800"
                     }`}
                 >
                   <div
                     className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${isDarkMode
-                      ? "text-slate-400 group-hover:text-cyan-400"
+                      ? "text-[#6D949D] group-hover:text-[#00E5FF]"
                       : "text-slate-500 group-hover:text-[#0284c7]"
                       }`}
                   >
                     <Settings className="w-[17px] h-[17px]" strokeWidth={1.75} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-white">
+                    <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-[#F2FBFD]">
                       Settings
                     </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                    <div className="text-[11px] text-slate-500 dark:text-[#6D949D] truncate mt-0.5">
                       Manage dashboard preferences
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#0284c7] group-hover:translate-x-0.5 transition-all duration-150" />
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#00E5FF] group-hover:translate-x-0.5 transition-all duration-150" />
                 </button>
 
                 {/* 4. Security & Privacy */}
@@ -363,33 +363,33 @@ export function CommandProfileDropdown({ isDarkMode }) {
                     })
                   }
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${isDarkMode
-                    ? "hover:bg-cyan-950/30 text-slate-200"
+                    ? "hover:bg-[#10313E] text-[#B2D2D9]"
                     : "hover:bg-blue-50/70 text-slate-800"
                     }`}
                 >
                   <div
                     className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${isDarkMode
-                      ? "text-slate-400 group-hover:text-cyan-400"
+                      ? "text-[#6D949D] group-hover:text-[#00E5FF]"
                       : "text-slate-500 group-hover:text-[#0284c7]"
                       }`}
                   >
                     <Shield className="w-[17px] h-[17px]" strokeWidth={1.75} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-white">
+                    <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-[#F2FBFD]">
                       Security &amp; Privacy
                     </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                    <div className="text-[11px] text-slate-500 dark:text-[#6D949D] truncate mt-0.5">
                       Security and account controls
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#0284c7] group-hover:translate-x-0.5 transition-all duration-150" />
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#00E5FF] group-hover:translate-x-0.5 transition-all duration-150" />
                 </button>
               </div>
 
               {/* SEPARATOR */}
               <div
-                className={`h-px mx-2 ${isDarkMode ? "bg-slate-800" : "bg-slate-100"
+                className={`h-px mx-2 ${isDarkMode ? "bg-[rgba(94,183,201,0.16)]" : "bg-slate-100"
                   }`}
               />
 
@@ -399,7 +399,7 @@ export function CommandProfileDropdown({ isDarkMode }) {
                   type="button"
                   onClick={handleSignOut}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${isDarkMode
-                    ? "hover:bg-rose-950/20 text-rose-400"
+                    ? "hover:bg-rose-950/30 text-rose-400"
                     : "hover:bg-rose-50/80 text-rose-600"
                     }`}
                 >

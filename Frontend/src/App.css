@@ -1,11 +1,9 @@
-@import "tailwindcss";
-
 :root {
-  --bg-primary: #f8f9fa;
-  --bg-surface: #fcfbf9;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --border-subtle: #e2e8f0;
+  --bg-primary: var(--nivara-bg-primary, #ffffff);
+  --bg-surface: var(--nivara-surface, #ffffff);
+  --text-main: var(--nivara-text-primary, #0f172a);
+  --text-muted: var(--nivara-text-muted, #64748b);
+  --border-subtle: var(--nivara-border, #e2e8f0);
 }
 
 * {
@@ -21,8 +19,8 @@ body,
   padding: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  background-color: #000000;
-  color: #0f172a;
+  background-color: var(--nivara-bg-primary);
+  color: var(--nivara-text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }

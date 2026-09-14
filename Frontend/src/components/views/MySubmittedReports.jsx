@@ -357,7 +357,7 @@ export function MySubmittedReports() {
   const hasRealUserReports = currentUser && myReports && myReports.length > 0;
 
   return (
-    <div className="relative w-full bg-[#f4f7fb] dark:bg-[#0b1220] text-slate-800 dark:text-slate-100 font-sans min-h-screen selection:bg-cyan-100 selection:text-cyan-900 pb-20">
+    <div className="relative w-full bg-[#f4f7fb] dark:bg-[#0A1E3B] text-slate-800 dark:text-[#F0F9FA] font-sans min-h-screen selection:bg-cyan-100 selection:text-cyan-900 pb-20">
       {/* ============================================================ */}
       {/* 1. CINEMATIC RIVERSIDE DUSK PANORAMA HERO BANNER             */}
       {/* State-of-the-Art Frosted Glassmorphism Architecture          */}
@@ -372,7 +372,7 @@ export function MySubmittedReports() {
           />
           {/* Subtle cinematic gradient vignette for depth and text legibility */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/10 to-black/25" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-[#f4f7fb] dark:to-[#0b1220] h-28 bottom-0 top-auto" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-[#f4f7fb] dark:to-[#0A1E3B] h-28 bottom-0 top-auto" />
         </div>
 
         {/* Floating Glassmorphic Content Containers */}
@@ -382,7 +382,7 @@ export function MySubmittedReports() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="relative rounded-[32px] p-6 sm:p-8 md:p-9 max-w-2xl bg-white/[0.12] dark:bg-black/[0.3] backdrop-blur-2xl border border-white/30 dark:border-white/20 shadow-[0_20px_60px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.45)] text-left"
+            className="relative rounded-[32px] p-6 sm:p-8 md:p-9 max-w-2xl bg-white/[0.12] dark:bg-[#061820]/[0.65] backdrop-blur-2xl border border-white/30 dark:border-[rgba(94,183,201,0.2)] shadow-[0_20px_60px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.45)] text-left"
           >
             {/* Ambient subtle cyan glow corner */}
             <div className="absolute -top-10 -left-10 w-36 h-36 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none" />
@@ -457,7 +457,7 @@ export function MySubmittedReports() {
             transition={{ duration: 0.5, delay: 0.15 }}
             className="flex flex-col items-start lg:items-end shrink-0"
           >
-            <div className="relative rounded-[24px] p-5 sm:p-6 max-w-[280px] sm:max-w-[300px] bg-white/[0.12] dark:bg-black/[0.32] backdrop-blur-2xl border border-white/25 shadow-[0_16px_45px_rgba(0,0,0,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] text-left text-white overflow-hidden">
+            <div className="relative rounded-[24px] p-5 sm:p-6 max-w-[280px] sm:max-w-[300px] bg-white/[0.12] dark:bg-[#030F14]/[0.85] backdrop-blur-2xl border border-white/25 dark:border-[rgba(94,183,201,0.2)] shadow-[0_16px_45px_rgba(0,0,0,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] text-left text-white overflow-hidden">
               <div className="text-3xl sm:text-4xl text-white/80 font-serif leading-none mb-2 select-none">
                 “
               </div>
@@ -487,20 +487,20 @@ export function MySubmittedReports() {
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -4 }}
             transition={{ duration: 0.25 }}
-            className="relative rounded-[24px] bg-white dark:bg-slate-900/95 backdrop-blur-xl p-5 border border-slate-200/80 dark:border-white/10 shadow-[0_12px_32px_-10px_rgba(15,35,65,0.1)] flex items-center justify-between overflow-hidden"
+            className="relative rounded-[24px] bg-white dark:bg-[#10313E] backdrop-blur-xl p-5 border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_12px_32px_-10px_rgba(15,35,65,0.1)] flex items-center justify-between overflow-hidden"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#edf5ff] dark:bg-blue-500/15 border border-[#d5e6ff] dark:border-blue-500/20 flex items-center justify-center text-[#2563eb] dark:text-blue-400 shrink-0 shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-[#edf5ff] dark:bg-blue-500/15 border border-[#d5e6ff] dark:border-blue-500/20 flex items-center justify-center text-[#2563eb] dark:text-[#38BDF8] shrink-0 shadow-sm">
                 <FileText className="w-6 h-6" />
               </div>
               <div>
-                <div className="text-3xl font-extrabold text-slate-900 dark:text-white leading-none font-sans">
+                <div className="text-3xl font-extrabold text-slate-900 dark:text-[#F2FBFD] leading-none font-sans">
                   {summaryCounts.total}
                 </div>
-                <div className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">
+                <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-1">
                   Total Reports
                 </div>
-                <div className="text-[11px] text-slate-400 dark:text-slate-500">
+                <div className="text-[11px] text-slate-400 dark:text-[#6D949D]">
                   Reports submitted by you
                 </div>
               </div>
@@ -525,20 +525,20 @@ export function MySubmittedReports() {
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -4 }}
             transition={{ duration: 0.25, delay: 0.08 }}
-            className="relative rounded-[24px] bg-white dark:bg-slate-900/95 backdrop-blur-xl p-5 border border-slate-200/80 dark:border-white/10 shadow-[0_12px_32px_-10px_rgba(15,35,65,0.1)] flex items-center justify-between overflow-hidden"
+            className="relative rounded-[24px] bg-white dark:bg-[#10313E] backdrop-blur-xl p-5 border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_12px_32px_-10px_rgba(15,35,65,0.1)] flex items-center justify-between overflow-hidden"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#eafaf0] dark:bg-emerald-500/15 border border-[#c4f0d3] dark:border-emerald-500/20 flex items-center justify-center text-[#16a34a] dark:text-emerald-400 shrink-0 shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-[#eafaf0] dark:bg-emerald-500/15 border border-[#c4f0d3] dark:border-emerald-500/20 flex items-center justify-center text-[#16a34a] dark:text-[#35D39E] shrink-0 shadow-sm">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <div>
-                <div className="text-3xl font-extrabold text-slate-900 dark:text-white leading-none font-sans">
+                <div className="text-3xl font-extrabold text-slate-900 dark:text-[#F2FBFD] leading-none font-sans">
                   {summaryCounts.verified}
                 </div>
-                <div className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">
+                <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-1">
                   Verified Reports
                 </div>
-                <div className="text-[11px] text-slate-400 dark:text-slate-500">
+                <div className="text-[11px] text-slate-400 dark:text-[#6D949D]">
                   AI verification completed
                 </div>
               </div>
@@ -563,20 +563,20 @@ export function MySubmittedReports() {
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -4 }}
             transition={{ duration: 0.25, delay: 0.16 }}
-            className="relative rounded-[24px] bg-white dark:bg-slate-900/95 backdrop-blur-xl p-5 border border-slate-200/80 dark:border-white/10 shadow-[0_12px_32px_-10px_rgba(15,35,65,0.1)] flex items-center justify-between overflow-hidden"
+            className="relative rounded-[24px] bg-white dark:bg-[#10313E] backdrop-blur-xl p-5 border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_12px_32px_-10px_rgba(15,35,65,0.1)] flex items-center justify-between overflow-hidden"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#fff8eb] dark:bg-amber-500/15 border border-[#fee6b8] dark:border-amber-500/20 flex items-center justify-center text-[#d97706] dark:text-amber-400 shrink-0 shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-[#fff8eb] dark:bg-amber-500/15 border border-[#fee6b8] dark:border-amber-500/20 flex items-center justify-center text-[#d97706] dark:text-[#F6B84C] shrink-0 shadow-sm">
                 <Clock className="w-6 h-6" />
               </div>
               <div>
-                <div className="text-3xl font-extrabold text-slate-900 dark:text-white leading-none font-sans">
+                <div className="text-3xl font-extrabold text-slate-900 dark:text-[#F2FBFD] leading-none font-sans">
                   {summaryCounts.review}
                 </div>
-                <div className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">
+                <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-1">
                   Under Review
                 </div>
-                <div className="text-[11px] text-slate-400 dark:text-slate-500">
+                <div className="text-[11px] text-slate-400 dark:text-[#6D949D]">
                   Being analyzed by AI team
                 </div>
               </div>
@@ -590,32 +590,32 @@ export function MySubmittedReports() {
                   <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
                 </linearGradient>
               </defs>
-              <path d="M2,20 Q 22,25 38,12 T 68,14 L 68,32 L 2,32 Z" fill="url(#sparkAmber)" />
-              <path d="M2,20 Q 22,25 38,12 T 68,14" stroke="#f59e0b" strokeWidth="2.2" strokeLinecap="round" />
+              <path d="M2,20 Q 20,28 38,14 T 68,8 L 68,32 L 2,32 Z" fill="url(#sparkAmber)" />
+              <path d="M2,20 Q 20,28 38,14 T 68,8" stroke="#f59e0b" strokeWidth="2.2" strokeLinecap="round" />
             </svg>
           </motion.div>
 
-          {/* Card 4: Dispatched */}
+          {/* Card 4: Dispatched Action */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -4 }}
             transition={{ duration: 0.25, delay: 0.24 }}
-            className="relative rounded-[24px] bg-gradient-to-br from-white via-white to-purple-50/50 dark:from-slate-900/95 dark:to-purple-950/20 backdrop-blur-xl p-5 border border-slate-200/80 dark:border-white/10 shadow-[0_12px_32px_-10px_rgba(15,35,65,0.1)] flex items-center justify-between overflow-hidden"
+            className="relative rounded-[24px] bg-white dark:bg-[#10313E] backdrop-blur-xl p-5 border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_12px_32px_-10px_rgba(15,35,65,0.1)] flex items-center justify-between overflow-hidden"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#f5f0ff] dark:bg-purple-500/15 border border-[#e2d4ff] dark:border-purple-500/20 flex items-center justify-center text-[#9333ea] dark:text-purple-400 shrink-0 shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-[#f5f3ff] dark:bg-purple-500/15 border border-[#e4ddff] dark:border-purple-500/20 flex items-center justify-center text-[#7c3aed] dark:text-purple-400 shrink-0 shadow-sm">
                 <Truck className="w-6 h-6" />
               </div>
               <div>
-                <div className="text-3xl font-extrabold text-slate-900 dark:text-white leading-none font-sans">
+                <div className="text-3xl font-extrabold text-slate-900 dark:text-[#F2FBFD] leading-none font-sans">
                   {summaryCounts.dispatched}
                 </div>
-                <div className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">
+                <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-1">
                   Dispatched
                 </div>
-                <div className="text-[11px] text-slate-400 dark:text-slate-500">
-                  Sent to municipal department
+                <div className="text-[11px] text-slate-400 dark:text-[#6D949D]">
+                  Field teams sent to site
                 </div>
               </div>
             </div>
@@ -641,7 +641,7 @@ export function MySubmittedReports() {
       <section className="relative max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         <div className="flex flex-col xl:flex-row gap-5 items-stretch">
           {/* Left Decorative Kolkata Heritage Street Lamp Banner */}
-          <div className="hidden xl:flex flex-col justify-between w-[96px] shrink-0 rounded-[28px] bg-gradient-to-b from-[#e3f0fc]/90 via-[#edf5fc]/85 to-[#d6eafc]/90 dark:from-[#11233d] dark:via-[#162d4e] dark:to-[#0f2038] p-4 shadow-sm border border-slate-200/80 dark:border-white/10 relative overflow-hidden text-center select-none">
+          <div className="hidden xl:flex flex-col justify-between w-[96px] shrink-0 rounded-[28px] bg-gradient-to-b from-[#e3f0fc]/90 via-[#edf5fc]/85 to-[#d6eafc]/90 dark:from-[#061820] dark:via-[#0B2430] dark:to-[#030F14] p-4 shadow-sm border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] relative overflow-hidden text-center select-none">
             {/* Victorian Heritage Gas Lantern */}
             <div className="flex flex-col items-center pt-2">
               <div className="w-7 h-2 bg-[#1e3a5f] dark:bg-slate-300 rounded-t-full shadow-sm" />
@@ -656,13 +656,13 @@ export function MySubmittedReports() {
 
             {/* Vertical Script Typography */}
             <div className="py-6 flex flex-col items-center justify-center">
-              <span className="text-[14px] font-serif font-bold italic text-[#16467f] dark:text-cyan-300 tracking-wide [writing-mode:vertical-rl] rotate-180 drop-shadow-sm">
+              <span className="text-[14px] font-serif font-bold italic text-[#16467f] dark:text-[#00E5FF] tracking-wide [writing-mode:vertical-rl] rotate-180 drop-shadow-sm">
                 Cleaner Waters, Brighter Kolkata
               </span>
             </div>
 
             {/* Bottom Pillar Text */}
-            <div className="text-[9px] font-extrabold tracking-[0.24em] text-[#24528a] dark:text-blue-300/70 uppercase leading-relaxed font-mono pb-2">
+            <div className="text-[9px] font-extrabold tracking-[0.24em] text-[#24528a] dark:text-[#38BDF8]/70 uppercase leading-relaxed font-mono pb-2">
               PEOPLE
               <br />
               REPORT
@@ -674,17 +674,17 @@ export function MySubmittedReports() {
           </div>
 
           {/* Main White Dashboard Card */}
-          <div className="flex-1 rounded-[28px] bg-white dark:bg-slate-900/95 border border-slate-200/80 dark:border-white/10 shadow-[0_18px_45px_-15px_rgba(15,35,65,0.08)] overflow-hidden">
+          <div className="flex-1 rounded-[28px] bg-white dark:bg-[#061820] border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_18px_45px_-15px_rgba(15,35,65,0.08)] overflow-hidden">
             {/* Header & Controls Toolbar */}
-            <div className="p-6 sm:p-7 border-b border-slate-100 dark:border-white/10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+            <div className="p-6 sm:p-7 border-b border-slate-100 dark:border-[rgba(94,183,201,0.16)] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
               <div>
                 <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-6 rounded-full bg-[#2563eb]" />
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  <div className="w-1.5 h-6 rounded-full bg-[#2563eb] dark:bg-[#00E5FF]" />
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-[#F2FBFD] tracking-tight">
                     Your Submitted Reports
                   </h2>
                 </div>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 pl-4.5">
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-[#B2D2D9] mt-1 pl-4.5">
                   Track, manage and see the impact of your civic contributions.
                 </p>
               </div>
@@ -693,19 +693,19 @@ export function MySubmittedReports() {
               <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
                 {/* Search Bar with generous width so placeholder never gets clipped */}
                 <div className="relative w-full sm:w-72 lg:w-80">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-[#6D949D] pointer-events-none" />
                   <input
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by report ID, location, or keyword..."
-                    className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.05] pl-9 pr-7 py-2 text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
+                    className="w-full rounded-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] bg-slate-50 dark:bg-[#10313E] pl-9 pr-7 py-2 text-xs text-slate-800 dark:text-[#F2FBFD] placeholder:text-slate-400 dark:placeholder:text-[#6D949D] focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
                   />
                   {search && (
                     <button
                       type="button"
                       onClick={() => setSearch("")}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-[#F2FBFD] cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -714,20 +714,20 @@ export function MySubmittedReports() {
 
                 {/* Date Dropdown */}
                 <div className="relative">
-                  <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.05] px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200">
-                    <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                  <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] bg-slate-50 dark:bg-[#10313E] px-3 py-2 text-xs font-semibold text-slate-700 dark:text-[#F2FBFD]">
+                    <Calendar className="w-3.5 h-3.5 text-slate-500 dark:text-[#B2D2D9]" />
                     <select
                       value={dateFilter}
                       onChange={(e) => setDateFilter(e.target.value)}
                       className="bg-transparent focus:outline-none cursor-pointer pr-2 appearance-none"
                     >
                       {["Last 7 Days", "Last 30 Days", "Last 3 Months", "Last 6 Months", "Last Year", "All Time"].map((opt) => (
-                        <option key={opt} value={opt} className="dark:bg-slate-800">
+                        <option key={opt} value={opt} className="dark:bg-[#061820]">
                           {opt}
                         </option>
                       ))}
                     </select>
-                    <ChevronDown className="w-3 h-3 text-slate-400 pointer-events-none" />
+                    <ChevronDown className="w-3 h-3 text-slate-400 dark:text-[#6D949D] pointer-events-none" />
                   </div>
                 </div>
 
@@ -736,9 +736,9 @@ export function MySubmittedReports() {
                   type="button"
                   onClick={handleRefresh}
                   disabled={refreshing}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.05] px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] bg-slate-50 dark:bg-[#10313E] px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-[#F2FBFD] hover:bg-slate-100 dark:hover:bg-[#163F4E] transition-all cursor-pointer"
                 >
-                  <Filter className="w-3.5 h-3.5 text-slate-500" />
+                  <Filter className="w-3.5 h-3.5 text-slate-500 dark:text-[#B2D2D9]" />
                   <span>Filter</span>
                   {refreshing && <RotateCw className="w-3 h-3 animate-spin text-blue-500 ml-1" />}
                 </button>
@@ -747,7 +747,7 @@ export function MySubmittedReports() {
                 <button
                   type="button"
                   onClick={handleNewReport}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#0c2340] hover:bg-[#14325c] text-white px-4 py-2 text-xs font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#0c2340] dark:bg-[#00E5FF] hover:bg-[#14325c] dark:hover:bg-[#2BEBFF] text-white dark:text-[#030F14] px-4 py-2 text-xs font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>New Report</span>
@@ -758,7 +758,7 @@ export function MySubmittedReports() {
                   <button
                     type="button"
                     onClick={() => setForceDemoMode(!forceDemoMode)}
-                    className="text-[11px] font-semibold text-[#2563eb] hover:underline cursor-pointer ml-1"
+                    className="text-[11px] font-semibold text-[#2563eb] dark:text-[#00E5FF] hover:underline cursor-pointer ml-1"
                   >
                     {forceDemoMode ? "View My 1 Report" : "View 5 Reference Demo Reports"}
                   </button>
@@ -767,7 +767,7 @@ export function MySubmittedReports() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="px-6 sm:px-7 pt-4 pb-2 border-b border-slate-100 dark:border-white/10 flex items-center gap-2 overflow-x-auto no-scrollbar">
+            <div className="px-6 sm:px-7 pt-4 pb-2 border-b border-slate-100 dark:border-[rgba(94,183,201,0.16)] flex items-center gap-2 overflow-x-auto no-scrollbar">
               {["All Reports", "Verified", "Dispatched", "Under Review", "Resolved"].map((tab) => {
                 const isActive = activeTab === tab;
                 const count =
@@ -781,14 +781,14 @@ export function MySubmittedReports() {
                     onClick={() => setActiveTab(tab)}
                     className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                       isActive
-                        ? "bg-[#2563eb] text-white shadow-sm"
-                        : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200/70"
+                        ? "bg-[#2563eb] dark:bg-[#00E5FF] text-white dark:text-[#030F14] shadow-sm"
+                        : "bg-slate-100 dark:bg-[#10313E] text-slate-600 dark:text-[#B2D2D9] hover:bg-slate-200/70 dark:hover:bg-[#163F4E]"
                     }`}
                   >
                     <span>{tab}</span>
                     <span
                       className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                        isActive ? "bg-white/20 text-white" : "bg-white dark:bg-white/10 text-slate-500"
+                        isActive ? "bg-white/20 dark:bg-black/20 text-white dark:text-[#030F14]" : "bg-white dark:bg-[#061820] text-slate-500 dark:text-[#6D949D]"
                       }`}
                     >
                       {count}
@@ -802,13 +802,13 @@ export function MySubmittedReports() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[960px]">
                 <thead>
-                  <tr className="border-b border-slate-100 dark:border-white/10 bg-slate-50/60 dark:bg-white/[0.02] text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  <tr className="border-b border-slate-100 dark:border-[rgba(94,183,201,0.16)] bg-slate-50/60 dark:bg-[#0B2430] text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-[#B2D2D9]">
                     <th className="py-3 px-4 w-12 text-center">#</th>
                     <th className="py-3 px-4">
                       <button
                         type="button"
                         onClick={() => toggleSort("report_id")}
-                        className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+                        className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-[#F2FBFD] cursor-pointer"
                       >
                         <span>Report ID</span>
                         <ArrowUpDown className="w-3 h-3" />
@@ -820,7 +820,7 @@ export function MySubmittedReports() {
                       <button
                         type="button"
                         onClick={() => toggleSort("submitted_at")}
-                        className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+                        className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-[#F2FBFD] cursor-pointer"
                       >
                         <span>Submitted On</span>
                         <ArrowUpDown className="w-3 h-3" />
@@ -831,7 +831,7 @@ export function MySubmittedReports() {
                       <button
                         type="button"
                         onClick={() => toggleSort("ai_confidence")}
-                        className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+                        className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-[#F2FBFD] cursor-pointer"
                       >
                         <span>AI Confidence</span>
                         <ArrowUpDown className="w-3 h-3" />
@@ -841,7 +841,7 @@ export function MySubmittedReports() {
                     <th className="py-3 px-4 text-center">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                <tbody className="divide-y divide-slate-100 dark:divide-[rgba(94,183,201,0.16)]">
                   <AnimatePresence initial={false}>
                     {filteredReports.map((report, idx) => {
                       const reportId = report.report_id || report.reportId || `KWI-2025-${idx + 100}`;
@@ -860,10 +860,10 @@ export function MySubmittedReports() {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="hover:bg-blue-50/40 dark:hover:bg-white/[0.02] transition-colors group"
+                          className="hover:bg-blue-50/40 dark:hover:bg-[#10313E]/60 transition-colors group"
                         >
                           {/* Row Number */}
-                          <td className="py-3.5 px-4 text-center text-xs font-semibold text-slate-400">
+                          <td className="py-3.5 px-4 text-center text-xs font-semibold text-slate-400 dark:text-[#6D949D]">
                             {idx + 1}
                           </td>
 
@@ -872,7 +872,7 @@ export function MySubmittedReports() {
                             <button
                               type="button"
                               onClick={() => setSelectedReport(report)}
-                              className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 hover:text-blue-600 transition-colors cursor-pointer text-left"
+                              className="font-mono text-xs font-bold text-slate-900 dark:text-[#F2FBFD] hover:text-blue-600 dark:hover:text-[#00E5FF] transition-colors cursor-pointer text-left"
                             >
                               {reportId}
                             </button>
@@ -885,7 +885,7 @@ export function MySubmittedReports() {
                               <button
                                 type="button"
                                 onClick={() => setLightboxImage(imageUrl)}
-                                className="relative w-16 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-800 group-hover:scale-105 transition-transform cursor-pointer shadow-sm"
+                                className="relative w-16 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-200 dark:border-[rgba(94,183,201,0.16)] bg-slate-100 dark:bg-[#10313E] group-hover:scale-105 transition-transform cursor-pointer shadow-sm"
                                 title="Click to view original full-resolution photo"
                               >
                                 {imageUrl ? (
@@ -895,7 +895,7 @@ export function MySubmittedReports() {
                                     className="w-full h-full object-cover"
                                   />
                                 ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                  <div className="w-full h-full flex items-center justify-center text-slate-400 dark:text-[#6D949D]">
                                     <Droplet className="w-4 h-4" />
                                   </div>
                                 )}
@@ -903,12 +903,12 @@ export function MySubmittedReports() {
 
                               {/* Locality info */}
                               <div className="flex items-start gap-1.5">
-                                <MapPin className="w-3.5 h-3.5 text-[#2563eb] shrink-0 mt-0.5" />
+                                <MapPin className="w-3.5 h-3.5 text-[#2563eb] dark:text-[#00E5FF] shrink-0 mt-0.5" />
                                 <div>
-                                  <div className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                                  <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD]">
                                     {report.location}
                                   </div>
-                                  <div className="text-[11px] text-slate-400 dark:text-slate-500">
+                                  <div className="text-[11px] text-slate-400 dark:text-[#6D949D]">
                                     {report.sub_location || "Kolkata"}
                                   </div>
                                 </div>
@@ -928,10 +928,10 @@ export function MySubmittedReports() {
 
                           {/* Submitted On */}
                           <td className="py-3.5 px-4">
-                            <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                            <div className="text-xs font-semibold text-slate-700 dark:text-[#B2D2D9]">
                               {formatDate(report.submitted_at || report.submittedAt)}
                             </div>
-                            <div className="text-[11px] text-blue-600 dark:text-cyan-400 font-semibold mt-0.5">
+                            <div className="text-[11px] text-blue-600 dark:text-[#00E5FF] font-semibold mt-0.5">
                               {formatTime(report.submitted_at || report.submittedAt)}
                             </div>
                             {(report.updated_at || report.updatedAt) &&
@@ -956,7 +956,7 @@ export function MySubmittedReports() {
                           {/* AI Confidence */}
                           <td className="py-3.5 px-4">
                             <div className="flex items-center gap-2.5 min-w-[120px]">
-                              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 w-8">
+                              <span className="text-xs font-bold text-slate-700 dark:text-[#B2D2D9] w-8">
                                 {confidence}%
                               </span>
                               <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-white/10 overflow-hidden">
@@ -969,7 +969,7 @@ export function MySubmittedReports() {
                           </td>
 
                           {/* Dispatched To */}
-                          <td className="py-3.5 px-4 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                          <td className="py-3.5 px-4 text-xs font-semibold text-slate-600 dark:text-[#B2D2D9]">
                             {report.dispatched_to || report.dispatchedTo || "—"}
                           </td>
 
@@ -979,7 +979,7 @@ export function MySubmittedReports() {
                               <button
                                 type="button"
                                 onClick={() => setSelectedReport(report)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-[#1d4ed8] dark:text-cyan-300 bg-[#eff6ff] dark:bg-blue-500/10 hover:bg-[#dbeafe] dark:hover:bg-blue-500/20 border border-[#bfdbfe] dark:border-blue-500/20 transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-[#1d4ed8] dark:text-[#00E5FF] bg-[#eff6ff] dark:bg-[#00E5FF]/10 hover:bg-[#dbeafe] dark:hover:bg-[#00E5FF]/20 border border-[#bfdbfe] dark:border-[#00E5FF]/25 transition-all cursor-pointer"
                               >
                                 <Eye className="w-3.5 h-3.5" />
                                 <span>View</span>
@@ -990,21 +990,21 @@ export function MySubmittedReports() {
                                 <button
                                   type="button"
                                   onClick={() => setMenuOpenId(menuOpenId === reportId ? null : reportId)}
-                                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-[#F2FBFD] transition-colors cursor-pointer"
                                 >
                                   <MoreVertical className="w-4 h-4" />
                                 </button>
                                 {menuOpenId === reportId && (
-                                  <div className="absolute right-0 top-full mt-1 w-44 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 shadow-lg py-1 z-20 text-left">
+                                  <div className="absolute right-0 top-full mt-1 w-44 rounded-xl bg-white dark:bg-[#061820] border border-slate-200 dark:border-[rgba(94,183,201,0.16)] shadow-lg py-1 z-20 text-left">
                                     <button
                                       type="button"
                                       onClick={() => {
                                         setLightboxImage(imageUrl);
                                         setMenuOpenId(null);
                                       }}
-                                      className="w-full px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 flex items-center gap-2 cursor-pointer"
+                                      className="w-full px-3 py-2 text-xs text-slate-700 dark:text-[#F2FBFD] hover:bg-slate-50 dark:hover:bg-[#10313E] flex items-center gap-2 cursor-pointer"
                                     >
-                                      <Eye className="w-3.5 h-3.5 text-blue-500" />
+                                      <Eye className="w-3.5 h-3.5 text-blue-500 dark:text-[#00E5FF]" />
                                       <span>Enlarge Photo</span>
                                     </button>
                                     <button
@@ -1013,9 +1013,9 @@ export function MySubmittedReports() {
                                         navigator.clipboard?.writeText(reportId);
                                         setMenuOpenId(null);
                                       }}
-                                      className="w-full px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 flex items-center gap-2 cursor-pointer"
+                                      className="w-full px-3 py-2 text-xs text-slate-700 dark:text-[#F2FBFD] hover:bg-slate-50 dark:hover:bg-[#10313E] flex items-center gap-2 cursor-pointer"
                                     >
-                                      <Copy className="w-3.5 h-3.5 text-slate-400" />
+                                      <Copy className="w-3.5 h-3.5 text-slate-400 dark:text-[#6D949D]" />
                                       <span>Copy Report ID</span>
                                     </button>
                                     <button
@@ -1024,9 +1024,9 @@ export function MySubmittedReports() {
                                         setSelectedReport(report);
                                         setMenuOpenId(null);
                                       }}
-                                      className="w-full px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 flex items-center gap-2 cursor-pointer"
+                                      className="w-full px-3 py-2 text-xs text-slate-700 dark:text-[#F2FBFD] hover:bg-slate-50 dark:hover:bg-[#10313E] flex items-center gap-2 cursor-pointer"
                                     >
-                                      <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                                      <ExternalLink className="w-3.5 h-3.5 text-slate-400 dark:text-[#6D949D]" />
                                       <span>View Full Details</span>
                                     </button>
                                   </div>
@@ -1041,10 +1041,10 @@ export function MySubmittedReports() {
 
                   {filteredReports.length === 0 && (
                     <tr>
-                      <td colSpan={9} className="py-12 text-center text-slate-400 dark:text-slate-500">
+                      <td colSpan={9} className="py-12 text-center text-slate-400 dark:text-[#6D949D]">
                         <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
                         <p className="text-sm font-semibold">No reports found matching your criteria.</p>
-                        <p className="text-xs mt-1 text-slate-400">Try adjusting your search query or filter tags.</p>
+                        <p className="text-xs mt-1 text-slate-400 dark:text-[#6E9298]">Try adjusting your search query or filter tags.</p>
                       </td>
                     </tr>
                   )}
@@ -1053,7 +1053,7 @@ export function MySubmittedReports() {
             </div>
 
             {/* Bottom Status Feed Footer */}
-            <div className="px-6 py-4 border-t border-slate-100 dark:border-white/10 flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+            <div className="px-6 py-4 border-t border-slate-100 dark:border-[rgba(94,183,201,0.16)] flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-[#A8C5C9]">
               <div>
                 Showing <span className="font-bold text-slate-800 dark:text-slate-200">{filteredReports.length}</span> of{" "}
                 <span className="font-bold text-slate-800 dark:text-slate-200">{activeReportsList.length}</span> reports
@@ -1126,7 +1126,7 @@ function ReportDetailsModal({ report, onClose, onEnlarge }) {
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ duration: 0.2 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-2xl"
+        className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white dark:bg-[#061820] border border-slate-200 dark:border-[rgba(94,183,201,0.16)] shadow-2xl"
       >
         {/* Close Button */}
         <button
@@ -1175,33 +1175,33 @@ function ReportDetailsModal({ report, onClose, onEnlarge }) {
         <div className="p-6 space-y-6">
           {/* Metadata Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="rounded-xl p-3 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-              <div className="text-[10px] uppercase font-bold text-slate-400">Submit Time</div>
-              <div className="text-xs font-bold text-slate-800 dark:text-slate-100 mt-1">
+            <div className="rounded-xl p-3 bg-slate-50 dark:bg-[#10313E] border border-slate-100 dark:border-[rgba(94,183,201,0.16)]">
+              <div className="text-[10px] uppercase font-bold text-slate-400 dark:text-[#6D949D]">Submit Time</div>
+              <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-1">
                 {formatDate(report.submitted_at || report.submittedAt)}
               </div>
-              <div className="text-[11px] text-blue-600 dark:text-cyan-400 font-semibold mt-0.5">
+              <div className="text-[11px] text-blue-600 dark:text-[#00E5FF] font-semibold mt-0.5">
                 {formatTime(report.submitted_at || report.submittedAt)}
               </div>
             </div>
-            <div className="rounded-xl p-3 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-              <div className="text-[10px] uppercase font-bold text-slate-400">Update Time</div>
-              <div className="text-xs font-bold text-slate-800 dark:text-slate-100 mt-1">
+            <div className="rounded-xl p-3 bg-slate-50 dark:bg-[#10313E] border border-slate-100 dark:border-[rgba(94,183,201,0.16)]">
+              <div className="text-[10px] uppercase font-bold text-slate-400 dark:text-[#6D949D]">Update Time</div>
+              <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-1">
                 {formatDate(report.updated_at || report.submitted_at || report.submittedAt)}
               </div>
-              <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
+              <div className="text-[11px] text-emerald-600 dark:text-[#35D39E] font-semibold mt-0.5">
                 {formatTime(report.updated_at || report.submitted_at || report.submittedAt)}
               </div>
             </div>
-            <div className="rounded-xl p-3 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-              <div className="text-[10px] uppercase font-bold text-slate-400">Status</div>
-              <div className="text-xs font-bold text-blue-600 dark:text-cyan-400 mt-1">
+            <div className="rounded-xl p-3 bg-slate-50 dark:bg-[#10313E] border border-slate-100 dark:border-[rgba(94,183,201,0.16)]">
+              <div className="text-[10px] uppercase font-bold text-slate-400 dark:text-[#6D949D]">Status</div>
+              <div className="text-xs font-bold text-blue-600 dark:text-[#00E5FF] mt-1">
                 {normStatus}
               </div>
             </div>
-            <div className="rounded-xl p-3 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-              <div className="text-[10px] uppercase font-bold text-slate-400">Water Depth</div>
-              <div className="text-xs font-bold text-slate-800 dark:text-slate-100 mt-1">
+            <div className="rounded-xl p-3 bg-slate-50 dark:bg-[#10313E] border border-slate-100 dark:border-[rgba(94,183,201,0.16)]">
+              <div className="text-[10px] uppercase font-bold text-slate-400 dark:text-[#6D949D]">Water Depth</div>
+              <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-1">
                 {report.water_depth ? `${report.water_depth} cm` : "15–30 cm"}
               </div>
             </div>
@@ -1210,27 +1210,27 @@ function ReportDetailsModal({ report, onClose, onEnlarge }) {
           {/* Description */}
           {report.description && (
             <div>
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+              <div className="text-xs font-bold text-slate-400 dark:text-[#B2D2D9] uppercase tracking-wider mb-1">
                 Citizen Description
               </div>
-              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-white/5 p-3.5 rounded-xl border border-slate-100 dark:border-white/5">
+              <p className="text-sm text-slate-700 dark:text-[#F2FBFD] leading-relaxed bg-slate-50 dark:bg-[#10313E] p-3.5 rounded-xl border border-slate-100 dark:border-[rgba(94,183,201,0.16)]">
                 {report.description}
               </p>
             </div>
           )}
 
           {/* AI Verification Section */}
-          <div className="rounded-2xl p-4 bg-gradient-to-br from-blue-50/70 to-cyan-50/70 dark:from-blue-950/20 dark:to-cyan-950/20 border border-blue-100 dark:border-blue-900/30 flex items-center gap-4">
-            <div className="relative w-16 h-16 rounded-full bg-white dark:bg-slate-800 border-4 border-cyan-500 flex items-center justify-center shrink-0 shadow-inner">
-              <span className="text-sm font-extrabold text-slate-900 dark:text-white">
+          <div className="rounded-2xl p-4 bg-gradient-to-br from-blue-50/70 to-cyan-50/70 dark:from-[#0B2430] dark:to-[#10313E] border border-blue-100 dark:border-[rgba(94,183,201,0.16)] flex items-center gap-4">
+            <div className="relative w-16 h-16 rounded-full bg-white dark:bg-[#163F4E] border-4 border-cyan-500 dark:border-[#00E5FF] flex items-center justify-center shrink-0 shadow-inner">
+              <span className="text-sm font-extrabold text-slate-900 dark:text-[#F2FBFD]">
                 {confidence}%
               </span>
             </div>
             <div>
-              <div className="text-xs font-extrabold text-blue-900 dark:text-cyan-300">
+              <div className="text-xs font-extrabold text-blue-900 dark:text-[#00E5FF]">
                 AI Vision Verification
               </div>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-snug">
+              <p className="text-xs text-slate-600 dark:text-[#B2D2D9] mt-0.5 leading-snug">
                 {report.ai_verification_result || "Verified – Standing water identified from citizen photo telemetry."}
               </p>
             </div>
@@ -1239,12 +1239,12 @@ function ReportDetailsModal({ report, onClose, onEnlarge }) {
           {/* Verification Pipeline Timeline */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <div className="text-xs font-bold text-slate-400 dark:text-[#B2D2D9] uppercase tracking-wider">
                 Verification Pipeline
               </div>
               {(report.updated_at || report.updatedAt) && (
-                <div className="text-[11px] font-mono text-cyan-600 dark:text-cyan-400 font-semibold flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+                <div className="text-[11px] font-mono text-cyan-600 dark:text-[#00E5FF] font-semibold flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 dark:bg-[#00E5FF] animate-pulse" />
                   <span>Last Update: {formatTime(report.updated_at || report.updatedAt)}</span>
                 </div>
               )}
@@ -1258,20 +1258,20 @@ function ReportDetailsModal({ report, onClose, onEnlarge }) {
                     {i !== 0 && (
                       <div
                         className={`absolute top-4 right-1/2 w-full h-[2px] ${
-                          i <= currentStageIndex ? "bg-cyan-500" : "bg-slate-200 dark:bg-white/10"
+                          i <= currentStageIndex ? "bg-cyan-500 dark:bg-[#00E5FF]" : "bg-slate-200 dark:bg-[rgba(94,183,201,0.16)]"
                         }`}
                       />
                     )}
                     <div
                       className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs transition-all ${
                         isPassed
-                          ? "bg-cyan-500 border-cyan-500 text-white shadow-sm"
-                          : "bg-white dark:bg-slate-800 border-slate-300 dark:border-white/20 text-slate-400"
+                          ? "bg-cyan-500 dark:bg-[#00E5FF] border-cyan-500 dark:border-[#00E5FF] text-white dark:text-[#030F14] shadow-sm"
+                          : "bg-white dark:bg-[#10313E] border-slate-300 dark:border-[rgba(94,183,201,0.16)] text-slate-400 dark:text-[#6D949D]"
                       }`}
                     >
                       <StageIcon className="w-3.5 h-3.5" />
                     </div>
-                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 mt-2">
+                    <span className="text-[10px] font-bold text-slate-600 dark:text-[#B2D2D9] mt-2">
                       {stage.label}
                     </span>
                   </div>

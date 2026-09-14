@@ -21,6 +21,23 @@
     />
     <!-- Google Identity Services SDK -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Prevent theme flash on initial render -->
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('kwi_theme');
+          var systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var isDark = saved === 'dark' || (!saved && systemDark) || (saved === 'system' && systemDark);
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.style.colorScheme = 'dark';
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.style.colorScheme = 'light';
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
 
   <body class="antialiased selection:bg-sky-500/20 selection:text-sky-900">

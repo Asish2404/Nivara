@@ -791,28 +791,28 @@ export function CitizenReportingSection() {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full min-h-[920px] sm:min-h-[980px] py-16 sm:py-24 px-4 flex flex-col items-center justify-center border-t border-slate-200/60 bg-gradient-to-b from-[#f8fafc] via-[#f1f5f9] to-[#f8fafc] select-none scroll-smooth overflow-hidden"
+      className="relative w-full min-h-[920px] sm:min-h-[980px] py-16 sm:py-24 px-4 flex flex-col items-center justify-center border-t border-slate-200/60 dark:border-[rgba(94,183,201,0.16)] bg-gradient-to-b from-[#f8fafc] via-[#f1f5f9] to-[#f8fafc] dark:bg-[#0A1E3B] dark:from-[#0A1E3B] dark:via-[#0A1E3B] dark:to-[#0A1E3B] select-none scroll-smooth overflow-hidden transition-colors duration-300"
     >
       {/* ================================================================ */}
       {/* SOFT STUDIO LIGHTING & DIFFUSED AMBIENT BACKGROUND               */}
       {/* ================================================================ */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {/* Soft studio center spotlight behind phone */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[900px] h-[640px] rounded-full bg-gradient-to-tr from-sky-100/40 via-blue-50/50 to-slate-200/40 blur-[130px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[900px] h-[640px] rounded-full bg-gradient-to-tr from-sky-100/40 via-blue-50/50 to-slate-200/40 dark:from-[#0E2648]/40 dark:via-[#122F56]/25 dark:to-transparent blur-[130px]" />
         {/* Soft floor shadow anchor */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-[340px] sm:w-[440px] h-[36px] rounded-[100%] bg-slate-900/12 blur-2xl pointer-events-none" />
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-[340px] sm:w-[440px] h-[36px] rounded-[100%] bg-slate-900/12 dark:bg-black/40 blur-2xl pointer-events-none" />
       </div>
 
       {/* ================================================================ */}
       {/* SECTION HEADER: ONE-LINE BOLD PURPOSE STATEMENT                  */}
       {/* ================================================================ */}
       <div className="relative z-10 text-center max-w-3xl mx-auto mb-8 sm:mb-12 px-4">
-        <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-blue-600 font-mono block mb-2">
+        <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-blue-600 dark:text-[#20C5D8] font-mono block mb-2">
           CITIZEN REPORTING & AI VERIFICATION
         </span>
         <SplitText
           text="Report waterlogging in real time with instant AI verification and municipal dispatch."
-          className="text-2xl sm:text-4xl font-extrabold text-slate-950 tracking-tight leading-tight"
+          className="text-2xl sm:text-4xl font-extrabold text-slate-950 dark:text-[#F0F9FA] tracking-tight leading-tight"
           delay={50}
           duration={1.25}
           ease="power3.out"
@@ -2158,10 +2158,10 @@ export function CitizenReportingSection() {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={handleReplay3D}
-            className="mt-6 px-4 py-1.5 rounded-full bg-white/90 hover:bg-white text-slate-700 text-[11px] font-mono font-semibold flex items-center gap-2 transition-all shadow-xs border border-slate-200/90 cursor-pointer active:scale-95"
+            className="mt-6 px-4 py-1.5 rounded-full bg-white/90 dark:bg-[#0E2648] hover:bg-white dark:hover:bg-[#122F56] text-slate-700 dark:text-[#F2FBFD] text-[11px] font-mono font-semibold flex items-center gap-2 transition-all shadow-xs border border-slate-200/90 dark:border-[rgba(94,183,201,0.16)] cursor-pointer active:scale-95"
             title="Replay 720° 3D Turntable Rotation"
           >
-            <RotateCw className="w-3.5 h-3.5 text-blue-600" />
+            <RotateCw className="w-3.5 h-3.5 text-blue-600 dark:text-[#00E5FF]" />
             <span>Replay 720° 3D Rotation</span>
           </motion.button>
         )}

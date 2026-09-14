@@ -21,18 +21,18 @@ export function SubpageLayout({ children }) {
 
   return (
     <div
-      className={`relative w-full min-h-screen text-slate-900 flex flex-col justify-between font-sans selection:bg-cyan-100 selection:text-cyan-900 overflow-hidden ${
+      className={`relative w-full min-h-screen text-slate-900 dark:text-[#F2FBFD] flex flex-col justify-between font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-hidden ${
         isDashboardRoute
-          ? "bg-[#e8f1f8] dark:bg-[#070c14] dark:text-slate-100"
+          ? "bg-[#e8f1f8] dark:bg-[#0A1E3B]"
           : isProfileRoute
-            ? "bg-[#eef2f6] dark:bg-[#0b1220] dark:text-slate-100"
+            ? "bg-[#eef2f6] dark:bg-[#0A1E3B]"
             : isReportsRoute
-              ? "bg-white dark:bg-[#0f172a] dark:text-slate-100"
+              ? "bg-[#f4f7fb] dark:bg-[#0A1E3B]"
               : isSimulateRoute
-                ? "bg-[#e8f1f8] dark:bg-[#070c14] dark:text-slate-100"
+                ? "bg-[#e8f1f8] dark:bg-[#0A1E3B]"
                 : isRespondRoute
-                  ? "bg-[#060d19] text-slate-100"
-                  : "bg-white dark:bg-[#0f172a] dark:text-slate-100"
+                  ? "bg-[#edf4fa] dark:bg-[#0A1E3B]"
+                  : "bg-white dark:bg-[#0A1E3B]"
       }`}
     >
       {/* Ambient Top Radiant Glow & Micro-Grid for standard Subpages — hidden for simulate & respond */}

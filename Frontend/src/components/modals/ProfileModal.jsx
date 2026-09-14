@@ -94,8 +94,8 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 12 }}
         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-        className={`relative w-full max-w-lg rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(15,23,42,0.25)] border backdrop-blur-2xl z-10 font-sans ${isDarkMode
-          ? "bg-[#0b1220]/95 border-slate-700/80 text-white"
+        className={`relative w-full max-w-lg rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(3,15,20,0.85)] border backdrop-blur-2xl z-10 font-sans ${isDarkMode
+          ? "bg-[#061820]/98 border-[rgba(94,183,201,0.16)] text-[#F2FBFD]"
           : "bg-white/95 border-slate-200/90 text-slate-900"
           }`}
       >
@@ -107,7 +107,7 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
             onClose();
           }}
           className={`absolute top-5 right-5 p-2 rounded-xl border transition-colors cursor-pointer ${isDarkMode
-            ? "bg-slate-800/60 border-slate-700 text-slate-400 hover:text-white"
+            ? "bg-[#10313E] border-[rgba(94,183,201,0.16)] text-[#B2D2D9] hover:text-[#F2FBFD]"
             : "bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-900"
             }`}
           aria-label="Close modal"
@@ -117,29 +117,29 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
 
         {/* Modal Header */}
         <div className="mb-6">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold tracking-wider uppercase bg-[rgba(8,145,178,0.1)] text-[#0891B2] border border-[rgba(8,145,178,0.2)] mb-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#0891B2] animate-pulse" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold tracking-wider uppercase bg-[rgba(0,229,255,0.12)] text-[#00E5FF] border border-[rgba(0,229,255,0.25)] mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-pulse" />
             <span>Operator Profile</span>
           </div>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-['Space_Grotesk']">
+          <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-[#F2FBFD] font-['Space_Grotesk']">
             Account settings
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-[#B2D2D9] mt-1">
             Update your identity, personal details, and operator jurisdiction.
           </p>
         </div>
 
         {/* Photo Upload Section */}
-        <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 mb-6">
+        <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-2xl border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] bg-slate-50/70 dark:bg-[#0B2430]/70 mb-6">
           <div className="relative group shrink-0">
             {/* Spinning Conic Ring */}
             <div
-              className="w-18 h-18 rounded-full flex items-center justify-center relative p-[3px] shadow-[0_0_20px_-4px_rgba(8,145,178,0.4)]"
+              className="w-18 h-18 rounded-full flex items-center justify-center relative p-[3px] shadow-[0_0_20px_-4px_rgba(0,229,255,0.4)]"
               style={{
-                background: "conic-gradient(from 0deg, #22D3EE, #2563EB, #22D3EE)",
+                background: "conic-gradient(from 0deg, #00E5FF, #38BDF8, #00E5FF)",
               }}
             >
-              <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-slate-900 flex items-center justify-center">
+              <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#061820] flex items-center justify-center">
                 {avatarPreview ? (
                   <img
                     src={avatarPreview}
@@ -147,7 +147,7 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="font-['Space_Grotesk'] font-bold text-xl text-[#0891B2]">
+                  <span className="font-['Space_Grotesk'] font-bold text-xl text-[#00E5FF]">
                     {userInitial}
                   </span>
                 )}
@@ -157,7 +157,7 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-[#0891B2] shadow-md hover:scale-105 transition-transform cursor-pointer"
+              className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-white dark:bg-[#10313E] border border-slate-300 dark:border-[rgba(94,183,201,0.2)] text-[#00E5FF] shadow-md hover:scale-105 transition-transform cursor-pointer"
               title="Upload new picture"
             >
               <Camera className="w-3 h-3" />
@@ -165,10 +165,10 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
           </div>
 
           <div className="flex-1 text-center sm:text-left">
-            <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
+            <h4 className="text-sm font-semibold text-slate-900 dark:text-[#F2FBFD]">
               Profile photo
             </h4>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-[11px] text-slate-500 dark:text-[#6D949D] mt-0.5">
               JPG, PNG, or GIF up to 5MB.
             </p>
 
@@ -176,7 +176,7 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 cursor-pointer shadow-xs transition-colors"
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-[#10313E] border border-slate-200 dark:border-[rgba(94,183,201,0.2)] text-slate-700 dark:text-[#F2FBFD] hover:bg-slate-50 dark:hover:bg-[#163F4E] cursor-pointer shadow-xs transition-colors"
               >
                 Change photo
               </button>
@@ -208,19 +208,19 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
         <form onSubmit={handleSave} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-[#B2D2D9] mb-1.5">
                 Display name
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0891B2]" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00E5FF]" />
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Asish Bose"
                   required
-                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#0891B2]/20 transition-all ${isDarkMode
-                    ? "bg-slate-900 border-slate-700 text-white focus:border-[#0891B2]"
+                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#00E5FF]/20 transition-all ${isDarkMode
+                    ? "bg-[#10313E] border-[rgba(94,183,201,0.16)] text-[#F2FBFD] placeholder-[#6D949D] focus:border-[#00E5FF]"
                     : "bg-white border-slate-200 text-slate-900 focus:border-[#0891B2]"
                     }`}
                 />
@@ -228,19 +228,19 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-[#B2D2D9] mb-1.5">
                 Organization
               </label>
               <div className="relative">
-                <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0891B2]" />
+                <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00E5FF]" />
                 <input
                   type="text"
                   value={org}
                   onChange={(e) => setOrg(e.target.value)}
                   placeholder="NIVARA"
                   required
-                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#0891B2]/20 transition-all ${isDarkMode
-                    ? "bg-slate-900 border-slate-700 text-white focus:border-[#0891B2]"
+                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#00E5FF]/20 transition-all ${isDarkMode
+                    ? "bg-[#10313E] border-[rgba(94,183,201,0.16)] text-[#F2FBFD] placeholder-[#6D949D] focus:border-[#00E5FF]"
                     : "bg-white border-slate-200 text-slate-900 focus:border-[#0891B2]"
                     }`}
                 />
@@ -250,18 +250,18 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-[#B2D2D9] mb-1.5">
                 Email address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0891B2]" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00E5FF]" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="asishbose313@gmail.com"
-                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#0891B2]/20 transition-all ${isDarkMode
-                    ? "bg-slate-900 border-slate-700 text-white focus:border-[#0891B2]"
+                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#00E5FF]/20 transition-all ${isDarkMode
+                    ? "bg-[#10313E] border-[rgba(94,183,201,0.16)] text-[#F2FBFD] placeholder-[#6D949D] focus:border-[#00E5FF]"
                     : "bg-white border-slate-200 text-slate-900 focus:border-[#0891B2]"
                     }`}
                 />
@@ -269,18 +269,18 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-[#B2D2D9] mb-1.5">
                 Location / Ward
               </label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0891B2]" />
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00E5FF]" />
                 <input
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="Kolkata, Sector V"
-                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#0891B2]/20 transition-all ${isDarkMode
-                    ? "bg-slate-900 border-slate-700 text-white focus:border-[#0891B2]"
+                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-[#00E5FF]/20 transition-all ${isDarkMode
+                    ? "bg-[#10313E] border-[rgba(94,183,201,0.16)] text-[#F2FBFD] placeholder-[#6D949D] focus:border-[#00E5FF]"
                     : "bg-white border-slate-200 text-slate-900 focus:border-[#0891B2]"
                     }`}
                 />
@@ -295,7 +295,7 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
-                className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold"
+                className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-[#35D39E] text-xs font-semibold"
               >
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
                 <span>Profile updated and synchronized successfully!</span>
@@ -304,12 +304,12 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
           </AnimatePresence>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800 mt-5">
+          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-[rgba(94,183,201,0.16)] mt-5">
             <button
               type="button"
               onClick={onClose}
               className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${isDarkMode
-                ? "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
+                ? "bg-[#10313E] border-[rgba(94,183,201,0.16)] text-[#B2D2D9] hover:bg-[#163F4E]"
                 : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
                 }`}
             >
@@ -318,7 +318,7 @@ export function ProfileModal({ isOpen, onClose, isDarkMode }) {
 
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#22D3EE] to-[#0891B2] text-white text-xs font-semibold hover:brightness-105 transition-all shadow-[0_4px_16px_rgba(8,145,178,0.35)] cursor-pointer"
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#00E5FF] to-[#0284c7] text-[#030F14] text-xs font-bold hover:brightness-105 transition-all shadow-[0_4px_16px_rgba(0,229,255,0.35)] cursor-pointer"
             >
               Save changes
             </button>
