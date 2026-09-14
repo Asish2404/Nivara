@@ -285,6 +285,23 @@ class WeatherService:
             if age_seconds < cls.CACHE_TTL_SECONDS:
                 logger.info("Serving live weather from in-memory cache (age: %.1fs, fresh within 15m TTL)", age_seconds)
                 return cls._cached_live_df, "live_api"
+        # 2. Check disk snapshot to avoid unnecessary API calls and disk writes on server startup
+        if not force_refresh and CACHED_FORECAST_FILE.exists():
+            try:
+                cached_df = pd.read_csv(CACHED_FORECAST_FILE)
+                if not cached_df.empty and len(cached_df) >= len(locations_df) * 0.9:
+                    cls._cached_live_df = cached_df
+                    try:
+                        cls._cached_timestamp = CACHED_FORECAST_FILE.stat().st_mtime
+                    except Exception:
+                        cls._cached_timestamp = now_ts
+                    logger.info(
+                        "Serving weather from existing disk snapshot (%d records) without querying live API.",
+                        len(cached_df),
+                    )
+                    return cached_df, "cached_snapshot"
+            except Exception as exc:
+                logger.warning("Could not read existing disk forecast snapshot: %s. Fetching fresh data.", exc)
 
         logger.info("Connecting to Open-Meteo API for real-time weather observations (%d locations)...", len(locations_df))
         try:

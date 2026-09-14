@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
@@ -9,42 +9,12 @@ import {
 } from "lucide-react";
 
 import { useKWIStore } from "../../store/useKWIStore";
-import { ACTIVE_INCIDENTS } from "../gis/kolkataCartographicData";
+import { aggregateIncidentsFromReports } from "../../utils/incidentAggregator";
 import { audioEngine } from "../../utils/audioEngine";
 import { BorderBeam } from "../ui/BorderBeam";
 
 import AnimatedContent from "../ui/AnimatedContent";
 import FadeContent from "../ui/FadeContent";
-
-// Priority Rank: CRITICAL > HIGH > MODERATE > MONITORING
-const getSeverityRank = (s) => {
-  const sev = (s || "").toUpperCase();
-
-  if (sev === "CRITICAL") return 4;
-  if (sev === "HIGH") return 3;
-  if (sev === "MODERATE") return 2;
-  if (sev === "MONITORING") return 1;
-
-  return 0;
-};
-
-// Numeric parser for riskScore (e.g. "89 / 100" -> 89)
-const getRiskScoreNum = (score) => {
-  if (!score) return 0;
-
-  const num = parseInt(score, 10);
-
-  return isNaN(num) ? 0 : num;
-};
-
-// Numeric parser for water depth (e.g. "28.4 cm" -> 28.4)
-const getWaterDepthNum = (depth) => {
-  if (!depth) return 0;
-
-  const num = parseFloat(depth);
-
-  return isNaN(num) ? 0 : num;
-};
 
 // Visual & Animation Configurations Per Severity
 const SEVERITY_CONFIG = {
@@ -83,6 +53,28 @@ const SEVERITY_CONFIG = {
     hasScanLine: false,
   },
 
+  MEDIUM: {
+    label: "MODERATE",
+    dotClass: "bg-amber-500",
+    badgeClass:
+      "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200/80 dark:border-amber-500/20",
+    accentBorder:
+      "hover:border-sky-400 dark:hover:border-sky-400",
+    glowColor: "rgba(245, 158, 11, 0.08)",
+    hasScanLine: false,
+  },
+
+  LOW: {
+    label: "LOW",
+    dotClass: "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]",
+    badgeClass:
+      "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200/80 dark:border-emerald-500/20",
+    accentBorder:
+      "hover:border-sky-400 dark:hover:border-sky-400",
+    glowColor: "rgba(16, 185, 129, 0.08)",
+    hasScanLine: false,
+  },
+
   MONITORING: {
     label: "MONITORING",
     dotClass: "bg-cyan-500",
@@ -97,6 +89,9 @@ const SEVERITY_CONFIG = {
 
 export function LiveIncidentIntelligenceSection() {
   const {
+    allReports,
+    myReports,
+    fetchAllReports,
     setSelectedIncident,
     setHoveredIncidentId,
     navigate,
@@ -104,35 +99,30 @@ export function LiveIncidentIntelligenceSection() {
 
   const [showAll, setShowAll] = useState(false);
 
-  // Dynamic Data Source: Sort existing Intelligence ACTIVE_INCIDENTS by priority rule
+  // Load municipal reports on mount
+  useEffect(() => {
+    fetchAllReports?.().catch(() => {});
+  }, [fetchAllReports]);
+
+  // Merge server and local citizen reports
+  const combinedReports = useMemo(() => {
+    return [
+      ...(allReports || []),
+      ...(myReports || []).filter(
+        (mr) => !(allReports || []).some((ar) => ar.report_id === mr.report_id)
+      ),
+    ];
+  }, [allReports, myReports]);
+
+  // Dynamically derive active incidents exclusively from citizen reports in reports table
+  // Strictly sorted: Critical -> High -> Moderate -> Low -> Monitoring, then report count desc
   const sortedIncidents = useMemo(() => {
-    return [...ACTIVE_INCIDENTS].sort((a, b) => {
-      const rankDiff =
-        getSeverityRank(b.severity) -
-        getSeverityRank(a.severity);
-
-      if (rankDiff !== 0) return rankDiff;
-
-      const scoreDiff =
-        getRiskScoreNum(b.riskScore) -
-        getRiskScoreNum(a.riskScore);
-
-      if (scoreDiff !== 0) return scoreDiff;
-
-      return (
-        getWaterDepthNum(b.waterDepth) -
-        getWaterDepthNum(a.waterDepth)
-      );
-    });
-  }, []);
+    return aggregateIncidentsFromReports(combinedReports);
+  }, [combinedReports]);
 
   // Dynamically calculated active incidents count
   const activeCount = useMemo(() => {
-    return sortedIncidents.filter(
-      (i) =>
-        i.severity !== "MONITORING" ||
-        i.status !== "Resolved"
-    ).length;
+    return sortedIncidents.length;
   }, [sortedIncidents]);
 
   const formattedActiveCount =
@@ -140,12 +130,13 @@ export function LiveIncidentIntelligenceSection() {
       ? `0${activeCount}`
       : `${activeCount}`;
 
-  // Visible incidents: initial 3 vs all
+  // Visible incidents: default 6 (matching 3x2 grid) vs all
+  const INITIAL_VISIBLE = 6;
   const visibleIncidents = showAll
     ? sortedIncidents
-    : sortedIncidents.slice(0, 3);
+    : sortedIncidents.slice(0, INITIAL_VISIBLE);
 
-  const hasMore = sortedIncidents.length > 3;
+  const hasMore = sortedIncidents.length > INITIAL_VISIBLE;
 
   const handleInspect = (incident) => {
     audioEngine.playUiChirp(1050);
@@ -221,10 +212,14 @@ export function LiveIncidentIntelligenceSection() {
 
             const isDepthPending =
               incident.waterDepth === "Pending" ||
-              !incident.waterDepth;
+              !incident.waterDepth ||
+              incident.waterDepth === "Telemetry Pending" ||
+              incident.waterDepth === "0 cm water depth";
 
             const displayDepth = isDepthPending
               ? "Telemetry Pending"
+              : String(incident.waterDepth).includes("water depth")
+              ? incident.waterDepth
               : `${incident.waterDepth} water depth`;
 
             const reportCount =

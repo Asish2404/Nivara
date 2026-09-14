@@ -227,6 +227,31 @@ class ReportService:
         return reports
 
     @classmethod
+    async def get_all_reports(cls, db: AsyncSession, limit: int = 300) -> List[Report]:
+        """Return all municipal reports across the city (newest first), applying status aging."""
+        result = await db.execute(
+            select(Report).order_by(Report.submitted_at.desc()).limit(limit)
+        )
+        reports = list(result.scalars().all())
+
+        now = get_current_time()
+        changed = False
+        for report in reports:
+            before = (report.status, report.updated_at)
+            cls._apply_aging(report, now)
+            if (report.status, report.updated_at) != before:
+                changed = True
+
+        if changed:
+            await db.commit()
+
+        for report in reports:
+            report.submitted_at = ensure_kolkata_tz(report.submitted_at)
+            report.updated_at = ensure_kolkata_tz(report.updated_at)
+
+        return reports
+
+    @classmethod
     async def get_user_report(
         cls, db: AsyncSession, user_id: str, report_id: str
     ) -> Report:

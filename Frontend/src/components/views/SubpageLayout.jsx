@@ -26,7 +26,7 @@ export function SubpageLayout({ children }) {
             : isSimulateRoute
               ? "bg-white dark:bg-[#0f172a] dark:text-slate-100"
               : isRespondRoute
-                ? "bg-[#edf4fa] dark:bg-[#0b1220] dark:text-slate-100"
+                ? "bg-[#060d19] text-slate-100"
                 : "bg-white dark:bg-[#0f172a] dark:text-slate-100"
       }`}
     >

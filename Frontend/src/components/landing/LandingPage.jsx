@@ -202,6 +202,7 @@ export function LandingPage() {
     navigate,
     currentUser,
     setSelectedIncident,
+    incidents,
   } = useKWIStore();
   const isAdmin = isUserAdmin(currentUser);
   const isCitizenUser = Boolean(currentUser && !isAdmin);
@@ -210,7 +211,8 @@ export function LandingPage() {
   const howItWorksRef = useRef(null);
 
   // Hotspot Accordion Gallery Items preserving exact incident data & functionality
-  const hotspotGalleryItems = ACTIVE_INCIDENTS.map((inc, index) => ({
+  const effectiveIncidents = incidents && incidents.length > 0 ? incidents : ACTIVE_INCIDENTS;
+  const hotspotGalleryItems = effectiveIncidents.map((inc, index) => ({
     id: inc.id,
     name: inc.name,
     label: inc.location,

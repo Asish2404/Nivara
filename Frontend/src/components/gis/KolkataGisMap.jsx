@@ -479,8 +479,16 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
 
       // 1. ACTIVE WATERLOGGING INCIDENTS
       if (activeLayers.incidents) {
-        ACTIVE_INCIDENTS.forEach((inc) => {
-          const coords = kmToGeoCoord(inc.x, inc.y);
+        const incidentsToRender =
+          store.incidents && store.incidents.length > 0
+            ? store.incidents
+            : ACTIVE_INCIDENTS;
+
+        incidentsToRender.forEach((inc) => {
+          const coords =
+            inc.longitude && inc.latitude
+              ? [inc.longitude, inc.latitude]
+              : kmToGeoCoord(inc.x || 0, inc.y || 0);
           const isCritical = inc.severity === "CRITICAL" || inc.severity === "HIGH";
 
           const el = document.createElement("div");
