@@ -22,6 +22,7 @@ class LocalityPredictionResponse(BaseModel):
     impact_score: float = Field(..., ge=0.0, le=1.0)
     priority_score: float = Field(..., ge=0.0, le=1.0)
     risk_level: str  # LOW, MEDIUM, HIGH
+    status: Optional[str] = "ACTIVE"
 
     model_version: str = "waterlogging-baseline-v1"
     prediction_timestamp: Optional[datetime] = None
@@ -57,3 +58,20 @@ class PredictionRefreshResponse(BaseModel):
     locations_processed: int
     data_source: str
     prediction_timestamp: str
+
+
+class ManualRefreshAcceptedResponse(BaseModel):
+    status: str = "accepted"
+    job_id: str
+    message: Optional[str] = "Waterlogging prediction cycle accepted."
+
+
+class PredictionRefreshStatusResponse(BaseModel):
+    last_update_ts: Optional[str] = None
+    next_auto_ts: Optional[str] = None
+    auto_job_in_progress: bool = False
+    cooldown_active: bool = False
+    next_available_at: Optional[str] = None
+    message: str = ""
+
+    model_config = ConfigDict(protected_namespaces=())

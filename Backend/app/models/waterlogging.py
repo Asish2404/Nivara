@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Float, DateTime, Index
+from sqlalchemy import Column, String, Float, DateTime, Index, Boolean
 from app.core.database import Base
 from app.core.datetime_utils import utc_now
 
@@ -35,6 +35,7 @@ class WaterloggingPrediction(Base):
     impact_score = Column(Float, nullable=False)
     priority_score = Column(Float, nullable=False, index=True)
     risk_level = Column(String(16), nullable=False, index=True)  # LOW, MEDIUM, HIGH
+    status = Column(String(32), default="ACTIVE", nullable=True)  # ACTIVE, MONITORING, RESOLVED
 
     model_version = Column(String(64), default="waterlogging-baseline-v1", nullable=False)
 

@@ -48,13 +48,19 @@ async function request(path, { method = "GET", body, token } = {}) {
 
   if (!res.ok) {
     let detail = res.statusText;
+    let parsedData = null;
     try {
-      const err = await res.json();
-      if (err && err.detail) detail = err.detail;
+      parsedData = await res.json();
+      if (parsedData && parsedData.detail) detail = parsedData.detail;
+      else if (parsedData && parsedData.message) detail = parsedData.message;
+      else if (parsedData) detail = parsedData;
     } catch {
       /* ignore parse failures */
     }
-    throw new Error(formatApiErrorMessage(detail, res.statusText));
+    const err = new Error(formatApiErrorMessage(detail, res.statusText));
+    err.status = res.status;
+    err.data = parsedData;
+    throw err;
   }
 
   const contentType = res.headers.get("content-type") || "";

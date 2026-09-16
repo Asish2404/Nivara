@@ -17,7 +17,7 @@ import {
   kmToGeoCoord,
   KOLKATA_CENTER_GEO,
 } from "./kolkataCartographicData";
-import { useKWIStore } from "../../store/useKWIStore";
+import { useKWIStore, isUserAdmin } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
 import {
   Layers,
@@ -38,6 +38,7 @@ import {
   SlidersHorizontal,
   Clock,
   Waves,
+  RefreshCw,
 } from "lucide-react";
 
 // Professional GIS Basemap Styles for Kolkata
@@ -109,9 +110,16 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
   const [showLayerMenu, setShowLayerMenu] = useState(false);
   const [timelineStep, setTimelineStep] = useState(0); // 0, 15, 30, 45, 60 mins
   const [simulateState, setSimulateState] = useState(null); // null | 'BEFORE' | 'AFTER'
+  const [activeSeverityFilter, setActiveSeverityFilter] = useState("ALL"); // "ALL" | "CRITICAL" | "HIGH" | "MODERATE" | "LOW"
+
+  const handleFilterSelect = useCallback((filterKey) => {
+    audioEngine.playUiChirp(1150);
+    setActiveSeverityFilter((prev) => (prev === filterKey && filterKey !== "ALL" ? "ALL" : filterKey));
+  }, []);
 
   // Internal layer toggles
   const store = useKWIStore();
+  const isAdmin = isUserAdmin(store.currentUser);
   const [layerVisibility, setLayerVisibility] = useState({
     canals: true,
     drainage: true,
@@ -152,6 +160,79 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
   const selectedIncident = store.selectedIncident;
   const selectedRiskZone = store.selectedRiskZone;
   const selectedPumpStation = store.selectedPumpStation;
+
+  // Waterlogging Prediction Run & Cooldown States
+  const [cooldownRemaining, setCooldownRemaining] = useState(null);
+  const [cooldownMessage, setCooldownMessage] = useState(null);
+  const [showCooldownBadge, setShowCooldownBadge] = useState(false);
+  const [runSuccessNotice, setRunSuccessNotice] = useState(false);
+
+  // Initial Prediction & Cooldown Load (Cooldown status checked for Admin only)
+  useEffect(() => {
+    if (!store.waterloggingPredictions || store.waterloggingPredictions.length === 0) {
+      store.fetchPredictions();
+    }
+    if (isAdmin) {
+      store.fetchPredictionRefreshStatus().then((status) => {
+        if (status && status.cooldown_active && status.next_available_at) {
+          const ms = new Date(status.next_available_at).getTime() - Date.now();
+          if (ms > 0) {
+            setCooldownRemaining(Math.floor(ms / 1000));
+          }
+        }
+      });
+    }
+  }, [isAdmin]);
+
+  // Cooldown countdown tick effect
+  useEffect(() => {
+    if (cooldownRemaining === null || cooldownRemaining <= 0) return;
+    const timer = setInterval(() => {
+      setCooldownRemaining((prev) => {
+        if (prev <= 1) {
+          setShowCooldownBadge(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldownRemaining]);
+
+  const formatCountdown = (totalSec) => {
+    if (!totalSec || totalSec <= 0) return "00:00:00";
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
+
+  const handleRunPrediction = async () => {
+    if (!isAdmin) return;
+    audioEngine.playUiChirp(1150);
+    if (cooldownRemaining && cooldownRemaining > 0) {
+      setShowCooldownBadge(true);
+      return;
+    }
+    const res = await store.triggerPredictionRefresh();
+    if (res.success) {
+      setRunSuccessNotice(true);
+      setShowCooldownBadge(false);
+      setTimeout(() => setRunSuccessNotice(false), 4000);
+    } else if (res.cooldownActive && res.nextAvailableAt) {
+      const msUntil = new Date(res.nextAvailableAt).getTime() - Date.now();
+      const sec = Math.max(0, Math.floor(msUntil / 1000));
+      setCooldownRemaining(sec);
+      setCooldownMessage(res.message || "Cooldown Active");
+      setShowCooldownBadge(true);
+    } else if (res.autoInProgress) {
+      setCooldownMessage("Auto update in progress, please try later.");
+      setShowCooldownBadge(true);
+    } else {
+      setCooldownMessage(res.message || "Refresh rejected");
+      setShowCooldownBadge(true);
+    }
+  };
 
   // Toggle individual layers locally
   const toggleLocalLayer = (key) => {
@@ -477,46 +558,106 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       markersRef.current = [];
       incidentMarkerMapRef.current = {};
 
-      // 1. ACTIVE WATERLOGGING INCIDENTS
+      // 1. ACTIVE WATERLOGGING PREDICTIONS & INCIDENTS
       if (activeLayers.incidents) {
-        const incidentsToRender =
-          store.incidents && store.incidents.length > 0
-            ? store.incidents
-            : ACTIVE_INCIDENTS;
+        const hasPredictions = store.waterloggingPredictions && store.waterloggingPredictions.length > 0;
+        const allIncidents = hasPredictions
+          ? store.waterloggingPredictions
+          : (store.incidents && store.incidents.length > 0 ? store.incidents : ACTIVE_INCIDENTS);
+
+        const incidentsToRender = allIncidents.filter((inc) => {
+          if (!activeSeverityFilter || activeSeverityFilter === "ALL") return true;
+
+          const isPred = inc.severity_score !== undefined;
+          const isCritical = isPred
+            ? (inc.risk_level === "HIGH" || inc.severity_score >= 0.65)
+            : (inc.severity === "CRITICAL" || inc.severity === "HIGH");
+
+          const isMedium = isPred
+            ? (inc.risk_level === "MEDIUM" || (inc.severity_score >= 0.35 && inc.severity_score < 0.65))
+            : (inc.severity === "MEDIUM");
+
+          const dotColor = isCritical ? "#ef4444" : (isMedium ? "#f59e0b" : "#10b981");
+
+          if (activeSeverityFilter === "CRITICAL") {
+            return dotColor === "#ef4444" || inc.severity === "CRITICAL" || inc.risk_level === "CRITICAL";
+          }
+          if (activeSeverityFilter === "HIGH") {
+            return dotColor === "#f97316" || inc.severity === "HIGH" || (dotColor !== "#ef4444" && inc.risk_level === "HIGH");
+          }
+          if (activeSeverityFilter === "MODERATE") {
+            return dotColor === "#eab308" || dotColor === "#f59e0b" || inc.severity === "MODERATE" || (!isCritical && isMedium);
+          }
+          if (activeSeverityFilter === "LOW") {
+            return dotColor === "#22c55e" || dotColor === "#10b981" || inc.severity === "LOW" || (!isCritical && !isMedium);
+          }
+          return true;
+        });
 
         incidentsToRender.forEach((inc) => {
+          const isPred = inc.severity_score !== undefined;
           const coords =
             inc.longitude && inc.latitude
               ? [inc.longitude, inc.latitude]
               : kmToGeoCoord(inc.x || 0, inc.y || 0);
-          const isCritical = inc.severity === "CRITICAL" || inc.severity === "HIGH";
+
+          const isCritical = isPred
+            ? (inc.risk_level === "HIGH" || inc.severity_score >= 0.65)
+            : (inc.severity === "CRITICAL" || inc.severity === "HIGH");
+
+          const isMedium = isPred
+            ? (inc.risk_level === "MEDIUM" || (inc.severity_score >= 0.35 && inc.severity_score < 0.65))
+            : (inc.severity === "MEDIUM");
+
+          const dotColor = isCritical ? "#ef4444" : (isMedium ? "#f59e0b" : "#10b981");
+          const rippleColor = isCritical
+            ? "rgba(239, 68, 68, 0.75)"
+            : (isMedium ? "rgba(245, 158, 11, 0.7)" : "rgba(16, 185, 129, 0.6)");
+
+          const tagText = isPred
+            ? `Sev ${(inc.severity_score * 100).toFixed(0)}% · Prio ${(inc.priority_score * 100).toFixed(0)}%`
+            : (inc.waterDepth || "Active Hotspot");
+
+          const titleText = isPred
+            ? `${inc.locality}: Severity ${(inc.severity_score * 100).toFixed(0)}%, Priority ${(inc.priority_score * 100).toFixed(0)}% [${inc.risk_level}]`
+            : `${inc.name}: ${inc.waterDepth}`;
 
           const el = document.createElement("div");
           el.className = "cursor-pointer group relative flex items-center justify-center transition-transform duration-300 kwi-incident-marker";
           el.setAttribute("data-cursor", "incident");
-          el.setAttribute("data-incident-id", inc.id);
-          el.setAttribute("title", `${inc.name}: ${inc.waterDepth}`);
+          el.setAttribute("data-incident-id", inc.id || inc.locality);
+          el.setAttribute("title", titleText);
           el.innerHTML = `
             <div class="kwi-incident-marker-body" style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
               <!-- Outer radar pulse ripple -->
-              <span class="kwi-incident-ripple" style="position: absolute; inset: 0; border-radius: 9999px; background-color: ${isCritical ? "rgba(244, 63, 94, 0.75)" : "rgba(245, 158, 11, 0.7)"
-            }; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+              <span class="kwi-incident-ripple" style="position: absolute; inset: 0; border-radius: 9999px; background-color: ${rippleColor}; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
               
               <!-- Center solid badge -->
-              <span class="kwi-incident-dot" style="position: relative; width: 15px; height: 15px; border-radius: 9999px; background-color: ${isCritical ? "#e11d48" : "#d97706"
-            }; border: 2.5px solid #ffffff; box-shadow: 0 0 12px rgba(0,0,0,0.6); transition: all 0.3s ease;"></span>
-              
-              <!-- Floating Depth Tag -->
-              <div class="kwi-incident-tag" style="position: absolute; top: -20px; background: rgba(15,23,42,0.92); color: #ffffff; font-size: 9.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 5px; white-space: nowrap; border: 1px solid rgba(255,255,255,0.25); font-family: monospace; letter-spacing: -0.02em; pointer-events: none; box-shadow: 0 2px 6px rgba(0,0,0,0.3); transition: all 0.25s ease;">
-                ${inc.waterDepth}
-              </div>
+              <span class="kwi-incident-dot" style="position: relative; width: 15px; height: 15px; border-radius: 9999px; background-color: ${dotColor}; border: 2.5px solid #ffffff; box-shadow: 0 0 12px rgba(0,0,0,0.6); transition: all 0.3s ease;"></span>
             </div>
           `;
 
           el.addEventListener("click", (e) => {
             e.stopPropagation();
             audioEngine.playUiChirp(1200);
-            store.setSelectedIncident(inc);
+
+            const selectedData = isPred ? {
+              id: inc.id,
+              name: inc.locality,
+              location: `${inc.locality}${inc.ward ? ` (Ward ${inc.ward})` : ""}`,
+              subdivision: inc.ulb_name || inc.district || "KMC METROPOLITAN",
+              severity: inc.risk_level,
+              waterDepth: `Sev: ${(inc.severity_score * 100).toFixed(0)}%`,
+              rainfall: `${inc.forecast_rain_24h_mm || 0} mm / 24h`,
+              verifiedReports: `Priority Score: ${(inc.priority_score * 100).toFixed(0)}%`,
+              probability: `${(inc.waterlogging_probability * 100).toFixed(0)}%`,
+              status: inc.status || "ACTIVE",
+              timestamp: "Waterlogging Prediction Intelligence",
+              latitude: inc.latitude,
+              longitude: inc.longitude,
+            } : inc;
+
+            store.setSelectedIncident(selectedData);
             map.flyTo({
               center: coords,
               zoom: 14.5,
@@ -530,7 +671,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
             .addTo(map);
 
           markersRef.current.push(marker);
-          incidentMarkerMapRef.current[inc.id] = { marker, el, inc };
+          incidentMarkerMapRef.current[inc.id || inc.locality] = { marker, el, inc };
         });
       }
 
@@ -649,7 +790,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
         });
       }
     },
-    [activeLayers.incidents, activeLayers.pumps, activeLayers.landmarks, activeLayers.drainage, is3DMode]
+    [activeLayers.incidents, activeLayers.pumps, activeLayers.landmarks, activeLayers.drainage, is3DMode, store.waterloggingPredictions, activeSeverityFilter]
   );
 
   // -------------------------------------------------------------
@@ -1169,35 +1310,104 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* Bottom Center: 0-60 Minute AI Spread Timeline Scrubber */}
+      {/* Bottom Center: AI Spread Timeline Scrubber + Run Button */}
       {/* ------------------------------------------------------------- */}
-      {activeLayers.spread && !simulateState && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
-          <div className="flex items-center gap-1 sm:gap-2 px-3 py-1.5 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-cyan-500/30 text-white shadow-2xl">
-            <div className="flex items-center gap-1.5 pr-2 border-r border-white/15 text-cyan-400 font-mono text-[11px] font-bold uppercase">
-              <Clock className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">AI Spread:</span>
-            </div>
-            {[0, 15, 30, 45, 60].map((mins) => {
-              const active = timelineStep === mins;
-              return (
-                <button
-                  key={mins}
-                  type="button"
-                  onClick={() => {
-                    setTimelineStep(mins);
-                    audioEngine.playUiChirp(800 + mins * 10);
-                  }}
-                  className={`px-2.5 py-1 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer ${active
-                    ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_12px_rgba(6,182,212,0.5)] border border-cyan-300/40"
-                    : "text-slate-400 hover:text-white hover:bg-white/10"
+      {!simulateState && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex items-center gap-2 max-w-[96vw]">
+          {/* AI Spread Full Bar */}
+          {activeLayers.spread && (
+            <div className="flex items-center gap-1 sm:gap-2 px-3 py-1.5 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-cyan-500/30 text-white shadow-2xl">
+              <div className="flex items-center gap-1.5 pr-2 border-r border-white/15 text-cyan-400 font-mono text-[11px] font-bold uppercase">
+                <Clock className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">AI Spread:</span>
+              </div>
+              {[0, 15, 30, 45, 60].map((mins) => {
+                const active = timelineStep === mins;
+                return (
+                  <button
+                    key={mins}
+                    type="button"
+                    onClick={() => {
+                      setTimelineStep(mins);
+                      audioEngine.playUiChirp(800 + mins * 10);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer ${
+                      active
+                        ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_12px_rgba(6,182,212,0.5)] border border-cyan-300/40"
+                        : "text-slate-400 hover:text-white hover:bg-white/10"
                     }`}
-                >
-                  {mins === 0 ? "NOW" : `+${mins}m`}
-                </button>
-              );
-            })}
-          </div>
+                  >
+                    {mins === 0 ? "NOW" : `+${mins}m`}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Manual Run Prediction Button & Dynamic Cooldown Tooltip (Admin Only) */}
+          {isAdmin && (
+            <div className="relative flex items-center">
+              {/* Inline Dynamic Cooldown Tooltip Pill (Appears only when clicked or active in cooldown) */}
+              {showCooldownBadge && (
+                <div className="absolute -top-11 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 z-30 px-3 py-1.5 rounded-xl bg-slate-950/95 backdrop-blur-xl border border-amber-500/60 text-amber-300 text-[11px] font-mono font-bold shadow-2xl flex items-center gap-2 whitespace-nowrap animate-in fade-in zoom-in-95">
+                  <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse shrink-0" />
+                  <span>
+                    {cooldownRemaining && cooldownRemaining > 0
+                      ? `Cooldown: ${formatCountdown(cooldownRemaining)}`
+                      : (cooldownMessage || "Cooldown Active")}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowCooldownBadge(false)}
+                    className="text-slate-400 hover:text-white ml-1 cursor-pointer"
+                    title="Dismiss"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+
+              {/* Run Success Temporary Notification Pill */}
+              {runSuccessNotice && (
+                <div className="absolute -top-11 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 z-30 px-3 py-1.5 rounded-xl bg-emerald-950/95 backdrop-blur-xl border border-emerald-400/60 text-emerald-300 text-[11px] font-mono font-bold shadow-2xl flex items-center gap-1.5 whitespace-nowrap animate-in fade-in zoom-in-95">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Prediction Queued</span>
+                </div>
+              )}
+
+              {/* Run Action Button */}
+              <button
+                type="button"
+                id="kwi-run-prediction-btn"
+                onClick={handleRunPrediction}
+                disabled={store.isRefreshingPredictions}
+                className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-2xl font-mono text-xs font-bold transition-all cursor-pointer shadow-2xl backdrop-blur-xl border ${
+                  store.isRefreshingPredictions
+                    ? "bg-slate-800 text-cyan-300 border-cyan-500/40 opacity-80 cursor-wait"
+                    : cooldownRemaining && cooldownRemaining > 0
+                    ? "bg-slate-900/95 hover:bg-slate-800/95 text-amber-400 border-amber-500/40 hover:border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.2)] active:scale-95"
+                    : "bg-gradient-to-r from-cyan-500 via-blue-600 to-teal-500 hover:from-cyan-400 hover:to-blue-500 text-white border-cyan-300/50 shadow-[0_0_16px_rgba(6,182,212,0.4)] active:scale-95"
+                }`}
+                title={
+                  cooldownRemaining && cooldownRemaining > 0
+                    ? `Cooldown Active (${formatCountdown(cooldownRemaining)}) - Click for status`
+                    : "Run Waterlogging Prediction Update"
+                }
+              >
+                {store.isRefreshingPredictions ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-cyan-400" />
+                    <span>Updating...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-3 h-3 fill-current text-white" />
+                    <span>Run</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -1323,31 +1533,92 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* Bottom Left: Quiet GIS Map Legend */}
+      {/* Bottom Left: Quiet GIS Map Legend & Color Filter */}
       {/* ------------------------------------------------------------- */}
       {showLegend && (
-        <div className="absolute bottom-4 left-4 z-20 pointer-events-auto bg-slate-900/90 backdrop-blur-md border border-white/15 rounded-xl p-3 text-[11px] text-slate-300 shadow-xl space-y-1.5 hidden sm:block">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
-            Hydrological Legend
+        <div className="absolute bottom-4 left-4 z-20 pointer-events-auto bg-slate-900/90 backdrop-blur-md border border-white/15 rounded-xl p-3 text-[11px] text-slate-300 shadow-xl space-y-2 hidden sm:block">
+          <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5">
+            <button
+              type="button"
+              onClick={() => handleFilterSelect("ALL")}
+              title="Show all points (Reset filter)"
+              className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider font-mono transition-all cursor-pointer ${
+                activeSeverityFilter === "ALL"
+                  ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <span>Hydrological Legend</span>
+              <span
+                className={`text-[9px] px-1.5 py-0.5 rounded font-sans font-semibold transition-all ${
+                  activeSeverityFilter === "ALL"
+                    ? "bg-cyan-500/25 text-cyan-300 border border-cyan-400/40"
+                    : "bg-slate-800 text-slate-400 hover:text-slate-200 border border-white/5"
+                }`}
+              >
+                ALL
+              </span>
+            </button>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-[#22c55e]" />
-              Low
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-[#eab308]" />
-              Moderate
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-[#f97316]" />
-              High
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-[#ef4444]" />
-              Critical
-            </span>
+
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => handleFilterSelect("LOW")}
+              title="Filter: Low severity points only (Green)"
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10.5px] transition-all cursor-pointer ${
+                activeSeverityFilter === "LOW"
+                  ? "bg-emerald-500/25 text-emerald-300 border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.3)] font-semibold"
+                  : "hover:bg-slate-800/80 text-slate-300 border border-transparent"
+              }`}
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e] shadow-[0_0_6px_#22c55e]" />
+              <span>Low</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleFilterSelect("MODERATE")}
+              title="Filter: Moderate severity points only (Yellow)"
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10.5px] transition-all cursor-pointer ${
+                activeSeverityFilter === "MODERATE"
+                  ? "bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.3)] font-semibold"
+                  : "hover:bg-slate-800/80 text-slate-300 border border-transparent"
+              }`}
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-[#eab308] shadow-[0_0_6px_#eab308]" />
+              <span>Moderate</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleFilterSelect("HIGH")}
+              title="Filter: High severity points only (Orange)"
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10.5px] transition-all cursor-pointer ${
+                activeSeverityFilter === "HIGH"
+                  ? "bg-orange-500/25 text-orange-300 border border-orange-500/50 shadow-[0_0_10px_rgba(249,115,22,0.3)] font-semibold"
+                  : "hover:bg-slate-800/80 text-slate-300 border border-transparent"
+              }`}
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-[#f97316] shadow-[0_0_6px_#f97316]" />
+              <span>High</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleFilterSelect("CRITICAL")}
+              title="Filter: Critical points only (Red)"
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10.5px] transition-all cursor-pointer ${
+                activeSeverityFilter === "CRITICAL"
+                  ? "bg-rose-500/25 text-rose-300 border border-rose-500/50 shadow-[0_0_10px_rgba(244,63,94,0.3)] font-semibold"
+                  : "hover:bg-slate-800/80 text-slate-300 border border-transparent"
+              }`}
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444] shadow-[0_0_6px_#ef4444]" />
+              <span>Critical</span>
+            </button>
           </div>
+
           <div className="flex items-center gap-3 pt-1 border-t border-white/10 text-[10px] text-slate-400">
             <span className="flex items-center gap-1">
               <span className="w-2.5 h-0.5 bg-cyan-400" />

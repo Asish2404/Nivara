@@ -217,6 +217,95 @@ export const useKWIStore = create((set, get) => ({
   setReportCoords: (coords) => set({ reportCoords: coords }),
   setReportDepth: (depth) => set({ reportDepth: depth }),
 
+  // ---- Waterlogging Predictions & Refresh Intelligence ----
+  waterloggingPredictions: [],
+  waterloggingLoading: false,
+  waterloggingLastUpdated: null,
+  waterloggingBatchId: null,
+  waterloggingRefreshStatus: null,
+  waterloggingCooldownUntil: null,
+  isRefreshingPredictions: false,
+  waterloggingError: null,
+
+  fetchPredictions: async () => {
+    set({ waterloggingLoading: true });
+    try {
+      const data = await api.get("/waterlogging/predictions");
+      if (data && Array.isArray(data.predictions)) {
+        set({
+          waterloggingPredictions: data.predictions,
+          waterloggingLastUpdated: data.prediction_timestamp,
+          waterloggingBatchId: data.batch_id,
+          waterloggingLoading: false,
+          waterloggingError: null,
+        });
+        return data.predictions;
+      }
+    } catch (err) {
+      console.warn("[KWI] fetchPredictions notice:", err?.message || err);
+      set({ waterloggingLoading: false, waterloggingError: err?.message });
+    }
+    return [];
+  },
+
+  fetchPredictionRefreshStatus: async () => {
+    try {
+      const status = await api.get("/waterlogging/status");
+      if (status) {
+        set({
+          waterloggingRefreshStatus: status,
+          waterloggingCooldownUntil: status.cooldown_active ? status.next_available_at : null,
+        });
+        return status;
+      }
+    } catch (err) {
+      console.warn("[KWI] fetchPredictionRefreshStatus notice:", err?.message || err);
+    }
+    return null;
+  },
+
+  triggerPredictionRefresh: async () => {
+    set({ isRefreshingPredictions: true });
+    try {
+      const res = await api.post("/waterlogging/refresh");
+      set({ isRefreshingPredictions: false });
+      // If accepted (202), wait a moment for background worker then refresh predictions
+      setTimeout(() => {
+        get().fetchPredictions();
+        get().fetchPredictionRefreshStatus();
+      }, 3000);
+      return { success: true, data: res };
+    } catch (err) {
+      set({ isRefreshingPredictions: false });
+      const status = err?.status;
+      const data = err?.data || {};
+
+      if (status === 429) {
+        const nextAvail = data.next_available_at || new Date(Date.now() + 2 * 3600 * 1000).toISOString();
+        set({ waterloggingCooldownUntil: nextAvail });
+        return {
+          success: false,
+          cooldownActive: true,
+          nextAvailableAt: nextAvail,
+          message: err?.message || "Cooldown active. Earliest next run is scheduled.",
+        };
+      }
+
+      if (status === 409) {
+        return {
+          success: false,
+          autoInProgress: true,
+          message: "Auto update in progress, please try later.",
+        };
+      }
+
+      return {
+        success: false,
+        message: err?.message || "Failed to trigger prediction refresh.",
+      };
+    }
+  },
+
   // ---- "My Submitted Reports" and City-Wide Municipal Reports ----
   myReports: [],
   allReports: [],

@@ -51,6 +51,12 @@ async def init_db() -> None:
             inspector = inspect(connection)
             table_names = inspector.get_table_names()
 
+            # Ensure 'status' column exists in waterlogging_predictions
+            if "waterlogging_predictions" in table_names:
+                wlp_cols = {col["name"] for col in inspector.get_columns("waterlogging_predictions")}
+                if "status" not in wlp_cols:
+                    connection.execute(text("ALTER TABLE waterlogging_predictions ADD COLUMN status VARCHAR(32) DEFAULT 'ACTIVE'"))
+
             # Migrate / clean 'users' table to have exact requested columns:
             # id, name, email, hashed_password, phone, role, clearance, status, created_at, location
             if "users" in table_names:

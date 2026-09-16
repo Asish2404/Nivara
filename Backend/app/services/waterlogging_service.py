@@ -11,14 +11,15 @@ Workflow:
 
 import uuid
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple, Any
 import numpy as np
 import pandas as pd
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 
-from app.core.datetime_utils import utc_now
+from app.core.database import async_session
+from app.core.datetime_utils import get_current_time, get_kolkata_tz, ensure_kolkata_tz, utc_now
 from app.models.waterlogging import WaterloggingPrediction
 from app.ml.feature_engineering import FeatureEngineering
 from app.ml.predictor import WaterloggingPredictor, MODEL_VERSION
@@ -30,10 +31,19 @@ logger = logging.getLogger(__name__)
 
 
 class WaterloggingService:
-    """Orchestrates end-to-end waterlogging intelligence and database persistence."""
+    """Orchestrates end-to-end waterlogging intelligence and persistence."""
 
     # In-memory cached result of the latest run for fast dashboard queries
     _latest_cache: Optional[Dict[str, Any]] = None
+
+    # In-memory scheduling and cooldown state (no separate municipality table required)
+    _scheduler_state: Dict[str, Any] = {
+        "auto_job_in_progress": False,
+        "auto_started_at": None,
+        "manual_job_in_progress": False,
+        "manual_started_at": None,
+        "last_update_ts": None,
+    }
 
     @classmethod
     async def run_prediction_cycle(
@@ -42,7 +52,7 @@ class WaterloggingService:
         force_weather_refresh: bool = False,
     ) -> Dict[str, Any]:
         """Executes one complete waterlogging prediction cycle for all Kolkata locations."""
-        cycle_start = utc_now()
+        cycle_start = get_current_time()
         batch_id = f"BATCH-{uuid.uuid4().hex[:8].upper()}"
 
         logger.info("Starting waterlogging prediction cycle (Batch %s)...", batch_id)
@@ -146,6 +156,7 @@ class WaterloggingService:
                 "impact_score": round(impact, 4),
                 "priority_score": round(priority, 4),
                 "risk_level": risk,
+                "status": "ACTIVE",
                 "model_version": MODEL_VERSION,
                 "prediction_timestamp": cycle_start,
             }
@@ -160,6 +171,7 @@ class WaterloggingService:
             "data_source": data_source,
             "locations_count": len(predictions),
             "batch_id": batch_id,
+            "last_update_ts": cycle_start.isoformat(),
             "predictions": predictions,
         }
 
@@ -188,6 +200,7 @@ class WaterloggingService:
                         impact_score=p["impact_score"],
                         priority_score=p["priority_score"],
                         risk_level=p["risk_level"],
+                        status=p.get("status", "ACTIVE"),
                         model_version=p["model_version"],
                     )
                     for p in predictions
@@ -198,6 +211,9 @@ class WaterloggingService:
             except Exception as exc:
                 await db.rollback()
                 logger.error("Failed to persist prediction batch to database: %s", exc)
+
+        # Update in-memory scheduling last_update_ts
+        cls._scheduler_state["last_update_ts"] = cycle_start
 
         logger.info(
             "Prediction cycle completed. Processed %d locations (High: %d, Med: %d, Low: %d)",
@@ -210,6 +226,279 @@ class WaterloggingService:
         return result_payload
 
     @classmethod
+    async def load_latest_from_db(cls, db: AsyncSession) -> bool:
+        """Loads the most recent prediction batch from the database into in-memory cache.
+
+        Returns True if a batch was successfully loaded, or False if no predictions exist.
+        """
+        try:
+            stmt = (
+                select(WaterloggingPrediction.batch_id)
+                .order_by(desc(WaterloggingPrediction.prediction_timestamp))
+                .limit(1)
+            )
+            res = await db.execute(stmt)
+            latest_batch_id = res.scalar_one_or_none()
+            if not latest_batch_id:
+                return False
+
+            pred_stmt = (
+                select(WaterloggingPrediction)
+                .where(WaterloggingPrediction.batch_id == latest_batch_id)
+                .order_by(desc(WaterloggingPrediction.priority_score))
+            )
+            rows = (await db.execute(pred_stmt)).scalars().all()
+            if not rows:
+                return False
+
+            first_row = rows[0]
+            predictions = [
+                {
+                    "id": r.id,
+                    "batch_id": r.batch_id,
+                    "locality": r.locality,
+                    "latitude": r.latitude,
+                    "longitude": r.longitude,
+                    "ward": r.ward or "",
+                    "ulb_name": r.ulb_name or "",
+                    "district": r.district or "",
+                    "elevation_m": r.elevation_m,
+                    "slope_deg": r.slope_deg,
+                    "forecast_rain_24h_mm": r.forecast_rain_24h_mm,
+                    "waterlogging_probability": r.waterlogging_probability,
+                    "severity_score": r.severity_score,
+                    "impact_score": r.impact_score,
+                    "priority_score": r.priority_score,
+                    "risk_level": r.risk_level,
+                    "status": getattr(r, "status", None) or "ACTIVE",
+                    "model_version": r.model_version,
+                    "prediction_timestamp": r.prediction_timestamp,
+                }
+                for r in rows
+            ]
+
+            first_ts = ensure_kolkata_tz(first_row.prediction_timestamp) if first_row.prediction_timestamp else get_current_time()
+            iso_ts = first_ts.isoformat()
+
+            cls._latest_cache = {
+                "prediction_timestamp": iso_ts,
+                "model_version": first_row.model_version or MODEL_VERSION,
+                "data_source": "database_snapshot",
+                "locations_count": len(predictions),
+                "batch_id": latest_batch_id,
+                "last_update_ts": iso_ts,
+                "predictions": predictions,
+            }
+            cls._scheduler_state["last_update_ts"] = first_ts
+            logger.info("Loaded latest prediction batch %s (%d records) from database into cache (last_update_ts: %s)", latest_batch_id, len(predictions), iso_ts)
+            return True
+        except Exception as exc:
+            logger.error("Failed to load latest predictions from database: %s", exc)
+            return False
+
+    @classmethod
+    def calculate_next_auto_ts(cls, now: Optional[datetime] = None) -> datetime:
+        """Returns the next calendar-anchored auto update timestamp (02:00, 10:00, 18:00 local IST)."""
+        tz = get_kolkata_tz()
+        if now is None:
+            local_now = datetime.now(tz)
+        else:
+            local_now = ensure_kolkata_tz(now)
+
+        today = local_now.date()
+        candidates = [
+            datetime(today.year, today.month, today.day, 2, 0, 0, tzinfo=tz),
+            datetime(today.year, today.month, today.day, 10, 0, 0, tzinfo=tz),
+            datetime(today.year, today.month, today.day, 18, 0, 0, tzinfo=tz),
+            datetime(today.year, today.month, today.day, 2, 0, 0, tzinfo=tz) + timedelta(days=1),
+        ]
+        for c in candidates:
+            if c > local_now:
+                return c
+        return candidates[-1]
+
+    @classmethod
+    async def check_manual_refresh_allowed(
+        cls,
+    ) -> Tuple[bool, Optional[str], Optional[datetime], int]:
+        """Validates if manual prediction refresh is permitted per exact business logic without DB schema changes:
+        1. Stuck-guards:
+           - auto_job_in_progress > 30 min -> reset to FALSE
+           - manual_job_in_progress > 15 min -> reset to FALSE
+        2. Concurrency check:
+           - auto_job_in_progress == TRUE -> 409 Conflict
+           - manual_job_in_progress == TRUE -> 409 Conflict
+        3. Exact 2-hour cooldown from last run:
+           - If NOW < last_update_ts + 2 hours -> 429 Too Many Requests with next_available_at
+        4. Imminent cron collision protection:
+           - If scheduled auto update is imminent (within 15 min of next_auto_ts) -> 429 Too Many Requests
+        5. All pass -> mark manual job started and return 202 Accepted.
+
+        Returns: (is_allowed, error_code_or_message, next_available_at, http_status_code)
+        """
+        tz = get_kolkata_tz()
+        now = datetime.now(tz)
+
+        # 1. Stuck-guards
+        if cls._scheduler_state.get("auto_job_in_progress") and cls._scheduler_state.get("auto_started_at"):
+            started_tz = ensure_kolkata_tz(cls._scheduler_state["auto_started_at"])
+            if (now - started_tz) > timedelta(minutes=30):
+                logger.warning("Stuck auto-job detected (>30 min). Resetting auto_job_in_progress to FALSE.")
+                cls._scheduler_state["auto_job_in_progress"] = False
+                cls._scheduler_state["auto_started_at"] = None
+
+        if cls._scheduler_state.get("manual_job_in_progress") and cls._scheduler_state.get("manual_started_at"):
+            man_started_tz = ensure_kolkata_tz(cls._scheduler_state["manual_started_at"])
+            if (now - man_started_tz) > timedelta(minutes=15):
+                logger.warning("Stuck manual-job detected (>15 min). Resetting manual_job_in_progress to FALSE.")
+                cls._scheduler_state["manual_job_in_progress"] = False
+                cls._scheduler_state["manual_started_at"] = None
+
+        # 2. Concurrency checks
+        if cls._scheduler_state.get("auto_job_in_progress"):
+            return False, "Auto update in progress, please try later.", None, 409
+
+        if cls._scheduler_state.get("manual_job_in_progress"):
+            return False, "Prediction update already in progress, please wait.", None, 409
+
+        # Ensure last_update_ts is populated from database snapshot if server recently started
+        if cls._scheduler_state.get("last_update_ts") is None:
+            try:
+                async with async_session() as db:
+                    await cls.load_latest_from_db(db)
+            except Exception as e:
+                logger.debug("Automatic cache warmup notice: %s", e)
+
+        next_auto_ts = cls.calculate_next_auto_ts(now)
+        last_update_local = ensure_kolkata_tz(cls._scheduler_state["last_update_ts"]) if cls._scheduler_state.get("last_update_ts") else None
+
+        # 3. 2-Hour Cooldown from last run
+        if last_update_local:
+            cooldown_end = last_update_local + timedelta(hours=2)
+            if now < cooldown_end:
+                # If cooldown expiration falls directly inside an auto-cron execution window, buffer past it
+                if next_auto_ts <= cooldown_end <= (next_auto_ts + timedelta(minutes=15)):
+                    next_avail = next_auto_ts + timedelta(minutes=15)
+                else:
+                    next_avail = cooldown_end
+                return False, "cooldown_active", next_avail, 429
+
+        # 4. Imminent cron collision protection (buffer within 15 minutes of next scheduled cron)
+        if now < next_auto_ts and (next_auto_ts - now) <= timedelta(minutes=15):
+            next_avail = next_auto_ts + timedelta(minutes=15)
+            return False, "cron_imminent", next_avail, 429
+
+        # 5. All pass -> mark manual job in progress and return 202 Accepted
+        cls._scheduler_state["manual_job_in_progress"] = True
+        cls._scheduler_state["manual_started_at"] = get_current_time()
+        return True, None, None, 202
+
+    @classmethod
+    async def run_auto_prediction_cycle(cls) -> None:
+        """Calendar-Anchored automated prediction cron worker:
+        1. Set auto_job_in_progress = TRUE, auto_started_at = NOW().
+        2. Ingest weather + historical data.
+        3. Compute severity_score + priority per location.
+        4. Update locations table.
+        5. On success: set last_update_ts = NOW(), update cached results.
+        6. On failure: log error, leave last_update_ts UNCHANGED.
+        7. In finally: set auto_job_in_progress = FALSE, auto_started_at = NULL.
+        """
+        cls._scheduler_state["auto_job_in_progress"] = True
+        cls._scheduler_state["auto_started_at"] = get_current_time()
+        logger.info("Calendar-anchored auto prediction cycle started.")
+
+        try:
+            async with async_session() as db:
+                await cls.run_prediction_cycle(db=db, force_weather_refresh=True)
+            logger.info("Auto prediction cycle completed successfully.")
+        except Exception as exc:
+            logger.error("Auto prediction cycle failed: %s (last_update_ts unchanged)", exc)
+        finally:
+            cls._scheduler_state["auto_job_in_progress"] = False
+            cls._scheduler_state["auto_started_at"] = None
+
+    @classmethod
+    async def run_background_manual_cycle(cls, job_id: str) -> None:
+        """Shared worker executed asynchronously for manual prediction refresh."""
+        logger.info("Starting background manual prediction job %s...", job_id)
+        try:
+            async with async_session() as db:
+                await cls.run_prediction_cycle(db=db, force_weather_refresh=True)
+                logger.info("Background manual prediction job %s finished successfully.", job_id)
+        except Exception as exc:
+            logger.error("Background manual prediction job %s encountered error: %s", job_id, exc)
+        finally:
+            cls._scheduler_state["manual_job_in_progress"] = False
+            cls._scheduler_state["manual_started_at"] = None
+
+    @classmethod
+    async def get_refresh_status(cls) -> Dict[str, Any]:
+        """Provides status of prediction update system and cooldown timer without database schema changes."""
+        tz = get_kolkata_tz()
+        now = datetime.now(tz)
+
+        # Stuck guards
+        if cls._scheduler_state.get("auto_job_in_progress") and cls._scheduler_state.get("auto_started_at"):
+            started_tz = ensure_kolkata_tz(cls._scheduler_state["auto_started_at"])
+            if (now - started_tz) > timedelta(minutes=30):
+                cls._scheduler_state["auto_job_in_progress"] = False
+                cls._scheduler_state["auto_started_at"] = None
+
+        if cls._scheduler_state.get("manual_job_in_progress") and cls._scheduler_state.get("manual_started_at"):
+            man_started_tz = ensure_kolkata_tz(cls._scheduler_state["manual_started_at"])
+            if (now - man_started_tz) > timedelta(minutes=15):
+                cls._scheduler_state["manual_job_in_progress"] = False
+                cls._scheduler_state["manual_started_at"] = None
+
+        # Ensure last_update_ts is populated from database snapshot if server recently started
+        if cls._scheduler_state.get("last_update_ts") is None:
+            try:
+                async with async_session() as db:
+                    await cls.load_latest_from_db(db)
+            except Exception as e:
+                logger.debug("Automatic cache warmup notice: %s", e)
+
+        is_in_progress = bool(
+            cls._scheduler_state.get("auto_job_in_progress")
+            or cls._scheduler_state.get("manual_job_in_progress")
+        )
+
+        next_auto_ts = cls.calculate_next_auto_ts(now)
+        last_update_local = ensure_kolkata_tz(cls._scheduler_state["last_update_ts"]) if cls._scheduler_state.get("last_update_ts") else None
+
+        cooldown_active = False
+        next_available_at = None
+        status_message = "Refresh available"
+
+        if is_in_progress:
+            status_message = "Prediction update currently in progress"
+        elif last_update_local:
+            cooldown_end = last_update_local + timedelta(hours=2)
+            if now < cooldown_end:
+                cooldown_active = True
+                if next_auto_ts <= cooldown_end <= (next_auto_ts + timedelta(minutes=15)):
+                    next_available_at = next_auto_ts + timedelta(minutes=15)
+                else:
+                    next_available_at = cooldown_end
+                status_message = "Cooldown active"
+
+        if not cooldown_active and not is_in_progress:
+            if now < next_auto_ts and (next_auto_ts - now) <= timedelta(minutes=15):
+                cooldown_active = True
+                next_available_at = next_auto_ts + timedelta(minutes=15)
+                status_message = "Scheduled auto update is imminent"
+
+        return {
+            "last_update_ts": last_update_local.isoformat() if last_update_local else None,
+            "next_auto_ts": next_auto_ts.isoformat(),
+            "auto_job_in_progress": is_in_progress,
+            "cooldown_active": cooldown_active,
+            "next_available_at": next_available_at.isoformat() if next_available_at else None,
+            "message": status_message,
+        }
+
+    @classmethod
     async def get_latest_predictions(
         cls,
         db: Optional[AsyncSession] = None,
@@ -217,9 +506,15 @@ class WaterloggingService:
         district: Optional[str] = None,
         limit: Optional[int] = None,
     ) -> Dict[str, Any]:
-        """Returns the latest predictions, executing a cycle if cache is empty."""
+        """Returns the latest predictions. If cache is empty, loads from database snapshot;
+        only generates a fresh cycle if the database has no prediction records.
+        """
         if cls._latest_cache is None:
-            await cls.run_prediction_cycle(db=db, force_weather_refresh=True)
+            loaded = False
+            if db is not None:
+                loaded = await cls.load_latest_from_db(db)
+            if not loaded:
+                await cls.run_prediction_cycle(db=db, force_weather_refresh=False)
 
         cached = cls._latest_cache
         if not cached:
@@ -257,9 +552,15 @@ class WaterloggingService:
         cls,
         db: Optional[AsyncSession] = None,
     ) -> Dict[str, Any]:
-        """Returns executive summary metrics and top priority hotspots."""
+        """Returns executive summary metrics and top priority hotspots.
+        Loads from database snapshot if in-memory cache is empty.
+        """
         if cls._latest_cache is None:
-            await cls.run_prediction_cycle(db=db, force_weather_refresh=True)
+            loaded = False
+            if db is not None:
+                loaded = await cls.load_latest_from_db(db)
+            if not loaded:
+                await cls.run_prediction_cycle(db=db, force_weather_refresh=False)
 
         cached = cls._latest_cache or {}
         predictions = cached.get("predictions", [])

@@ -13,40 +13,63 @@ from .services.auth_service import AuthService
 from .services.report_service import UPLOAD_DIR
 from .services.waterlogging_service import WaterloggingService
 
+from .core.datetime_utils import get_kolkata_tz
+from datetime import datetime
+
 logger = logging.getLogger("app.main")
 
 
-async def run_periodic_prediction_scheduler(interval_hours: int = 8):
-    """Background task executing the waterlogging prediction cycle periodically every 8 hours."""
-    # Brief initial pause to let the server finish startup before first run
+async def run_periodic_prediction_scheduler():
+    """Background task executing the calendar-anchored waterlogging prediction update.
+    Schedule: 02:00, 10:00, 18:00 (local IST time, every day).
+    On startup, it warms up cache from the database WITHOUT inserting new data unless empty.
+    """
+    # Brief initial pause to let the server finish startup before checking DB
     try:
         await asyncio.sleep(2.0)
         async with async_session() as db:
-            await WaterloggingService.run_prediction_cycle(db=db, force_weather_refresh=False)
+            loaded = await WaterloggingService.load_latest_from_db(db)
+            if not loaded:
+                logger.info("Database has no waterlogging predictions yet. Generating initial baseline snapshot...")
+                await WaterloggingService.run_prediction_cycle(db=db, force_weather_refresh=False)
+            else:
+                logger.info("Startup initialized with latest predictions from database. No new insertion performed.")
     except asyncio.CancelledError:
         return
     except Exception as exc:
-        logger.warning("Initial background waterlogging cycle notice: %s", exc)
+        logger.warning("Initial background waterlogging cache load notice: %s", exc)
 
     while True:
         try:
-            await asyncio.sleep(interval_hours * 3600)
-            async with async_session() as db:
-                await WaterloggingService.run_prediction_cycle(db=db, force_weather_refresh=True)
+            tz = get_kolkata_tz()
+            now = datetime.now(tz)
+            next_auto = WaterloggingService.calculate_next_auto_ts(now)
+            wait_seconds = max(1.0, (next_auto - now).total_seconds())
+
+            logger.info(
+                "Calendar-anchored prediction scheduled for %s (in %.1f sec / %.2f hours)",
+                next_auto.strftime("%Y-%m-%d %H:%M:%S %Z"),
+                wait_seconds,
+                wait_seconds / 3600,
+            )
+
+            await asyncio.sleep(wait_seconds)
+            logger.info("Firing calendar-anchored auto prediction cycle (02:00 / 10:00 / 18:00 IST)...")
+            await WaterloggingService.run_auto_prediction_cycle()
         except asyncio.CancelledError:
             break
         except Exception as exc:
-            logger.error("Periodic waterlogging prediction error: %s", exc)
+            logger.error("Periodic calendar prediction error: %s", exc)
             await asyncio.sleep(60)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Create tables
+    # Startup: Create tables and execute safe migrations
     await init_db()
 
-    # Start 8-hour background prediction scheduler
-    scheduler_task = asyncio.create_task(run_periodic_prediction_scheduler(interval_hours=8))
+    # Start calendar-anchored background prediction scheduler (02:00, 10:00, 18:00)
+    scheduler_task = asyncio.create_task(run_periodic_prediction_scheduler())
     yield
     # Shutdown logic: cancel background task cleanly
     scheduler_task.cancel()

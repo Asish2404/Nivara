@@ -1,14 +1,14 @@
-"""FastAPI Router for Waterlogging Prediction, Severity Estimation, and Priority Intelligence."""
-
+import uuid
 from typing import Optional
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, BackgroundTasks, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.schemas.waterlogging import (
     WaterloggingPredictionListResponse,
     WaterloggingSummaryResponse,
-    PredictionRefreshResponse,
+    PredictionRefreshStatusResponse,
 )
 from app.services.waterlogging_service import WaterloggingService
 
@@ -52,36 +52,74 @@ async def get_waterlogging_summary(
     return await WaterloggingService.get_summary(db=db)
 
 
+@router.get(
+    "/status",
+    response_model=PredictionRefreshStatusResponse,
+    summary="Get prediction refresh status, active cooldown, and next schedule",
+)
+async def get_refresh_status():
+    """Returns operational status of prediction scheduling, active cooldown, and earliest valid update time."""
+    return await WaterloggingService.get_refresh_status()
+
+
 @router.post(
     "/refresh",
-    response_model=PredictionRefreshResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Trigger immediate waterlogging prediction refresh cycle",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Trigger immediate waterlogging prediction refresh cycle with cooldown and schedule validation",
 )
 async def trigger_prediction_refresh(
+    background_tasks: BackgroundTasks,
     force_weather_refresh: bool = Query(
         False,
         description="If True, forces an immediate live HTTP fetch from Open-Meteo API",
     ),
-    db: AsyncSession = Depends(get_db),
 ):
-    """Manually triggers a full prediction cycle across all locations:
+    """Manually triggers a full prediction cycle across all locations subject to validation:
 
-    1. Ingests weather forecast.
-    2. Computes baseline ML susceptibility + dynamic rainfall risk.
-    3. Derives probability, severity, impact, priority, and risk level.
-    4. Persists a new snapshot in the municipal database.
+    1. Stuck-guard: If auto_job_in_progress == TRUE and (NOW - auto_started_at) > 30 min -> treat as FALSE.
+    2. If auto_job_in_progress == TRUE -> 409 "Auto update in progress, please try later."
+    3. cooldown_ok = NOW >= last_update_ts + 2 hours
+    4. no_overlap_ok = NOW + 2 hours <= next_auto_ts
+    5. If NOT (cooldown_ok AND no_overlap_ok) -> 429 with JSON {"error": "cooldown_active", "next_available_at": "..."}
+    6. All pass -> enqueues prediction as background job, returns 202 {"status": "accepted", "job_id": "..."}
     """
-    cycle_result = await WaterloggingService.run_prediction_cycle(
-        db=db,
-        force_weather_refresh=force_weather_refresh,
-    )
+    allowed, err_msg, next_avail, status_code = await WaterloggingService.check_manual_refresh_allowed()
 
-    return PredictionRefreshResponse(
-        status="SUCCESS",
-        message="Waterlogging prediction cycle executed successfully.",
-        batch_id=cycle_result["batch_id"],
-        locations_processed=cycle_result["locations_count"],
-        data_source=cycle_result["data_source"],
-        prediction_timestamp=cycle_result["prediction_timestamp"],
+    if not allowed:
+        if status_code == 409:
+            return JSONResponse(
+                status_code=status.HTTP_409_CONFLICT,
+                content={
+                    "error": "in_progress",
+                    "message": err_msg or "Update in progress, please try later.",
+                    "detail": err_msg or "Update in progress, please try later.",
+                },
+            )
+        elif status_code == 429:
+            iso_next = next_avail.isoformat() if next_avail else ""
+            return JSONResponse(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                content={
+                    "error": "cooldown_active",
+                    "next_available_at": iso_next,
+                    "message": err_msg or f"Cooldown active. Next update available at {iso_next}",
+                },
+            )
+        else:
+            return JSONResponse(
+                status_code=status_code,
+                content={"error": "refresh_rejected", "message": err_msg or "Refresh request rejected."},
+            )
+
+    # All validation passed: Enqueue background job
+    job_id = f"JOB-{uuid.uuid4().hex[:10].upper()}"
+    background_tasks.add_task(WaterloggingService.run_background_manual_cycle, job_id)
+
+    return JSONResponse(
+        status_code=status.HTTP_202_ACCEPTED,
+        content={
+            "status": "accepted",
+            "job_id": job_id,
+            "message": "Waterlogging prediction cycle accepted and running in background.",
+        },
     )
