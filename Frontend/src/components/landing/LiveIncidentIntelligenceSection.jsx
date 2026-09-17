@@ -9,8 +9,12 @@ import {
 } from "lucide-react";
 
 import { useKWIStore } from "../../store/useKWIStore";
-import { aggregateIncidentsFromReports } from "../../utils/incidentAggregator";
+import {
+  aggregateIncidentsFromReports,
+  mapIncidentQueueToCards,
+} from "../../utils/incidentAggregator";
 import { audioEngine } from "../../utils/audioEngine";
+
 import { BorderBeam } from "../ui/BorderBeam";
 
 import AnimatedContent from "../ui/AnimatedContent";
@@ -91,7 +95,9 @@ export function LiveIncidentIntelligenceSection() {
   const {
     allReports,
     myReports,
+    incidentQueue,
     fetchAllReports,
+    fetchIncidentQueue,
     setSelectedIncident,
     setHoveredIncidentId,
     navigate,
@@ -99,10 +105,15 @@ export function LiveIncidentIntelligenceSection() {
 
   const [showAll, setShowAll] = useState(false);
 
-  // Load municipal reports on mount
+  // Load municipal reports and active incident queue on mount + poll periodically
   useEffect(() => {
     fetchAllReports?.().catch(() => {});
-  }, [fetchAllReports]);
+    fetchIncidentQueue?.().catch(() => {});
+    const interval = setInterval(() => {
+      fetchIncidentQueue?.().catch(() => {});
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [fetchAllReports, fetchIncidentQueue]);
 
   // Merge server and local citizen reports
   const combinedReports = useMemo(() => {
@@ -114,11 +125,15 @@ export function LiveIncidentIntelligenceSection() {
     ];
   }, [allReports, myReports]);
 
-  // Dynamically derive active incidents exclusively from citizen reports in reports table
+  // Dynamically derive active incidents: prioritize database incidentQueue table, fallback to reports
   // Strictly sorted: Critical -> High -> Moderate -> Low -> Monitoring, then report count desc
   const sortedIncidents = useMemo(() => {
+    if (Array.isArray(incidentQueue) && incidentQueue.length > 0) {
+      return mapIncidentQueueToCards(incidentQueue);
+    }
     return aggregateIncidentsFromReports(combinedReports);
-  }, [combinedReports]);
+  }, [incidentQueue, combinedReports]);
+
 
   // Dynamically calculated active incidents count
   const activeCount = useMemo(() => {

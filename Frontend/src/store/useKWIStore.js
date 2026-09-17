@@ -1,7 +1,11 @@
 import { create } from "zustand";
 import { api } from "../utils/api.js";
 import { formatTime12Hour } from "../utils/dateTimeUtils.js";
-import { aggregateIncidentsFromReports } from "../utils/incidentAggregator.js";
+import {
+  aggregateIncidentsFromReports,
+  mapIncidentQueueToCards,
+} from "../utils/incidentAggregator.js";
+
 
 
 // Helper to check public routes
@@ -308,23 +312,48 @@ export const useKWIStore = create((set, get) => ({
     }
   },
 
-  // ---- "My Submitted Reports" and City-Wide Municipal Reports ----
+  // ---- "My Submitted Reports", Incident Queue, and City-Wide Municipal Reports ----
   myReports: [],
   allReports: [],
+  incidentQueue: [],
   reportsLoaded: false,
   reportsError: null,
 
-  // Fetch all municipal reports across Kolkata (with status aging)
-  fetchAllReports: async () => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('kwi_token') : null
+  // Fetch dynamic active incidents grouped from incident_queue table
+  fetchIncidentQueue: async () => {
     try {
-      const reports = await api.get('/reports?all_reports=true', token)
-      if (Array.isArray(reports)) {
-        set({ allReports: reports, reportsLoaded: true, reportsError: null })
-        get().refreshDynamicIncidents()
+      const queue = await api.get('/incidents');
+      if (Array.isArray(queue)) {
+        set({ incidentQueue: queue });
+        get().refreshDynamicIncidents();
       }
     } catch (err) {
-      console.warn('[KWI] fetchAllReports notice:', err?.message || err)
+      console.warn('[KWI] fetchIncidentQueue notice:', err?.message || err);
+    }
+  },
+
+  // Fetch all municipal reports across Kolkata and the active incident queue
+  fetchAllReports: async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('kwi_token') : null;
+    try {
+      // Parallel fetch for reports and incident queue
+      const [reports, queue] = await Promise.allSettled([
+        api.get('/reports?all_reports=true', token),
+        api.get('/incidents', token),
+      ]);
+
+      const stateUpdate = { reportsLoaded: true, reportsError: null };
+      if (reports.status === 'fulfilled' && Array.isArray(reports.value)) {
+        stateUpdate.allReports = reports.value;
+      }
+      if (queue.status === 'fulfilled' && Array.isArray(queue.value)) {
+        stateUpdate.incidentQueue = queue.value;
+      }
+
+      set(stateUpdate);
+      get().refreshDynamicIncidents();
+    } catch (err) {
+      console.warn('[KWI] fetchAllReports notice:', err?.message || err);
     }
   },
 
@@ -346,9 +375,17 @@ export const useKWIStore = create((set, get) => ({
     }
   },
 
-  // Dynamically derive active incidents strictly from reports table
+  // Dynamically derive active incidents strictly from incident_queue table and reports
   refreshDynamicIncidents: () => {
     const s = get();
+    // 1. If incidentQueue from backend is loaded and non-empty, map it to cards
+    if (Array.isArray(s.incidentQueue) && s.incidentQueue.length > 0) {
+      const cards = mapIncidentQueueToCards(s.incidentQueue);
+      set({ incidents: cards });
+      return cards;
+    }
+
+    // 2. Fallback to client-side aggregation from submitted reports
     const combined = [
       ...(s.allReports || []),
       ...(s.myReports || []).filter(
@@ -359,6 +396,7 @@ export const useKWIStore = create((set, get) => ({
     set({ incidents: dynamic });
     return dynamic;
   },
+
 
   submitCitizenReport: () => {
     const now = formatTime12Hour(new Date());
@@ -444,8 +482,10 @@ export const useKWIStore = create((set, get) => ({
               reportsLoaded: true,
             }));
             get().refreshDynamicIncidents();
+            get().fetchIncidentQueue().catch(() => {});
           }
         })
+
         .catch((err) => {
           console.warn(
             "[KWI] Report submission notification:",

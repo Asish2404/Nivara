@@ -72,3 +72,62 @@ class ReportResponse(BaseModel):
     class Config:
         from_attributes = True
         populate_by_name = True
+
+
+class IncidentQueueResponse(BaseModel):
+    id: int
+    incident_id: str
+    location: str
+    latitude: float
+    longitude: float
+    ward: Optional[str] = ""
+    assigned_ulb_id: Optional[str] = ""
+    assigned_ulb_name: Optional[str] = ""
+    jurisdiction_type: Optional[str] = ""
+    subdivision: Optional[str] = ""
+    issue_type: Optional[str] = "Waterlogging"
+    water_depth: float = 0.0
+    report_count: int = 1
+    risk_level: str = "LOW"
+    severity: Optional[str] = None
+    status: str = "Needs Intervention"
+    latest_description: Optional[str] = ""
+    latest_image_url: Optional[str] = ""
+    latest_report_id: Optional[str] = ""
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    last_reported_at: Optional[datetime] = None
+
+    @computed_field
+    @property
+    def card_id(self) -> str:
+        return f"#{self.incident_id}" if not self.incident_id.startswith("#") else self.incident_id
+
+    @computed_field
+    @property
+    def water_depth_display(self) -> str:
+        if self.water_depth and self.water_depth > 0:
+            return f"{int(self.water_depth) if self.water_depth.is_integer() else self.water_depth} cm water depth"
+        return "Telemetry Pending"
+
+    @computed_field
+    @property
+    def verified_reports_display(self) -> str:
+        count = self.report_count or 1
+        return f"{count} verified {'report' if count == 1 else 'reports'}"
+
+    @computed_field
+    @property
+    def dynamic_severity(self) -> str:
+        return self.risk_level or self.severity or "LOW"
+
+    @computed_field
+    @property
+    def updated_at_formatted(self) -> str:
+        dt = ensure_kolkata_tz(self.updated_at)
+        return dt.strftime("%b %d, %Y at %I:%M %p") if dt else ""
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+

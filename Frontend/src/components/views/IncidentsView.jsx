@@ -4,7 +4,10 @@ import { useKWIStore } from "../../store/useKWIStore";
 import { ArrowRight, CheckCircle2, ShieldAlert } from "lucide-react";
 import { CardSpotlight } from "../ui/CardSpotlight";
 import { BorderBeam } from "../ui/BorderBeam";
-import { aggregateIncidentsFromReports } from "../../utils/incidentAggregator";
+import {
+  aggregateIncidentsFromReports,
+  mapIncidentQueueToCards,
+} from "../../utils/incidentAggregator";
 
 export function IncidentsView() {
   const {
@@ -13,12 +16,15 @@ export function IncidentsView() {
     navigate,
     allReports,
     myReports,
+    incidentQueue,
     fetchAllReports,
+    fetchIncidentQueue,
   } = useKWIStore();
 
   useEffect(() => {
     fetchAllReports?.().catch(() => {});
-  }, [fetchAllReports]);
+    fetchIncidentQueue?.().catch(() => {});
+  }, [fetchAllReports, fetchIncidentQueue]);
 
   const combinedReports = useMemo(() => {
     return [
@@ -30,8 +36,12 @@ export function IncidentsView() {
   }, [allReports, myReports]);
 
   const dynamicIncidents = useMemo(() => {
+    if (Array.isArray(incidentQueue) && incidentQueue.length > 0) {
+      return mapIncidentQueueToCards(incidentQueue);
+    }
     return aggregateIncidentsFromReports(combinedReports);
-  }, [combinedReports]);
+  }, [incidentQueue, combinedReports]);
+
 
   const [selectedId, setSelectedId] = useState(
     selectedIncident?.id || dynamicIncidents[0]?.id || ""

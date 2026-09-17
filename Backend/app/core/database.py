@@ -40,11 +40,13 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 # 5. Startup table initializer with safe schema migration for SQLite
 async def init_db() -> None:
-    # Import models so Base.metadata knows about users, admin, reports, and waterlogging predictions
-    from app.models import User, Admin, Report, WaterloggingPrediction  # noqa: F401
+    # Import models so Base.metadata knows about users, admin, reports, waterlogging predictions, and incident_queue
+    from app.models import User, Admin, Report, WaterloggingPrediction, IncidentQueue  # noqa: F401
+    from app.services.incident_service import IncidentQueueService
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
 
         def sync_migrate(connection):
             from sqlalchemy import inspect, text
@@ -136,4 +138,79 @@ async def init_db() -> None:
                     if col_name not in existing_report_cols:
                         connection.execute(text(f"ALTER TABLE reports ADD COLUMN {col_name} {col_type}"))
 
+            if "incident_queue" in table_names:
+                existing_inc_cols = {col["name"] for col in inspector.get_columns("incident_queue")}
+                if "reports_number" in existing_inc_cols:
+                    connection.execute(text("""
+                        CREATE TABLE incident_queue_migrated (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            incident_id VARCHAR(32) NOT NULL,
+                            location VARCHAR(255) NOT NULL,
+                            latitude FLOAT DEFAULT 0.0,
+                            longitude FLOAT DEFAULT 0.0,
+                            ward VARCHAR(64) DEFAULT '',
+                            assigned_ulb_id VARCHAR(64) DEFAULT '',
+                            assigned_ulb_name VARCHAR(128) DEFAULT '',
+                            jurisdiction_type VARCHAR(64) DEFAULT '',
+                            subdivision VARCHAR(255) DEFAULT '',
+                            issue_type VARCHAR(128) DEFAULT 'Waterlogging',
+                            water_depth FLOAT DEFAULT 0.0,
+                            report_count INTEGER DEFAULT 1,
+                            risk_level VARCHAR(32) DEFAULT 'LOW',
+                            status VARCHAR(32) DEFAULT 'Needs Intervention',
+                            latest_description TEXT DEFAULT '',
+                            latest_image_url VARCHAR(255) DEFAULT '',
+                            latest_report_id VARCHAR(64) DEFAULT '',
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            last_reported_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    rep_cnt = "COALESCE(report_count, reports_number, 1)" if "report_count" in existing_inc_cols else "COALESCE(reports_number, 1)"
+                    r_lvl = "COALESCE(risk_level, severity, 'LOW')" if "severity" in existing_inc_cols else "COALESCE(risk_level, 'LOW')"
+                    connection.execute(text(f"""
+                        INSERT OR IGNORE INTO incident_queue_migrated (id, incident_id, location, latitude, longitude, ward, assigned_ulb_id, assigned_ulb_name, jurisdiction_type, subdivision, issue_type, water_depth, report_count, risk_level, status, latest_description, latest_image_url, latest_report_id, created_at, updated_at, last_reported_at)
+                        SELECT id, incident_id, location, latitude, longitude, COALESCE(ward, ''), COALESCE(assigned_ulb_id, ''), COALESCE(assigned_ulb_name, ''), COALESCE(jurisdiction_type, ''), COALESCE(subdivision, ''), COALESCE(issue_type, 'Waterlogging'), COALESCE(water_depth, 0.0), {rep_cnt}, {r_lvl}, COALESCE(status, 'Needs Intervention'), COALESCE(latest_description, ''), COALESCE(latest_image_url, ''), COALESCE(latest_report_id, ''), created_at, updated_at, COALESCE(last_reported_at, updated_at, created_at)
+                        FROM incident_queue
+                    """))
+                    connection.execute(text("DROP TABLE incident_queue"))
+                    connection.execute(text("ALTER TABLE incident_queue_migrated RENAME TO incident_queue"))
+                else:
+                    missing_inc_columns = {
+                        "incident_id": "VARCHAR(32) DEFAULT ''",
+                        "location": "VARCHAR(255) DEFAULT ''",
+                        "latitude": "FLOAT DEFAULT 0.0",
+                        "longitude": "FLOAT DEFAULT 0.0",
+                        "ward": "VARCHAR(64) DEFAULT ''",
+                        "assigned_ulb_id": "VARCHAR(64) DEFAULT ''",
+                        "assigned_ulb_name": "VARCHAR(128) DEFAULT ''",
+                        "jurisdiction_type": "VARCHAR(64) DEFAULT ''",
+                        "subdivision": "VARCHAR(255) DEFAULT ''",
+                        "issue_type": "VARCHAR(128) DEFAULT 'Waterlogging'",
+                        "water_depth": "FLOAT DEFAULT 0.0",
+                        "report_count": "INTEGER DEFAULT 1",
+                        "risk_level": "VARCHAR(32) DEFAULT 'LOW'",
+                        "status": "VARCHAR(32) DEFAULT 'Needs Intervention'",
+                        "latest_description": "TEXT DEFAULT ''",
+                        "latest_image_url": "VARCHAR(255) DEFAULT ''",
+                        "latest_report_id": "VARCHAR(64) DEFAULT ''",
+                        "created_at": "DATETIME DEFAULT CURRENT_TIMESTAMP",
+                        "updated_at": "DATETIME DEFAULT CURRENT_TIMESTAMP",
+                        "last_reported_at": "DATETIME DEFAULT CURRENT_TIMESTAMP",
+                    }
+                    for col_name, col_type in missing_inc_columns.items():
+                        if col_name not in existing_inc_cols:
+                            connection.execute(text(f"ALTER TABLE incident_queue ADD COLUMN {col_name} {col_type}"))
+
         await conn.run_sync(sync_migrate)
+
+
+
+    # Initial sync from reports to incident_queue if queue is empty
+    try:
+        async with async_session() as session:
+            await IncidentQueueService.sync_from_existing_reports(session)
+    except Exception as e:
+        # Non-fatal if table is newly initializing
+        pass
+

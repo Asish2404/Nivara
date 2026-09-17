@@ -11,7 +11,9 @@ from ..models.user import User
 from ..schemas.report import ReportCreate
 from .geocoding_service import GeocodingService
 from .jurisdiction_service import JurisdictionService
+from .incident_service import IncidentQueueService
 from ..core.datetime_utils import get_current_time, ensure_kolkata_tz, get_kolkata_tz
+
 
 # Directory where citizen-submitted report images are stored (relative to Backend/)
 UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "uploads"))
@@ -195,9 +197,17 @@ class ReportService:
         db.add(report)
         await db.commit()
         await db.refresh(report)
+
+        # Record and dynamically update the incident_queue table
+        try:
+            await IncidentQueueService.record_report(db, report)
+        except Exception as queue_err:
+            print(f"[KWI] IncidentQueue update warning: {queue_err}")
+
         report.submitted_at = ensure_kolkata_tz(report.submitted_at)
         report.updated_at = ensure_kolkata_tz(report.updated_at)
         return report
+
 
     @classmethod
     async def get_user_reports(cls, db: AsyncSession, user_id: str) -> List[Report]:

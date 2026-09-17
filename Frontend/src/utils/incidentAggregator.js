@@ -186,8 +186,8 @@ export function aggregateIncidentsFromReports(reports = []) {
     const subdivision = ward
       ? `${primaryName} // ${ward.toUpperCase()}`
       : ulb
-      ? `${primaryName} // ${ulb.toUpperCase()}`
-      : `${primaryName} // LOCAL DRAINAGE`;
+        ? `${primaryName} // ${ulb.toUpperCase()}`
+        : `${primaryName} // LOCAL DRAINAGE`;
 
     const waterDepthDisplay =
       effectiveDepth > 0
@@ -237,6 +237,70 @@ export function aggregateIncidentsFromReports(reports = []) {
 }
 
 /**
+ * Maps raw IncidentQueue records from backend incident_queue table directly to UI incident cards.
+ */
+export function mapIncidentQueueToCards(incidentQueue = []) {
+  if (!Array.isArray(incidentQueue) || incidentQueue.length === 0) return [];
+
+  const mapped = incidentQueue.map((inc) => {
+    const rawConnectedId = (inc.incident_id || "").replace(/^#/, "") || generateConnectedIncidentId(inc.location);
+    const cardId = `#${rawConnectedId}`;
+    const count = inc.report_count || 1;
+    const depth = parseWaterDepthCm(inc.water_depth);
+    const lat = inc.latitude || 22.5726;
+    const lon = inc.longitude || 88.3639;
+    const kmX = Number(((lon - 88.3639) * 102.6).toFixed(2));
+    const kmY = Number(((22.5726 - lat) * 111.13).toFixed(2));
+
+    const primaryName = (inc.location || "LOCALITY").split(",")[0].trim().toUpperCase();
+    const subdivision = inc.subdivision || (
+      inc.ward
+        ? `${primaryName} // ${inc.ward.toUpperCase()}`
+        : inc.assigned_ulb_name
+          ? `${primaryName} // ${inc.assigned_ulb_name.toUpperCase()}`
+          : `${primaryName} // LOCAL DRAINAGE`
+    );
+
+    const waterDepthDisplay =
+      depth > 0 ? `${depth} cm water depth` : (inc.water_depth_display || "Telemetry Pending");
+
+    return {
+      id: cardId,
+      connectedIncidentId: rawConnectedId,
+      name: `${inc.location} Incident ${cardId}`,
+      subdivision,
+      location: inc.location,
+      latitude: lat,
+      longitude: lon,
+      x: kmX,
+      y: kmY,
+      timestamp: inc.updated_at_formatted || "Active",
+      waterDepth: waterDepthDisplay,
+      waterLevel: `${depth > 0 ? depth : 15} cm`,
+      waterLevelCm: depth > 0 ? depth : 15.0,
+      rainfall: `${Math.min(95, 45 + count * 6)} mm / 3 hr`,
+      verifiedReports: count,
+      affectedArea: `${Math.round(4200 + count * 1100).toLocaleString()} m²`,
+      riskScore: `${Math.min(96, 45 + count * 8)} / 100`,
+      connectedDrainage: "Local Municipal Stormwater Network",
+      nearestPump: "PS-07",
+      probableCause: "Verified citizen ground reports indicating active surface inundation.",
+      severity: inc.severity || getSeverityFromReportCount(count, depth),
+      status: "Needs Intervention",
+      isPrimary: false,
+    };
+  });
+
+  return mapped.sort((a, b) => {
+    const rankDiff = getSeverityRank(b.severity) - getSeverityRank(a.severity);
+    if (rankDiff !== 0) return rankDiff;
+    const reportDiff = (b.verifiedReports ?? 0) - (a.verifiedReports ?? 0);
+    if (reportDiff !== 0) return reportDiff;
+    return parseWaterDepthCm(b.waterDepth) - parseWaterDepthCm(a.waterDepth);
+  });
+}
+
+/**
  * Backward-compatible wrapper for aggregateIncidentsFromReports.
  * Exclusively derives incidents from the reports table.
  */
@@ -244,3 +308,4 @@ export function aggregateIncidentsWithReports(arg1 = [], arg2 = null) {
   const reports = Array.isArray(arg2) ? arg2 : (Array.isArray(arg1) ? arg1 : []);
   return aggregateIncidentsFromReports(reports);
 }
+

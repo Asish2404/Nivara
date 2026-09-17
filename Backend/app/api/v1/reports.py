@@ -5,11 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.models.user import User
 from app.api.v1.auth import get_current_user, get_current_user_or_default
-from app.schemas.report import ReportResponse, ReportCreate
+from app.schemas.report import ReportResponse, ReportCreate, IncidentQueueResponse
 from app.services.report_service import ReportService
+from app.services.incident_service import IncidentQueueService
 from app.services.image_validation_service import ImageValidationService
 
 router = APIRouter()
+
 
 
 @router.post(
@@ -99,3 +101,21 @@ async def get_my_report(
     """Returns a single report only if it belongs to the requesting user (404 otherwise)."""
     report = await ReportService.get_user_report(db, current_user.id, report_id)
     return ReportResponse.model_validate(report)
+
+
+@router.get(
+    "/incidents",
+    response_model=List[IncidentQueueResponse],
+    summary="Get dynamic active incidents from incident_queue",
+)
+@router.get(
+    "/reports/incident-queue",
+    response_model=List[IncidentQueueResponse],
+    summary="Get dynamic active incidents from incident_queue (alias)",
+)
+async def get_incident_queue(
+    db: AsyncSession = Depends(get_db),
+):
+    """Returns all dynamic active incidents grouped by location from the incident_queue table."""
+    incidents = await IncidentQueueService.get_active_incidents(db)
+    return [IncidentQueueResponse.model_validate(inc) for inc in incidents]
