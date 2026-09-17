@@ -197,6 +197,7 @@ export const useKWIStore = create((set, get) => ({
   // Shared Mobile Report & Verification State (Stores original user input)
   reportPhoto: null,
   reportPhotoName: null,
+  reportPhotoValidation: null,
   reportDescription: "",
   reportLocation: "Salt Lake, Sector V, Kolkata",
   reportLocality: "Salt Lake, Sector V",
@@ -210,6 +211,7 @@ export const useKWIStore = create((set, get) => ({
 
   setReportPhoto: (photo) => set({ reportPhoto: photo }),
   setReportPhotoName: (name) => set({ reportPhotoName: name }),
+  setReportPhotoValidation: (validation) => set({ reportPhotoValidation: validation }),
   setReportDescription: (desc) => set({ reportDescription: desc }),
   setReportLocation: (loc) => set({ reportLocation: loc }),
   setReportLocality: (loc) => set({ reportLocality: loc }),
@@ -487,6 +489,7 @@ export const useKWIStore = create((set, get) => ({
       isReportVerified: false,
       reportPhoto: null,
       reportPhotoName: null,
+      reportPhotoValidation: null,
       reportDescription: "",
     });
   },
@@ -1046,8 +1049,25 @@ export const useKWIStore = create((set, get) => ({
   setActiveWorkOrderTicketId: (ticketId) => set({ activeWorkOrderTicketId: ticketId }),
   latestSimulationOutcome: null,
   setLatestSimulationOutcome: (outcome) => set({ latestSimulationOutcome: outcome }),
+  simulatedIncidentIds: [],
+  simulationOutcomes: {},
+  markIncidentSimulated: (id, outcome) => {
+    if (!id) return;
+    const clean = String(id).replace(/^#/, "");
+    set((state) => ({
+      simulatedIncidentIds: Array.from(
+        new Set([...(state.simulatedIncidentIds || []), id, clean, `#${clean}`])
+      ),
+      simulationOutcomes: {
+        ...(state.simulationOutcomes || {}),
+        [id]: outcome,
+        [clean]: outcome,
+        [`#${clean}`]: outcome,
+      },
+    }));
+  },
 
-  createWorkOrder: (newOrder) => {
+  createWorkOrder: (newOrder, options = {}) => {
     const rawRef = newOrder.incidentRef || newOrder.incidentId || '0041'
     const cleanRef = String(rawRef).replace(/^#/, '').replace(/[^a-zA-Z0-9]/g, '')
     const ticketKey = newOrder.ticketKey || `WO-${cleanRef}`
@@ -1063,17 +1083,24 @@ export const useKWIStore = create((set, get) => ({
     }
 
     set((state) => {
-      // Also mark as dispatched
+      // Also mark as dispatched & simulated
       const setIds = new Set([...state.dispatchedHotspotIds])
+      const simIds = new Set([...(state.simulatedIncidentIds || [])])
       if (newOrder.incidentId) {
         setIds.add(newOrder.incidentId)
         setIds.add(String(newOrder.incidentId).replace(/^#/, ''))
         setIds.add(`#${String(newOrder.incidentId).replace(/^#/, '')}`)
+        simIds.add(newOrder.incidentId)
+        simIds.add(String(newOrder.incidentId).replace(/^#/, ''))
+        simIds.add(`#${String(newOrder.incidentId).replace(/^#/, '')}`)
       }
       if (newOrder.incidentRef) {
         setIds.add(newOrder.incidentRef)
         setIds.add(String(newOrder.incidentRef).replace(/^#/, ''))
         setIds.add(`#${String(newOrder.incidentRef).replace(/^#/, '')}`)
+        simIds.add(newOrder.incidentRef)
+        simIds.add(String(newOrder.incidentRef).replace(/^#/, ''))
+        simIds.add(`#${String(newOrder.incidentRef).replace(/^#/, '')}`)
       }
 
       return {
@@ -1084,11 +1111,19 @@ export const useKWIStore = create((set, get) => ({
         activeWorkOrderTicketId: ticketKey,
         latestSimulationOutcome: finalizedOrder,
         dispatchedHotspotIds: Array.from(setIds),
+        simulatedIncidentIds: Array.from(simIds),
+        simulationOutcomes: {
+          ...(state.simulationOutcomes || {}),
+          [rawRef]: newOrder.simulationOutcome,
+          [cleanRef]: newOrder.simulationOutcome,
+          [`#${cleanRef}`]: newOrder.simulationOutcome,
+        },
       }
     })
 
-    get().navigate('/action-center')
-    return ticketKey
+    const targetRoute = options.redirectTo || '/respond';
+    get().navigate(targetRoute);
+    return ticketKey;
   },
 
   advanceWorkOrderStatus: (ticketKey) => {

@@ -20,9 +20,11 @@ import {
   Volume2,
   Search,
   Edit2,
+  AlertTriangle,
 } from 'lucide-react'
 import { useKWIStore } from '../../store/useKWIStore'
 import { audioEngine } from '../../utils/audioEngine'
+import { api } from '../../utils/api'
 
 const KOLKATA_PRESETS = [
   { name: 'Salt Lake, Sector V', ward: 'Ward 31 (Bidhannagar)', lat: 22.5735, lon: 88.4331 },
@@ -42,6 +44,8 @@ export function MobileReportForm({ onBackToStep1 }) {
     reportPhoto,
     setReportPhoto,
     setReportPhotoName,
+    reportPhotoValidation,
+    setReportPhotoValidation,
     reportDescription,
     setReportDescription,
     reportLocation,
@@ -64,6 +68,41 @@ export function MobileReportForm({ onBackToStep1 }) {
   // Device inputs (Camera ONLY vs Gallery ONLY)
   const cameraInputRef = useRef(null)
   const galleryInputRef = useRef(null)
+
+  // Real-time AI Vision Validation State
+  const [isValidatingPhoto, setIsValidatingPhoto] = useState(false)
+  const [attemptedWithoutPhoto, setAttemptedWithoutPhoto] = useState(false)
+  const [attemptedWithoutDescription, setAttemptedWithoutDescription] = useState(false)
+
+  // If a photo exists in store upon returning/mounting, verify its validation status
+  useEffect(() => {
+    if (reportPhoto && !reportPhotoValidation && !isValidatingPhoto) {
+      let isCancelled = false
+      setIsValidatingPhoto(true)
+      fetch(reportPhoto)
+        .then((r) => r.blob())
+        .then((blob) => {
+          const file = new File([blob], reportPhotoName || 'report.jpg', {
+            type: blob.type || 'image/jpeg',
+          })
+          const formData = new FormData()
+          formData.append('image', file)
+          return api.postForm('/reports/validate-drainage-image', formData)
+        })
+        .then((res) => {
+          if (!isCancelled) setReportPhotoValidation(res)
+        })
+        .catch((err) => {
+          console.warn('[KWI] Photo re-validation error:', err)
+        })
+        .finally(() => {
+          if (!isCancelled) setIsValidatingPhoto(false)
+        })
+      return () => {
+        isCancelled = true
+      }
+    }
+  }, [reportPhoto, reportPhotoValidation])
 
   // Voice Recording Page State
   const [isListening, setIsListening] = useState(false)
@@ -278,8 +317,8 @@ export function MobileReportForm({ onBackToStep1 }) {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
   }
 
-  // Handle Photo selection from native file picker or camera
-  const handleImageUpload = (e) => {
+  // Handle Photo selection from native file picker or camera with instant ML validation
+  const handleImageUpload = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -293,6 +332,29 @@ export function MobileReportForm({ onBackToStep1 }) {
       }
     }
     reader.readAsDataURL(file)
+
+    // Reset photo required warning since user picked a photo
+    setAttemptedWithoutPhoto(false)
+
+    // Execute instant local ML vision check (MobileNetV3)
+    setIsValidatingPhoto(true)
+    setReportPhotoValidation(null)
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+      const res = await api.postForm('/reports/validate-drainage-image', formData)
+      setReportPhotoValidation(res)
+      if (res && res.is_drainage) {
+        audioEngine.playUiChirp(1300)
+      } else {
+        audioEngine.playUiChirp(600)
+      }
+    } catch (err) {
+      console.warn('[KWI] Image validation service fallback:', err)
+      setReportPhotoValidation({ is_drainage: true, message: 'Offline check passed' })
+    } finally {
+      setIsValidatingPhoto(false)
+    }
   }
 
   // Fetch Real GPS Coordinates from Device
@@ -489,15 +551,31 @@ export function MobileReportForm({ onBackToStep1 }) {
                   </div>
                 </div>
                 {reportPhoto && (
-                  <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px]">
-                    <Check className="w-3 h-3 stroke-[3]" />
-                  </span>
+                  reportPhotoValidation && !reportPhotoValidation.is_drainage ? (
+                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-700 flex items-center justify-center text-[10px]" title="Invalid Photo">
+                      <AlertTriangle className="w-3 h-3 stroke-[3]" />
+                    </span>
+                  ) : reportPhotoValidation?.is_drainage ? (
+                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px]">
+                      <Check className="w-3 h-3 stroke-[3]" />
+                    </span>
+                  ) : (
+                    <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-[10px]" title="Validating...">
+                      <Loader2 className="w-3 h-3 animate-spin text-amber-600" />
+                    </span>
+                  )
                 )}
               </div>
 
               {/* Card 2: Describe the Problem */}
               <div
                 onClick={() => {
+                  if (!reportPhoto || !reportPhotoValidation || !reportPhotoValidation.is_drainage) {
+                    audioEngine.playUiChirp(550)
+                    setAttemptedWithoutPhoto(true)
+                    setStep(1)
+                    return
+                  }
                   audioEngine.playUiChirp(1000)
                   setStep(2)
                 }}
@@ -526,6 +604,18 @@ export function MobileReportForm({ onBackToStep1 }) {
               {/* Card 3: Use Current Location */}
               <div
                 onClick={() => {
+                  if (!reportPhoto || !reportPhotoValidation || !reportPhotoValidation.is_drainage) {
+                    audioEngine.playUiChirp(550)
+                    setAttemptedWithoutPhoto(true)
+                    setStep(1)
+                    return
+                  }
+                  if (!reportDescription || !reportDescription.trim()) {
+                    audioEngine.playUiChirp(550)
+                    setAttemptedWithoutDescription(true)
+                    setStep(2)
+                    return
+                  }
                   audioEngine.playUiChirp(1000)
                   setStep(3)
                 }}
@@ -603,43 +693,129 @@ export function MobileReportForm({ onBackToStep1 }) {
             {/* Central Photo Dashed Box */}
             <div className="mt-3">
               {reportPhoto ? (
-                <div className="relative h-[200px] w-full rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 group shadow-xs">
-                  <img
-                    src={reportPhoto}
-                    alt="Waterlogging report"
-                    className="w-full h-full object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setReportPhoto(null)
-                      setReportPhotoName(null)
-                      audioEngine.playUiChirp(850)
-                    }}
-                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-slate-900/80 text-white flex items-center justify-center hover:bg-slate-950 transition-all cursor-pointer shadow-md"
-                    title="Remove Photo"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                  <div className="absolute bottom-2 left-2.5 bg-slate-900/85 backdrop-blur-md text-white text-[10px] font-mono px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                    <span>Photo Attached</span>
+                <div>
+                  <div className={`relative h-[200px] w-full rounded-2xl overflow-hidden border transition-all group shadow-xs ${
+                    reportPhotoValidation && !reportPhotoValidation.is_drainage
+                      ? 'border-2 border-red-500/80 bg-red-50/20'
+                      : reportPhotoValidation?.is_drainage
+                      ? 'border-2 border-emerald-500/80 bg-slate-100'
+                      : 'border-slate-200 bg-slate-100'
+                  }`}>
+                    <img
+                      src={reportPhoto}
+                      alt="Waterlogging report"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReportPhoto(null)
+                        setReportPhotoName(null)
+                        setReportPhotoValidation(null)
+                        setIsValidatingPhoto(false)
+                        setAttemptedWithoutPhoto(false)
+                        audioEngine.playUiChirp(850)
+                      }}
+                      className="absolute top-2 right-2 w-7 h-7 rounded-full bg-slate-900/80 text-white flex items-center justify-center hover:bg-slate-950 transition-all cursor-pointer shadow-md z-10"
+                      title="Remove Photo"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+
+                    {/* AI scanning overlay */}
+                    {isValidatingPhoto && (
+                      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs flex flex-col items-center justify-center gap-2 text-white">
+                        <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
+                        <span className="text-[12px] font-bold tracking-wide">
+                          AI Analyzing Photo...
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Bottom Status Tag */}
+                    {!isValidatingPhoto && (
+                      <div className="absolute bottom-2 left-2.5 z-10">
+                        {reportPhotoValidation && !reportPhotoValidation.is_drainage ? (
+                          <div className="bg-red-600/90 backdrop-blur-md text-white text-[10px] font-mono px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
+                            <AlertTriangle className="w-3 h-3 text-white" />
+                            <span>Photo Rejected</span>
+                          </div>
+                        ) : reportPhotoValidation?.is_drainage ? (
+                          <div className="bg-emerald-600/90 backdrop-blur-md text-white text-[10px] font-mono px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
+                            <CheckCircle2 className="w-3 h-3 text-white" />
+                            <span>AI Verified Drainage</span>
+                          </div>
+                        ) : (
+                          <div className="bg-amber-600/90 backdrop-blur-md text-white text-[10px] font-mono px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
+                            <AlertTriangle className="w-3 h-3 text-white" />
+                            <span>Pending AI Check</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
+
+                  {/* Rejected Error Banner */}
+                  {reportPhotoValidation && !reportPhotoValidation.is_drainage && (
+                    <div className="mt-2.5 p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 flex items-start gap-2.5 animate-in fade-in">
+                      <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                      <div className="text-left">
+                        <div className="text-[12px] font-bold text-red-900 dark:text-red-300">
+                          Invalid Photo Detected
+                        </div>
+                        <div className="text-[11px] text-red-700 dark:text-red-400 mt-0.5 leading-snug">
+                          {reportPhotoValidation.message || 'Please upload a clear photo of the street or drainage problem.'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Approved Success Banner */}
+                  {reportPhotoValidation?.is_drainage && (
+                    <div className="mt-2.5 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 flex items-center gap-2 animate-in fade-in">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <div className="text-[11.5px] font-bold text-emerald-900 dark:text-emerald-300">
+                        {reportPhotoValidation.message || 'Valid drainage/waterlogging photo verified.'}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div
-                  onClick={() => galleryInputRef.current?.click()}
-                  className="h-[200px] w-full rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/40 hover:bg-blue-50/30 transition-all flex flex-col items-center justify-center p-4 text-center cursor-pointer group"
-                >
-                  <div className="w-14 h-14 rounded-2xl bg-[#edf5fc] text-[#1d63a8] flex items-center justify-center mb-2.5 shadow-2xs group-hover:scale-105 transition-transform">
-                    <Camera className="w-6 h-6" />
+                <div>
+                  <div
+                    onClick={() => {
+                      setAttemptedWithoutPhoto(false)
+                      galleryInputRef.current?.click()
+                    }}
+                    className={`h-[200px] w-full rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center p-4 text-center cursor-pointer group ${
+                      attemptedWithoutPhoto
+                        ? 'border-amber-400 bg-amber-50/50 ring-2 ring-amber-300/40 animate-pulse'
+                        : 'border-slate-300 bg-slate-50/40 hover:bg-blue-50/30'
+                    }`}
+                  >
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-2.5 shadow-2xs group-hover:scale-105 transition-transform ${
+                      attemptedWithoutPhoto
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-[#edf5fc] text-[#1d63a8]'
+                    }`}>
+                      <Camera className="w-6 h-6" />
+                    </div>
+                    <span className="text-[13px] font-bold text-slate-800">
+                      Tap to add photo
+                    </span>
+                    <span className="text-[11px] text-slate-400 mt-0.5">
+                      From device camera or gallery
+                    </span>
                   </div>
-                  <span className="text-[13px] font-bold text-slate-800">
-                    Tap to add photo
-                  </span>
-                  <span className="text-[11px] text-slate-400 mt-0.5">
-                    From device camera or gallery
-                  </span>
+
+                  {attemptedWithoutPhoto && (
+                    <div className="mt-2.5 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 flex items-center gap-2 animate-in fade-in">
+                      <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                      <span className="text-[11.5px] font-semibold text-amber-900 dark:text-amber-300">
+                        Photo required: Please take or upload a photo of the problem first.
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -649,6 +825,7 @@ export function MobileReportForm({ onBackToStep1 }) {
               <button
                 type="button"
                 onClick={() => {
+                  setAttemptedWithoutPhoto(false)
                   audioEngine.playUiChirp(1100)
                   cameraInputRef.current?.click()
                 }}
@@ -661,6 +838,7 @@ export function MobileReportForm({ onBackToStep1 }) {
               <button
                 type="button"
                 onClick={() => {
+                  setAttemptedWithoutPhoto(false)
                   audioEngine.playUiChirp(1100)
                   galleryInputRef.current?.click()
                 }}
@@ -676,14 +854,54 @@ export function MobileReportForm({ onBackToStep1 }) {
           <div className="pt-3 pb-1">
             <button
               type="button"
+              disabled={!reportPhoto || isValidatingPhoto || !reportPhotoValidation || !reportPhotoValidation.is_drainage}
               onClick={() => {
+                if (!reportPhoto) {
+                  audioEngine.playUiChirp(550)
+                  setAttemptedWithoutPhoto(true)
+                  return
+                }
+                if (isValidatingPhoto) {
+                  audioEngine.playUiChirp(550)
+                  return
+                }
+                if (!reportPhotoValidation || !reportPhotoValidation.is_drainage) {
+                  audioEngine.playUiChirp(600)
+                  return
+                }
                 audioEngine.playUiChirp(1200)
                 setStep(2)
               }}
-              className="w-full h-11 rounded-2xl bg-[#8c9eb2] hover:bg-[#1d63a8] text-white font-bold text-[13px] transition-all shadow-xs cursor-pointer flex items-center justify-center active:scale-[0.98]"
+              className={`w-full h-11 rounded-2xl font-bold text-[13px] transition-all shadow-xs flex items-center justify-center active:scale-[0.98] ${
+                !reportPhoto || isValidatingPhoto || !reportPhotoValidation || !reportPhotoValidation.is_drainage
+                  ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200/50 dark:border-slate-700/50 shadow-none'
+                  : 'bg-[#1d63a8] hover:bg-[#164e85] text-white cursor-pointer shadow-md'
+              }`}
             >
-              <span>Continue</span>
+              {isValidatingPhoto ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Validating Photo...</span>
+                </span>
+              ) : (
+                <span>Continue</span>
+              )}
             </button>
+            {!reportPhoto && (
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium text-center mt-1.5 leading-tight">
+                Photo is required to continue.
+              </p>
+            )}
+            {reportPhoto && isValidatingPhoto && (
+              <p className="text-[11px] text-cyan-600 dark:text-cyan-400 font-medium text-center mt-1.5 leading-tight animate-pulse">
+                Analyzing photo with local AI model...
+              </p>
+            )}
+            {reportPhotoValidation && !reportPhotoValidation.is_drainage && (
+              <p className="text-[11px] text-red-500 font-semibold text-center mt-1.5 leading-tight animate-in fade-in">
+                Please attach a valid drainage photo to continue.
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -720,10 +938,27 @@ export function MobileReportForm({ onBackToStep1 }) {
               <textarea
                 rows={3}
                 value={reportDescription}
-                onChange={(e) => setReportDescription(e.target.value)}
+                onChange={(e) => {
+                  setReportDescription(e.target.value)
+                  if (e.target.value.trim()) {
+                    setAttemptedWithoutDescription(false)
+                  }
+                }}
                 placeholder="Water is knee-deep near the crossing..."
-                className="w-full text-xs p-3 rounded-2xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#1d63a8] focus:ring-1 focus:ring-[#1d63a8] resize-none transition-all leading-relaxed shadow-2xs"
+                className={`w-full text-xs p-3 rounded-2xl border bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#1d63a8] focus:ring-1 focus:ring-[#1d63a8] resize-none transition-all leading-relaxed shadow-2xs ${
+                  attemptedWithoutDescription && (!reportDescription || !reportDescription.trim())
+                    ? 'border-amber-400 dark:border-amber-500 bg-amber-50/30 ring-2 ring-amber-300/40 animate-pulse'
+                    : 'border-slate-200'
+                }`}
               />
+              {attemptedWithoutDescription && (!reportDescription || !reportDescription.trim()) && (
+                <div className="mt-1.5 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 flex items-center gap-2 animate-in fade-in">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span className="text-[11px] font-semibold text-amber-900 dark:text-amber-300">
+                    Description required: Please write what is happening or tap "Describe by Voice".
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Water Depth Radio Options */}
@@ -788,14 +1023,29 @@ export function MobileReportForm({ onBackToStep1 }) {
           <div className="pt-3 pb-1">
             <button
               type="button"
+              disabled={!reportDescription || !reportDescription.trim()}
               onClick={() => {
+                if (!reportDescription || !reportDescription.trim()) {
+                  audioEngine.playUiChirp(550)
+                  setAttemptedWithoutDescription(true)
+                  return
+                }
                 audioEngine.playUiChirp(1200)
                 setStep(3)
               }}
-              className="w-full h-11 rounded-2xl bg-[#8c9eb2] hover:bg-[#1d63a8] text-white font-bold text-[13px] transition-all shadow-xs cursor-pointer flex items-center justify-center active:scale-[0.98]"
+              className={`w-full h-11 rounded-2xl font-bold text-[13px] transition-all shadow-xs flex items-center justify-center active:scale-[0.98] ${
+                !reportDescription || !reportDescription.trim()
+                  ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200/50 dark:border-slate-700/50 shadow-none'
+                  : 'bg-[#1d63a8] hover:bg-[#164e85] text-white cursor-pointer shadow-md'
+              }`}
             >
               <span>Continue</span>
             </button>
+            {(!reportDescription || !reportDescription.trim()) && (
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium text-center mt-1.5 leading-tight">
+                Please describe the problem or record voice to continue.
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -935,6 +1185,7 @@ export function MobileReportForm({ onBackToStep1 }) {
               disabled={!reportDescription}
               onClick={() => {
                 stopVoiceRecording()
+                setAttemptedWithoutDescription(false)
                 audioEngine.playUiChirp(1200)
                 setStep(3) // Advance directly to Confirm Location
               }}

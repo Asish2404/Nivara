@@ -6,14 +6,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from .core.config import settings
-from .core.database import init_db, async_session
-from .api.v1.api import api_router
-from .services.auth_service import AuthService
-from .services.report_service import UPLOAD_DIR
-from .services.waterlogging_service import WaterloggingService
+from app.core.config import settings
+from app.core.database import init_db, async_session
+from app.api.v1.api import api_router
+from app.services.auth_service import AuthService
+from app.services.report_service import UPLOAD_DIR
+from app.services.waterlogging_service import WaterloggingService
 
-from .core.datetime_utils import get_kolkata_tz
+from app.core.datetime_utils import get_kolkata_tz
 from datetime import datetime
 
 logger = logging.getLogger("app.main")

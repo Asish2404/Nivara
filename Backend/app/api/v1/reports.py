@@ -4,11 +4,28 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.models.user import User
-from .auth import get_current_user, get_current_user_or_default
+from app.api.v1.auth import get_current_user, get_current_user_or_default
 from app.schemas.report import ReportResponse, ReportCreate
 from app.services.report_service import ReportService
+from app.services.image_validation_service import ImageValidationService
 
 router = APIRouter()
+
+
+@router.post(
+    "/reports/validate-drainage-image",
+    summary="Fast MobileNet ML validation of drainage/waterlogging photo",
+)
+@router.post(
+    "/validate-drainage-image",
+    summary="Fast MobileNet ML validation of drainage/waterlogging photo (alias)",
+)
+async def validate_drainage_image(
+    image: UploadFile = File(..., description="Uploaded citizen photo to inspect"),
+):
+    """Classify whether the uploaded image is a legitimate municipal drainage/waterlogging photo."""
+    image_bytes = await image.read()
+    return await ImageValidationService.validate_image(image_bytes, image.filename or "")
 
 
 @router.post(
