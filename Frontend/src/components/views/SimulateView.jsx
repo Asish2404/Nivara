@@ -116,6 +116,8 @@ export function SimulateView() {
     activeSimulationIncidentId,
     setActiveSimulationIncidentId,
     selectedIncident,
+    setSelectedIncident,
+    markIncidentSimulated,
     dispatchSimulationToWorkOrder,
     setLatestSimulationOutcome,
     dispatchedHotspotIds,
@@ -445,15 +447,36 @@ export function SimulateView() {
       targetLabel: locShort,
     };
 
-    // 5. Advance simulator target hotspot to next location & reset timeline
-    if (nextIncident) {
-      setSelectedIncidentId(nextIncident.id);
-      setActiveSimulationIncidentId(nextIncident.id);
-    }
-    setSimState("CURRENT"); // Ready for next location's baseline evaluation
+    const drainMins = simulationResult.clearanceHours
+      ? Math.max(15, Math.round(simulationResult.clearanceHours * 22))
+      : 22;
 
-    // 6. Push work order to store, pop dispatched hotspot, and navigate to respond page
-    createWorkOrder(orderPayload);
+    const outcomeData = {
+      baselineDepthCm: `${Math.round(baselineDepthCm)} cm (Critical)`,
+      simulatedDepthCm: `${Math.round(simulationResult.simulatedDepthCm)} cm (-${simulationResult.depthReductionPct}% reduction)`,
+      baselineAreaM2: `${baselineAreaM2.toLocaleString()} m² (Expanded)`,
+      simulatedAreaM2: `${Math.round(simulationResult.simulatedAreaM2).toLocaleString()} m² (Contained)`,
+      baselineDrainTime: "Over 4 hours",
+      simulatedDrainTime: `${drainMins} mins`,
+    };
+
+    // 5. Keep active incident selected in store and mark as simulated
+    if (activeIncident) {
+      setSelectedIncident?.(activeIncident);
+      if (activeIncident.id) {
+        setActiveSimulationIncidentId?.(activeIncident.id);
+        markIncidentSimulated?.(activeIncident.id, outcomeData);
+      }
+    }
+
+    // 6. Push work order to store with simulation outcome and redirect to respond page
+    createWorkOrder(
+      {
+        ...orderPayload,
+        simulationOutcome: outcomeData,
+      },
+      { redirectTo: "/respond" }
+    );
   };
 
   const stagger = {

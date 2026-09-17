@@ -152,6 +152,42 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
   const selectedIncident = store.selectedIncident;
   const selectedRiskZone = store.selectedRiskZone;
   const selectedPumpStation = store.selectedPumpStation;
+  const simulatedIncidentIds = store.simulatedIncidentIds || [];
+  const simulationOutcomes = store.simulationOutcomes || {};
+
+  const isIncidentSimulated = useMemo(() => {
+    if (!selectedIncident?.id) return false;
+    const cleanId = String(selectedIncident.id).replace(/^#/, "");
+    const cleanConn = String(selectedIncident.connectedIncidentId || "").replace(/^#/, "");
+    return (
+      simulatedIncidentIds.includes(selectedIncident.id) ||
+      simulatedIncidentIds.includes(cleanId) ||
+      (cleanConn && simulatedIncidentIds.includes(cleanConn)) ||
+      store.dispatchedHotspotIds?.includes(selectedIncident.id) ||
+      store.dispatchedHotspotIds?.includes(cleanId) ||
+      (cleanConn && store.dispatchedHotspotIds?.includes(cleanConn))
+    );
+  }, [selectedIncident, simulatedIncidentIds, store.dispatchedHotspotIds]);
+
+  const activeOutcome = useMemo(() => {
+    if (!selectedIncident) return null;
+    const cleanId = String(selectedIncident.id || "").replace(/^#/, "");
+    return (
+      simulationOutcomes[selectedIncident.id] ||
+      simulationOutcomes[cleanId] ||
+      store.latestSimulationOutcome?.simulationOutcome ||
+      null
+    );
+  }, [selectedIncident, simulationOutcomes, store.latestSimulationOutcome]);
+
+  // When selected incident has been simulated via Create Work Order, initialize simulation mode to AFTER
+  useEffect(() => {
+    if (isIncidentSimulated) {
+      setSimulateState("AFTER");
+    } else {
+      setSimulateState(null);
+    }
+  }, [isIncidentSimulated, selectedIncident?.id]);
 
   // Toggle individual layers locally
   const toggleLocalLayer = (key) => {
@@ -1469,27 +1505,33 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
               <span className="text-xs font-bold font-mono text-slate-300">
                 INTERVENTION DIGITAL TWIN
               </span>
-              {simulateState && (
+              {isIncidentSimulated && (
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-400/30">
                   SIMULATION ACTIVE
                 </span>
               )}
             </div>
 
-            {!simulateState ? (
+            {!isIncidentSimulated ? (
               <button
                 type="button"
                 onClick={() => {
                   audioEngine.playUiChirp(1300);
-                  setSimulateState("AFTER");
+                  if (selectedIncident) {
+                    store.setSelectedIncident?.(selectedIncident);
+                    if (selectedIncident.id) {
+                      store.setActiveSimulationIncidentId?.(selectedIncident.id);
+                    }
+                  }
+                  store.navigate("/simulate");
                 }}
-                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-500 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all"
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-500 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all hover:scale-[1.01] active:scale-[0.99]"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Simulate Intervention (Before vs After)</span>
+                <span>Simulate Intervention</span>
               </button>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-3 animate-in fade-in duration-200">
                 {/* Before vs After Switcher Tabs */}
                 <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-950/80 border border-white/10">
                   <button
@@ -1498,10 +1540,11 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                       audioEngine.playUiChirp(850);
                       setSimulateState("BEFORE");
                     }}
-                    className={`py-1.5 rounded-lg text-xs font-bold font-mono cursor-pointer transition-all ${simulateState === "BEFORE"
-                      ? "bg-rose-500/30 text-rose-300 border border-rose-500/40 shadow-xs"
-                      : "text-slate-400 hover:text-white"
-                      }`}
+                    className={`py-1.5 rounded-lg text-xs font-bold font-mono cursor-pointer transition-all ${
+                      simulateState === "BEFORE"
+                        ? "bg-rose-500/30 text-rose-300 border border-rose-500/40 shadow-xs"
+                        : "text-slate-400 hover:text-white"
+                    }`}
                   >
                     BEFORE (Baseline)
                   </button>
@@ -1511,10 +1554,11 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                       audioEngine.playUiChirp(1250);
                       setSimulateState("AFTER");
                     }}
-                    className={`py-1.5 rounded-lg text-xs font-bold font-mono cursor-pointer transition-all ${simulateState === "AFTER"
-                      ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 shadow-xs"
-                      : "text-slate-400 hover:text-white"
-                      }`}
+                    className={`py-1.5 rounded-lg text-xs font-bold font-mono cursor-pointer transition-all ${
+                      simulateState === "AFTER" || !simulateState
+                        ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 shadow-xs"
+                        : "text-slate-400 hover:text-white"
+                    }`}
                   >
                     AFTER (Mitigated)
                   </button>
@@ -1525,38 +1569,44 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                   <div className="flex items-center justify-between font-mono">
                     <span className="text-slate-400">Water Depth:</span>
                     <span className="font-bold text-white">
-                      {simulateState === "AFTER" ? (
-                        <span className="text-emerald-400">6 cm (-78% reduction)</span>
+                      {simulateState === "BEFORE" ? (
+                        <span className="text-rose-400">
+                          {activeOutcome?.baselineDepthCm || "28 cm (Critical)"}
+                        </span>
                       ) : (
-                        <span className="text-rose-400">28 cm (Critical)</span>
+                        <span className="text-emerald-400">
+                          {activeOutcome?.simulatedDepthCm || "6 cm (-78% reduction)"}
+                        </span>
                       )}
                     </span>
                   </div>
                   <div className="flex items-center justify-between font-mono">
                     <span className="text-slate-400">Inundation Footprint:</span>
                     <span className="font-bold text-white">
-                      {simulateState === "AFTER" ? (
-                        <span className="text-emerald-400">3,200 m² (Contained)</span>
+                      {simulateState === "BEFORE" ? (
+                        <span className="text-rose-400">
+                          {activeOutcome?.baselineAreaM2 || "12,400 m² (Expanded)"}
+                        </span>
                       ) : (
-                        <span className="text-rose-400">12,400 m² (Expanded)</span>
+                        <span className="text-emerald-400">
+                          {activeOutcome?.simulatedAreaM2 || "3,200 m² (Contained)"}
+                        </span>
                       )}
                     </span>
                   </div>
                   <div className="flex items-center justify-between font-mono">
                     <span className="text-slate-400">Time to Drain:</span>
                     <span className="font-bold text-cyan-300">
-                      {simulateState === "AFTER" ? "22 mins" : "Over 4 hours"}
+                      {simulateState === "BEFORE"
+                        ? (!activeOutcome?.baselineDrainTime || String(activeOutcome.baselineDrainTime).includes("undefined"))
+                          ? "Over 4 hours"
+                          : activeOutcome.baselineDrainTime
+                        : (!activeOutcome?.simulatedDrainTime || String(activeOutcome.simulatedDrainTime).includes("undefined"))
+                          ? "22 mins"
+                          : activeOutcome.simulatedDrainTime}
                     </span>
                   </div>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => setSimulateState(null)}
-                  className="w-full py-1.5 rounded-lg text-[11px] text-slate-400 hover:text-white transition-colors cursor-pointer"
-                >
-                  Exit Simulation Mode
-                </button>
               </div>
             )}
           </div>

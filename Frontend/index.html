@@ -1,47 +1,45 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/jpeg" href="/textures/NIVARA_LOGO.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>
-      Kolkata Water Intelligence | Geospatial Flood & Municipal Drainage
-      Platform
-    </title>
-    <meta
-      name="description"
-      content="Know the water. Know the city. Turn rainfall, citizen signals, and drainage intelligence into faster municipal decisions across the Kolkata Metropolitan Area."
-    />
-    <!-- Google Fonts: Sora, Manrope, Inter, JetBrains Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <!-- Google Identity Services SDK -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <!-- Prevent theme flash on initial render -->
-    <script>
-      (function() {
-        try {
-          var saved = localStorage.getItem('kwi_theme');
-          var systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var isDark = saved === 'dark' || (!saved && systemDark) || (saved === 'system' && systemDark);
-          if (isDark) {
-            document.documentElement.classList.add('dark');
-            document.documentElement.style.colorScheme = 'dark';
-          } else {
-            document.documentElement.classList.remove('dark');
-            document.documentElement.style.colorScheme = 'light';
-          }
-        } catch (e) {}
-      })();
-    </script>
-  </head>
 
-  <body class="antialiased selection:bg-sky-500/20 selection:text-sky-900">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/textures/NIVARA_LOGO.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>
+    NIVARA | Water Intelligence Platform
+  </title>
+  <meta name="description"
+    content="NIVARA is a water intelligence platform that uses geospatial flood & drainage intelligence to help municipalities make faster decisions across the Kolkata Metropolitan Area." />
+  <!-- Google Fonts: Sora, Manrope, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <!-- Google Identity Services SDK -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Prevent theme flash on initial render -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('kwi_theme');
+        var systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var isDark = saved === 'dark' || (!saved && systemDark) || (saved === 'system' && systemDark);
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = 'dark';
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.style.colorScheme = 'light';
+        }
+      } catch (e) { }
+    })();
+  </script>
+</head>
+
+<body class="antialiased selection:bg-sky-500/20 selection:text-sky-900">
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>
