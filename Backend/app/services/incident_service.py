@@ -176,11 +176,7 @@ class IncidentQueueService:
         # Query all active / ongoing incidents to find match
         result = await db.execute(
             select(IncidentQueue).where(
-                or_(
-                    IncidentQueue.status == "ACTIVE",
-                    IncidentQueue.status == "Needs Intervention",
-                    IncidentQueue.status == "Under Review",
-                )
+                IncidentQueue.status != "RESOLVED"
             )
         )
         active_incidents = list(result.scalars().all())
@@ -328,11 +324,7 @@ class IncidentQueueService:
         """Fetch all active incidents ordered by risk level, report count, water depth, and first submitted."""
         result = await db.execute(
             select(IncidentQueue).where(
-                or_(
-                    IncidentQueue.status == "ACTIVE",
-                    IncidentQueue.status == "Needs Intervention",
-                    IncidentQueue.status == "Under Review",
-                )
+                IncidentQueue.status != "RESOLVED"
             )
         )
         incidents = list(result.scalars().all())

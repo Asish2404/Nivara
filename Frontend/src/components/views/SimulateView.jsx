@@ -24,6 +24,7 @@ import {
 import { useKWIStore } from "../../store/useKWIStore";
 import {
   aggregateIncidentsFromReports,
+  mapIncidentQueueToCards,
   parseWaterDepthCm,
   getSeverityRank,
 } from "../../utils/incidentAggregator";
@@ -107,9 +108,11 @@ export function SimulateView() {
   const {
     navigate,
     incidents,
+    incidentQueue,
     allReports,
     myReports,
     fetchAllReports,
+    fetchIncidentQueue,
     pumpingStations,
     hooghlyTideLevel,
     hooghlyTideTrend,
@@ -125,10 +128,11 @@ export function SimulateView() {
     resetDispatchedHotspots,
   } = useKWIStore();
 
-  // Load municipal reports on mount
+  // Load municipal reports and active incident queue on mount + poll periodically
   useEffect(() => {
     fetchAllReports?.().catch(() => {});
-  }, [fetchAllReports]);
+    fetchIncidentQueue?.().catch(() => {});
+  }, [fetchAllReports, fetchIncidentQueue]);
 
   // Combine citizen reports from database & local preview
   const combinedReports = useMemo(() => {
@@ -140,10 +144,16 @@ export function SimulateView() {
     ];
   }, [allReports, myReports]);
 
-  // Sort incidents strictly in decreasing order from reports table
+  // Derive active incidents strictly from incident_queue table (matching Live City Map & Live Incident cards in same order)
   const sortedIncidents = useMemo(() => {
+    if (Array.isArray(incidentQueue) && incidentQueue.length > 0) {
+      return mapIncidentQueueToCards(incidentQueue);
+    }
+    if (Array.isArray(incidents) && incidents.length > 0) {
+      return incidents;
+    }
     return aggregateIncidentsFromReports(combinedReports);
-  }, [combinedReports]);
+  }, [incidentQueue, incidents, combinedReports]);
 
   // Available incidents: filter out any that have been dispatched (popped)
   const availableIncidents = useMemo(() => {
@@ -159,14 +169,9 @@ export function SimulateView() {
     });
   }, [sortedIncidents, dispatchedHotspotIds]);
 
-  // Active Hotspot Selection (defaults to top available hotspot from reports table)
-  const [selectedIncidentId, setSelectedIncidentId] = useState(() => {
-    return (
-      selectedIncident?.id ||
-      activeSimulationIncidentId ||
-      ""
-    );
-  });
+  // Active Hotspot Selection (defaults to highest priority available hotspot)
+  const [selectedIncidentId, setSelectedIncidentId] = useState("");
+  const hasUserManuallySelectedRef = useRef(false);
 
   // Custom 5-item scrollable dropdown state & outside click handler
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -218,26 +223,28 @@ export function SimulateView() {
     };
   }, [isDropdownOpen]);
 
-  // Auto-select top available hotspot from reports table when loaded or after a pop
+  // Auto-select highest priority available hotspot when Simulate page opens or availableIncidents updates
   useEffect(() => {
     if (availableIncidents.length > 0) {
-      const exists = availableIncidents.some(
-        (i) => i.id === selectedIncidentId || i.connectedIncidentId === selectedIncidentId
-      );
-      if (!exists || !selectedIncidentId) {
-        setSelectedIncidentId(availableIncidents[0].id);
-        setActiveSimulationIncidentId(availableIncidents[0].id);
+      if (!hasUserManuallySelectedRef.current) {
+        // Automatically default to highest priority (index 0)
+        const topIncident = availableIncidents[0];
+        setSelectedIncidentId(topIncident.id);
+        setActiveSimulationIncidentId(topIncident.id);
+      } else {
+        // If user manually selected an incident in this session, check if it's still available (not popped)
+        const exists = availableIncidents.some(
+          (i) => i.id === selectedIncidentId || i.connectedIncidentId === selectedIncidentId
+        );
+        if (!exists) {
+          const topIncident = availableIncidents[0];
+          setSelectedIncidentId(topIncident.id);
+          setActiveSimulationIncidentId(topIncident.id);
+          hasUserManuallySelectedRef.current = false;
+        }
       }
     }
   }, [availableIncidents, selectedIncidentId, setActiveSimulationIncidentId]);
-
-  // Sync if selected incident from Live City changes
-  useEffect(() => {
-    if (selectedIncident?.id) {
-      setSelectedIncidentId(selectedIncident.id);
-      setActiveSimulationIncidentId(selectedIncident.id);
-    }
-  }, [selectedIncident, setActiveSimulationIncidentId]);
 
   // Retrieve current active incident data from real reports table incidents
   const activeIncident = useMemo(() => {
@@ -354,6 +361,7 @@ export function SimulateView() {
   // Handle hotspot selection change
   const handleSelectIncident = (newId) => {
     audioEngine.playUiChirp(1000);
+    hasUserManuallySelectedRef.current = true;
     setSelectedIncidentId(newId);
     setActiveSimulationIncidentId(newId);
     setSimState("CURRENT"); // reset timeline to re-evaluate new baseline
@@ -383,6 +391,7 @@ export function SimulateView() {
 
   const handleCreateWorkOrder = () => {
     audioEngine.playUiChirp(1300);
+    hasUserManuallySelectedRef.current = false;
 
     // 1. Determine index of current incident in available list before popping
     const currentIndex = availableIncidents.findIndex(
@@ -407,11 +416,11 @@ export function SimulateView() {
       nextIncident = remaining[nextIndex];
     }
 
-    // 4. Construct high-fidelity Work Order payload matching reference image
-    const rawConnectedId = activeIncident.connectedIncidentId || String(activeIncident.id || "0041").replace(/^#/, "");
-    const cleanTicketNum = rawConnectedId.replace(/[^a-zA-Z0-9]/g, "");
-    const ticketKey = `WO-${cleanTicketNum}`;
-    const workOrderId = `WO-2026-0323-${cleanTicketNum}`;
+    // 4. Construct high-fidelity Work Order payload with exact incident_id and WO-incident_id format
+    const rawConnectedId = String(activeIncident.id || activeIncident.connectedIncidentId || "IN-101").replace(/^#/, "").trim();
+    const cleanIncId = rawConnectedId;
+    const ticketKey = `WO-${cleanIncId}`;
+    const workOrderId = `WO-${cleanIncId}`;
 
     const assignedEquipmentList = [
       extraPumpUnit ? "20 HP Godwin High-Head Unit" : "25 HP Godwin High-Head Unit",
@@ -421,17 +430,34 @@ export function SimulateView() {
     const locClean = activeIncident.location ? activeIncident.location.split("(")[0].trim() : "Municipal Ward";
     const locShort = locClean.split(",")[0].trim();
 
+    // 4. Construct selected intervention type from simulated parameters
+    const interventionParts = [];
+    if (pumpCapacity) {
+      interventionParts.push(`Pump Load ${pumpCapacity}% (${Math.round((stationCapacityCusecs * pumpCapacity) / 100)} Cusecs)`);
+    }
+    if (extraPumpUnit) {
+      interventionParts.push("25 HP Godwin High-Head Unit");
+    }
+    if (crewDispatched) {
+      interventionParts.push("Inlet Desilting Taskforce");
+    }
+    const interventionType = interventionParts.length > 0
+      ? interventionParts.join(" + ")
+      : "Standard Hydraulic Drainage Response";
+
     const orderPayload = {
       id: workOrderId,
       ticketKey,
-      incidentRef: activeIncident.id || `#${rawConnectedId}`,
-      incidentId: activeIncident.id,
+      incidentRef: `#${cleanIncId}`,
+      incidentId: cleanIncId,
       location: locClean,
       lat: activeIncident.latitude ? `${Number(activeIncident.latitude).toFixed(4)}° N` : "22.5802° N",
       lng: activeIncident.longitude ? `${Number(activeIncident.longitude).toFixed(4)}° E` : "88.3685° E",
       borough: activeIncident.subdivision || activeIncident.ward || "KMC Borough V",
       priority: activeIncident.severity || "CRITICAL",
       status: "Dispatched",
+      intervention_type: interventionType,
+      interventionType: interventionType,
       stage: 1, // Step 2: Dispatched (matching exact reference screenshot)
       riskScore: `${activeIncident.riskScore ? String(activeIncident.riskScore).replace(/[^\d/]/g, '').trim() : `${baselineRiskScore} / 100`}`,
       expectedImpact: `-${simulationResult.depthReductionCm ?? 14} cm depth`,

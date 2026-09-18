@@ -60,10 +60,10 @@ export function ActionsView() {
 
   const allWorkOrders = useMemo(() => {
     return {
-      ...(workOrders || {}),
       ...(latestSimulationOutcome && latestSimulationOutcome.ticketKey
         ? { [latestSimulationOutcome.ticketKey]: latestSimulationOutcome }
         : {}),
+      ...(workOrders || {}),
     };
   }, [workOrders, latestSimulationOutcome]);
 
@@ -76,22 +76,33 @@ export function ActionsView() {
     Object.values(allWorkOrders)[0] ||
     null;
 
+  const getTicketStage = (ticket) => {
+    if (!ticket) return 1;
+    if (typeof ticket.stage === "number") return ticket.stage;
+    if (ticket.status === "Resolved") return 3;
+    if (ticket.status === "In Progress") return 2;
+    if (ticket.status === "Dispatched") return 1;
+    return 0;
+  };
+
   // Workflow stages (Dispatched is active by default as shown in exact reference pic)
   const [currentStage, setCurrentStage] = useState(() => {
-    return typeof activeTicket?.stage === "number" ? activeTicket.stage : 1;
+    return getTicketStage(activeTicket);
   });
 
-  // Synchronize when activeTicket stage changes or ticket is switched
+  // Synchronize when activeTicket stage/status changes or ticket is switched
   useEffect(() => {
-    if (activeTicket && typeof activeTicket.stage === "number") {
-      setCurrentStage(activeTicket.stage);
+    if (activeTicket) {
+      setCurrentStage(getTicketStage(activeTicket));
     }
-  }, [selectedTicketId, activeTicket?.stage]);
+  }, [selectedTicketId, activeTicket?.stage, activeTicket?.status]);
 
-  // Synchronize when store activeWorkOrderTicketId updates (e.g. from Simulate page)
+  // Synchronize when store activeWorkOrderTicketId updates or tickets are resolved/removed
   useEffect(() => {
     if (activeWorkOrderTicketId && allWorkOrders[activeWorkOrderTicketId]) {
       setSelectedTicketId(activeWorkOrderTicketId);
+    } else if (selectedTicketId && !allWorkOrders[selectedTicketId]) {
+      setSelectedTicketId(Object.keys(allWorkOrders)[0] || null);
     } else if (!selectedTicketId && Object.keys(allWorkOrders).length > 0) {
       setSelectedTicketId(Object.keys(allWorkOrders)[0]);
     }
@@ -106,14 +117,13 @@ export function ActionsView() {
 
   const handleAdvanceStage = () => {
     if (!activeTicket) return;
-    audioEngine.playUiChirp(950 + currentStage * 120);
-    setCurrentStage((prev) => {
-      const next = prev < 3 ? prev + 1 : prev;
-      if (advanceWorkOrderStatus && selectedTicketId) {
-        advanceWorkOrderStatus(selectedTicketId);
-      }
-      return next;
-    });
+    const targetKey = selectedTicketId || activeTicket.ticketKey || activeTicket.id;
+    const next = currentStage < 3 ? currentStage + 1 : currentStage;
+    audioEngine.playUiChirp(950 + next * 120);
+    setCurrentStage(next);
+    if (advanceWorkOrderStatus && targetKey) {
+      advanceWorkOrderStatus(targetKey);
+    }
   };
 
   const handleViewIncidentOnMap = () => {
@@ -179,13 +189,17 @@ export function ActionsView() {
 
                 {/* Connecting Arrow between steps */}
                 {idx < STAGES.length - 1 && (
-                  <div className="hidden md:flex items-center px-3 shrink-0">
+                  <div className="hidden md:flex items-center px-2 lg:px-3 shrink-0">
                     <div
-                      className={`h-[2px] w-10 lg:w-16 rounded-full transition-colors ${idx < currentStage ? "bg-[#00d0f5]" : "bg-[#162338]"
+                      className={`h-[2px] w-8 sm:w-12 lg:w-16 rounded-full transition-all duration-300 ${idx < currentStage
+                        ? "bg-[#00d0f5] shadow-[0_0_8px_rgba(0,208,245,0.7)]"
+                        : "bg-[#162338]"
                         }`}
                     />
                     <ChevronRight
-                      className={`w-4 h-4 -ml-1 ${idx < currentStage ? "text-[#00d0f5]" : "text-[#162338]"
+                      className={`w-4 h-4 -ml-1 transition-all duration-300 ${idx < currentStage
+                        ? "text-[#00d0f5] drop-shadow-[0_0_6px_rgba(0,208,245,0.8)]"
+                        : "text-[#162338]"
                         }`}
                     />
                   </div>

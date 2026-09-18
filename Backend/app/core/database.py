@@ -40,8 +40,8 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 # 5. Startup table initializer with safe schema migration for SQLite
 async def init_db() -> None:
-    # Import models so Base.metadata knows about users, admin, reports, waterlogging predictions, and incident_queue
-    from app.models import User, Admin, Report, WaterloggingPrediction, IncidentQueue  # noqa: F401
+    # Import models so Base.metadata knows about users, admin, reports, waterlogging predictions, incident_queue, work_orders, and historical_place
+    from app.models import User, Admin, Report, WaterloggingPrediction, IncidentQueue, WorkOrder, HistoricalPlace  # noqa: F401
     from app.services.incident_service import IncidentQueueService
 
     async with engine.begin() as conn:
@@ -201,6 +201,69 @@ async def init_db() -> None:
                     for col_name, col_type in missing_inc_columns.items():
                         if col_name not in existing_inc_cols:
                             connection.execute(text(f"ALTER TABLE incident_queue ADD COLUMN {col_name} {col_type}"))
+
+            if "work_orders" in table_names:
+                existing_wo_cols = {col["name"] for col in inspector.get_columns("work_orders")}
+                unwanted_cols = {"stage", "equipment", "eta", "expected_impact", "assigned_node", "trigger_reason", "simulation_outcome", "assigned_crew", "chief", "radio", "expected_action"}
+                if existing_wo_cols.intersection(unwanted_cols):
+                    # Cleanly rebuild table with exact requested columns only
+                    connection.execute(text("""
+                        CREATE TABLE work_orders_clean (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            work_id VARCHAR(64) UNIQUE NOT NULL,
+                            incident_id VARCHAR(32) NOT NULL,
+                            location VARCHAR(255) NOT NULL,
+                            latitude FLOAT DEFAULT 0.0,
+                            longitude FLOAT DEFAULT 0.0,
+                            ward VARCHAR(64) DEFAULT '',
+                            assigned_ulb_id VARCHAR(64) DEFAULT '',
+                            assigned_ulb_name VARCHAR(128) DEFAULT '',
+                            jurisdiction_type VARCHAR(64) DEFAULT '',
+                            issue_type VARCHAR(128) DEFAULT 'Waterlogging',
+                            risk_level VARCHAR(32) DEFAULT 'LOW',
+                            water_depth FLOAT DEFAULT 0.0,
+                            reports_number INTEGER DEFAULT 1,
+                            intervention_type VARCHAR(255) DEFAULT '',
+                            status VARCHAR(32) DEFAULT 'Dispatched',
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            dispatched_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            started_at DATETIME,
+                            resolved_at DATETIME,
+                            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    # Copy over data from existing table
+                    connection.execute(text("""
+                        INSERT OR IGNORE INTO work_orders_clean (
+                            id, work_id, incident_id, location, latitude, longitude,
+                            ward, assigned_ulb_id, assigned_ulb_name, jurisdiction_type,
+                            issue_type, risk_level, water_depth, reports_number,
+                            intervention_type, status, created_at, dispatched_at,
+                            started_at, resolved_at, updated_at
+                        )
+                        SELECT 
+                            id, work_id, incident_id, location, latitude, longitude,
+                            ward, assigned_ulb_id, assigned_ulb_name, jurisdiction_type,
+                            issue_type, risk_level, water_depth, reports_number,
+                            intervention_type, status, created_at, dispatched_at,
+                            started_at, resolved_at, updated_at
+                        FROM work_orders
+                    """))
+                    connection.execute(text("DROP TABLE work_orders"))
+                    connection.execute(text("ALTER TABLE work_orders_clean RENAME TO work_orders"))
+                else:
+                    # Add any missing standard columns if not present
+                    missing_wo_columns = {
+                        "intervention_type": "VARCHAR(255) DEFAULT ''",
+                        "status": "VARCHAR(32) DEFAULT 'Dispatched'",
+                        "dispatched_at": "DATETIME DEFAULT CURRENT_TIMESTAMP",
+                        "started_at": "DATETIME",
+                        "resolved_at": "DATETIME",
+                        "updated_at": "DATETIME DEFAULT CURRENT_TIMESTAMP",
+                    }
+                    for col_name, col_type in missing_wo_columns.items():
+                        if col_name not in existing_wo_cols:
+                            connection.execute(text(f"ALTER TABLE work_orders ADD COLUMN {col_name} {col_type}"))
 
         await conn.run_sync(sync_migrate)
 

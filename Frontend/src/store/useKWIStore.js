@@ -332,14 +332,91 @@ export const useKWIStore = create((set, get) => ({
     }
   },
 
-  // Fetch all municipal reports across Kolkata and the active incident queue
+  // Fetch all persisted work orders from the work_orders table
+  fetchWorkOrders: async () => {
+    try {
+      const orders = await api.get('/work-orders');
+      if (Array.isArray(orders) && orders.length > 0) {
+        const ordersMap = {};
+        const setIds = new Set(get().dispatchedHotspotIds || []);
+        const simIds = new Set(get().simulatedIncidentIds || []);
+        const outcomes = { ...(get().simulationOutcomes || {}) };
+
+        orders.forEach((wo) => {
+          const cleanRef = String(wo.incident_id || '').replace(/^#/, '').trim();
+          const cleanWorkId = wo.work_id || `WO-${cleanRef}`;
+          const rawTicketKey = cleanWorkId;
+          let eqList = ['High-Volume Suction Desilter'];
+          if (wo.equipment) {
+            try {
+              eqList = typeof wo.equipment === 'string' && wo.equipment.startsWith('[')
+                ? JSON.parse(wo.equipment)
+                : [wo.equipment];
+            } catch {
+              eqList = [wo.equipment];
+            }
+          }
+
+          ordersMap[rawTicketKey] = {
+            id: cleanWorkId,
+            ticketKey: rawTicketKey,
+            incidentRef: `#${cleanRef}`,
+            incidentId: cleanRef,
+            location: wo.location,
+            borough: wo.ward || wo.assigned_ulb_name || 'KMC Ward',
+            priority: wo.risk_level || 'CRITICAL',
+            status: wo.status || 'Dispatched',
+            stage: typeof wo.stage === 'number'
+              ? wo.stage
+              : (wo.status === 'Resolved' ? 3 : wo.status === 'In Progress' ? 2 : wo.status === 'Dispatched' ? 1 : 0),
+            riskScore: `${wo.risk_level || 'HIGH'} / 100`,
+            expectedImpact: wo.expected_impact || '-14 cm depth',
+            assignedNode: wo.assigned_node || 'PS-07 Central Sump',
+            assignedCrew: wo.assigned_crew || 'Central Rapid Sluice Taskforce 01',
+            chief: wo.chief || 'Er. K. Bhattacharya',
+            radio: wo.radio || 'CH-01-TAC',
+            equipment: eqList,
+            eta: wo.eta || '12 minutes',
+            trigger: wo.trigger_reason || 'Severe street inundation',
+            simulationOutcome: wo.parsed_simulation_outcome || null,
+            createdAt: wo.created_at,
+          };
+
+          if (wo.incident_id) {
+            setIds.add(wo.incident_id);
+            setIds.add(cleanRef);
+            setIds.add(`#${cleanRef}`);
+            simIds.add(wo.incident_id);
+            simIds.add(cleanRef);
+            simIds.add(`#${cleanRef}`);
+          }
+          if (wo.parsed_simulation_outcome) {
+            outcomes[cleanRef] = wo.parsed_simulation_outcome;
+            outcomes[`#${cleanRef}`] = wo.parsed_simulation_outcome;
+          }
+        });
+
+        set((state) => ({
+          workOrders: { ...ordersMap, ...state.workOrders },
+          dispatchedHotspotIds: Array.from(setIds),
+          simulatedIncidentIds: Array.from(simIds),
+          simulationOutcomes: outcomes,
+        }));
+      }
+    } catch (err) {
+      console.warn('[KWI] fetchWorkOrders notice:', err?.message || err);
+    }
+  },
+
+  // Fetch all municipal reports across Kolkata, the active incident queue, and work orders
   fetchAllReports: async () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('kwi_token') : null;
     try {
-      // Parallel fetch for reports and incident queue
-      const [reports, queue] = await Promise.allSettled([
+      // Parallel fetch for reports, incident queue, and work orders
+      const [reports, queue, workOrdersRes] = await Promise.allSettled([
         api.get('/reports?all_reports=true', token),
         api.get('/incidents', token),
+        get().fetchWorkOrders(),
       ]);
 
       const stateUpdate = { reportsLoaded: true, reportsError: null };
@@ -1083,7 +1160,7 @@ export const useKWIStore = create((set, get) => ({
   workOrders: {},
 
   // Hydraulic Scenario Simulation State & Action Center Bridge
-  activeSimulationIncidentId: '#SA-754',
+  activeSimulationIncidentId: null,
   setActiveSimulationIncidentId: (id) => set({ activeSimulationIncidentId: id }),
   activeWorkOrderTicketId: null,
   setActiveWorkOrderTicketId: (ticketId) => set({ activeWorkOrderTicketId: ticketId }),
@@ -1108,22 +1185,23 @@ export const useKWIStore = create((set, get) => ({
   },
 
   createWorkOrder: (newOrder, options = {}) => {
-    const rawRef = newOrder.incidentRef || newOrder.incidentId || '0041'
-    const cleanRef = String(rawRef).replace(/^#/, '').replace(/[^a-zA-Z0-9]/g, '')
-    const ticketKey = newOrder.ticketKey || `WO-${cleanRef}`
-    const fullId = newOrder.id || `WO-2026-0323-${cleanRef}`
+    const rawRef = newOrder.incidentId || newOrder.incidentRef || 'IN-101';
+    const cleanRef = String(rawRef).replace(/^#/, '').trim();
+    const ticketKey = `WO-${cleanRef}`;
+    const fullId = `WO-${cleanRef}`;
 
     const finalizedOrder = {
       ...newOrder,
       id: fullId,
       ticketKey,
-      incidentRef: newOrder.incidentRef || (newOrder.incidentId ? `#${String(newOrder.incidentId).replace(/^#/, '')}` : '#TK-089'),
+      incidentRef: `#${cleanRef}`,
+      incidentId: cleanRef,
       status: newOrder.status || 'Dispatched',
       stage: typeof newOrder.stage === 'number' ? newOrder.stage : 1, // Stage 1 = Dispatched (Step 2)
-    }
+    };
 
+    // 1. Instantly update local store for zero UI lag
     set((state) => {
-      // Also mark as dispatched & simulated
       const setIds = new Set([...state.dispatchedHotspotIds])
       const simIds = new Set([...(state.simulatedIncidentIds || [])])
       if (newOrder.incidentId) {
@@ -1161,28 +1239,83 @@ export const useKWIStore = create((set, get) => ({
       }
     })
 
+    // 2. Persist to backend work_orders table asynchronously (non-blocking)
+    api.post('/work-orders', {
+      work_id: ticketKey,
+      incident_id: cleanRef,
+      incident_ref: finalizedOrder.incidentRef,
+      location: finalizedOrder.location || '',
+      latitude: finalizedOrder.lat ? parseFloat(String(finalizedOrder.lat).replace(/[^\d.]/g, '')) : 0.0,
+      longitude: finalizedOrder.lng ? parseFloat(String(finalizedOrder.lng).replace(/[^\d.]/g, '')) : 0.0,
+      ward: finalizedOrder.borough || '',
+      issue_type: 'Waterlogging',
+      risk_level: finalizedOrder.priority || 'CRITICAL',
+      intervention_type: finalizedOrder.intervention_type || finalizedOrder.interventionType || '',
+      status: finalizedOrder.status || 'Dispatched',
+    }).catch((err) => {
+      console.warn('[KWI] Backend work order persistence notice:', err?.message || err)
+    })
+
     const targetRoute = options.redirectTo || '/respond';
     get().navigate(targetRoute);
     return ticketKey;
   },
 
   advanceWorkOrderStatus: (ticketKey) => {
-    set((state) => {
-      const key = ticketKey || state.activeWorkOrderTicketId
-      const existing = state.workOrders[key]
-      if (!existing) return state
-      const nextStage = Math.min(3, (existing.stage ?? 1) + 1)
-      const STAGE_NAMES = ['Recommended', 'Dispatched', 'In Progress', 'Resolved']
-      return {
+    const key = ticketKey || get().activeWorkOrderTicketId
+    const existing = get().workOrders[key]
+    if (!existing) return
+
+    const currentStage = typeof existing.stage === 'number'
+      ? existing.stage
+      : (existing.status === 'Resolved' ? 3 : existing.status === 'In Progress' ? 2 : existing.status === 'Dispatched' ? 1 : 0)
+
+    const nextStage = Math.min(3, currentStage + 1)
+    const STAGE_NAMES = ['Recommended', 'Dispatched', 'In Progress', 'Resolved']
+    const nextStatus = STAGE_NAMES[nextStage]
+
+    if (nextStatus === 'Resolved') {
+      // Remove from workOrders table in store
+      set((state) => {
+        const nextWorkOrders = { ...state.workOrders }
+        delete nextWorkOrders[key]
+
+        const remainingKeys = Object.keys(nextWorkOrders)
+        const nextActiveId = remainingKeys.length > 0 ? remainingKeys[0] : null
+
+        return {
+          workOrders: nextWorkOrders,
+          activeWorkOrderTicketId: nextActiveId,
+          latestSimulationOutcome:
+            state.latestSimulationOutcome?.ticketKey === key ? null : state.latestSimulationOutcome,
+        }
+      })
+    } else {
+      set((state) => ({
         workOrders: {
           ...state.workOrders,
           [key]: {
             ...existing,
             stage: nextStage,
-            status: STAGE_NAMES[nextStage],
+            status: nextStatus,
           },
         },
-      }
+        latestSimulationOutcome:
+          state.latestSimulationOutcome?.ticketKey === key
+            ? { ...state.latestSimulationOutcome, stage: nextStage, status: nextStatus }
+            : state.latestSimulationOutcome,
+      }))
+    }
+
+    // Async sync to backend
+    api.patch(`/work-orders/${encodeURIComponent(key)}/status`, {
+      status: nextStatus,
+      stage: nextStage,
+    }).then(() => {
+      // Refresh incident queue and reports so resolved status is reflected across the app
+      get().fetchAllReports().catch(() => {})
+    }).catch((err) => {
+      console.warn('[KWI] Backend work order status update notice:', err?.message || err)
     })
   },
 

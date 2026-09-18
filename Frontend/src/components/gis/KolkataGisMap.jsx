@@ -596,10 +596,21 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
 
       // 1. ACTIVE WATERLOGGING PREDICTIONS & INCIDENTS
       if (activeLayers.incidents) {
+        const liveIncidentsList = store.incidents && store.incidents.length > 0 ? store.incidents : [];
         const hasPredictions = store.waterloggingPredictions && store.waterloggingPredictions.length > 0;
-        const allIncidents = hasPredictions
-          ? store.waterloggingPredictions
-          : (store.incidents && store.incidents.length > 0 ? store.incidents : ACTIVE_INCIDENTS);
+
+        let allIncidents = [];
+        if (liveIncidentsList.length > 0) {
+          const liveLocs = new Set(liveIncidentsList.map(i => (i.location || '').toLowerCase().trim()));
+          const extraPredictions = hasPredictions
+            ? store.waterloggingPredictions.filter(p => !liveLocs.has((p.locality || '').toLowerCase().trim()))
+            : [];
+          allIncidents = [...liveIncidentsList, ...extraPredictions];
+        } else if (hasPredictions) {
+          allIncidents = store.waterloggingPredictions;
+        } else {
+          allIncidents = ACTIVE_INCIDENTS;
+        }
 
         const incidentsToRender = allIncidents.filter((inc) => {
           if (!activeSeverityFilter || activeSeverityFilter === "ALL") return true;

@@ -4,6 +4,8 @@ from .admin import Admin
 from .report import Report
 from .waterlogging import WaterloggingPrediction
 from .incident_queue import IncidentQueue
+from .work_order import WorkOrder
+from .historical_place import HistoricalPlace
 
-__all__ = ["User", "Admin", "Report", "WaterloggingPrediction", "IncidentQueue"]
+__all__ = ["User", "Admin", "Report", "WaterloggingPrediction", "IncidentQueue", "WorkOrder", "HistoricalPlace"]
 

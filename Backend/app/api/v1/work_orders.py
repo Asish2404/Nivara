@@ -1,0 +1,117 @@
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.database import get_db
+from app.schemas.work_order import WorkOrderCreate, WorkOrderResponse, WorkOrderStatusUpdate
+from app.services.work_order_service import WorkOrderService
+
+router = APIRouter()
+
+
+@router.post(
+    "/work-orders",
+    response_model=WorkOrderResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create or update work order with simulation intervention details",
+)
+@router.post(
+    "/work_orders",
+    response_model=WorkOrderResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create or update work order with simulation intervention details (alias)",
+)
+async def create_work_order(
+    data: WorkOrderCreate,
+    db: AsyncSession = Depends(get_db),
+):
+    """Stores simulation intervention details into the `work_orders` table and pops the selected incident
+
+    from the simulate hotspot dropdown queue.
+    """
+    work_order = await WorkOrderService.create_work_order(db, data)
+    return WorkOrderResponse.model_validate(work_order)
+
+
+@router.get(
+    "/work-orders",
+    response_model=List[WorkOrderResponse],
+    summary="List all work orders in reverse chronological order",
+)
+@router.get(
+    "/work_orders",
+    response_model=List[WorkOrderResponse],
+    summary="List all work orders in reverse chronological order (alias)",
+)
+async def list_work_orders(
+    db: AsyncSession = Depends(get_db),
+):
+    """Fetch all work orders from `work_orders` table."""
+    orders = await WorkOrderService.get_all_work_orders(db)
+    return [WorkOrderResponse.model_validate(wo) for wo in orders]
+
+
+@router.get(
+    "/work-orders/dispatched-ids",
+    response_model=List[str],
+    summary="Get list of all dispatched incident IDs",
+)
+@router.get(
+    "/work_orders/dispatched-ids",
+    response_model=List[str],
+    summary="Get list of all dispatched incident IDs (alias)",
+)
+async def get_dispatched_incident_ids(
+    db: AsyncSession = Depends(get_db),
+):
+    """Returns all incident IDs that have been dispatched into work orders."""
+    return await WorkOrderService.get_dispatched_incident_ids(db)
+
+
+@router.get(
+    "/work-orders/{work_id}",
+    response_model=WorkOrderResponse,
+    summary="Get details of a single work order",
+)
+@router.get(
+    "/work_orders/{work_id}",
+    response_model=WorkOrderResponse,
+    summary="Get details of a single work order (alias)",
+)
+async def get_work_order(
+    work_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    wo = await WorkOrderService.get_work_order_by_id(db, work_id)
+    if not wo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Work order '{work_id}' not found.",
+        )
+    return WorkOrderResponse.model_validate(wo)
+
+
+@router.patch(
+    "/work-orders/{work_id}/status",
+    response_model=WorkOrderResponse,
+    summary="Update work order status and stage",
+)
+@router.patch(
+    "/work_orders/{work_id}/status",
+    response_model=WorkOrderResponse,
+    summary="Update work order status and stage (alias)",
+)
+async def update_work_order_status(
+    work_id: str,
+    payload: WorkOrderStatusUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    wo = await WorkOrderService.update_work_order_status(
+        db, work_id, status=payload.status
+    )
+    if not wo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Work order '{work_id}' not found.",
+        )
+    return WorkOrderResponse.model_validate(wo)
