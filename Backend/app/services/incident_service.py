@@ -1,12 +1,36 @@
 import math
+from collections import Counter
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Union
 from sqlalchemy import select, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.incident_queue import IncidentQueue
 from ..models.report import Report
 from ..core.datetime_utils import get_current_time, ensure_kolkata_tz
+
+
+def calculate_most_frequent_water_depth(depths: List[Union[int, float]]) -> float:
+    """Calculate the water depth that appears most frequently (statistical mode) for a location.
+
+    - When 1 report is generated: returns that depth as usual.
+    - When multiple reports are generated: counts which water depth comes many times.
+      e.g. for depths [30, 15, 0, 30], 30 comes 2 times, 15 and 0 come 1 time -> returns 30.0 cm.
+    - Ties: In case of equal highest frequency, returns the highest depth among the tied candidates.
+    """
+    if not depths:
+        return 0.0
+    if len(depths) == 1:
+        val = float(depths[0]) if depths[0] is not None else 0.0
+        return round(val, 1)
+
+    normalized = [round(float(d or 0.0), 1) for d in depths]
+    counts = Counter(normalized)
+
+    max_frequency = max(counts.values())
+    candidates = [depth for depth, freq in counts.items() if freq == max_frequency]
+
+    return float(max(candidates))
 
 
 def generate_incident_id(location: str) -> str:
@@ -178,10 +202,34 @@ class IncidentQueueService:
         now = get_current_time()
 
         if matched_incident is not None:
-            # Case 1: Same place or area -> increment report_count by one in the same row
-            matched_incident.report_count = (matched_incident.report_count or 0) + 1
-            if depth > 0:
-                matched_incident.water_depth = max(matched_incident.water_depth, depth)
+            # Case 1: Same place or area -> query all reports for this location to compute mode depth & count
+            reports_res = await db.execute(select(Report))
+            all_reports = list(reports_res.scalars().all())
+
+            location_reports = [
+                r for r in all_reports
+                if is_same_place(
+                    r.location,
+                    matched_incident.location,
+                    r.latitude,
+                    r.longitude,
+                    matched_incident.latitude,
+                    matched_incident.longitude,
+                )
+            ]
+
+            # Ensure current report is included if not yet present
+            already_in = False
+            for r in location_reports:
+                if (report.id and r.id == report.id) or (report.report_id and r.report_id == report.report_id):
+                    already_in = True
+                    break
+            if not already_in:
+                location_reports.append(report)
+
+            depths = [float(r.water_depth or 0.0) for r in location_reports]
+            matched_incident.water_depth = calculate_most_frequent_water_depth(depths)
+            matched_incident.report_count = len(location_reports)
             
             computed_risk = compute_severity(
                 matched_incident.report_count, matched_incident.water_depth
@@ -219,7 +267,33 @@ class IncidentQueueService:
             subdiv = format_subdivision(
                 loc_str, report.ward or "", report.assigned_ulb_name or ""
             )
-            computed_risk = compute_severity(1, depth)
+
+            # Query all reports for this location to accurately determine depth and count
+            reports_res = await db.execute(select(Report))
+            all_reports = list(reports_res.scalars().all())
+            location_reports = [
+                r for r in all_reports
+                if is_same_place(
+                    r.location,
+                    loc_str,
+                    r.latitude,
+                    r.longitude,
+                    lat,
+                    lon,
+                )
+            ]
+            already_in = False
+            for r in location_reports:
+                if (report.id and r.id == report.id) or (report.report_id and r.report_id == report.report_id):
+                    already_in = True
+                    break
+            if not already_in:
+                location_reports.append(report)
+
+            depths = [float(r.water_depth or 0.0) for r in location_reports]
+            calc_depth = calculate_most_frequent_water_depth(depths)
+            calc_count = max(len(location_reports), 1)
+            computed_risk = compute_severity(calc_count, calc_depth)
 
             target_incident = IncidentQueue(
                 incident_id=inc_id,
@@ -232,8 +306,8 @@ class IncidentQueueService:
                 jurisdiction_type=report.jurisdiction_type or "",
                 subdivision=subdiv,
                 issue_type=report.issue_type or "Waterlogging",
-                water_depth=depth,
-                report_count=1,
+                water_depth=calc_depth,
+                report_count=calc_count,
                 risk_level=computed_risk,
                 status="Needs Intervention",
                 latest_description=report.description or "",
@@ -251,7 +325,7 @@ class IncidentQueueService:
 
     @classmethod
     async def get_active_incidents(cls, db: AsyncSession) -> List[IncidentQueue]:
-        """Fetch all active incidents ordered by risk level, report count, and latest update."""
+        """Fetch all active incidents ordered by risk level, report count, water depth, and first submitted."""
         result = await db.execute(
             select(IncidentQueue).where(
                 or_(
@@ -263,17 +337,29 @@ class IncidentQueueService:
         )
         incidents = list(result.scalars().all())
 
-        # Sort dynamically:
-        # Priority 1: Risk Rank (CRITICAL > HIGH > MODERATE > LOW > MONITORING)
-        # Priority 2: Report Count (descending)
-        # Priority 3: Water Depth (descending)
-        # Priority 4: Updated At (newest first)
+        # Sort dynamically according to priority rules:
+        # Rule 1: If report_count is same then check for water_depth, else whose report_count is more priorities first.
+        # Rule 2: If water_depth is same then check, for which location report generated first priorities first, else whose water_depth is more priorities first.
         def sort_key(inc: IncidentQueue):
+            created_dt = inc.created_at or inc.updated_at
+            if isinstance(created_dt, datetime):
+                created_ts = created_dt.timestamp()
+            elif isinstance(created_dt, str):
+                try:
+                    created_ts = datetime.fromisoformat(created_dt.replace("Z", "+00:00")).timestamp()
+                except Exception:
+                    created_ts = float("inf")
+            else:
+                created_ts = float("inf")
+
+            # Sorted with reverse=True:
+            # 1. Report Count (descending: larger comes first)
+            # 2. Water Depth (descending: larger comes first)
+            # 3. Location report generated first (earliest timestamp comes first: smaller timestamp -> larger -created_ts)
             return (
-                get_severity_rank(inc.risk_level),
                 inc.report_count or 1,
                 inc.water_depth or 0.0,
-                inc.updated_at.timestamp() if inc.updated_at else 0,
+                -created_ts if created_ts != float("inf") else float("-inf"),
             )
 
         incidents.sort(key=sort_key, reverse=True)
@@ -286,11 +372,48 @@ class IncidentQueueService:
         return incidents
 
     @classmethod
-    async def sync_from_existing_reports(cls, db: AsyncSession) -> int:
+    async def recalculate_all_incidents(cls, db: AsyncSession) -> int:
+        """Recalculate report count, most frequent water depth, and severity for all active incidents."""
+        inc_res = await db.execute(select(IncidentQueue))
+        incidents = list(inc_res.scalars().all())
+        if not incidents:
+            return 0
+
+        reports_res = await db.execute(select(Report))
+        all_reports = list(reports_res.scalars().all())
+
+        updated_count = 0
+        for inc in incidents:
+            loc_reports = [
+                r for r in all_reports
+                if is_same_place(
+                    r.location,
+                    inc.location,
+                    r.latitude,
+                    r.longitude,
+                    inc.latitude,
+                    inc.longitude,
+                )
+            ]
+            if loc_reports:
+                depths = [float(r.water_depth or 0.0) for r in loc_reports]
+                inc.water_depth = calculate_most_frequent_water_depth(depths)
+                inc.report_count = len(loc_reports)
+                inc.risk_level = compute_severity(inc.report_count, inc.water_depth)
+                updated_count += 1
+
+        await db.commit()
+        return updated_count
+
+    @classmethod
+    async def sync_from_existing_reports(cls, db: AsyncSession, force_resync: bool = False) -> int:
         """Syncs all existing rows from `reports` table into `incident_queue` table."""
-        count_res = await db.execute(select(IncidentQueue))
-        if count_res.scalars().first() is not None:
-            return 0  # Already populated
+        if not force_resync:
+            count_res = await db.execute(select(IncidentQueue))
+            if count_res.scalars().first() is not None:
+                # Ensure existing incident depths and counts match most frequent calculation
+                await cls.recalculate_all_incidents(db)
+                return 0  # Already populated
 
         reports_res = await db.execute(
             select(Report).order_by(Report.submitted_at.asc())

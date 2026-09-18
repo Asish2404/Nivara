@@ -98,6 +98,42 @@ export function parseWaterDepthCm(depthVal) {
 }
 
 /**
+ * Calculates the water depth that appears most frequently (statistical mode) for a location.
+ *
+ * - When 1 report is generated: returns that depth as usual.
+ * - When multiple reports are generated: counts which water depth comes many times.
+ *   e.g. for [30, 15, 0, 30], 30 comes 2 times, 15 and 0 come 1 time -> returns 30 cm.
+ * - Ties: In case of equal highest frequency, returns the highest depth among the tied candidates.
+ *
+ * @param {Array<number>} depths - Array of water depths in cm
+ * @returns {number} The most frequent water depth in cm
+ */
+export function calculateMostFrequentWaterDepth(depths = []) {
+  if (!Array.isArray(depths) || depths.length === 0) return 0;
+  if (depths.length === 1) return Number(depths[0]) || 0;
+
+  const freq = new Map();
+  for (const d of depths) {
+    const num = Math.round((Number(d) || 0) * 10) / 10;
+    freq.set(num, (freq.get(num) || 0) + 1);
+  }
+
+  let maxCount = 0;
+  for (const count of freq.values()) {
+    if (count > maxCount) maxCount = count;
+  }
+
+  const candidates = [];
+  for (const [depth, count] of freq.entries()) {
+    if (count === maxCount) {
+      candidates.push(depth);
+    }
+  }
+
+  return candidates.length > 0 ? Math.max(...candidates) : 0;
+}
+
+/**
  * Normalizes location key for grouping reports submitted for the same location
  */
 function getNormalizedLocationKey(location) {
@@ -159,14 +195,13 @@ export function aggregateIncidentsFromReports(reports = []) {
     const loc = group.rawLocation;
     const count = group.reports.length;
 
-    // Collect depths from reports for this location
-    const depths = group.reports
-      .map((r) => parseWaterDepthCm(r.water_depth ?? r.waterDepth))
-      .filter((d) => d > 0);
+    // Collect depths from all reports for this location (including 0 cm)
+    const depths = group.reports.map((r) =>
+      parseWaterDepthCm(r.water_depth ?? r.waterDepth)
+    );
 
-    const maxDepth = depths.length > 0 ? Math.max(...depths) : 0;
-    const avgDepth = depths.length > 0 ? Math.round(depths.reduce((a, b) => a + b, 0) / depths.length) : 0;
-    const effectiveDepth = maxDepth > 0 ? maxDepth : avgDepth;
+    // Calculate water depth by counting which water depth came many times (mode)
+    const effectiveDepth = calculateMostFrequentWaterDepth(depths);
 
     // connectedIncidentId strictly formatted as:
     // "First 2 letter of location in capital format-random 3 numbers" (e.g. SA-288, TE-891)
@@ -194,6 +229,14 @@ export function aggregateIncidentsFromReports(reports = []) {
         ? `${effectiveDepth} cm water depth`
         : "Telemetry Pending";
 
+    const reportTimestamps = group.reports
+      .map((r) => {
+        const t = r.submitted_at || r.createdAt || r.created_at;
+        return t ? new Date(t).getTime() : Infinity;
+      })
+      .filter((t) => !isNaN(t) && t < Infinity);
+    const earliestSubmittedAt = reportTimestamps.length > 0 ? Math.min(...reportTimestamps) : (firstReport.submitted_at ? new Date(firstReport.submitted_at).getTime() : null);
+
     finalIncidents.push({
       id: cardId,
       connectedIncidentId: rawConnectedId,
@@ -215,24 +258,39 @@ export function aggregateIncidentsFromReports(reports = []) {
       connectedDrainage: "Local Municipal Stormwater Network",
       nearestPump: "PS-07",
       probableCause: "Verified citizen ground reports indicating active surface inundation.",
+      firstSubmittedAt: earliestSubmittedAt,
       severity: dynamicSeverity,
       status: "Needs Intervention",
       isPrimary: false,
     });
   });
 
-  // Sort boxes strictly in decreasing order:
-  // Priority 1: Severity Rank (CRITICAL > HIGH > MODERATE > LOW > MONITORING)
-  // Priority 2: Verified Reports Count (descending)
-  // Priority 3: Water Depth (descending)
+  // Sort boxes strictly according to priority:
+  // Rule 1: If report_count is same then check for water_depth, else whose report_count is more priorities first.
+  // Rule 2: If water_depth is same then check, for which location report generated first priorities first, else whose water_depth is more priorities first.
   return finalIncidents.sort((a, b) => {
-    const rankDiff = getSeverityRank(b.severity) - getSeverityRank(a.severity);
-    if (rankDiff !== 0) return rankDiff;
+    // Priority 1: Whose report_count is more priorities first
+    const countA = a.verifiedReports ?? 0;
+    const countB = b.verifiedReports ?? 0;
+    if (countB !== countA) {
+      return countB - countA;
+    }
 
-    const reportDiff = (b.verifiedReports ?? 0) - (a.verifiedReports ?? 0);
-    if (reportDiff !== 0) return reportDiff;
+    // Priority 2: If report_count is same, check for water_depth (more priorities first)
+    const depthA = parseWaterDepthCm(a.waterDepth);
+    const depthB = parseWaterDepthCm(b.waterDepth);
+    if (depthB !== depthA) {
+      return depthB - depthA;
+    }
 
-    return parseWaterDepthCm(b.waterDepth) - parseWaterDepthCm(a.waterDepth);
+    // Priority 3: If water_depth is same, for which location report generated first priorities first
+    const timeA = a.firstSubmittedAt != null ? Number(a.firstSubmittedAt) : Infinity;
+    const timeB = b.firstSubmittedAt != null ? Number(b.firstSubmittedAt) : Infinity;
+    if (timeA !== timeB) {
+      return timeA - timeB;
+    }
+
+    return String(a.id || "").localeCompare(String(b.id || ""));
   });
 }
 
@@ -274,6 +332,7 @@ export function mapIncidentQueueToCards(incidentQueue = []) {
       longitude: lon,
       x: kmX,
       y: kmY,
+      createdAt: inc.created_at || null,
       timestamp: inc.updated_at_formatted || "Active",
       waterDepth: waterDepthDisplay,
       waterLevel: `${depth > 0 ? depth : 15} cm`,
@@ -291,12 +350,32 @@ export function mapIncidentQueueToCards(incidentQueue = []) {
     };
   });
 
+  // Sort boxes strictly according to priority:
+  // Rule 1: If report_count is same then check for water_depth, else whose report_count is more priorities first.
+  // Rule 2: If water_depth is same then check, for which location report generated first priorities first, else whose water_depth is more priorities first.
   return mapped.sort((a, b) => {
-    const rankDiff = getSeverityRank(b.severity) - getSeverityRank(a.severity);
-    if (rankDiff !== 0) return rankDiff;
-    const reportDiff = (b.verifiedReports ?? 0) - (a.verifiedReports ?? 0);
-    if (reportDiff !== 0) return reportDiff;
-    return parseWaterDepthCm(b.waterDepth) - parseWaterDepthCm(a.waterDepth);
+    // Priority 1: Whose report_count is more priorities first
+    const countA = a.verifiedReports ?? 0;
+    const countB = b.verifiedReports ?? 0;
+    if (countB !== countA) {
+      return countB - countA;
+    }
+
+    // Priority 2: If report_count is same, check for water_depth (more priorities first)
+    const depthA = parseWaterDepthCm(a.waterDepth);
+    const depthB = parseWaterDepthCm(b.waterDepth);
+    if (depthB !== depthA) {
+      return depthB - depthA;
+    }
+
+    // Priority 3: If water_depth is same, for which location report generated first priorities first
+    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : Infinity;
+    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : Infinity;
+    if (timeA !== timeB) {
+      return timeA - timeB;
+    }
+
+    return String(a.id || "").localeCompare(String(b.id || ""));
   });
 }
 
