@@ -1364,40 +1364,177 @@ export function getTrunkConduitsGeoJson() {
   }
 }
 
-export function getRiskZonesGeoJson() {
+export function deriveRiskZonesFromIncidents(activeIncidents = []) {
+  if (!Array.isArray(activeIncidents) || activeIncidents.length === 0) {
+    return [];
+  }
+
+  const derivedZones = [];
+  const seenIds = new Set();
+
+  activeIncidents.forEach((inc) => {
+    const cleanId = String(inc.id || inc.incident_id || inc.connectedIncidentId || '').replace(/^#/, '').toLowerCase().trim();
+    const locLower = String(inc.location || '').toLowerCase().trim();
+
+    // 1. Try to match an authoritative cartographic RISK_ZONE
+    let matchedZone = RISK_ZONES.find((rz) => {
+      const rzConn = String(rz.connectedIncidentId || '').replace(/^#/, '').toLowerCase().trim();
+      if (rzConn && cleanId && (rzConn === cleanId || cleanId.includes(rzConn) || rzConn.includes(cleanId))) {
+        return true;
+      }
+      const rzName = String(rz.name || '').toLowerCase();
+      const rzDist = String(rz.districtName || '').toLowerCase();
+      if (locLower) {
+        if ((locLower.includes('sector v') || locLower.includes('salt lake')) && (rzName.includes('sector v') || rzDist.includes('sector v') || rzDist.includes('salt lake'))) return true;
+        if ((locLower.includes('college') || locLower.includes('thanthania')) && (rzName.includes('college') || rzName.includes('thanthania'))) return true;
+        if (locLower.includes('behala') && rzName.includes('behala')) return true;
+        if (locLower.includes('park circus') && rzName.includes('park circus')) return true;
+        if ((locLower.includes('maidan') || locLower.includes('esplanade')) && rzName.includes('maidan')) return true;
+        if (locLower.includes('new town') && rzName.includes('new town')) return true;
+        if (locLower.includes('ultadanga') && rzName.includes('ultadanga')) return true;
+      }
+      return false;
+    });
+
+    const severity = String(inc.severity || inc.risk_level || 'HIGH').toUpperCase();
+    const severityColor =
+      severity === 'CRITICAL' ? '#d64545' :
+      severity === 'HIGH' ? '#e07a38' :
+      (severity === 'MODERATE' || severity === 'MEDIUM') ? '#d99b38' : '#4f9160';
+
+    if (matchedZone && !seenIds.has(matchedZone.id)) {
+      seenIds.add(matchedZone.id);
+      derivedZones.push({
+        ...matchedZone,
+        level: severity,
+        severityColor: severityColor,
+        color: severityColor,
+        waterDepth: inc.waterDepth || inc.waterLevel || matchedZone.waterDepth,
+        rainfall: inc.rainfall || matchedZone.rainfall,
+        riskScore: inc.riskScore || matchedZone.riskScore,
+        drainageLoad: inc.drainageLoad || matchedZone.drainageLoad,
+        connectedIncidentId: inc.id || matchedZone.connectedIncidentId,
+      });
+    } else if (!matchedZone) {
+      // Dynamic risk zone generated around submitted incident
+      const zoneId = `risk_dynamic_${cleanId || Math.abs(locLower.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0))}`;
+      if (!seenIds.has(zoneId)) {
+        seenIds.add(zoneId);
+        const kmX = inc.x !== undefined ? inc.x : Number((((inc.longitude || 88.3639) - 88.3639) * 102.6).toFixed(2));
+        const kmY = inc.y !== undefined ? inc.y : Number(((22.5726 - (inc.latitude || 22.5726)) * 111.13).toFixed(2));
+
+        const radX = 0.8;
+        const radY = 0.65;
+        const polygon = [
+          [Number((kmX - radX).toFixed(2)), Number((kmY - radY).toFixed(2))],
+          [Number((kmX + radX).toFixed(2)), Number((kmY - radY).toFixed(2))],
+          [Number((kmX + radX).toFixed(2)), Number((kmY + radY).toFixed(2))],
+          [Number((kmX - radX).toFixed(2)), Number((kmY + radY).toFixed(2))],
+        ];
+
+        derivedZones.push({
+          id: zoneId,
+          name: `${(inc.location || 'Reported Locality').split(',')[0].trim()} Catchment`,
+          districtName: (inc.subdivision || inc.location || 'Municipal Risk Zone').toUpperCase(),
+          level: severity,
+          severityColor: severityColor,
+          color: severityColor,
+          center: [kmX, kmY],
+          polygon: polygon,
+          waterDepth: inc.waterDepth || inc.waterLevel || '25 cm',
+          rainfall: inc.rainfall || '65 mm / 3 hr',
+          drainageLoad: inc.drainageLoad || '88%',
+          affectedArea: inc.affectedArea || '8,500 m²',
+          riskScore: inc.riskScore || '78 / 100',
+          nearestPump: inc.nearestPump || 'PS-07',
+          connectedIncidentId: inc.id || `#${cleanId}`,
+        });
+      }
+    }
+  });
+
+  return derivedZones;
+}
+
+export function getRiskZonesGeoJson(zonesOrIncidents) {
+  let zonesToMap = [];
+  if (Array.isArray(zonesOrIncidents)) {
+    if (zonesOrIncidents.length > 0 && (zonesOrIncidents[0].polygon || zonesOrIncidents[0].radiusX)) {
+      zonesToMap = zonesOrIncidents;
+    } else if (zonesOrIncidents.length > 0) {
+      zonesToMap = deriveRiskZonesFromIncidents(zonesOrIncidents);
+    } else {
+      zonesToMap = [];
+    }
+  } else if (zonesOrIncidents === undefined) {
+    zonesToMap = [];
+  }
+
   return {
     type: 'FeatureCollection',
-    features: RISK_ZONES.map((zone) => {
-      const polygonCoords = zone.polygon.map(([x, y]) => kmToGeoCoord(x, y))
-      // Close the polygon if not already closed
-      if (polygonCoords.length > 0) {
-        const first = polygonCoords[0]
-        const last = polygonCoords[polygonCoords.length - 1]
-        if (first[0] !== last[0] || first[1] !== last[1]) {
-          polygonCoords.push([first[0], first[1]])
+    features: zonesToMap.map((zone) => {
+      let polygonCoords = [];
+      if (Array.isArray(zone.polygon) && zone.polygon.length > 0) {
+        polygonCoords = zone.polygon.map(([x, y]) => {
+          if (typeof x === 'number' && x > 70) {
+            return [x, y];
+          }
+          return kmToGeoCoord(x, y);
+        });
+      } else if (zone.center) {
+        const cx = zone.center[0];
+        const cy = zone.center[1];
+        if (typeof cx === 'number' && cx > 70) {
+          const radLng = 0.006;
+          const radLat = 0.005;
+          polygonCoords = [
+            [cx - radLng, cy - radLat],
+            [cx + radLng, cy - radLat],
+            [cx + radLng, cy + radLat],
+            [cx - radLng, cy + radLat],
+          ];
+        } else {
+          const rad = 0.6;
+          polygonCoords = [
+            kmToGeoCoord(cx - rad, cy - rad * 0.8),
+            kmToGeoCoord(cx + rad, cy - rad * 0.8),
+            kmToGeoCoord(cx + rad, cy + rad * 0.8),
+            kmToGeoCoord(cx - rad, cy + rad * 0.8),
+          ];
         }
       }
+
+      // Close the polygon if not already closed
+      if (polygonCoords.length > 0) {
+        const first = polygonCoords[0];
+        const last = polygonCoords[polygonCoords.length - 1];
+        if (first[0] !== last[0] || first[1] !== last[1]) {
+          polygonCoords.push([first[0], first[1]]);
+        }
+      }
+
       return {
         type: 'Feature',
         id: zone.id,
         properties: {
           id: zone.id,
           name: zone.name,
-          districtName: zone.districtName,
-          level: zone.level,
-          color: zone.severityColor || (zone.level === 'CRITICAL' ? '#ef4444' : zone.level === 'HIGH' ? '#f97316' : '#eab308'),
-          waterDepth: zone.waterDepth,
-          rainfall: zone.rainfall,
-          riskScore: zone.riskScore,
-          drainageLoad: zone.drainageLoad,
+          districtName: zone.districtName || zone.name,
+          level: zone.level || 'HIGH',
+          color: zone.severityColor || zone.color || (zone.level === 'CRITICAL' ? '#ef4444' : zone.level === 'HIGH' ? '#f97316' : '#eab308'),
+          waterDepth: zone.waterDepth || '25 cm',
+          rainfall: zone.rainfall || '65 mm / 3 hr',
+          riskScore: zone.riskScore || '75 / 100',
+          drainageLoad: zone.drainageLoad || '85%',
+          affectedArea: zone.affectedArea || '8,500 m²',
         },
         geometry: {
           type: 'Polygon',
           coordinates: [polygonCoords],
         },
-      }
+      };
     }),
-  }
+  };
 }
 
 export function getFloodDepthGeoJson(timeStep = 0) {

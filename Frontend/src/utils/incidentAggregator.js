@@ -390,3 +390,6 @@ export function aggregateIncidentsWithReports(arg1 = [], arg2 = null) {
   return aggregateIncidentsFromReports(reports);
 }
 
+export { deriveRiskZonesFromIncidents } from "../components/gis/kolkataCartographicData";
+
+

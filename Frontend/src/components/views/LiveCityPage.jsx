@@ -39,6 +39,7 @@ export function LiveCityPage() {
     clearSelections,
     navigate,
     highRiskZonesCount,
+    riskZones,
     criticalIncidentsCount,
     rainfallDisplay,
     pumpsAtCapacityCount,
@@ -155,11 +156,15 @@ export function LiveCityPage() {
             </div>
             <div className="text-[11px] text-slate-500 dark:text-[#6D949D] mt-2 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
-                <span className="line-clamp-1">Sector V & Park Circus Basin</span>
+                <span className={`w-1.5 h-1.5 rounded-full ${highRiskZonesCount > 0 ? "bg-rose-500 animate-ping" : "bg-emerald-500"}`} />
+                <span className="line-clamp-1">
+                  {riskZones && riskZones.length > 0
+                    ? riskZones.map((z) => z.name || z.districtName).slice(0, 2).join(" & ") + (riskZones.length > 2 ? ` +${riskZones.length - 2}` : "")
+                    : "All Risk Basins Clear"}
+                </span>
               </div>
               {/* Mini sparkline curve */}
-              <svg className="w-12 h-4 text-rose-500 shrink-0" viewBox="0 0 48 16" fill="none">
+              <svg className={`w-12 h-4 ${highRiskZonesCount > 0 ? "text-rose-500" : "text-emerald-500"} shrink-0`} viewBox="0 0 48 16" fill="none">
                 <path d="M0 14 L12 11 L24 13 L36 6 L48 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>

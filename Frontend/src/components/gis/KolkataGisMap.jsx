@@ -376,11 +376,12 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
         });
       }
 
-      // 3. RISK ZONES (Polygon)
+      // 3. RISK ZONES (Polygon - Derived strictly from submitted risk areas)
+      const dynamicRiskData = getRiskZonesGeoJson(store.riskZones || store.incidents || []);
       if (!map.getSource("risk-source")) {
         map.addSource("risk-source", {
           type: "geojson",
-          data: getRiskZonesGeoJson(),
+          data: dynamicRiskData,
         });
         map.addLayer({
           id: "risk-fill",
@@ -401,6 +402,16 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
             "line-opacity": 0.8,
           },
         });
+
+        map.on("click", "risk-fill", (e) => {
+          if (e.features && e.features[0]) {
+            const props = e.features[0].properties;
+            const zone = (store.riskZones || []).find((z) => z.id === props.id) || props;
+            store.setSelectedRiskZone?.(zone);
+          }
+        });
+      } else {
+        map.getSource("risk-source").setData(dynamicRiskData);
       }
 
       // 4. WATERBODIES, PONDS & WETLANDS (Polygon)
@@ -997,6 +1008,19 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
     activeLayers.spread,
     simulateState,
   ]);
+
+  // -------------------------------------------------------------
+  // Synchronize Risk Zones (Derived strictly from submitted risk areas)
+  // -------------------------------------------------------------
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+
+    const source = map.getSource("risk-source");
+    if (source) {
+      source.setData(getRiskZonesGeoJson(store.riskZones || store.incidents || []));
+    }
+  }, [store.riskZones, store.incidents]);
 
   // -------------------------------------------------------------
   // Synchronize Markers (Toggling incident, pump, or landmark markers)

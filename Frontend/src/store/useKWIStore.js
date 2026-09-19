@@ -4,6 +4,7 @@ import { formatTime12Hour } from "../utils/dateTimeUtils.js";
 import {
   aggregateIncidentsFromReports,
   mapIncidentQueueToCards,
+  deriveRiskZonesFromIncidents,
 } from "../utils/incidentAggregator.js";
 
 
@@ -470,9 +471,13 @@ export const useKWIStore = create((set, get) => ({
       cards = aggregateIncidentsFromReports(combined);
     }
 
+    const dynamicRiskZones = deriveRiskZonesFromIncidents(cards);
+
     set({
       incidents: cards,
       criticalIncidentsCount: cards.length,
+      riskZones: dynamicRiskZones,
+      highRiskZonesCount: dynamicRiskZones.length,
     });
     return cards;
   },
@@ -903,7 +908,7 @@ export const useKWIStore = create((set, get) => ({
   hooghlyTideTrend: "RISING", // 'RISING' | 'FALLING' | 'STABLE'
 
   // Real GIS Municipal Stats (as requested)
-  highRiskZonesCount: 7,
+  highRiskZonesCount: 0,
   criticalIncidentsCount: 0,
   rainfallDisplay: "74 mm / 3 hr",
   rainfallIntensity: "HEAVY",
@@ -970,114 +975,8 @@ export const useKWIStore = create((set, get) => ({
     },
   ],
 
-  // Risk Zones Dataset
-  riskZones: [
-    {
-      id: "risk_sector_v",
-      name: "SECTOR V // SALT LAKE",
-      level: "HIGH",
-      color: "#f97316",
-      center: [6.2, -1.6],
-      radiusX: 0.95,
-      radiusZ: 0.75,
-      affectedArea: "12,400 m²",
-      rainfall: "74 mm / 3 hr",
-      drainageLoad: "94%",
-      waterDepth: "30 cm",
-      riskScore: "85 / 100",
-      connectedIncidentId: "#SA-754",
-    },
-    {
-      id: "risk_college_st",
-      name: "COLLEGE MORE // WARD 32",
-      level: "MODERATE",
-      color: "#f59e0b",
-      center: [6.99, 0.0],
-      radiusX: 0.65,
-      radiusZ: 0.55,
-      affectedArea: "6,400 m²",
-      rainfall: "57 mm / 3 hr",
-      drainageLoad: "82%",
-      waterDepth: "30 cm",
-      riskScore: "61 / 100",
-      connectedIncidentId: "#CO-493",
-    },
-    {
-      id: "risk_behala",
-      name: "BEHALA CHOWRASTA",
-      level: "LOW",
-      color: "#10b981",
-      center: [-4.69, 8.2],
-      radiusX: 0.8,
-      radiusZ: 0.65,
-      affectedArea: "5,300 m²",
-      rainfall: "51 mm / 3 hr",
-      drainageLoad: "65%",
-      waterDepth: "Telemetry Pending",
-      riskScore: "53 / 100",
-      connectedIncidentId: "#BE-819",
-    },
-    {
-      id: "risk_park_circus",
-      name: "PARK CIRCUS 7-POINT",
-      level: "MODERATE",
-      color: "#f59e0b",
-      center: [1.4, 0.8],
-      radiusX: 0.6,
-      radiusZ: 0.5,
-      affectedArea: "8,600 m²",
-      rainfall: "62 mm / 3 hr",
-      drainageLoad: "76%",
-      waterDepth: "14.5 cm",
-      riskScore: "64 / 100",
-      connectedIncidentId: "#PS-032",
-    },
-    {
-      id: "risk_maidan",
-      name: "THE MAIDAN / ESPLANADE",
-      level: "LOW",
-      color: "#10b981",
-      center: [-1.3, 0.6],
-      radiusX: 0.75,
-      radiusZ: 0.9,
-      affectedArea: "4,200 m²",
-      rainfall: "35 mm / 3 hr",
-      drainageLoad: "42%",
-      waterDepth: "5 cm",
-      riskScore: "28 / 100",
-      connectedIncidentId: null,
-    },
-    {
-      id: "risk_new_town",
-      name: "NEW TOWN ACTION AREA I",
-      level: "MODERATE",
-      color: "#f59e0b",
-      center: [8.2, -4.0],
-      radiusX: 0.8,
-      radiusZ: 0.6,
-      affectedArea: "6,100 m²",
-      rainfall: "45 mm / 3 hr",
-      drainageLoad: "68%",
-      waterDepth: "8 cm",
-      riskScore: "45 / 100",
-      connectedIncidentId: null,
-    },
-    {
-      id: "risk_ultadanga",
-      name: "ULTADANGA UNDERPASS",
-      level: "LOW",
-      color: "#10b981",
-      center: [3.0, -5.0],
-      radiusX: 0.5,
-      radiusZ: 0.4,
-      affectedArea: "3,400 m²",
-      rainfall: "30 mm / 3 hr",
-      drainageLoad: "48%",
-      waterDepth: "4 cm",
-      riskScore: "32 / 100",
-      connectedIncidentId: null,
-    },
-  ],
+  // Risk Zones Dataset (Dynamically populated from submitted incidents)
+  riskZones: [],
 
   // Incident filter/resolution
   resolveIncident: (id) =>
