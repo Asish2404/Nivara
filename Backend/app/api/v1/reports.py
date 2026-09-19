@@ -118,4 +118,21 @@ async def get_incident_queue(
 ):
     """Returns all dynamic active incidents grouped by location from the incident_queue table."""
     incidents = await IncidentQueueService.get_active_incidents(db)
-    return [IncidentQueueResponse.model_validate(inc) for inc in incidents]
+    return [IncidentQueueResponse.model_validate(inc) for inc in incidents]
+
+
+@router.get(
+    "/reports/analytics/submitted-vs-resolved",
+    summary="Get reports submitted vs resolved analytics for admin dashboard",
+)
+async def get_submitted_vs_resolved_analytics(
+    timeframe: str = Query("Last 6 Months", description="Timeframe filter: 'Last 6 Months', 'Last 3 Months', 'Year 2026'"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Calculates:
+    1. Total reports count directly from the reports table.
+    2. Total resolved reports count from resolved incidents in historical_place.
+    3. Resolution rate = (resolved / total_reports) * 100.
+    4. Month-by-month timeline values for the line graph.
+    """
+    return await ReportService.get_submitted_vs_resolved_analytics(db, timeframe)

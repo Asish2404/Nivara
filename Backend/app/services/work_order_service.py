@@ -9,6 +9,7 @@ from ..models.historical_place import HistoricalPlace
 from ..models.report import Report
 from ..schemas.work_order import WorkOrderCreate, WorkOrderStatusUpdate
 from ..core.datetime_utils import get_current_time, ensure_kolkata_tz
+from .incident_service import is_same_place
 
 
 class WorkOrderService:
@@ -245,19 +246,31 @@ class WorkOrderService:
                 await db.delete(linked_inc)
 
             # 3. Mark linked reports in reports table as Resolved
-            rep_res = await db.execute(
-                select(Report).where(
-                    or_(
-                        Report.location == wo.location,
-                        Report.location.ilike(f"%{wo.location}%"),
-                        and_(Report.ward == wo.ward, Report.assigned_ulb_name == wo.assigned_ulb_name),
-                    )
-                )
-            )
+            rep_res = await db.execute(select(Report))
+            wo_loc = str(wo.location or "").strip().lower()
+            wo_ulb = str(wo.assigned_ulb_name or "").strip().lower()
+            wo_primary = wo_loc.split(",")[0].strip() if wo_loc else ""
             for rep in rep_res.scalars().all():
-                rep.status = "Resolved"
-                rep.dispatch_status = "Resolved"
-                rep.updated_at = now
+                r_loc = str(rep.location or "").strip().lower()
+                r_ulb = str(rep.assigned_ulb_name or "").strip().lower()
+                r_primary = r_loc.split(",")[0].strip() if r_loc else ""
+
+                is_match = False
+                if wo_loc and (wo_loc == r_loc or wo_loc in r_loc or r_loc in wo_loc):
+                    is_match = True
+                elif is_same_place(wo_loc, r_loc, float(wo.latitude or 0), float(wo.longitude or 0), float(rep.latitude or 0), float(rep.longitude or 0)):
+                    is_match = True
+                elif ("salt lake" in wo_loc and "salt lake" in r_loc and "sector v" in wo_loc and "sector v" in r_loc):
+                    is_match = True
+                elif ("college more" in wo_loc and "college more" in r_loc) or ("behala" in wo_loc and "behala" in r_loc) or ("park street" in wo_loc and "park street" in r_loc):
+                    is_match = True
+                elif wo_ulb and r_ulb and wo_ulb == r_ulb and wo_primary and r_primary and (wo_primary in r_primary or r_primary in wo_primary):
+                    is_match = True
+
+                if is_match:
+                    rep.status = "Resolved"
+                    rep.dispatch_status = "Resolved"
+                    rep.updated_at = now
 
             # Snapshot data for response before removing from work_orders
             resolved_dict = {
@@ -314,3 +327,10 @@ class WorkOrderService:
                 clean_ids.add(c)
                 clean_ids.add(f"#{c}")
         return list(clean_ids)
+
+    @classmethod
+    async def get_all_historical_places(cls, db: AsyncSession) -> List[HistoricalPlace]:
+        """Fetch all historical resolved places from the historical_place table."""
+        result = await db.execute(select(HistoricalPlace).order_by(HistoricalPlace.id.desc()))
+        return list(result.scalars().all())
+

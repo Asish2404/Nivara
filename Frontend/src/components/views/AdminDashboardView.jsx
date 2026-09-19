@@ -40,6 +40,7 @@ import {
   X
 } from "lucide-react";
 import { useKWIStore, isUserAdmin } from "../../store/useKWIStore";
+import { api } from "../../utils/api";
 import { ACTIVE_INCIDENTS } from "../gis/kolkataCartographicData";
 
 export function AdminDashboardView() {
@@ -50,9 +51,21 @@ export function AdminDashboardView() {
     criticalIncidentsCount,
     highRiskZonesCount,
     incidents = [],
-    myReports = []
+    myReports = [],
+    allReports = [],
+    incidentQueue = [],
+    workOrders = {},
+    historicalPlaces = [],
+    fetchAllReports,
+    token,
   } = useKWIStore();
   const isAdmin = isUserAdmin(currentUser);
+
+  useEffect(() => {
+    if (fetchAllReports) {
+      fetchAllReports().catch(() => { });
+    }
+  }, [fetchAllReports]);
 
   // Filter States for 4 Quadrants
   // 1. Top-Left: Risk Area Map dropdowns
@@ -67,6 +80,7 @@ export function AdminDashboardView() {
 
   // 3. Bottom-Left: My Work Queue
   const [workQueuePriority, setWorkQueuePriority] = useState("All");
+  const [workQueueStatus, setWorkQueueStatus] = useState("All");
   const [actionMenuOpenId, setActionMenuOpenId] = useState(null);
 
   // 4. Bottom-Right: Average Resolution Time
@@ -494,109 +508,380 @@ export function AdminDashboardView() {
   }, [mapMonth, mapDays, effectiveLiveIncidents]);
 
   // ---------------------------------------------------------------------------
-  // 2. TOP-RIGHT: COMPARISON BAR CHART DATA
+  // 2. TOP-RIGHT: REPORTS SUBMITTED VS RESOLVED ANALYTICS
+  // 1. Total reports count directly from reports table
+  // 2. Total resolved reports count for resolved incidents from historical_place
+  // 3. Resolution rate = (resolved / total_reports) * 100
   // ---------------------------------------------------------------------------
-  const chartData = useMemo(() => {
+  const combinedReports = useMemo(() => {
     return [
-      { month: "Apr 2026", submitted: 180, resolved: 120, rate: "66.7%" },
-      { month: "May 2026", submitted: 200, resolved: 145, rate: "72.5%" },
-      { month: "Jun 2026", submitted: 176, resolved: 130, rate: "73.8%" },
-      { month: "Jul 2026", submitted: 220, resolved: 162, rate: "73.6%" },
-      { month: "Aug 2026", submitted: 240, resolved: 171, rate: "71.3%" },
-      { month: "Sep 2026", submitted: 232, resolved: 164, rate: "70.7%" }
+      ...(allReports || []),
+      ...(myReports || []).filter(
+        (mr) => !(allReports || []).some((ar) => ar.report_id === mr.report_id)
+      ),
     ];
-  }, [chartTimeframe]);
+  }, [allReports, myReports]);
 
-  const maxChartVal = 260; // Max Y value for scaling 0 - 250
+  const [backendAnalytics, setBackendAnalytics] = useState(null);
 
-  // ---------------------------------------------------------------------------
-  // 3. BOTTOM-LEFT: MY WORK QUEUE DATA
-  // ---------------------------------------------------------------------------
-  const [workOrdersList, setWorkOrdersList] = useState([
-    {
-      id: "WO-0248",
-      orderNum: 1,
-      title: "Drainage Blockage & Sump",
-      location: "Park Street",
-      zone: "Central",
-      type: "Drainage",
-      typeIcon: Wrench,
-      priority: "High",
-      assignedOn: "14 Sept 2026",
-      assignedTime: "10:12 AM",
-      status: "In Progress",
-      statusVariant: "in-progress"
-    },
-    {
-      id: "WO-0249",
-      orderNum: 2,
-      title: "Water Logging",
-      location: "Salt Lake",
-      zone: "Bidhannagar",
-      type: "Flooding",
-      typeIcon: Droplets,
-      priority: "Medium",
-      assignedOn: "14 Sept 2026",
-      assignedTime: "09:48 AM",
-      status: "Assigned",
-      statusVariant: "assigned"
-    },
-    {
-      id: "WO-0250",
-      orderNum: 3,
-      title: "Pipeline Leak",
-      location: "Maniktala",
-      zone: "North Central",
-      type: "Leakage",
-      typeIcon: Wrench,
-      priority: "High",
-      assignedOn: "13 Sept 2026",
-      assignedTime: "06:30 PM",
-      status: "Not Started",
-      statusVariant: "not-started"
-    },
-    {
-      id: "WO-0251",
-      orderNum: 4,
-      title: "Illegal Dumping",
-      location: "Tollygunge",
-      zone: "South",
-      type: "Sanitation",
-      typeIcon: Trash2,
-      priority: "Medium",
-      assignedOn: "13 Sept 2026",
-      assignedTime: "04:12 PM",
-      status: "Assigned",
-      statusVariant: "assigned"
-    },
-    {
-      id: "WO-0252",
-      orderNum: 5,
-      title: "Low Water Pressure",
-      location: "Jadavpur",
-      zone: "South East",
-      type: "Water Supply",
-      typeIcon: Droplets,
-      priority: "Low",
-      assignedOn: "12 Sept 2026",
-      assignedTime: "11:20 AM",
-      status: "In Progress",
-      statusVariant: "in-progress"
+  useEffect(() => {
+    api.get(`/reports/analytics/submitted-vs-resolved?timeframe=${encodeURIComponent(chartTimeframe)}`, token)
+      .then((res) => {
+        if (res) {
+          setBackendAnalytics(res);
+        }
+      })
+      .catch(() => {});
+  }, [chartTimeframe, allReports, historicalPlaces, token]);
+
+  const isReportInHistoricalPlaces = (report) => {
+    if (!report) return false;
+    const rLoc = String(report.location || "").trim().toLowerCase();
+    if (!rLoc) return false;
+    const rUlb = String(report.assigned_ulb_name || "").trim().toLowerCase();
+    const rParts = rLoc.split(",").map((p) => p.trim()).filter(Boolean);
+    const rPrimary = rParts[0] || "";
+
+    return (historicalPlaces || []).some((hp) => {
+      if (!hp) return false;
+      const hpLoc = String(hp.location || "").trim().toLowerCase();
+      if (!hpLoc) return false;
+      const hpUlb = String(hp.assigned_ulb_name || "").trim().toLowerCase();
+
+      // 1. Direct match or containment
+      if (hpLoc === rLoc || hpLoc.includes(rLoc) || rLoc.includes(hpLoc)) return true;
+
+      // 2. Incident ID match if present
+      if (report.incident_id && hp.incident_id) {
+        const cleanR = String(report.incident_id).replace("#", "").trim().toLowerCase();
+        const cleanHp = String(hp.incident_id).replace("#", "").trim().toLowerCase();
+        if (cleanR && cleanHp && cleanR === cleanHp) return true;
+      }
+
+      // 3. Primary token / landmark match
+      const hpParts = hpLoc.split(",").map((p) => p.trim()).filter(Boolean);
+      const hpPrimary = hpParts[0] || "";
+
+      if (
+        rPrimary &&
+        hpPrimary &&
+        (rPrimary === hpPrimary || rPrimary.includes(hpPrimary) || hpPrimary.includes(rPrimary))
+      ) {
+        // Sector check to prevent mismatched sectors (e.g. Sector V vs Sector III)
+        const rSec = rParts.find((p) => p.includes("sector"));
+        const hpSec = hpParts.find((p) => p.includes("sector"));
+        if (rSec && hpSec && rSec !== hpSec) {
+          return false;
+        }
+        return true;
+      }
+
+      // 4. Locality keywords matching (e.g. "salt lake" + "sector v")
+      if (
+        (rLoc.includes("salt lake") && hpLoc.includes("salt lake") && rLoc.includes("sector v") && hpLoc.includes("sector v")) ||
+        (rLoc.includes("behala") && hpLoc.includes("behala")) ||
+        (rLoc.includes("park street") && hpLoc.includes("park street")) ||
+        (rLoc.includes("college more") && hpLoc.includes("college more")) ||
+        (rLoc.includes("thanthania") && hpLoc.includes("thanthania")) ||
+        (rLoc.includes("bagmari") && hpLoc.includes("bagmari")) ||
+        (rLoc.includes("tangra") && hpLoc.includes("tangra")) ||
+        (rLoc.includes("tollygunge") && hpLoc.includes("tollygunge")) ||
+        (rLoc.includes("jadavpur") && hpLoc.includes("jadavpur")) ||
+        (rLoc.includes("howrah") && hpLoc.includes("howrah")) ||
+        (rLoc.includes("lake town") && hpLoc.includes("lake town")) ||
+        (rLoc.includes("new alipore") && hpLoc.includes("new alipore"))
+      ) {
+        return true;
+      }
+
+      // 5. ULB match and primary locality match
+      if (
+        rUlb &&
+        hpUlb &&
+        rUlb === hpUlb &&
+        rPrimary &&
+        hpPrimary &&
+        (rPrimary.includes(hpPrimary) || hpPrimary.includes(rPrimary))
+      ) {
+        return true;
+      }
+
+      return false;
+    });
+  };
+
+  // 1. Total reports count from the reports table
+  const totalReportsCount = useMemo(() => {
+    if (backendAnalytics && typeof backendAnalytics.total_reports === "number") {
+      return backendAnalytics.total_reports;
     }
-  ]);
+    return combinedReports.length;
+  }, [backendAnalytics, combinedReports]);
 
-  const filteredWorkQueue = useMemo(() => {
-    if (workQueuePriority === "All") return workOrdersList;
-    return workOrdersList.filter(wo => wo.priority.toLowerCase() === workQueuePriority.toLowerCase());
-  }, [workOrdersList, workQueuePriority]);
+  // 2. Total resolved reports count strictly for resolved incidents in historical_place table
+  const totalResolvedCount = useMemo(() => {
+    if (backendAnalytics && typeof backendAnalytics.total_resolved === "number") {
+      return backendAnalytics.total_resolved;
+    }
+    return combinedReports.filter(isReportInHistoricalPlaces).length;
+  }, [backendAnalytics, combinedReports, historicalPlaces]);
 
-  const updateWorkOrderStatus = (id, newStatus, newVariant) => {
-    setWorkOrdersList(prev => prev.map(item => {
-      if (item.id === id) {
-        return { ...item, status: newStatus, statusVariant: newVariant };
+  // 3. Calculated resolution rate
+  const resolutionRateFormatted = useMemo(() => {
+    if (backendAnalytics && backendAnalytics.resolution_rate) {
+      return backendAnalytics.resolution_rate;
+    }
+    if (totalReportsCount === 0) return "0.0%";
+    const pct = (totalResolvedCount / totalReportsCount) * 100;
+    return `${pct.toFixed(1)}%`;
+  }, [backendAnalytics, totalReportsCount, totalResolvedCount]);
+
+  const chartData = useMemo(() => {
+    if (backendAnalytics && Array.isArray(backendAnalytics.monthly_data) && backendAnalytics.monthly_data.length > 0) {
+      return backendAnalytics.monthly_data;
+    }
+
+    const monthLabels =
+      chartTimeframe === "Last 3 Months"
+        ? ["Jul 2026", "Aug 2026", "Sep 2026"]
+        : chartTimeframe === "Year 2026"
+        ? ["Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"]
+        : ["Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"];
+
+    const monthlySubmitted = {};
+    const monthlyResolved = {};
+    monthLabels.forEach((m) => {
+      monthlySubmitted[m] = 0;
+      monthlyResolved[m] = 0;
+    });
+
+    combinedReports.forEach((r) => {
+      const dt = r.submitted_at ? new Date(r.submitted_at) : new Date();
+      const mStr = isNaN(dt.getTime())
+        ? "Sep 2026"
+        : dt.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+
+      const targetMonth = monthLabels.includes(mStr) ? mStr : monthLabels[monthLabels.length - 1];
+      monthlySubmitted[targetMonth] = (monthlySubmitted[targetMonth] || 0) + 1;
+
+      if (isReportInHistoricalPlaces(r)) {
+        monthlyResolved[targetMonth] = (monthlyResolved[targetMonth] || 0) + 1;
+      }
+    });
+
+    return monthLabels.map((m) => {
+      const sub = monthlySubmitted[m] || 0;
+      const res = monthlyResolved[m] || 0;
+      const rateStr = sub > 0 ? `${((res / sub) * 100).toFixed(1)}%` : res > 0 ? "100.0%" : "0.0%";
+      return {
+        month: m,
+        submitted: sub,
+        resolved: res,
+        rate: rateStr,
+      };
+    });
+  }, [backendAnalytics, chartTimeframe, combinedReports, historicalPlaces]);
+
+  const maxChartDataVal = useMemo(() => {
+    return Math.max(
+      ...chartData.map((d) => Math.max(d.submitted || 0, d.resolved || 0)),
+      1
+    );
+  }, [chartData]);
+
+  const chartYMax = useMemo(() => {
+    if (maxChartDataVal > 250) return Math.ceil(maxChartDataVal / 50) * 50;
+    if (maxChartDataVal > 100) return 250;
+    if (maxChartDataVal > 50) return 100;
+    if (maxChartDataVal > 20) return 50;
+    if (maxChartDataVal > 10) return 20;
+    if (maxChartDataVal > 5) return 10;
+    return 5;
+  }, [maxChartDataVal]);
+
+  // ---------------------------------------------------------------------------
+  // 3. BOTTOM-LEFT: MY WORK QUEUE DATA (From historical_place, incident_queue & work_orders)
+  // ---------------------------------------------------------------------------
+  const getTypeIcon = (issueType = "", intervention = "") => {
+    const combined = `${issueType || ""} ${intervention || ""}`.toLowerCase();
+    if (
+      combined.includes("drain") ||
+      combined.includes("pipe") ||
+      combined.includes("block") ||
+      combined.includes("leak") ||
+      combined.includes("repair") ||
+      combined.includes("sluice") ||
+      combined.includes("pump")
+    ) {
+      return Wrench;
+    }
+    if (
+      combined.includes("sanit") ||
+      combined.includes("dump") ||
+      combined.includes("waste") ||
+      combined.includes("trash") ||
+      combined.includes("debris") ||
+      combined.includes("desilt")
+    ) {
+      return Trash2;
+    }
+    return Droplets;
+  };
+
+  const getTypeName = (issueType = "", intervention = "") => {
+    if (intervention && intervention.length < 25) return intervention;
+    const lower = String(issueType || "").toLowerCase();
+    if (lower.includes("drain")) return "Drainage";
+    if (lower.includes("leak") || lower.includes("pipe")) return "Leakage";
+    if (lower.includes("sanit") || lower.includes("dump")) return "Sanitation";
+    if (lower.includes("supply")) return "Water Supply";
+    if (lower.includes("flood")) return "Flooding";
+    return issueType || "Waterlogging";
+  };
+
+  const getNormalizedPriority = (risk = "") => {
+    const upper = String(risk || "").toUpperCase();
+    if (upper.includes("CRIT") || upper.includes("HIGH") || upper.includes("SEV")) return "High";
+    if (upper.includes("MOD") || upper.includes("MED")) return "Medium";
+    return "Low";
+  };
+
+  const getStatusVariant = (status = "") => {
+    const lower = String(status || "").toLowerCase();
+    if (lower.includes("resolv") || lower.includes("closed") || lower.includes("complete")) {
+      return "resolved";
+    }
+    if (lower.includes("in prog") || lower.includes("progress") || lower.includes("active intervention")) {
+      return "in-progress";
+    }
+    if (lower.includes("assign") || lower.includes("dispatch") || lower.includes("en route")) {
+      return "assigned";
+    }
+    if (lower.includes("need") || lower.includes("crit") || lower.includes("review") || lower.includes("triage")) {
+      return "needs-intervention";
+    }
+    return "not-started";
+  };
+
+  const formatDateTime = (dtValue) => {
+    if (!dtValue) {
+      return { assignedOn: "14 Sept 2026", assignedTime: "10:00 AM" };
+    }
+    const dt = new Date(dtValue);
+    if (isNaN(dt.getTime())) {
+      return { assignedOn: String(dtValue), assignedTime: "10:00 AM" };
+    }
+    const assignedOn = dt.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+    const assignedTime = dt.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    return { assignedOn, assignedTime };
+  };
+
+  const [statusOverrides, setStatusOverrides] = useState({});
+
+  const combinedWorkQueue = useMemo(() => {
+    const list = [];
+    const seenIds = new Set();
+
+    // 1. Process items from `work_orders` table
+    const rawOrders = Array.isArray(workOrders) ? workOrders : Object.values(workOrders || {});
+    rawOrders.forEach((wo) => {
+      const id = wo.work_id || wo.id || (wo.incidentId || wo.incident_id ? `WO-${String(wo.incidentId || wo.incident_id).replace(/^#/, "")}` : null);
+      if (!id || seenIds.has(id)) return;
+      seenIds.add(id);
+
+      const dt = formatDateTime(wo.created_at || wo.dispatched_at || wo.createdAt);
+      list.push({
+        id,
+        title: wo.intervention_type || wo.assignedCrew || (wo.trigger ? String(wo.trigger).slice(0, 32) : "Drainage Response & Sump"),
+        location: wo.location || "Kolkata Locality",
+        zone: wo.borough || wo.ward || wo.assigned_ulb_name || "Municipal Ward",
+        type: getTypeName(wo.issue_type, wo.intervention_type),
+        typeIcon: getTypeIcon(wo.issue_type, wo.intervention_type),
+        priority: getNormalizedPriority(wo.priority || wo.risk_level || wo.riskScore),
+        assignedOn: dt.assignedOn,
+        assignedTime: dt.assignedTime,
+        status: wo.status || "Dispatched",
+        statusVariant: getStatusVariant(wo.status || "Dispatched"),
+        sourceTable: "work_orders",
+      });
+    });
+
+    // 2. Process items from `historical_place` table
+    (historicalPlaces || []).forEach((hp) => {
+      const rawIncId = hp.incident_id || hp.id;
+      const cleanIncId = String(rawIncId || "").replace(/^#/, "").trim();
+      const id = hp.work_id || (cleanIncId ? `WO-${cleanIncId}` : `WO-HIST-${hp.id}`);
+      if (!id || seenIds.has(id)) return;
+      seenIds.add(id);
+
+      const dt = formatDateTime(hp.created_at || hp.resolved_at || "14 Sept 2026");
+      list.push({
+        id,
+        title: hp.location ? `Resolved: ${hp.location.split(',')[0]} Drainage` : "Municipal Clearance & Relief",
+        location: hp.location || "Kolkata Locality",
+        zone: hp.ward || hp.assigned_ulb_name || "Municipal Ward",
+        type: getTypeName(hp.issue_type),
+        typeIcon: getTypeIcon(hp.issue_type),
+        priority: getNormalizedPriority(hp.water_depth > 25 ? "HIGH" : hp.water_depth > 15 ? "MEDIUM" : "LOW"),
+        assignedOn: dt.assignedOn,
+        assignedTime: dt.assignedTime,
+        status: hp.status || "Resolved",
+        statusVariant: "resolved",
+        sourceTable: "historical_place",
+      });
+    });
+
+    return list.map((item, idx) => ({
+      ...item,
+      orderNum: idx + 1,
+    }));
+  }, [workOrders, historicalPlaces]);
+
+  const workOrdersList = useMemo(() => {
+    return combinedWorkQueue.map((item) => {
+      if (statusOverrides[item.id]) {
+        return {
+          ...item,
+          status: statusOverrides[item.id].status,
+          statusVariant: statusOverrides[item.id].statusVariant,
+        };
       }
       return item;
+    });
+  }, [combinedWorkQueue, statusOverrides]);
+
+  const filteredWorkQueue = useMemo(() => {
+    return workOrdersList.filter((wo) => {
+      const matchPriority =
+        workQueuePriority === "All" ||
+        wo.priority.toLowerCase() === workQueuePriority.toLowerCase();
+      const matchStatus =
+        workQueueStatus === "All" ||
+        wo.status.toLowerCase() === workQueueStatus.toLowerCase() ||
+        (wo.statusVariant && wo.statusVariant.toLowerCase() === workQueueStatus.toLowerCase().replace(/\s+/g, "-"));
+      return matchPriority && matchStatus;
+    });
+  }, [workOrdersList, workQueuePriority, workQueueStatus]);
+
+  const updateWorkOrderStatus = (id, newStatus, newVariant) => {
+    setStatusOverrides((prev) => ({
+      ...prev,
+      [id]: { status: newStatus, statusVariant: newVariant },
     }));
+    if (id) {
+      api.patch(`/work-orders/${encodeURIComponent(id)}/status`, {
+        status: newStatus,
+      }).then(() => {
+        if (fetchAllReports) fetchAllReports();
+      }).catch(() => { });
+    }
     setActionMenuOpenId(null);
   };
 
@@ -646,7 +931,7 @@ export function AdminDashboardView() {
 
   return (
     <div className="w-full min-h-screen bg-[#f3f7fb] dark:bg-[#070c14] text-slate-900 dark:text-[#F0F9FA] transition-colors duration-300 pb-16 font-sans relative">
-      
+
       {/* ========================================================================= */}
       {/* HERITAGE HEADER BANNER (PREMIUM ATMOSPHERIC BLEND)                        */}
       {/* ========================================================================= */}
@@ -678,7 +963,7 @@ export function AdminDashboardView() {
         </div>
 
         <div className="relative z-10 max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 pt-9 pb-16 sm:pt-11 sm:pb-20 flex flex-col md:flex-row md:items-center justify-between gap-6 min-h-[230px]">
-          
+
           <motion.div
             initial={{ opacity: 0, x: -15 }}
             animate={{ opacity: 1, x: 0 }}
@@ -705,7 +990,7 @@ export function AdminDashboardView() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1, y: [0, -4, 0] }}
-            transition={{ 
+            transition={{
               opacity: { duration: 0.35 },
               scale: { duration: 0.35 },
               y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
@@ -907,14 +1192,14 @@ export function AdminDashboardView() {
                   const isHigh = hp.level === "High";
                   const isMed = hp.level === "Medium";
                   const isSelected = activeHotspot?.id === hp.id;
-                  
+
                   const glowId = isCrit ? "url(#map-glow-critical)" :
-                                 isHigh ? "url(#map-glow-high)" :
-                                 isMed ? "url(#map-glow-medium)" : "url(#map-glow-low)";
-                  
+                    isHigh ? "url(#map-glow-high)" :
+                      isMed ? "url(#map-glow-medium)" : "url(#map-glow-low)";
+
                   const dotColor = isCrit ? "#ef4444" :
-                                   isHigh ? "#f97316" :
-                                   isMed ? "#eab308" : "#10b981";
+                    isHigh ? "#f97316" :
+                      isMed ? "#eab308" : "#10b981";
 
                   const haloSize = isCrit ? 34 : isHigh ? 26 : isMed ? 20 : 15;
                   const innerSize = isCrit ? 8.5 : isHigh ? 7 : isMed ? 6 : 5;
@@ -1057,14 +1342,13 @@ export function AdminDashboardView() {
                           {activeHotspot.subdivision}
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-1 shrink-0">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${
-                          activeHotspot.level === "Critical" ? "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400" :
-                          activeHotspot.level === "High" ? "bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-400" :
-                          activeHotspot.level === "Medium" ? "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400" :
-                          "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
-                        }`}>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${activeHotspot.level === "Critical" ? "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400" :
+                            activeHotspot.level === "High" ? "bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-400" :
+                              activeHotspot.level === "Medium" ? "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400" :
+                                "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
+                          }`}>
                           {activeHotspot.level}
                         </span>
 
@@ -1177,10 +1461,10 @@ export function AdminDashboardView() {
                     </span>
                   </div>
                   <div className="text-xl sm:text-2xl font-bold font-mono text-slate-900 dark:text-white">
-                    1,248
+                    {totalReportsCount.toLocaleString()}
                   </div>
                   <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold font-mono flex items-center gap-0.5 mt-1">
-                    <span>↑ 12%</span>
+                    <span>↑ {backendAnalytics?.growth?.reports_growth ?? 12}%</span>
                     <span className="text-slate-400 font-normal text-[10px]">vs prev</span>
                   </div>
                 </div>
@@ -1196,10 +1480,10 @@ export function AdminDashboardView() {
                     </span>
                   </div>
                   <div className="text-xl sm:text-2xl font-bold font-mono text-slate-900 dark:text-white">
-                    892
+                    {totalResolvedCount.toLocaleString()}
                   </div>
                   <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold font-mono flex items-center gap-0.5 mt-1">
-                    <span>↑ 18%</span>
+                    <span>↑ {backendAnalytics?.growth?.resolved_growth ?? 18}%</span>
                     <span className="text-slate-400 font-normal text-[10px]">vs prev</span>
                   </div>
                 </div>
@@ -1215,10 +1499,10 @@ export function AdminDashboardView() {
                     </span>
                   </div>
                   <div className="text-xl sm:text-2xl font-bold font-mono text-slate-900 dark:text-white">
-                    71.5%
+                    {resolutionRateFormatted}
                   </div>
                   <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold font-mono flex items-center gap-0.5 mt-1">
-                    <span>↑ 6%</span>
+                    <span>↑ {backendAnalytics?.growth?.rate_growth ?? 6}%</span>
                     <span className="text-slate-400 font-normal text-[10px]">vs prev</span>
                   </div>
                 </div>
@@ -1227,7 +1511,7 @@ export function AdminDashboardView() {
 
             {/* Comparison Dual Line Graph Container */}
             <div className="relative w-full pt-2">
-              
+
               {/* Dynamic SVG Smooth Dual Line Graph */}
               <div className="relative w-full h-[255px] sm:h-[270px]">
                 <svg
@@ -1258,35 +1542,32 @@ export function AdminDashboardView() {
                   </defs>
 
                   {/* Horizontal Gridlines & Y-Axis Scale */}
-                  {[
-                    { val: 250, y: 20 },
-                    { val: 200, y: 50 },
-                    { val: 150, y: 80 },
-                    { val: 100, y: 110 },
-                    { val: 50, y: 140 },
-                    { val: 0, y: 170 }
-                  ].map((grid) => (
-                    <g key={grid.val}>
-                      <text
-                        x="32"
-                        y={grid.y + 3.5}
-                        className="text-[10px] font-mono fill-slate-400 dark:fill-slate-500 text-anchor-end"
-                        textAnchor="end"
-                      >
-                        {grid.val}
-                      </text>
-                      <line
-                        x1="42"
-                        y1={grid.y}
-                        x2="495"
-                        y2={grid.y}
-                        stroke="currentColor"
-                        strokeDasharray={grid.val === 0 ? "none" : "3 3"}
-                        strokeWidth={grid.val === 0 ? "1.2" : "0.75"}
-                        className="text-slate-200/90 dark:text-slate-800"
-                      />
-                    </g>
-                  ))}
+                  {[1.0, 0.8, 0.6, 0.4, 0.2, 0.0].map((frac) => {
+                    const val = Math.round(chartYMax * frac);
+                    const y = 20 + (1 - frac) * 150;
+                    return (
+                      <g key={`${val}-${frac}`}>
+                        <text
+                          x="32"
+                          y={y + 3.5}
+                          className="text-[10px] font-mono fill-slate-400 dark:fill-slate-500 text-anchor-end"
+                          textAnchor="end"
+                        >
+                          {val}
+                        </text>
+                        <line
+                          x1="42"
+                          y1={y}
+                          x2="495"
+                          y2={y}
+                          stroke="currentColor"
+                          strokeDasharray={val === 0 ? "none" : "3 3"}
+                          strokeWidth={val === 0 ? "1.2" : "0.75"}
+                          className="text-slate-200/90 dark:text-slate-800"
+                        />
+                      </g>
+                    );
+                  })}
 
                   {/* Coordinate computations */}
                   {(() => {
@@ -1297,11 +1578,11 @@ export function AdminDashboardView() {
                     const heightSpan = bottomY - topY; // 150px
                     const widthSpan = rightPad - leftPad; // 433px
 
-                    const step = widthSpan / (chartData.length - 1);
+                    const step = widthSpan / Math.max(chartData.length - 1, 1);
 
                     const subPoints = chartData.map((d, i) => ({
                       x: leftPad + i * step,
-                      y: bottomY - (d.submitted / 250) * heightSpan,
+                      y: bottomY - ((d.submitted || 0) / chartYMax) * heightSpan,
                       val: d.submitted,
                       month: d.month,
                       rate: d.rate
@@ -1309,7 +1590,7 @@ export function AdminDashboardView() {
 
                     const resPoints = chartData.map((d, i) => ({
                       x: leftPad + i * step,
-                      y: bottomY - (d.resolved / 250) * heightSpan,
+                      y: bottomY - ((d.resolved || 0) / chartYMax) * heightSpan,
                       val: d.resolved,
                       month: d.month,
                       rate: d.rate
@@ -1399,9 +1680,8 @@ export function AdminDashboardView() {
                               x={pt.x}
                               y={pt.y - 8}
                               textAnchor="middle"
-                              className={`text-[10px] font-mono font-bold select-none transition-all ${
-                                hoveredBarIndex === i ? "fill-blue-600 dark:fill-cyan-400 text-xs" : "fill-slate-600 dark:fill-slate-400"
-                              }`}
+                              className={`text-[10px] font-mono font-bold select-none transition-all ${hoveredBarIndex === i ? "fill-blue-600 dark:fill-cyan-400 text-xs" : "fill-slate-600 dark:fill-slate-400"
+                                }`}
                             >
                               {pt.val}
                             </text>
@@ -1433,9 +1713,8 @@ export function AdminDashboardView() {
                               x={pt.x}
                               y={pt.y - 8}
                               textAnchor="middle"
-                              className={`text-[10px] font-mono font-bold select-none transition-all ${
-                                hoveredBarIndex === i ? "fill-emerald-600 dark:fill-emerald-400 text-xs" : "fill-slate-600 dark:fill-slate-400"
-                              }`}
+                              className={`text-[10px] font-mono font-bold select-none transition-all ${hoveredBarIndex === i ? "fill-emerald-600 dark:fill-emerald-400 text-xs" : "fill-slate-600 dark:fill-slate-400"
+                                }`}
                             >
                               {pt.val}
                             </text>
@@ -1461,9 +1740,8 @@ export function AdminDashboardView() {
                             x={pt.x}
                             y={bottomY + 18}
                             textAnchor="middle"
-                            className={`text-[11px] select-none font-medium transition-colors ${
-                              hoveredBarIndex === i ? "fill-blue-600 dark:fill-cyan-400 font-bold" : "fill-slate-500 dark:fill-slate-400"
-                            }`}
+                            className={`text-[11px] select-none font-medium transition-colors ${hoveredBarIndex === i ? "fill-blue-600 dark:fill-cyan-400 font-bold" : "fill-slate-500 dark:fill-slate-400"
+                              }`}
                           >
                             {pt.month}
                           </text>
@@ -1568,19 +1846,38 @@ export function AdminDashboardView() {
                   </div>
                 </div>
 
-                {/* Priority Filter Dropdown */}
-                <div className="relative self-start sm:self-auto">
-                  <select
-                    value={workQueuePriority}
-                    onChange={(e) => setWorkQueuePriority(e.target.value)}
-                    className="appearance-none text-xs font-semibold bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg pl-3 pr-7 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-xs"
-                  >
-                    <option value="All">All Priorities</option>
-                    <option value="High">High</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
-                  </select>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                {/* Priority & Status Filters */}
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  {/* Priority Filter Dropdown */}
+                  <div className="relative">
+                    <select
+                      value={workQueuePriority}
+                      onChange={(e) => setWorkQueuePriority(e.target.value)}
+                      className="appearance-none text-xs font-semibold bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg pl-3 pr-7 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-xs"
+                    >
+                      <option value="All">All Priorities</option>
+                      <option value="High">High</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Low">Low</option>
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+
+                  {/* Status Filter Dropdown */}
+                  <div className="relative">
+                    <select
+                      value={workQueueStatus}
+                      onChange={(e) => setWorkQueueStatus(e.target.value)}
+                      className="appearance-none text-xs font-semibold bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg pl-3 pr-7 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-xs"
+                    >
+                      <option value="All">All Statuses</option>
+                      <option value="Resolved">Resolved</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Dispatched">Dispatched</option>
+                      <option value="Assigned">Assigned</option>
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
                 </div>
               </div>
 
@@ -1589,146 +1886,112 @@ export function AdminDashboardView() {
                 <table className="w-full text-left border-collapse min-w-[620px]">
                   <thead>
                     <tr className="border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      <th className="py-3 px-3 w-[5%] font-mono">#</th>
-                      <th className="py-3 px-3 w-[24%]">Work Order</th>
-                      <th className="py-3 px-3 w-[18%]">Location</th>
+                      <th className="py-3 px-3 w-[6%] font-mono">#</th>
+                      <th className="py-3 px-3 w-[25%]">Work Order</th>
+                      <th className="py-3 px-3 w-[22%]">Location</th>
                       <th className="py-3 px-3 w-[14%]">Type</th>
                       <th className="py-3 px-3 w-[11%]">Priority</th>
-                      <th className="py-3 px-3 w-[14%]">Assigned On</th>
+                      <th className="py-3 px-3 w-[11%]">Assigned On</th>
                       <th className="py-3 px-3 w-[11%]">Status</th>
-                      <th className="py-3 px-3 w-[3%] text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs sm:text-[13px]">
-                    {filteredWorkQueue.map((wo) => {
-                      const TypeIcon = wo.typeIcon;
+                    {filteredWorkQueue.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs font-medium">
+                          No active work orders or resolved historical records found.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredWorkQueue.map((wo) => {
+                        const TypeIcon = wo.typeIcon;
 
-                      // Priority styling
-                      const isHigh = wo.priority === "High";
-                      const isMed = wo.priority === "Medium";
-                      const priorityPillClass = isHigh
-                        ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/50"
-                        : isMed
-                        ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/50"
-                        : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/50";
+                        // Priority styling
+                        const isHigh = wo.priority === "High";
+                        const isMed = wo.priority === "Medium";
+                        const priorityPillClass = isHigh
+                          ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/50"
+                          : isMed
+                            ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/50"
+                            : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/50";
 
-                      // Status Badge styling
-                      const statusPillClass =
-                        wo.statusVariant === "in-progress"
-                          ? "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800"
-                          : wo.statusVariant === "assigned"
-                          ? "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800"
-                          : wo.statusVariant === "resolved"
-                          ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
-                          : "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
+                        // Status Badge styling
+                        const statusPillClass =
+                          wo.statusVariant === "in-progress"
+                            ? "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800"
+                            : wo.statusVariant === "assigned"
+                              ? "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800"
+                              : wo.statusVariant === "resolved"
+                                ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                                : wo.statusVariant === "needs-intervention"
+                                  ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800"
+                                  : "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
 
-                      return (
-                        <tr
-                          key={wo.id}
-                          className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
-                        >
-                          {/* 1. Order Number */}
-                          <td className="py-3.5 px-3 font-mono font-medium text-slate-400 dark:text-slate-500">
-                            {wo.orderNum}
-                          </td>
+                        return (
+                          <tr
+                            key={wo.id}
+                            className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                          >
+                            {/* 1. Order Number */}
+                            <td className="py-3.5 px-3 font-mono font-medium text-slate-400 dark:text-slate-500">
+                              {wo.orderNum}
+                            </td>
 
-                          {/* 2. Work Order ID & Title */}
-                          <td className="py-3.5 px-3">
-                            <div className="font-mono font-bold text-slate-900 dark:text-white leading-tight text-xs sm:text-[13px]">
-                              {wo.id}
-                            </div>
-                            <div className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5 truncate max-w-[160px]">
-                              {wo.title}
-                            </div>
-                          </td>
-
-                          {/* 3. Location & Zone */}
-                          <td className="py-3.5 px-3">
-                            <div className="font-semibold text-slate-800 dark:text-slate-200 leading-tight text-xs sm:text-[13px]">
-                              {wo.location}
-                            </div>
-                            <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                              {wo.zone}
-                            </div>
-                          </td>
-
-                          {/* 4. Type with Semantic Icon */}
-                          <td className="py-3.5 px-3">
-                            <div className="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300 font-medium">
-                              <TypeIcon className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                              <span className="text-[11.5px]">{wo.type}</span>
-                            </div>
-                          </td>
-
-                          {/* 5. Priority Pill */}
-                          <td className="py-3.5 px-3">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold border ${priorityPillClass}`}>
-                              {wo.priority}
-                            </span>
-                          </td>
-
-                          {/* 6. Assigned On Date & Time */}
-                          <td className="py-3.5 px-3">
-                            <div className="text-[11.5px] text-slate-700 dark:text-slate-300 font-medium">
-                              {wo.assignedOn}
-                            </div>
-                            <div className="text-[10.5px] font-mono text-slate-400 dark:text-slate-500">
-                              {wo.assignedTime}
-                            </div>
-                          </td>
-
-                          {/* 7. Status Pill */}
-                          <td className="py-3.5 px-3">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold border whitespace-nowrap ${statusPillClass}`}>
-                              {wo.status}
-                            </span>
-                          </td>
-
-                          {/* 8. Action Context Menu Button */}
-                          <td className="py-3.5 px-3 text-right relative action-menu-container">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActionMenuOpenId(actionMenuOpenId === wo.id ? null : wo.id);
-                              }}
-                              className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                            >
-                              <MoreHorizontal className="w-4 h-4" />
-                            </button>
-
-                            {/* Dropdown Menu */}
-                            {actionMenuOpenId === wo.id && (
-                              <div className="absolute right-0 top-9 z-30 w-36 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 py-1.5 text-left text-xs">
-                                <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                  Set Status
-                                </div>
-                                <button
-                                  onClick={() => updateWorkOrderStatus(wo.id, "In Progress", "in-progress")}
-                                  className="w-full px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between"
-                                >
-                                  In Progress
-                                  {wo.status === "In Progress" && <Check className="w-3.5 h-3.5 text-blue-500" />}
-                                </button>
-                                <button
-                                  onClick={() => updateWorkOrderStatus(wo.id, "Assigned", "assigned")}
-                                  className="w-full px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between"
-                                >
-                                  Assigned
-                                  {wo.status === "Assigned" && <Check className="w-3.5 h-3.5 text-blue-500" />}
-                                </button>
-                                <button
-                                  onClick={() => updateWorkOrderStatus(wo.id, "Resolved", "resolved")}
-                                  className="w-full px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between"
-                                >
-                                  Resolved
-                                  {wo.status === "Resolved" && <Check className="w-3.5 h-3.5 text-blue-500" />}
-                                </button>
+                            {/* 2. Work Order ID & Title */}
+                            <td className="py-3.5 px-3">
+                              <div className="font-mono font-bold text-slate-900 dark:text-white leading-tight text-xs sm:text-[13px]">
+                                {wo.id}
                               </div>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
+                              <div className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5 truncate max-w-[160px]">
+                                {wo.title}
+                              </div>
+                            </td>
+
+                            {/* 3. Location & Zone */}
+                            <td className="py-3.5 px-3">
+                              <div className="font-semibold text-slate-800 dark:text-slate-200 leading-tight text-xs sm:text-[13px]">
+                                {wo.location}
+                              </div>
+                              <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                                {wo.zone}
+                              </div>
+                            </td>
+
+                            {/* 4. Type with Semantic Icon */}
+                            <td className="py-3.5 px-3">
+                              <div className="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300 font-medium">
+                                <TypeIcon className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                                <span className="text-[11.5px]">{wo.type}</span>
+                              </div>
+                            </td>
+
+                            {/* 5. Priority Pill */}
+                            <td className="py-3.5 px-3">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold border ${priorityPillClass}`}>
+                                {wo.priority}
+                              </span>
+                            </td>
+
+                            {/* 6. Assigned On Date & Time */}
+                            <td className="py-3.5 px-3">
+                              <div className="text-[11.5px] text-slate-700 dark:text-slate-300 font-medium">
+                                {wo.assignedOn}
+                              </div>
+                              <div className="text-[10.5px] font-mono text-slate-400 dark:text-slate-500">
+                                {wo.assignedTime}
+                              </div>
+                            </td>
+
+                            {/* 7. Status Pill */}
+                            <td className="py-3.5 px-3">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold border whitespace-nowrap ${statusPillClass}`}>
+                                {wo.status}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1778,7 +2041,7 @@ export function AdminDashboardView() {
 
               {/* Split Content: Left Progress Bars & Right Overall KPI Highlight */}
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-5 items-center mt-3">
-                
+
                 {/* Left: Resolution Time Progress Bars (7 Cols) */}
                 <div className="sm:col-span-7 space-y-4">
                   {resolutionBreakdown.map((item) => (

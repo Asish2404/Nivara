@@ -52,6 +52,39 @@ async def list_work_orders(
 
 
 @router.get(
+    "/historical-places",
+    summary="List all historical/resolved places",
+)
+@router.get(
+    "/historical_places",
+    summary="List all historical/resolved places (alias)",
+)
+async def list_historical_places(
+    db: AsyncSession = Depends(get_db),
+):
+    """Fetch all historical resolved places from the historical_place table."""
+    places = await WorkOrderService.get_all_historical_places(db)
+    return [
+        {
+            "id": hp.id,
+            "incident_id": hp.incident_id,
+            "work_id": hp.work_id or (f"WO-{hp.incident_id}" if hp.incident_id else f"WO-HIST-{hp.id}"),
+            "location": hp.location,
+            "latitude": hp.latitude,
+            "longitude": hp.longitude,
+            "issue_type": hp.issue_type or "Waterlogging",
+            "water_depth": hp.water_depth,
+            "assigned_ulb_id": hp.assigned_ulb_id,
+            "assigned_ulb_name": hp.assigned_ulb_name,
+            "jurisdiction_type": hp.jurisdiction_type,
+            "ward": hp.ward,
+            "status": hp.status or "Resolved",
+        }
+        for hp in places
+    ]
+
+
+@router.get(
     "/work-orders/dispatched-ids",
     response_model=List[str],
     summary="Get list of all dispatched incident IDs",

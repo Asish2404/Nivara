@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
@@ -43,6 +43,8 @@ export function LiveCityPage() {
     criticalIncidentsCount,
     rainfallDisplay,
     pumpsAtCapacityCount,
+    allReports = [],
+    myReports = [],
     fetchAllReports,
     fetchIncidentQueue,
   } = store;
@@ -53,6 +55,17 @@ export function LiveCityPage() {
   }, [fetchAllReports, fetchIncidentQueue]);
 
   const [traceWaterFlow, setTraceWaterFlow] = useState(false);
+
+  // Total count of reports submitted to the portal (from reports table)
+  const totalReportsCount = useMemo(() => {
+    const combined = [
+      ...(allReports || []),
+      ...(myReports || []).filter(
+        (mr) => !(allReports || []).some((ar) => ar.report_id === mr.report_id)
+      ),
+    ];
+    return combined.length;
+  }, [allReports, myReports]);
 
   const LAYER_KEYS = [
     { key: "rain", label: "Rainfall Radar", icon: "🌧️", color: "border-cyan-400/60 text-cyan-700 bg-cyan-50/80" },
@@ -189,7 +202,7 @@ export function LiveCityPage() {
             </div>
             <div className="flex items-baseline gap-1.5 mt-1">
               <span className="text-2xl sm:text-3xl font-bold text-slate-950 dark:text-[#F2FBFD] font-mono tracking-tight">
-                <AnimatedNumber value={criticalIncidentsCount} duration={1400} />
+                <AnimatedNumber value={totalReportsCount} duration={1400} />
               </span>
               <span className="text-xs font-semibold text-slate-400 dark:text-[#6D949D] tracking-wider font-mono">REPORTS</span>
             </div>

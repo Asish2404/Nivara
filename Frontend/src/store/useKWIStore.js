@@ -103,7 +103,7 @@ const getInitialRoute = () => {
     try {
       const raw = localStorage.getItem("kwi_user");
       if (raw && hasToken) cachedUser = JSON.parse(raw);
-    } catch {}
+    } catch { }
 
     if (!cachedUser && !isPublicRoute(p)) {
       if (window.history && window.history.replaceState) {
@@ -409,15 +409,16 @@ export const useKWIStore = create((set, get) => ({
     }
   },
 
-  // Fetch all municipal reports across Kolkata, the active incident queue, and work orders
+  // Fetch all municipal reports across Kolkata, the active incident queue, work orders, and historical places
   fetchAllReports: async () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('kwi_token') : null;
     try {
-      // Parallel fetch for reports, incident queue, and work orders
-      const [reports, queue, workOrdersRes] = await Promise.allSettled([
+      // Parallel fetch for reports, incident queue, work orders, and historical places
+      const [reports, queue, workOrdersRes, histRes] = await Promise.allSettled([
         api.get('/reports?all_reports=true', token),
         api.get('/incidents', token),
         get().fetchWorkOrders(),
+        api.get('/historical-places', token),
       ]);
 
       const stateUpdate = { reportsLoaded: true, reportsError: null };
@@ -427,11 +428,26 @@ export const useKWIStore = create((set, get) => ({
       if (queue.status === 'fulfilled' && Array.isArray(queue.value)) {
         stateUpdate.incidentQueue = queue.value;
       }
+      if (histRes.status === 'fulfilled' && Array.isArray(histRes.value)) {
+        stateUpdate.historicalPlaces = histRes.value;
+      }
 
       set(stateUpdate);
       get().refreshDynamicIncidents();
     } catch (err) {
       console.warn('[KWI] fetchAllReports notice:', err?.message || err);
+    }
+  },
+
+  fetchHistoricalPlaces: async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('kwi_token') : null;
+    try {
+      const places = await api.get('/historical-places', token);
+      if (Array.isArray(places)) {
+        set({ historicalPlaces: places });
+      }
+    } catch (err) {
+      console.warn('[KWI] fetchHistoricalPlaces notice:', err?.message || err);
     }
   },
 
@@ -567,7 +583,7 @@ export const useKWIStore = create((set, get) => ({
               reportsLoaded: true,
             }));
             get().refreshDynamicIncidents();
-            get().fetchIncidentQueue().catch(() => {});
+            get().fetchIncidentQueue().catch(() => { });
           }
         })
 
@@ -750,8 +766,8 @@ export const useKWIStore = create((set, get) => ({
   // Real user identity — hydrated from localStorage cache only if a token also exists
   currentUser:
     typeof window !== "undefined" &&
-    localStorage.getItem("kwi_token") &&
-    localStorage.getItem("kwi_user")
+      localStorage.getItem("kwi_token") &&
+      localStorage.getItem("kwi_user")
       ? JSON.parse(localStorage.getItem("kwi_user"))
       : null,
 
@@ -802,7 +818,7 @@ export const useKWIStore = create((set, get) => ({
   initUser: async () => {
     if (typeof window === "undefined") return;
     // Always fetch municipal reports and compute dynamic incidents on app load
-    get().fetchAllReports().catch(() => {});
+    get().fetchAllReports().catch(() => { });
     const token = localStorage.getItem("kwi_token");
     if (!token) {
       set({ currentUser: null });
@@ -811,7 +827,7 @@ export const useKWIStore = create((set, get) => ({
     try {
       const me = await api.get("/auth/me", token);
       get().setCurrentUser(get().mapBackendUser(me));
-      get().fetchMyReports().catch(() => {});
+      get().fetchMyReports().catch(() => { });
     } catch (err) {
       // Unauthorized / invalid token → drop the stale session.
       if (
@@ -872,7 +888,7 @@ export const useKWIStore = create((set, get) => ({
     const token =
       typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
     if (token) {
-      api.post("/auth/logout", {}, token).catch(() => {});
+      api.post("/auth/logout", {}, token).catch(() => { });
     }
     if (typeof window !== "undefined") {
       localStorage.removeItem("kwi_user");
@@ -984,11 +1000,11 @@ export const useKWIStore = create((set, get) => ({
       incidents: state.incidents.map((inc) =>
         inc.id === id
           ? {
-              ...inc,
-              severity: "RESOLVED",
-              status: "RESOLVED",
-              waterLevel: "2.0 cm",
-            }
+            ...inc,
+            severity: "RESOLVED",
+            status: "RESOLVED",
+            waterLevel: "2.0 cm",
+          }
           : inc,
       ),
     })),
@@ -1060,6 +1076,8 @@ export const useKWIStore = create((set, get) => ({
 
   // Work Orders Store
   workOrders: {},
+  historicalPlaces: [],
+  setHistoricalPlaces: (places) => set({ historicalPlaces: places }),
 
   // Hydraulic Scenario Simulation State & Action Center Bridge
   activeSimulationIncidentId: null,
@@ -1177,21 +1195,50 @@ export const useKWIStore = create((set, get) => ({
     const nextStatus = STAGE_NAMES[nextStage]
 
     if (nextStatus === 'Resolved') {
-      // Remove from workOrders table in store
-      set((state) => {
-        const nextWorkOrders = { ...state.workOrders }
-        delete nextWorkOrders[key]
+      // First update state to Resolved so resolved phase and arrow indication stay on screen for 3s
+      set((state) => ({
+        workOrders: {
+          ...state.workOrders,
+          [key]: {
+            ...existing,
+            stage: nextStage,
+            status: nextStatus,
+          },
+        },
+        latestSimulationOutcome:
+          state.latestSimulationOutcome?.ticketKey === key
+            ? { ...state.latestSimulationOutcome, stage: nextStage, status: nextStatus }
+            : state.latestSimulationOutcome,
+      }))
 
-        const remainingKeys = Object.keys(nextWorkOrders)
-        const nextActiveId = remainingKeys.length > 0 ? remainingKeys[0] : null
+      // Increase time for resolved phase by 3s with arrow indication, then clear incident details
+      setTimeout(() => {
+        set((state) => {
+          const nextWorkOrders = { ...state.workOrders }
+          delete nextWorkOrders[key]
 
-        return {
-          workOrders: nextWorkOrders,
-          activeWorkOrderTicketId: nextActiveId,
-          latestSimulationOutcome:
-            state.latestSimulationOutcome?.ticketKey === key ? null : state.latestSimulationOutcome,
-        }
-      })
+          const remainingKeys = Object.keys(nextWorkOrders)
+          const nextActiveId = remainingKeys.length > 0 ? remainingKeys[0] : null
+
+          return {
+            workOrders: nextWorkOrders,
+            activeWorkOrderTicketId: nextActiveId,
+            latestSimulationOutcome:
+              state.latestSimulationOutcome?.ticketKey === key ? null : state.latestSimulationOutcome,
+          }
+        })
+
+        // Async sync to backend after 3s resolved phase
+        api.patch(`/work-orders/${encodeURIComponent(key)}/status`, {
+          status: nextStatus,
+          stage: nextStage,
+        }).then(() => {
+          // Refresh incident queue and reports so resolved status is reflected across the app
+          get().fetchAllReports().catch(() => { })
+        }).catch((err) => {
+          console.warn('[KWI] Backend work order status update notice:', err?.message || err)
+        })
+      }, 2000)
     } else {
       set((state) => ({
         workOrders: {
@@ -1207,18 +1254,18 @@ export const useKWIStore = create((set, get) => ({
             ? { ...state.latestSimulationOutcome, stage: nextStage, status: nextStatus }
             : state.latestSimulationOutcome,
       }))
-    }
 
-    // Async sync to backend
-    api.patch(`/work-orders/${encodeURIComponent(key)}/status`, {
-      status: nextStatus,
-      stage: nextStage,
-    }).then(() => {
-      // Refresh incident queue and reports so resolved status is reflected across the app
-      get().fetchAllReports().catch(() => {})
-    }).catch((err) => {
-      console.warn('[KWI] Backend work order status update notice:', err?.message || err)
-    })
+      // Async sync to backend
+      api.patch(`/work-orders/${encodeURIComponent(key)}/status`, {
+        status: nextStatus,
+        stage: nextStage,
+      }).then(() => {
+        // Refresh incident queue and reports so resolved status is reflected across the app
+        get().fetchAllReports().catch(() => { })
+      }).catch((err) => {
+        console.warn('[KWI] Backend work order status update notice:', err?.message || err)
+      })
+    }
   },
 
   dispatchSimulationToWorkOrder: (ticketId, outcome) => {
