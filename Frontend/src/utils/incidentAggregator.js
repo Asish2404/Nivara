@@ -149,7 +149,9 @@ function getNormalizedLocationKey(location) {
  * @returns {Array} Real, auto-counted, severity-ranked, sorted incidents
  */
 export function aggregateIncidentsFromReports(reports = []) {
-  const safeReports = Array.isArray(reports) ? reports : [];
+  const safeReports = (Array.isArray(reports) ? reports : []).filter(
+    (r) => r && String(r.status || "").toLowerCase() !== "resolved" && String(r.status || "").toLowerCase() !== "closed"
+  );
   if (safeReports.length === 0) return [];
 
   // Group reports by location column from reports table

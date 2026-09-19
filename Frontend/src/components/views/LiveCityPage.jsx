@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
@@ -42,7 +42,14 @@ export function LiveCityPage() {
     criticalIncidentsCount,
     rainfallDisplay,
     pumpsAtCapacityCount,
+    fetchAllReports,
+    fetchIncidentQueue,
   } = store;
+
+  useEffect(() => {
+    fetchAllReports?.().catch(() => {});
+    fetchIncidentQueue?.().catch(() => {});
+  }, [fetchAllReports, fetchIncidentQueue]);
 
   const [traceWaterFlow, setTraceWaterFlow] = useState(false);
 

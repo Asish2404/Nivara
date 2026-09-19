@@ -452,26 +452,29 @@ export const useKWIStore = create((set, get) => ({
     }
   },
 
-  // Dynamically derive active incidents strictly from incident_queue table and reports
+  // Dynamically derive active incidents strictly from incident_queue table
   refreshDynamicIncidents: () => {
     const s = get();
-    // 1. If incidentQueue from backend is loaded and non-empty, map it to cards
-    if (Array.isArray(s.incidentQueue) && s.incidentQueue.length > 0) {
-      const cards = mapIncidentQueueToCards(s.incidentQueue);
-      set({ incidents: cards });
-      return cards;
+    // 1. If incidentQueue from backend is loaded (it is an Array), map it directly
+    let cards = [];
+    if (Array.isArray(s.incidentQueue)) {
+      cards = mapIncidentQueueToCards(s.incidentQueue);
+    } else if (!s.reportsLoaded) {
+      // Temporary client fallback only before initial backend fetch completes
+      const combined = [
+        ...(s.allReports || []),
+        ...(s.myReports || []).filter(
+          (mr) => !(s.allReports || []).some((ar) => ar.report_id === mr.report_id),
+        ),
+      ];
+      cards = aggregateIncidentsFromReports(combined);
     }
 
-    // 2. Fallback to client-side aggregation from submitted reports
-    const combined = [
-      ...(s.allReports || []),
-      ...(s.myReports || []).filter(
-        (mr) => !(s.allReports || []).some((ar) => ar.report_id === mr.report_id),
-      ),
-    ];
-    const dynamic = aggregateIncidentsFromReports(combined);
-    set({ incidents: dynamic });
-    return dynamic;
+    set({
+      incidents: cards,
+      criticalIncidentsCount: cards.length,
+    });
+    return cards;
   },
 
 
@@ -901,7 +904,7 @@ export const useKWIStore = create((set, get) => ({
 
   // Real GIS Municipal Stats (as requested)
   highRiskZonesCount: 7,
-  criticalIncidentsCount: 3,
+  criticalIncidentsCount: 0,
   rainfallDisplay: "74 mm / 3 hr",
   rainfallIntensity: "HEAVY",
   pumpsAtCapacityCount: 2,

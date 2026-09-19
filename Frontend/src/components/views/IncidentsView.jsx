@@ -36,11 +36,11 @@ export function IncidentsView() {
   }, [allReports, myReports]);
 
   const dynamicIncidents = useMemo(() => {
-    if (Array.isArray(incidentQueue) && incidentQueue.length > 0) {
+    if (Array.isArray(incidentQueue)) {
       return mapIncidentQueueToCards(incidentQueue);
     }
-    return aggregateIncidentsFromReports(combinedReports);
-  }, [incidentQueue, combinedReports]);
+    return [];
+  }, [incidentQueue]);
 
 
   const [selectedId, setSelectedId] = useState(

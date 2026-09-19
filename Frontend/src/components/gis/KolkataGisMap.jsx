@@ -609,7 +609,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
         } else if (hasPredictions) {
           allIncidents = store.waterloggingPredictions;
         } else {
-          allIncidents = ACTIVE_INCIDENTS;
+          allIncidents = [];
         }
 
         const incidentsToRender = allIncidents.filter((inc) => {

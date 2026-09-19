@@ -146,14 +146,14 @@ export function SimulateView() {
 
   // Derive active incidents strictly from incident_queue table (matching Live City Map & Live Incident cards in same order)
   const sortedIncidents = useMemo(() => {
-    if (Array.isArray(incidentQueue) && incidentQueue.length > 0) {
+    if (Array.isArray(incidentQueue)) {
       return mapIncidentQueueToCards(incidentQueue);
     }
-    if (Array.isArray(incidents) && incidents.length > 0) {
+    if (Array.isArray(incidents)) {
       return incidents;
     }
-    return aggregateIncidentsFromReports(combinedReports);
-  }, [incidentQueue, incidents, combinedReports]);
+    return [];
+  }, [incidentQueue, incidents]);
 
   // Available incidents: filter out any that have been dispatched (popped)
   const availableIncidents = useMemo(() => {
@@ -302,29 +302,35 @@ export function SimulateView() {
   const [simState, setSimState] = useState("CURRENT");
 
   // Extracted Baseline Numeric Values with Complete Mathematical Safety (No NaN / Divide-by-Zero)
+  const isQueueEmpty = availableIncidents.length === 0 || Boolean(activeIncident?.isAllClear);
+
   const baselineDepthCm = useMemo(() => {
+    if (isQueueEmpty) return 0;
     const parsed = activeIncident?.waterLevelCm ?? parseWaterDepthCm(activeIncident?.waterDepth);
     return typeof parsed === "number" && !isNaN(parsed) && parsed > 0 ? parsed : 15.0;
-  }, [activeIncident]);
+  }, [activeIncident, isQueueEmpty]);
 
   const baselineRiskScore = useMemo(() => {
+    if (isQueueEmpty) return 0;
     if (!activeIncident?.riskScore) return 65;
     const match = String(activeIncident.riskScore).match(/(\d+)/);
     const val = match ? parseInt(match[1], 10) : 65;
     return !isNaN(val) && val >= 10 && val <= 100 ? val : 65;
-  }, [activeIncident]);
+  }, [activeIncident, isQueueEmpty]);
 
   const baselineAreaM2 = useMemo(() => {
+    if (isQueueEmpty) return 0;
     if (!activeIncident?.affectedArea) return 8500;
     const clean = String(activeIncident.affectedArea).replace(/[^0-9]/g, "");
     const val = clean ? parseInt(clean, 10) : 8500;
     return !isNaN(val) && val > 0 ? val : 8500;
-  }, [activeIncident]);
+  }, [activeIncident, isQueueEmpty]);
 
   const baselineDrainageLoad = useMemo(() => {
+    if (isQueueEmpty) return 0;
     const load = activeStation?.loadPct;
     return typeof load === "number" && !isNaN(load) && load > 0 ? load : 80;
-  }, [activeStation]);
+  }, [activeStation, isQueueEmpty]);
 
   const stationCapacityCusecs = useMemo(() => {
     if (!activeStation?.dischargeRate) return 85;
@@ -370,6 +376,7 @@ export function SimulateView() {
 
   // Run Simulation Handler
   const handleRunSimulation = () => {
+    if (isQueueEmpty) return;
     audioEngine.playUiChirp(1200);
     setSimState("SIMULATING");
     setTimeout(() => {
@@ -390,6 +397,7 @@ export function SimulateView() {
   };
 
   const handleCreateWorkOrder = () => {
+    if (isQueueEmpty) return;
     audioEngine.playUiChirp(1300);
     hasUserManuallySelectedRef.current = false;
 
@@ -610,26 +618,36 @@ export function SimulateView() {
                     TARGET HOTSPOT
                   </div>
                   <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate flex items-center gap-1.5 mt-0.5">
-                    <span className="font-mono text-blue-600 dark:text-blue-400 font-bold shrink-0">
-                      {activeIncident?.id || "#--"}
+                    <span className={`font-mono font-bold shrink-0 ${isQueueEmpty ? "text-emerald-600 dark:text-emerald-400" : "text-blue-600 dark:text-blue-400"}`}>
+                      {isQueueEmpty ? "#ALL-CLEAR" : (activeIncident?.id || "#--")}
                     </span>
                     <span className="truncate">
-                      {activeIncident?.location ? activeIncident.location.split("(")[0].trim() : "Select Hotspot"}
+                      {isQueueEmpty
+                        ? "No Active Order · All Hotspots Dispatched"
+                        : (activeIncident?.location ? activeIncident.location.split("(")[0].trim() : "Select Hotspot")}
                     </span>
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 flex items-center gap-1.5 font-normal">
                     <span>
-                      {activeIncident?.waterLevel ||
-                        (activeIncident?.waterDepth && !String(activeIncident.waterDepth).includes("Pending")
-                          ? activeIncident.waterDepth
-                          : "Telemetry Pending")}
+                      {isQueueEmpty
+                        ? "0 active incidents"
+                        : (activeIncident?.waterLevel ||
+                          (activeIncident?.waterDepth && !String(activeIncident.waterDepth).includes("Pending")
+                            ? activeIncident.waterDepth
+                            : "Telemetry Pending"))}
                     </span>
                     <span>•</span>
                     <span>
-                      {activeIncident?.verifiedReports ?? 0} {(activeIncident?.verifiedReports ?? 0) === 1 ? "report" : "reports"}
+                      {isQueueEmpty
+                        ? "0 reports"
+                        : `${activeIncident?.verifiedReports ?? 0} ${(activeIncident?.verifiedReports ?? 0) === 1 ? "report" : "reports"}`}
                     </span>
-                    <span className={`text-[9.5px] font-bold font-mono px-1.5 py-0.2 rounded border ${SEVERITY_BADGE_STYLE[activeIncident?.severity] || SEVERITY_BADGE_STYLE.MONITORING}`}>
-                      {activeIncident?.severity || "MONITORING"}
+                    <span className={`text-[9.5px] font-bold font-mono px-1.5 py-0.2 rounded border ${
+                      isQueueEmpty
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40"
+                        : (SEVERITY_BADGE_STYLE[activeIncident?.severity] || SEVERITY_BADGE_STYLE.MONITORING)
+                    }`}>
+                      {isQueueEmpty ? "NO ACTIVE ORDER" : (activeIncident?.severity || "MONITORING")}
                     </span>
                   </div>
                 </div>
@@ -927,17 +945,30 @@ export function SimulateView() {
               <button
                 type="button"
                 onClick={handleRunSimulation}
-                disabled={simState === "SIMULATING"}
-                className="w-full relative overflow-hidden py-3 px-5 rounded-xl font-medium text-[13.5px] text-white transition-all duration-200 active:translate-y-0 hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed group shadow-[0_4px_16px_rgba(37,99,235,0.28)] hover:shadow-[0_6px_22px_rgba(37,99,235,0.38)]"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%)",
-                }}
+                disabled={simState === "SIMULATING" || isQueueEmpty}
+                className={`w-full relative overflow-hidden py-3 px-5 rounded-xl font-medium text-[13.5px] transition-all duration-200 flex items-center justify-center gap-2 group ${
+                  isQueueEmpty
+                    ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 cursor-not-allowed shadow-none"
+                    : "text-white active:translate-y-0 hover:-translate-y-0.5 cursor-pointer shadow-[0_4px_16px_rgba(37,99,235,0.28)] hover:shadow-[0_6px_22px_rgba(37,99,235,0.38)]"
+                }`}
+                style={
+                  isQueueEmpty
+                    ? {}
+                    : {
+                        background:
+                          "linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%)",
+                      }
+                }
               >
                 {simState === "SIMULATING" ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Solving Hydraulic PDE Grid…</span>
+                  </>
+                ) : isQueueEmpty ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>No Active Order to Simulate</span>
                   </>
                 ) : (
                   <>
@@ -980,13 +1011,21 @@ export function SimulateView() {
                   </p>
                 </div>
               </div>
-              <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200">
-                {activeIncident.severity || "Critical"}
+              <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border ${
+                isQueueEmpty
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-rose-50 text-rose-700 border-rose-200"
+              }`}>
+                {isQueueEmpty ? "No Active Order" : (activeIncident.severity || "Critical")}
               </span>
             </div>
 
             {/* Main Risk Circular Gauge */}
-            <div className="rounded-2xl bg-gradient-to-b from-rose-50/70 via-rose-50/30 to-white/40 border border-rose-100/80 p-5 flex flex-col items-center justify-center text-center relative overflow-hidden">
+            <div className={`rounded-2xl border p-5 flex flex-col items-center justify-center text-center relative overflow-hidden ${
+              isQueueEmpty
+                ? "bg-gradient-to-b from-emerald-50/70 via-emerald-50/30 to-white/40 border-emerald-100/80"
+                : "bg-gradient-to-b from-rose-50/70 via-rose-50/30 to-white/40 border-rose-100/80"
+            }`}>
               {/* Circular Gauge Ring */}
               <div className="relative w-24 h-24 flex items-center justify-center">
                 <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
@@ -994,7 +1033,7 @@ export function SimulateView() {
                     cx="50"
                     cy="50"
                     r="40"
-                    stroke="#ffe4e6"
+                    stroke={isQueueEmpty ? "#d1fae5" : "#ffe4e6"}
                     strokeWidth="6"
                     fill="none"
                   />
@@ -1002,10 +1041,10 @@ export function SimulateView() {
                     cx="50"
                     cy="50"
                     r="40"
-                    stroke="url(#roseGradient)"
+                    stroke={isQueueEmpty ? "#10b981" : "url(#roseGradient)"}
                     strokeWidth="6"
                     strokeDasharray="251.2"
-                    strokeDashoffset={baselineDashOffset}
+                    strokeDashoffset={isQueueEmpty ? 0 : baselineDashOffset}
                     strokeLinecap="round"
                     fill="none"
                     className="transition-all duration-700"
@@ -1019,27 +1058,35 @@ export function SimulateView() {
                 </svg>
                 {/* Center Value */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-[34px] font-semibold tracking-tight text-rose-600 leading-none tabular-nums">
+                  <span className={`text-[34px] font-semibold tracking-tight leading-none tabular-nums ${
+                    isQueueEmpty ? "text-emerald-600" : "text-rose-600"
+                  }`}>
                     {baselineDepthCm}
                   </span>
-                  <span className="text-[11px] font-medium text-rose-500 mt-0.5">
+                  <span className={`text-[11px] font-medium mt-0.5 ${
+                    isQueueEmpty ? "text-emerald-500" : "text-rose-500"
+                  }`}>
                     cm
                   </span>
                 </div>
               </div>
 
               <div className="text-[13.5px] font-semibold text-slate-900 mt-2.5">
-                {baselineDepthCm >= 20
-                  ? "Severe Street Inundation"
-                  : baselineDepthCm >= 12
-                    ? "Moderate Waterlogging"
-                    : "Surface Water Accumulation"}
+                {isQueueEmpty
+                  ? "No Active Inundation"
+                  : baselineDepthCm >= 20
+                    ? "Severe Street Inundation"
+                    : baselineDepthCm >= 12
+                      ? "Moderate Waterlogging"
+                      : "Surface Water Accumulation"}
               </div>
               <div className="text-[11.5px] text-slate-600 mt-0.5 flex items-center gap-1.5 font-normal">
-                <span>{activeIncident?.ward || activeIncident?.subdivision?.split("//")[0]?.trim() || "Kolkata Grid"}</span>
+                <span>{isQueueEmpty ? "All Hotspots Dispatched" : (activeIncident?.ward || activeIncident?.subdivision?.split("//")[0]?.trim() || "Kolkata Grid")}</span>
                 <span className="text-slate-300">·</span>
-                <span className="font-medium text-rose-700 truncate max-w-[200px]">
-                  {activeIncident?.location ? activeIncident.location.split("(")[0].trim() : "Hotspot"}
+                <span className={`font-medium truncate max-w-[200px] ${
+                  isQueueEmpty ? "text-emerald-700" : "text-rose-700"
+                }`}>
+                  {isQueueEmpty ? "Queue All-Clear" : (activeIncident?.location ? activeIncident.location.split("(")[0].trim() : "Hotspot")}
                 </span>
               </div>
             </div>
@@ -1105,10 +1152,20 @@ export function SimulateView() {
             </div>
 
             {/* Subtle Risk Warning Panel */}
-            <div className="rounded-xl bg-amber-50/90 border border-amber-200/80 px-3.5 py-2 text-[11.5px] text-amber-900 flex items-center gap-2 font-normal">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <div className={`rounded-xl px-3.5 py-2 text-[11.5px] flex items-center gap-2 font-normal ${
+              isQueueEmpty
+                ? "bg-emerald-50/90 border border-emerald-200/80 text-emerald-900"
+                : "bg-amber-50/90 border border-amber-200/80 text-amber-900"
+            }`}>
+              {isQueueEmpty ? (
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              )}
               <span className="truncate">
-                {activeIncident.probableCause || "High risk of further inundation if no intervention is taken."}
+                {isQueueEmpty
+                  ? "All municipal hotspots have been dispatched. No active orders pending simulation."
+                  : (activeIncident.probableCause || "High risk of further inundation if no intervention is taken.")}
               </span>
             </div>
           </div>
@@ -1235,14 +1292,22 @@ export function SimulateView() {
                     className="flex flex-col items-center gap-2 py-1.5"
                   >
                     {/* Clean analytics visual */}
-                    <div className="relative w-14 h-14 rounded-full border border-slate-200 bg-white flex items-center justify-center shadow-xs">
-                      <TrendingDown className="w-5 h-5 text-slate-400" />
+                    <div className={`relative w-14 h-14 rounded-full border flex items-center justify-center shadow-xs ${
+                      isQueueEmpty ? "border-emerald-200 bg-emerald-50/60 text-emerald-600" : "border-slate-200 bg-white text-slate-400"
+                    }`}>
+                      {isQueueEmpty ? (
+                        <CheckCircle2 className="w-6 h-6" />
+                      ) : (
+                        <TrendingDown className="w-5 h-5" />
+                      )}
                     </div>
                     <div className="text-[13px] font-medium text-slate-900 mt-1">
-                      Trigger simulation to model relief
+                      {isQueueEmpty ? "No Active Order to Simulate" : "Trigger simulation to model relief"}
                     </div>
                     <div className="text-[11.5px] text-slate-500 max-w-[240px] leading-relaxed font-normal">
-                      Run the hydraulic model to see projected reduction in water levels and affected area.
+                      {isQueueEmpty
+                        ? "All municipal hotspots are either dispatched into active field units or resolved."
+                        : "Run the hydraulic model to see projected reduction in water levels and affected area."}
                     </div>
                   </motion.div>
                 )}
@@ -1347,7 +1412,7 @@ export function SimulateView() {
 
         {/* ── Post-Simulation Verified Work Order Banner ────────────── */}
         <AnimatePresence>
-          {simState === "RESULT" && (
+          {simState === "RESULT" && !isQueueEmpty && (
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}

@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import List, Optional, Union
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.work_order import WorkOrder
 from ..models.incident_queue import IncidentQueue
 from ..models.historical_place import HistoricalPlace
+from ..models.report import Report
 from ..schemas.work_order import WorkOrderCreate, WorkOrderStatusUpdate
 from ..core.datetime_utils import get_current_time, ensure_kolkata_tz
 
@@ -22,6 +23,11 @@ class WorkOrderService:
         # Derive clean incident ID matching incident_queue format (e.g. PA-729)
         raw_inc_id = data.incident_id or data.incident_ref or "IN-101"
         clean_inc_id = str(raw_inc_id).replace("#", "").strip()
+
+        # Guard: do not create work orders when no active incident is selected / all clear
+        if clean_inc_id.upper() in ["ALL-CLEAR", "CLEAR", "NONE", ""] or "ALL HOTSPOTS DISPATCHED" in (data.location or "").upper():
+            from fastapi import HTTPException
+            raise HTTPException(status_code=400, detail="No active incidents in queue to generate work orders.")
 
         # Check if corresponding incident row exists in incident_queue to enrich missing metadata and exact incident_id
         inc_res = await db.execute(
@@ -237,6 +243,21 @@ class WorkOrderService:
             linked_incidents = list(inc_res.scalars().all())
             for linked_inc in linked_incidents:
                 await db.delete(linked_inc)
+
+            # 3. Mark linked reports in reports table as Resolved
+            rep_res = await db.execute(
+                select(Report).where(
+                    or_(
+                        Report.location == wo.location,
+                        Report.location.ilike(f"%{wo.location}%"),
+                        and_(Report.ward == wo.ward, Report.assigned_ulb_name == wo.assigned_ulb_name),
+                    )
+                )
+            )
+            for rep in rep_res.scalars().all():
+                rep.status = "Resolved"
+                rep.dispatch_status = "Resolved"
+                rep.updated_at = now
 
             # Snapshot data for response before removing from work_orders
             resolved_dict = {

@@ -125,14 +125,13 @@ export function LiveIncidentIntelligenceSection() {
     ];
   }, [allReports, myReports]);
 
-  // Dynamically derive active incidents: prioritize database incidentQueue table, fallback to reports
-  // Strictly sorted: Critical -> High -> Moderate -> Low -> Monitoring, then report count desc
+  // Dynamically derive active incidents strictly from database incidentQueue table
   const sortedIncidents = useMemo(() => {
-    if (Array.isArray(incidentQueue) && incidentQueue.length > 0) {
+    if (Array.isArray(incidentQueue)) {
       return mapIncidentQueueToCards(incidentQueue);
     }
-    return aggregateIncidentsFromReports(combinedReports);
-  }, [incidentQueue, combinedReports]);
+    return [];
+  }, [incidentQueue]);
 
 
   // Dynamically calculated active incidents count
@@ -201,7 +200,7 @@ export function LiveIncidentIntelligenceSection() {
         {/* Dynamic Active Count Pill */}
         <div className="self-start sm:self-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 dark:bg-[#10313E]/90 backdrop-blur-md border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_2px_12px_rgba(15,23,42,0.03)] font-mono text-xs text-slate-700 dark:text-[#F2FBFD]">
 
-          <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+          <span className={`w-2 h-2 rounded-full ${activeCount > 0 ? "bg-rose-500 animate-ping" : "bg-emerald-500"}`} />
 
           <span className="font-bold text-slate-900 dark:text-[#F2FBFD] tracking-wider">
             {formattedActiveCount} ACTIVE
@@ -215,9 +214,21 @@ export function LiveIncidentIntelligenceSection() {
       {/* 2. INCIDENT CARDS GRID                                   */}
       {/* ======================================================== */}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
-
-        <AnimatePresence initial={false}>
+      {visibleIncidents.length === 0 ? (
+        <div className="w-full py-10 px-6 rounded-[20px] bg-white/75 dark:bg-[#10313E]/75 backdrop-blur-xl border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] flex flex-col items-center justify-center text-center shadow-xs">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-3 shadow-2xs">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <h3 className="text-base font-bold text-slate-900 dark:text-[#F2FBFD] tracking-tight">
+            All Municipal Incidents Resolved
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-[#6D949D] mt-1 max-w-sm leading-relaxed">
+            0 active ground incidents in the queue. All municipal sectors and drainage networks operating normally.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
+          <AnimatePresence initial={false}>
 
           {visibleIncidents.map((incident, idx) => {
 
@@ -434,6 +445,7 @@ export function LiveIncidentIntelligenceSection() {
         </AnimatePresence>
 
       </div>
+      )}
 
       {/* ======================================================== */}
       {/* 3. SHOW MORE / SHOW LESS CONTROL                         */}
