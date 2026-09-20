@@ -175,8 +175,8 @@ const STAIR_PLATFORMS = [
     anchorX: 205,
     anchorY: 465,
     camX: 80,
-    camY: -20,
-    camScale: 1.02,
+    camY: -35,
+    camScale: 1.04,
   },
   {
     x: 310,
@@ -187,8 +187,8 @@ const STAIR_PLATFORMS = [
     anchorX: 360,
     anchorY: 410,
     camX: 35,
-    camY: -5,
-    camScale: 1.02,
+    camY: -15,
+    camScale: 1.03,
   },
   {
     x: 395,
@@ -199,7 +199,7 @@ const STAIR_PLATFORMS = [
     anchorX: 445,
     anchorY: 350,
     camX: -10,
-    camY: 12,
+    camY: 5,
     camScale: 1.03,
   },
   {
@@ -211,46 +211,46 @@ const STAIR_PLATFORMS = [
     anchorX: 535,
     anchorY: 290,
     camX: -45,
-    camY: 28,
-    camScale: 1.03,
+    camY: 25,
+    camScale: 1.04,
   },
   {
     x: 570,
-    y: 230,
+    y: 225,
     label: "PREDICT",
     portalX: 615,
     portalY: 195,
     anchorX: 620,
-    anchorY: 235,
+    anchorY: 230,
     openDown: true,
     camX: -80,
-    camY: 44,
+    camY: 40,
     camScale: 1.04,
   },
   {
     x: 655,
-    y: 188,
+    y: 185,
     label: "ALERT",
     portalX: 625,
     portalY: 210,
     anchorX: 705,
-    anchorY: 193,
+    anchorY: 190,
     openDown: true,
     camX: -115,
-    camY: 58,
-    camScale: 1.04,
+    camY: 55,
+    camScale: 1.05,
   },
   {
     x: 740,
-    y: 142,
+    y: 130,
     label: "ACT",
     portalX: 370,
-    portalY: 195,
+    portalY: 185,
     anchorX: 740,
-    anchorY: 147,
+    anchorY: 135,
     openLeft: true,
     camX: -60,
-    camY: 72,
+    camY: 65,
     camScale: 1.04,
   },
 ];
@@ -498,98 +498,96 @@ const ProtagonistRobot = ({
   }, [isTraversing]);
 
   return (
-    <div className="relative flex flex-col items-center select-none pointer-events-none z-40 origin-bottom scale-[0.68] min-[360px]:scale-[0.72] min-[390px]:scale-[0.78] sm:scale-90 md:scale-100">
-      <motion.div
-        className="relative flex flex-col items-center"
-        style={{ width: "52px" }}
-        animate={
-          shouldReduceMotion
-            ? {}
-            : isAnticipating
+    <motion.div
+      className="relative flex flex-col items-center select-none pointer-events-none z-40 scale-[0.6] min-[360px]:scale-[0.66] min-[390px]:scale-[0.74] sm:scale-90 md:scale-100 origin-bottom"
+      style={{ width: "52px" }}
+      animate={
+        shouldReduceMotion
+          ? {}
+          : isAnticipating
+            ? {
+                y: 5.5,
+                scaleY: 0.93,
+                scaleX: 1.05,
+                rotate: 6.5,
+              }
+            : isTraversing
               ? {
-                  y: 5.5,
-                  scaleY: 0.93,
-                  scaleX: 1.05,
-                  rotate: 6.5,
+                  y: [0, -7, 0],
+                  scaleY: [0.98, 1.03, 0.98],
+                  scaleX: [1.02, 0.98, 1.02],
+                  rotate: [6.5, 4.5, 7.5, 6.5],
                 }
-              : isTraversing
+              : isLanding
                 ? {
-                    y: [0, -7, 0],
-                    scaleY: [0.98, 1.03, 0.98],
-                    scaleX: [1.02, 0.98, 1.02],
-                    rotate: [6.5, 4.5, 7.5, 6.5],
+                    y: [0, 4.5, 0],
+                    scaleY: [1, 0.96, 1],
+                    scaleX: [1, 1.04, 1],
+                    rotate: 0,
                   }
-                : isLanding
-                  ? {
-                      y: [0, 4.5, 0],
-                      scaleY: [1, 0.96, 1],
-                      scaleX: [1, 1.04, 1],
-                      rotate: 0,
-                    }
-                  : {
-                      y: [0, -2.5, 0],
-                      scaleY: [1, 1.015, 1],
-                      rotate: [-0.6, 1.0, -0.6],
-                    }
+                : {
+                    y: [0, -2.5, 0],
+                    scaleY: [1, 1.015, 1],
+                    rotate: [-0.6, 1.0, -0.6],
+                  }
+      }
+      transition={
+        shouldReduceMotion
+          ? { duration: 0.01 }
+          : isAnticipating
+            ? { duration: 0.18, ease: "easeIn" }
+            : isTraversing
+              ? { duration: 0.68, ease: [0.25, 1, 0.5, 1] }
+              : isLanding
+                ? { duration: 0.24, ease: [0.22, 1, 0.36, 1] }
+                : { repeat: Infinity, duration: 2.2, ease: "easeInOut" }
+      }
+    >
+      {/* Ambient Cyan Glow behind robot */}
+      <div className="absolute inset-x-0 bottom-0 h-10 rounded-full bg-[#08B8F5]/18 blur-lg -z-10" />
+
+      {/* KWI Standing Bot Image */}
+      <img
+        src="/assets/kwi-standing-bot.png"
+        alt="KWI AI Robot"
+        className="h-[110px] w-auto object-contain filter drop-shadow-[0_6px_18px_rgba(8,184,245,0.42)] drop-shadow-[0_12px_28px_rgba(15,23,42,0.18)]"
+        draggable="false"
+      />
+
+      {/* Dynamic Floor Contact Shadow */}
+      <motion.div
+        className="w-10 h-2 bg-slate-950/38 rounded-full blur-[1.5px] -mt-1"
+        animate={
+          isAnticipating
+            ? { scaleX: 1.18, scaleY: 1.1, opacity: 0.55 }
+            : isTraversing
+              ? {
+                  scaleX: [1.1, 0.6, 1.05],
+                  scaleY: [1, 0.5, 0.95],
+                  opacity: [0.5, 0.18, 0.46],
+                }
+              : isLanding
+                ? {
+                    scaleX: [1, 1.35, 1],
+                    scaleY: [1, 1.22, 1],
+                    opacity: [0.45, 0.78, 0.45],
+                  }
+                : {
+                    scaleX: [1, 0.93, 1],
+                    opacity: [0.44, 0.3, 0.44],
+                  }
         }
         transition={
-          shouldReduceMotion
-            ? { duration: 0.01 }
-            : isAnticipating
-              ? { duration: 0.18, ease: "easeIn" }
-              : isTraversing
-                ? { duration: 0.68, ease: [0.25, 1, 0.5, 1] }
-                : isLanding
-                  ? { duration: 0.24, ease: [0.22, 1, 0.36, 1] }
-                  : { repeat: Infinity, duration: 2.2, ease: "easeInOut" }
+          isAnticipating
+            ? { duration: 0.18 }
+            : isTraversing
+              ? { duration: 0.68, ease: "easeInOut" }
+              : isLanding
+                ? { duration: 0.24, ease: "easeOut" }
+                : { repeat: Infinity, duration: 2.2, ease: "easeInOut" }
         }
-      >
-        {/* Ambient Cyan Glow behind robot */}
-        <div className="absolute inset-x-0 bottom-0 h-10 rounded-full bg-[#08B8F5]/18 blur-lg -z-10" />
-
-        {/* KWI Standing Bot Image */}
-        <img
-          src="/assets/kwi-standing-bot.png"
-          alt="KWI AI Robot"
-          className="h-[84px] sm:h-[96px] md:h-[110px] w-auto object-contain filter drop-shadow-[0_6px_18px_rgba(8,184,245,0.42)] drop-shadow-[0_12px_28px_rgba(15,23,42,0.18)]"
-          draggable="false"
-        />
-
-        {/* Dynamic Floor Contact Shadow */}
-        <motion.div
-          className="w-10 h-2 bg-slate-950/38 rounded-full blur-[1.5px] -mt-1"
-          animate={
-            isAnticipating
-              ? { scaleX: 1.18, scaleY: 1.1, opacity: 0.55 }
-              : isTraversing
-                ? {
-                    scaleX: [1.1, 0.6, 1.05],
-                    scaleY: [1, 0.5, 0.95],
-                    opacity: [0.5, 0.18, 0.46],
-                  }
-                : isLanding
-                  ? {
-                      scaleX: [1, 1.35, 1],
-                      scaleY: [1, 1.22, 1],
-                      opacity: [0.45, 0.78, 0.45],
-                    }
-                  : {
-                      scaleX: [1, 0.93, 1],
-                      opacity: [0.44, 0.3, 0.44],
-                    }
-          }
-          transition={
-            isAnticipating
-              ? { duration: 0.18 }
-              : isTraversing
-                ? { duration: 0.68, ease: "easeInOut" }
-                : isLanding
-                  ? { duration: 0.24, ease: "easeOut" }
-                  : { repeat: Infinity, duration: 2.2, ease: "easeInOut" }
-          }
-        />
-      </motion.div>
-    </div>
+      />
+    </motion.div>
   );
 };
 
@@ -1176,9 +1174,9 @@ export const RobotPipelineStepping = ({
   }, []);
 
   // Optical Camera Pan/Zoom target to keep active platform in center-right with full robot headroom
-  const cameraX = isMobile ? 20 + (activeCoord.camX || 0) * 0.45 : (activeCoord.camX || 0);
-  const cameraY = isMobile ? 24 + (activeCoord.camY || 0) * 0.8 : (activeCoord.camY || 0);
-  const cameraScale = isMobile ? 1.06 : (activeCoord.camScale || 1.03);
+  const cameraX = isMobile ? 24 + (activeCoord.camX || 0) * 0.45 : (activeCoord.camX || 0);
+  const cameraY = isMobile ? 18 + (activeCoord.camY || 0) * 0.75 : (activeCoord.camY || 0);
+  const cameraScale = isMobile ? 1.08 : (activeCoord.camScale || 1.03);
 
   const renderChapterCardContent = () => (
     <>
@@ -1407,20 +1405,19 @@ export const RobotPipelineStepping = ({
           3. CINEMATIC VIEWPORT CAMERA SYSTEM (PANS & ZOOMS AS ROBOT CLIMBS)
           ============================================================
         */}
-        <div className="relative md:absolute md:inset-0 w-full h-[280px] min-[360px]:h-[300px] min-[390px]:h-[320px] sm:h-[360px] md:h-full pointer-events-none overflow-hidden my-0">
-          <motion.div
-            className="w-full h-full relative"
-            animate={
-              shouldReduceMotion
-                ? {}
-                : {
-                    x: cameraX,
-                    y: cameraY,
-                    scale: cameraScale,
-                  }
-            }
-            transition={{ duration: 0.7, ease: [0.25, 1, 0.5, 1] }}
-          >
+        <motion.div
+          className="relative md:absolute md:inset-0 w-full h-[270px] min-[360px]:h-[290px] min-[390px]:h-[310px] sm:h-[340px] md:h-full pointer-events-none overflow-hidden my-0"
+          animate={
+            shouldReduceMotion
+              ? {}
+              : {
+                  x: cameraX,
+                  y: cameraY,
+                  scale: cameraScale,
+                }
+          }
+          transition={{ duration: 0.7, ease: [0.25, 1, 0.5, 1] }}
+        >
           {/*
             VECTOR DATA CONNECTOR PATH (CONNECTING STAIRS) WITH TRAIL LIGHTING
           */}
@@ -1590,7 +1587,6 @@ export const RobotPipelineStepping = ({
             </AnimatePresence>
           </div>
         </motion.div>
-      </div>
 
         {/*
           MOBILE ASSEMBLED CHAPTER CARD
