@@ -8,6 +8,7 @@ import {
   Check,
   CheckCircle2,
   ChevronLeft,
+  ChevronRight,
   Loader2,
   Navigation,
   X,
@@ -17,6 +18,7 @@ import {
   Play,
   Square,
   RotateCcw,
+  RefreshCw,
   Volume2,
   Search,
   Edit2,
@@ -68,6 +70,28 @@ export function MobileReportForm({ onBackToStep1 }) {
   // Device inputs (Camera ONLY vs Gallery ONLY)
   const cameraInputRef = useRef(null)
   const galleryInputRef = useRef(null)
+
+  // Choice Modal State: Take Photo vs Choose from Gallery
+  const [showPhotoSourceModal, setShowPhotoSourceModal] = useState(false)
+
+  // In-App Camera Controller State & Refs
+  const [isCameraOpen, setIsCameraOpen] = useState(false)
+  const [isCameraStarting, setIsCameraStarting] = useState(false)
+  const [cameraError, setCameraError] = useState(null)
+  const [facingMode, setFacingMode] = useState('environment') // 'environment' | 'user'
+  const [isFlashing, setIsFlashing] = useState(false)
+  const videoRef = useRef(null)
+  const streamRef = useRef(null)
+
+  // Clean up camera stream if component unmounts
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop())
+        streamRef.current = null
+      }
+    }
+  }, [])
 
   // Real-time AI Vision Validation State
   const [isValidatingPhoto, setIsValidatingPhoto] = useState(false)
@@ -317,9 +341,8 @@ export function MobileReportForm({ onBackToStep1 }) {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
   }
 
-  // Handle Photo selection from native file picker or camera with instant ML validation
-  const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0]
+  // Process photo file (from either file upload or camera capture) with instant ML validation
+  const processPhotoFile = async (file) => {
     if (!file) return
 
     const reader = new FileReader()
@@ -354,6 +377,153 @@ export function MobileReportForm({ onBackToStep1 }) {
       setReportPhotoValidation({ is_drainage: true, message: 'Offline check passed' })
     } finally {
       setIsValidatingPhoto(false)
+    }
+  }
+
+  // Handle Photo selection from native file picker
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      processPhotoFile(file)
+    }
+    if (e.target) {
+      e.target.value = ''
+    }
+  }
+
+  // Start In-App Camera stream with permission request
+  const handleStartCamera = async (targetFacing = facingMode) => {
+    // If an existing stream is running, stop it first
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop())
+      streamRef.current = null
+    }
+
+    setIsCameraOpen(true)
+    setIsCameraStarting(true)
+    setCameraError(null)
+
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraError(
+        'Camera is not supported in this browser or connection (requires HTTPS or localhost). Please use the Gallery option.'
+      )
+      setIsCameraStarting(false)
+      return
+    }
+
+    try {
+      let stream
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: targetFacing },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        })
+      } catch (constraintErr) {
+        console.warn('FacingMode camera constraint failed, falling back to default video...', constraintErr)
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        })
+      }
+
+      streamRef.current = stream
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        try {
+          await videoRef.current.play()
+        } catch (playErr) {
+          console.warn('Camera video play warning:', playErr)
+        }
+      }
+      setIsCameraStarting(false)
+      audioEngine.playUiChirp(1200)
+    } catch (err) {
+      console.error('Camera access error:', err)
+      setIsCameraStarting(false)
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setCameraError(
+          'Camera access was denied. Please allow camera permissions in your browser address bar to take live photos, or pick an image from your Gallery.'
+        )
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        setCameraError('No camera device was detected on your computer or phone. Please use the Gallery.')
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        setCameraError('Camera is already in use by another application. Please close other camera apps and retry.')
+      } else {
+        setCameraError(err.message || 'Could not access the camera. Please use the Gallery option.')
+      }
+      audioEngine.playUiChirp(600)
+    }
+  }
+
+  // Stop In-App Camera stream and turn off hardware sensor
+  const handleStopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop())
+      streamRef.current = null
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+    setIsCameraOpen(false)
+    setIsCameraStarting(false)
+    setCameraError(null)
+  }
+
+  // Toggle between environment (back) and user (front) cameras
+  const handleSwitchCamera = () => {
+    const nextMode = facingMode === 'environment' ? 'user' : 'environment'
+    setFacingMode(nextMode)
+    audioEngine.playUiChirp(1000)
+    handleStartCamera(nextMode)
+  }
+
+  // Capture frame from active video stream
+  const handleCapturePhoto = () => {
+    const video = videoRef.current
+    if (!video || isCameraStarting) return
+
+    setIsFlashing(true)
+    setTimeout(() => setIsFlashing(false), 220)
+    audioEngine.playUiChirp(1350)
+
+    try {
+      const canvas = document.createElement('canvas')
+      const width = video.videoWidth || 1280
+      const height = video.videoHeight || 720
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+
+      if (facingMode === 'user') {
+        // Mirror horizontally if using front/user camera so it matches preview
+        ctx.translate(width, 0)
+        ctx.scale(-1, 1)
+      }
+
+      ctx.drawImage(video, 0, 0, width, height)
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const file = new File([blob], `camera_capture_${Date.now()}.jpg`, {
+              type: 'image/jpeg',
+            })
+            processPhotoFile(file)
+            handleStopCamera()
+          } else {
+            console.error('Canvas toBlob returned null')
+          }
+        },
+        'image/jpeg',
+        0.92
+      )
+    } catch (e) {
+      console.error('Error capturing camera frame:', e)
     }
   }
 
@@ -458,6 +628,285 @@ export function MobileReportForm({ onBackToStep1 }) {
 
   return (
     <div className="flex flex-col h-full justify-between text-left select-none relative font-sans">
+      {/* ===================================================================== */}
+      {/* PHOTO SOURCE CHOICE MODAL (TAKE PHOTO VS GALLERY)                     */}
+      {/* ===================================================================== */}
+      {showPhotoSourceModal && (
+        <div
+          onClick={() => setShowPhotoSourceModal(false)}
+          className="-m-3 sm:-m-4 absolute inset-0 z-45 bg-slate-950/65 backdrop-blur-xs flex items-end justify-center p-3 animate-in fade-in duration-200 rounded-3xl sm:rounded-[2.4rem] overflow-hidden select-none"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full bg-white rounded-3xl p-4 shadow-2xl border border-slate-100 animate-in slide-in-from-bottom-5 duration-200"
+          >
+            <div className="flex items-center justify-between mb-3 px-0.5">
+              <div>
+                <h4 className="text-[13.5px] font-extrabold text-slate-900 leading-tight">
+                  Add Waterlogging Photo
+                </h4>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Choose how you'd like to provide the photo
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  audioEngine.playUiChirp(850)
+                  setShowPhotoSourceModal(false)
+                }}
+                className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2 mb-3">
+              {/* Option 1: Take Photo */}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPhotoSourceModal(false)
+                  audioEngine.playUiChirp(1100)
+                  handleStartCamera('environment')
+                }}
+                className="w-full p-2.5 rounded-2xl border border-blue-200/90 bg-[#f0f6fc] hover:bg-blue-100/70 text-slate-900 font-bold text-[12.5px] flex items-center justify-between transition-all cursor-pointer group active:scale-[0.98]"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#1d63a8] text-white flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+                    <Camera className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <span className="block leading-tight font-extrabold text-slate-900">
+                      Take Photo
+                    </span>
+                    <span className="text-[10.5px] font-normal text-slate-500 mt-0.5 block">
+                      Use live device camera
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#1d63a8] group-hover:translate-x-0.5 transition-all" />
+              </button>
+
+              {/* Option 2: Gallery */}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPhotoSourceModal(false)
+                  audioEngine.playUiChirp(1100)
+                  galleryInputRef.current?.click()
+                }}
+                className="w-full p-2.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-bold text-[12.5px] flex items-center justify-between transition-all cursor-pointer group active:scale-[0.98] shadow-2xs"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-slate-800 text-white flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+                    <ImageIcon className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <span className="block leading-tight font-extrabold text-slate-900">
+                      Choose from Gallery
+                    </span>
+                    <span className="text-[10.5px] font-normal text-slate-500 mt-0.5 block">
+                      Select photo from device storage
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-800 group-hover:translate-x-0.5 transition-all" />
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                audioEngine.playUiChirp(850)
+                setShowPhotoSourceModal(false)
+              }}
+              className="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11.5px] transition-all cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* IN-APP LIVE CAMERA VIEWFINDER OVERLAY                                 */}
+      {/* ===================================================================== */}
+      {isCameraOpen && (
+        <div className="-m-3 sm:-m-4 absolute inset-0 z-50 bg-black text-white flex flex-col justify-between overflow-hidden rounded-3xl sm:rounded-[2.4rem] shadow-2xl animate-in fade-in zoom-in-95 duration-200 select-none">
+          {/* Top Camera Controls Bar */}
+          <div className="relative z-30 pt-4 px-4 pb-2 flex items-center justify-between bg-gradient-to-b from-black/80 via-black/40 to-transparent">
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => {
+                audioEngine.playUiChirp(850)
+                handleStopCamera()
+              }}
+              className="w-10 h-10 rounded-full bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/15 flex items-center justify-center text-white cursor-pointer active:scale-95 transition-all shadow-md"
+              title="Close Camera"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Live Camera Badge */}
+            <div className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[11px] font-mono tracking-wider font-semibold flex items-center gap-2 shadow-md">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>LIVE CAMERA</span>
+            </div>
+
+            {/* Switch Camera (Front/Back) */}
+            <button
+              type="button"
+              onClick={handleSwitchCamera}
+              className="w-10 h-10 rounded-full bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/15 flex items-center justify-center text-white cursor-pointer active:scale-95 transition-all shadow-md"
+              title="Flip Camera"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Central Viewfinder Area */}
+          <div className="relative flex-1 flex items-center justify-center overflow-hidden bg-black">
+            {/* Live Video Feed */}
+            <video
+              ref={(el) => {
+                videoRef.current = el
+                if (el && streamRef.current && el.srcObject !== streamRef.current) {
+                  el.srcObject = streamRef.current
+                  el.play().catch(() => {})
+                }
+              }}
+              autoPlay
+              playsInline
+              muted
+              className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+            />
+
+            {/* Viewfinder Target Reticle / Guidance */}
+            {!cameraError && !isCameraStarting && (
+              <div className="absolute inset-8 pointer-events-none border border-white/15 rounded-2xl flex flex-col justify-between p-3">
+                <div className="flex justify-between">
+                  <div className="w-5 h-5 border-t-2 border-l-2 border-white/90 rounded-tl-md" />
+                  <div className="w-5 h-5 border-t-2 border-r-2 border-white/90 rounded-tr-md" />
+                </div>
+                <div className="text-center">
+                  <span className="text-[10.5px] font-medium text-white/90 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/15 shadow-sm">
+                    Frame waterlogging or street drain in view
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <div className="w-5 h-5 border-b-2 border-l-2 border-white/90 rounded-bl-md" />
+                  <div className="w-5 h-5 border-b-2 border-r-2 border-white/90 rounded-br-md" />
+                </div>
+              </div>
+            )}
+
+            {/* Flash Effect on Capture */}
+            {isFlashing && (
+              <div className="absolute inset-0 bg-white z-40 animate-out fade-out duration-200 pointer-events-none" />
+            )}
+
+            {/* Camera Starting / Permission Prompt Overlay */}
+            {isCameraStarting && (
+              <div className="absolute inset-0 bg-black/90 backdrop-blur-xs flex flex-col items-center justify-center gap-3.5 p-6 text-center z-30 animate-in fade-in">
+                <div className="w-14 h-14 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                  <Camera className="w-7 h-7 animate-pulse" />
+                </div>
+                <div>
+                  <div className="text-[15px] font-extrabold text-white">Opening Device Camera...</div>
+                  <p className="text-[12px] text-slate-300 mt-1 max-w-[230px] leading-relaxed">
+                    Please click <strong>"Allow"</strong> when your browser prompts for camera permissions.
+                  </p>
+                </div>
+                <Loader2 className="w-5 h-5 animate-spin text-blue-400 mt-1" />
+              </div>
+            )}
+
+            {/* Camera Error / Permission Denied Overlay */}
+            {cameraError && (
+              <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-30 animate-in fade-in">
+                <div className="w-13 h-13 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center mb-3">
+                  <AlertTriangle className="w-6 h-6" />
+                </div>
+                <h4 className="text-[15px] font-extrabold text-white mb-1.5">
+                  Camera Permission Required
+                </h4>
+                <p className="text-[11.5px] text-slate-300 leading-relaxed mb-5 max-w-[240px]">
+                  {cameraError}
+                </p>
+                <div className="flex flex-col gap-2.5 w-full max-w-[220px]">
+                  <button
+                    type="button"
+                    onClick={() => handleStartCamera(facingMode)}
+                    className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-[12.5px] transition-all cursor-pointer shadow-md active:scale-95"
+                  >
+                    Grant Permission / Retry
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleStopCamera()
+                      galleryInputRef.current?.click()
+                    }}
+                    className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-[12px] transition-all cursor-pointer border border-white/15"
+                  >
+                    Upload from Gallery
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleStopCamera}
+                    className="text-[11px] text-slate-400 hover:text-white pt-1 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Shutter & Controls Bar */}
+          <div className="relative z-30 pb-5 pt-3 px-6 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex items-center justify-between">
+            {/* Gallery Picker Fallback */}
+            <button
+              type="button"
+              onClick={() => {
+                handleStopCamera()
+                audioEngine.playUiChirp(1000)
+                galleryInputRef.current?.click()
+              }}
+              className="w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 flex flex-col items-center justify-center text-white gap-0.5 cursor-pointer active:scale-95 transition-all shadow-md"
+              title="Pick from Gallery"
+            >
+              <ImageIcon className="w-5 h-5 text-white" />
+              <span className="text-[9px] font-medium text-white/80">Gallery</span>
+            </button>
+
+            {/* Shutter Capture Button */}
+            <button
+              type="button"
+              disabled={isCameraStarting || !!cameraError}
+              onClick={handleCapturePhoto}
+              className="w-[72px] h-[72px] rounded-full border-4 border-white/80 flex items-center justify-center p-1.5 cursor-pointer active:scale-90 transition-transform shadow-2xl hover:border-white disabled:opacity-50 disabled:cursor-not-allowed group"
+              title="Snap Photo"
+            >
+              <div className="w-full h-full rounded-full bg-white group-hover:bg-slate-100 active:bg-slate-300 transition-all shadow-inner" />
+            </button>
+
+            {/* Switch Camera Button */}
+            <button
+              type="button"
+              onClick={handleSwitchCamera}
+              className="w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 flex flex-col items-center justify-center text-white gap-0.5 cursor-pointer active:scale-95 transition-all shadow-md"
+              title="Switch Camera"
+            >
+              <RefreshCw className="w-4 h-4 text-white" />
+              <span className="text-[9px] font-medium text-white/80">Flip</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Native Camera input - ONLY opens camera */}
       <input
         ref={cameraInputRef}
@@ -785,7 +1234,8 @@ export function MobileReportForm({ onBackToStep1 }) {
                   <div
                     onClick={() => {
                       setAttemptedWithoutPhoto(false)
-                      galleryInputRef.current?.click()
+                      audioEngine.playUiChirp(1000)
+                      setShowPhotoSourceModal(true)
                     }}
                     className={`h-[200px] w-full rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center p-4 text-center cursor-pointer group ${
                       attemptedWithoutPhoto
@@ -827,7 +1277,7 @@ export function MobileReportForm({ onBackToStep1 }) {
                 onClick={() => {
                   setAttemptedWithoutPhoto(false)
                   audioEngine.playUiChirp(1100)
-                  cameraInputRef.current?.click()
+                  handleStartCamera('environment')
                 }}
                 className="py-2.5 px-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-bold text-[12px] flex items-center justify-center gap-2 shadow-2xs cursor-pointer active:scale-[0.98] transition-all"
               >

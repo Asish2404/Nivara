@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
@@ -24,6 +24,7 @@ import { AnimatedNumber } from "../ui/AnimatedNumber";
 import Footer from "../Footer";
 import { useKWIStore, isUserAdmin } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
+import { api } from "../../utils/api";
 import { CitizenReportingSection } from "./CitizenReportingSection";
 import { KolkataDecorativeLayer } from "./KolkataDecorativeLayer";
 import {
@@ -578,6 +579,9 @@ export function LandingPage() {
     currentUser,
     setSelectedIncident,
     incidents,
+    incidentQueue,
+    fetchIncidentQueue,
+    fetchAllReports,
     theme,
   } = useKWIStore();
   const isDark = theme === "dark";
@@ -588,6 +592,88 @@ export function LandingPage() {
   const [selectedScenario, setSelectedScenario] = useState("live");
   const [selectedStatId, setSelectedStatId] = useState("stat-discharge");
   const howItWorksRef = useRef(null);
+
+  // Admin historical places state
+  const [historicalPlaces, setHistoricalPlaces] = useState([]);
+
+  // Fetch historical_place table data exclusively for admin
+  useEffect(() => {
+    if (isAdmin) {
+      api.get("/historical-places")
+        .then((res) => {
+          if (Array.isArray(res)) {
+            setHistoricalPlaces(res);
+          }
+        })
+        .catch((err) => {
+          console.warn("[KWI] historical-places fetch error:", err);
+        });
+    }
+  }, [isAdmin]);
+
+  // Refresh active incident telemetry on mount
+  useEffect(() => {
+    fetchIncidentQueue?.().catch(() => { });
+    fetchAllReports?.().catch(() => { });
+  }, [fetchIncidentQueue, fetchAllReports]);
+
+  // Determine if there are zero active live incidents in system
+  const activeIncidents = Array.isArray(incidentQueue) && incidentQueue.length > 0
+    ? incidentQueue
+    : Array.isArray(incidents)
+      ? incidents
+      : [];
+  const hasNoLiveIncidents = activeIncidents.length === 0;
+
+  // Map historical_place records into AccordionGallery items for Admin
+  const adminHistoricalGalleryItems = useMemo(() => {
+    return historicalPlaces.map((hist, index) => {
+      const rawIncId = String(hist.incident_id || hist.id || `HIST-${index + 1}`).trim();
+      const formattedId = rawIncId.startsWith("#") ? rawIncId : `#${rawIncId}`;
+      const depthNum = parseFloat(hist.water_depth) || 15;
+
+      return {
+        id: formattedId,
+        name: hist.location || `Historical Incident ${formattedId}`,
+        label: hist.location || `Kolkata Historical Sector`,
+        location: hist.location || "Kolkata Drainage Basin",
+        subdivision: hist.ward || hist.assigned_ulb_name || "MUNICIPAL ARCHIVE // RESOLVED",
+        severity: hist.status?.toUpperCase() || "RESOLVED",
+        waterDepth: `${depthNum} cm water depth`,
+        rainfall: "Historical Telemetry",
+        verifiedReports: hist.work_id ? `Work Order: ${hist.work_id}` : "Resolved Field Record",
+        timestamp: "Logged via Municipal History",
+        image: HOTSPOT_PHOTOS[index % HOTSPOT_PHOTOS.length],
+        incident: {
+          id: formattedId,
+          name: hist.location,
+          location: hist.location,
+          latitude: hist.latitude || 22.5735,
+          longitude: hist.longitude || 88.4331,
+          waterDepth: `${depthNum} cm`,
+          severity: hist.status || "Resolved",
+        },
+        onViewOnMap: () => {
+          audioEngine.playUiChirp(1040);
+          setSelectedIncident({
+            id: formattedId,
+            name: hist.location,
+            location: hist.location,
+            coords: { lat: hist.latitude || 22.5735, lon: hist.longitude || 88.4331 },
+            lat: hist.latitude || 22.5735,
+            lon: hist.longitude || 88.4331,
+          });
+          navigate("/live-city");
+          setTimeout(() => {
+            const mapElem = document.getElementById("gis-map-viewport");
+            if (mapElem) {
+              mapElem.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          }, 100);
+        },
+      };
+    });
+  }, [historicalPlaces, navigate, setSelectedIncident]);
 
   // Hotspot Accordion Gallery Items preserving exact incident data & functionality
   const effectiveIncidents = incidents && incidents.length > 0 ? incidents : ACTIVE_INCIDENTS;
@@ -816,7 +902,8 @@ export function LandingPage() {
             </span>
             <div className="flex justify-center">
               <SplitText
-                text="Active Ground Inundation Hotspots"
+                key={isAdmin ? "admin-hotspots" : "user-hotspots"}
+                text={isAdmin ? "Past Incidents Hotspot" : "Active Ground Inundation Hotspots"}
                 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#F2FBFD] tracking-tight text-center"
                 delay={50}
                 duration={1.25}
@@ -833,8 +920,9 @@ export function LandingPage() {
               />
             </div>
             <p className="text-sm text-slate-600 dark:text-[#B2D2D9] mt-2 leading-relaxed">
-              Live field data, citizen reports and sensor streams to identify
-              and respond faster.
+              {isAdmin
+                ? "Historical incident archives, resolved field reports, and municipal records."
+                : "Live field data, citizen reports and sensor streams to identify and respond faster."}
             </p>
             <div className="mt-3.5 flex items-center justify-center">
               <button
@@ -848,27 +936,80 @@ export function LandingPage() {
             </div>
           </div>
 
-          {/* Hotspot Cards -> Accordion Gallery */}
-          <AccordionGallery
-            items={hotspotGalleryItems}
-            defaultIndex={2}
-            expandRatio={0.52}
-            trigger="hover"
-            accentColor="#ffffff"
-            overlayColor="#060010"
-            textColor="#ffffff"
-            grayscale
-            showLabels
-            duration={0.6}
-            ease="power3.out"
-            parallax={0.5}
-            tilt={8}
-            stagger={0.06}
-            height={460}
-            gap={10}
-            radius={15}
-            orientation="horizontal"
-          />
+          {/* Hotspot Cards -> Admin Past Details vs Citizen Live Incidents vs Empty States */}
+          {isAdmin ? (
+            historicalPlaces.length === 0 ? (
+              /* If Admin and historical_place table has no records */
+              <div className="w-full py-12 px-6 rounded-[24px] bg-white/80 dark:bg-[#10313E]/80 backdrop-blur-xl border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] flex flex-col items-center justify-center text-center shadow-xs animate-in fade-in duration-300">
+                <div className="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-3 shadow-2xs">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-[#F2FBFD] tracking-tight">
+                  No Past Records
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-[#6D949D] mt-1 max-w-sm leading-relaxed">
+                  No past records found in the historical places.
+                </p>
+              </div>
+            ) : (
+              /* If Admin and historical_place table has past records */
+              <AccordionGallery
+                items={adminHistoricalGalleryItems}
+                defaultIndex={0}
+                expandRatio={0.52}
+                trigger="hover"
+                accentColor="#ffffff"
+                overlayColor="#060010"
+                textColor="#ffffff"
+                grayscale
+                showLabels
+                duration={0.6}
+                ease="power3.out"
+                parallax={0.5}
+                tilt={8}
+                stagger={0.06}
+                height={460}
+                gap={10}
+                radius={15}
+                orientation="horizontal"
+              />
+            )
+          ) : isCitizenUser && hasNoLiveIncidents ? (
+            /* If logged-in Citizen and there are no live incidents */
+            <div className="w-full py-12 px-6 rounded-[24px] bg-white/80 dark:bg-[#10313E]/80 backdrop-blur-xl border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] flex flex-col items-center justify-center text-center shadow-xs animate-in fade-in duration-300">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-3 shadow-2xs">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-[#F2FBFD] tracking-tight">
+                No Active Incidents
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-[#6D949D] mt-1 max-w-sm leading-relaxed">
+                0 active ground incidents. All drainage networks are clearing normally. Stay Safe!
+              </p>
+            </div>
+          ) : (
+            /* Default fallback for guests/visitors or citizen with active incidents */
+            <AccordionGallery
+              items={hotspotGalleryItems}
+              defaultIndex={2}
+              expandRatio={0.52}
+              trigger="hover"
+              accentColor="#ffffff"
+              overlayColor="#060010"
+              textColor="#ffffff"
+              grayscale
+              showLabels
+              duration={0.6}
+              ease="power3.out"
+              parallax={0.5}
+              tilt={8}
+              stagger={0.06}
+              height={460}
+              gap={10}
+              radius={15}
+              orientation="horizontal"
+            />
+          )}
         </div>
 
         {/* ========================================================================= */}
