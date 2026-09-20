@@ -135,4 +135,4 @@ async def get_submitted_vs_resolved_analytics(
     3. Resolution rate = (resolved / total_reports) * 100.
     4. Month-by-month timeline values for the line graph.
     """
-    return await ReportService.get_submitted_vs_resolved_analytics(db, timeframe)
+    return await ReportService.get_submitted_vs_resolved_analytics(db, timeframe)

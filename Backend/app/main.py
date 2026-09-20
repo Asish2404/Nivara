@@ -68,6 +68,14 @@ async def lifespan(app: FastAPI):
     # Startup: Create tables and execute safe migrations
     await init_db()
 
+    # Reconcile status synchronization across historical_place, work_orders, incident_queue, and reports
+    try:
+        from app.services.work_order_service import WorkOrderService
+        async with async_session() as db:
+            await WorkOrderService.sync_all_database_statuses(db)
+    except Exception as exc:
+        logger.warning("Startup database status reconciliation notice: %s", exc)
+
     # Start calendar-anchored background prediction scheduler (02:00, 10:00, 18:00)
     scheduler_task = asyncio.create_task(run_periodic_prediction_scheduler())
     yield

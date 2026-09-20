@@ -455,11 +455,10 @@ export const useKWIStore = create((set, get) => ({
   fetchMyReports: async () => {
     const token =
       typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
-    if (!token) return;
     try {
-      const reports = await api.get("/reports", token);
+      const reports = await api.get(token ? "/reports" : "/reports?all_reports=true", token);
       set({
-        myReports: reports || [],
+        myReports: Array.isArray(reports) ? reports : [],
         reportsLoaded: true,
         reportsError: null,
       });

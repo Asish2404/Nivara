@@ -26,8 +26,6 @@ UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..",
 #   Dispatched   -> Resolved after ~15 min
 STATUS_AGING = [
     ("Under Review", "Verified", 60),
-    ("Verified", "Dispatched", 5 * 60),
-    ("Dispatched", "Resolved", 15 * 60),
 ]
 
 # Senseful metadata chosen when a report advances to the next stage.

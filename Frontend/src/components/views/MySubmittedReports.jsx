@@ -40,104 +40,17 @@ import {
 
 const HERO_TWILIGHT_BG = "/textures/kolkata_howrah_sunset_4k.jpg";
 
-/* ================================================================ */
-/*  REFERENCE 5 DEMO REPORTS (Exact 1:1 match with original design) */
-/* ================================================================ */
-const REFERENCE_DEMO_REPORTS = [
-  {
-    report_id: "KWI-2025-00123",
-    image_url: "/images/kolkata_waterlog_sector_v.jpg",
-    location: "Gariahat, Kolkata",
-    sub_location: "Main Road",
-    issue_type: "Waterlogging",
-    submitted_at: "2025-09-09T10:32:00+05:30",
-    status: "Verified",
-    ai_confidence: 92,
-    dispatched_to: "—",
-    description: "Heavy rain water accumulation across main carriageway impeding commuter traffic and transit.",
-    water_depth: 18,
-    ai_verification_result: "Verified – High confidence waterlogging event",
-    dispatch_status: "Awaiting municipal dispatch",
-    latitude: 22.5186,
-    longitude: 88.3644,
-  },
-  {
-    report_id: "KWI-2025-00110",
-    image_url: "/images/hotspot_park_street.jpg",
-    location: "Park Street, Kolkata",
-    sub_location: "Near Metro Station",
-    issue_type: "Drain Blockage",
-    submitted_at: "2025-09-07T18:15:00+05:30",
-    status: "Dispatched",
-    ai_confidence: 88,
-    dispatched_to: "KMC - Ward 70",
-    description: "Blocked roadside drainage culvert causing water to collect near the metro station entrance.",
-    water_depth: 12,
-    ai_verification_result: "Verified – Drainage obstruction identified",
-    dispatch_status: "Field team en route",
-    latitude: 22.5524,
-    longitude: 88.3526,
-  },
-  {
-    report_id: "KWI-2025-00098",
-    image_url: "/images/hotspot_thanthania.jpg",
-    location: "Salt Lake, Kolkata",
-    sub_location: "Sector V",
-    issue_type: "Waterlogging",
-    submitted_at: "2025-09-05T13:48:00+05:30",
-    status: "Under Review",
-    ai_confidence: 76,
-    dispatched_to: "—",
-    description: "Standing water visible along the IT corridor service road, pedestrian curb and footpath.",
-    water_depth: 10,
-    ai_verification_result: "Pending Analysis – Multi-model sensor telemetry verification ongoing",
-    dispatch_status: "Unassigned",
-    latitude: 22.5735,
-    longitude: 88.4331,
-  },
-  {
-    report_id: "KWI-2025-00087",
-    image_url: "/images/hotspot_kalighat.jpg",
-    location: "Belgharia, Kolkata",
-    sub_location: "Expressway",
-    issue_type: "Overflow",
-    submitted_at: "2025-09-02T11:21:00+05:30",
-    status: "Verified",
-    ai_confidence: 90,
-    dispatched_to: "—",
-    description: "Water overflow observed beside the highway embankment following severe afternoon downpour.",
-    water_depth: 16,
-    ai_verification_result: "Verified – Monsoon hydraulic surge confirmed",
-    dispatch_status: "Awaiting municipal dispatch",
-    latitude: 22.6635,
-    longitude: 88.3846,
-  },
-  {
-    report_id: "KWI-2025-00071",
-    image_url: "/images/hotspot_behala.jpg",
-    location: "Tollygunge, Kolkata",
-    sub_location: "Prince Anwar Shah Road",
-    issue_type: "Drain Blockage",
-    submitted_at: "2025-08-28T16:09:00+05:30",
-    status: "Resolved",
-    ai_confidence: 95,
-    dispatched_to: "KMC - Ward 108",
-    description: "Storm drain blockage cleared by municipal crew, street completely drained and traffic restored.",
-    water_depth: 14,
-    ai_verification_result: "Verified – Clearing confirmed and verified by ward telemetry",
-    dispatch_status: "Resolved – Area returned to normal service",
-    latitude: 22.4988,
-    longitude: 88.3475,
-  },
-];
+
 
 /* Normalize report status to standard display keys */
 function normalizeStatus(statusStr) {
-  const s = (statusStr || "").toLowerCase();
+  const s = (statusStr || "").toLowerCase().trim();
+  if (s.includes("in progress") || s.includes("progress")) return "In Progress";
   if (s.includes("verif")) return "Verified";
   if (s.includes("dispatch")) return "Dispatched";
   if (s.includes("resolv")) return "Resolved";
-  return "Under Review";
+  if (s.includes("review") || s.includes("analy") || s.includes("pending")) return "Under Review";
+  return statusStr || "Under Review";
 }
 
 /* Status styling aligned with reference mockup */
@@ -159,6 +72,15 @@ const STATUS_CONFIG = {
     icon: Truck,
     iconColor: "text-[#2563eb] dark:text-blue-400",
     barColor: "bg-[#3b82f6]",
+  },
+  "In Progress": {
+    label: "In Progress",
+    bg: "bg-[#fff7ed] dark:bg-amber-500/15",
+    text: "text-[#ea580c] dark:text-amber-300",
+    border: "border-[#fed7aa] dark:border-amber-500/30",
+    icon: Wrench,
+    iconColor: "text-[#ea580c] dark:text-amber-400",
+    barColor: "bg-[#f97316]",
   },
   "Under Review": {
     label: "Under Review",
@@ -212,6 +134,7 @@ const PIPELINE = [
   { key: "Verified", label: "Verified", icon: ShieldCheck },
   { key: "Review", label: "Review", icon: Clock },
   { key: "Dispatch", label: "Dispatch", icon: Truck },
+  { key: "In Progress", label: "In Progress", icon: Wrench },
   { key: "Resolved", label: "Resolved", icon: Flag },
 ];
 
@@ -232,40 +155,27 @@ export function MySubmittedReports() {
 
   const [activeTab, setActiveTab] = useState("All Reports");
   const [search, setSearch] = useState("");
-  const [dateFilter, setDateFilter] = useState("Last 6 Months");
+  const [dateFilter, setDateFilter] = useState("Today");
   const [sortField, setSortField] = useState("submitted_at");
   const [sortOrder, setSortOrder] = useState("desc");
   const [selectedReport, setSelectedReport] = useState(null);
   const [lightboxImage, setLightboxImage] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState(null);
-  const [forceDemoMode, setForceDemoMode] = useState(false);
 
-  // Poll backend user reports if logged in
+  // Poll backend reports from the reports database table
   useEffect(() => {
-    if (currentUser) {
+    fetchMyReports();
+    const interval = setInterval(() => {
       fetchMyReports();
-      const interval = setInterval(() => {
-        fetchMyReports();
-      }, 15000);
-      return () => clearInterval(interval);
-    }
-  }, [currentUser, fetchMyReports]);
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [fetchMyReports]);
 
-  // Determine active report list: user's reports or reference demo dataset
+  // Determine active report list strictly from reports database table (no dummy fallback)
   const activeReportsList = useMemo(() => {
-    if (forceDemoMode) {
-      return REFERENCE_DEMO_REPORTS;
-    }
-    if (currentUser && myReports && myReports.length > 0) {
-      const filtered = myReports.filter((r) => {
-        const uid = r.user_id || r.userId;
-        return !uid || uid === currentUser.id || uid === currentUser.email;
-      });
-      return filtered.length > 0 ? filtered : myReports;
-    }
-    return REFERENCE_DEMO_REPORTS;
-  }, [currentUser, myReports, forceDemoMode]);
+    return Array.isArray(myReports) ? myReports : [];
+  }, [myReports]);
 
   // Compute live summary counts
   const summaryCounts = useMemo(() => {
@@ -277,7 +187,7 @@ export function MySubmittedReports() {
     activeReportsList.forEach((r) => {
       const s = normalizeStatus(r.status);
       if (s === "Verified") verified++;
-      else if (s === "Dispatched") dispatched++;
+      else if (s === "Dispatched" || s === "In Progress") dispatched++;
       else if (s === "Under Review") review++;
     });
 
@@ -289,15 +199,21 @@ export function MySubmittedReports() {
     const q = search.trim().toLowerCase();
     const now = Date.now();
     const daysMap = {
+      "Today": 1,
       "Last 7 Days": 7,
-      "Last 30 Days": 30,
       "Last 3 Months": 90,
       "Last 6 Months": 180,
       "Last Year": 365,
       "All Time": null,
     };
-    const maxDays = daysMap[dateFilter] ?? null;
-    const cutoffTs = maxDays != null ? now - maxDays * 86400000 : null;
+    let cutoffTs = null;
+    if (dateFilter === "Today") {
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      cutoffTs = startOfToday.getTime();
+    } else if (daysMap[dateFilter] != null) {
+      cutoffTs = now - daysMap[dateFilter] * 86400000;
+    }
 
     const list = activeReportsList.filter((r) => {
       const normStatus = normalizeStatus(r.status);
@@ -353,8 +269,6 @@ export function MySubmittedReports() {
   const handleNewReport = () => {
     navigate("/reports");
   };
-
-  const hasRealUserReports = currentUser && myReports && myReports.length > 0;
 
   return (
     <div className="relative w-full bg-[#f4f7fb] dark:bg-[#0A1E3B] text-slate-800 dark:text-[#F0F9FA] font-sans min-h-screen selection:bg-cyan-100 selection:text-cyan-900 pb-20">
@@ -690,15 +604,15 @@ export function MySubmittedReports() {
               </div>
 
               {/* Action Controls */}
-              <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-                {/* Search Bar with generous width so placeholder never gets clipped */}
-                <div className="relative w-full sm:w-72 lg:w-80">
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-2.5">
+                {/* Search Bar */}
+                <div className="relative w-full sm:w-48 md:w-52 lg:w-56 xl:w-64">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-[#6D949D] pointer-events-none" />
                   <input
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search by report ID, location, or keyword..."
+                    placeholder="Search by report ID, location..."
                     className="w-full rounded-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] bg-slate-50 dark:bg-[#10313E] pl-9 pr-7 py-2 text-xs text-slate-800 dark:text-[#F2FBFD] placeholder:text-slate-400 dark:placeholder:text-[#6D949D] focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
                   />
                   {search && (
@@ -713,7 +627,7 @@ export function MySubmittedReports() {
                 </div>
 
                 {/* Date Dropdown */}
-                <div className="relative">
+                <div className="relative shrink-0">
                   <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] bg-slate-50 dark:bg-[#10313E] px-3 py-2 text-xs font-semibold text-slate-700 dark:text-[#F2FBFD]">
                     <Calendar className="w-3.5 h-3.5 text-slate-500 dark:text-[#B2D2D9]" />
                     <select
@@ -721,7 +635,7 @@ export function MySubmittedReports() {
                       onChange={(e) => setDateFilter(e.target.value)}
                       className="bg-transparent focus:outline-none cursor-pointer pr-2 appearance-none"
                     >
-                      {["Last 7 Days", "Last 30 Days", "Last 3 Months", "Last 6 Months", "Last Year", "All Time"].map((opt) => (
+                      {["Today", "Last 7 Days", "Last 3 Months", "Last 6 Months", "Last Year", "All Time"].map((opt) => (
                         <option key={opt} value={opt} className="dark:bg-[#061820]">
                           {opt}
                         </option>
@@ -736,7 +650,7 @@ export function MySubmittedReports() {
                   type="button"
                   onClick={handleRefresh}
                   disabled={refreshing}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] bg-slate-50 dark:bg-[#10313E] px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-[#F2FBFD] hover:bg-slate-100 dark:hover:bg-[#163F4E] transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] bg-slate-50 dark:bg-[#10313E] px-3 py-2 text-xs font-semibold text-slate-700 dark:text-[#F2FBFD] hover:bg-slate-100 dark:hover:bg-[#163F4E] transition-all cursor-pointer shrink-0"
                 >
                   <Filter className="w-3.5 h-3.5 text-slate-500 dark:text-[#B2D2D9]" />
                   <span>Filter</span>
@@ -747,28 +661,17 @@ export function MySubmittedReports() {
                 <button
                   type="button"
                   onClick={handleNewReport}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#0c2340] dark:bg-[#00E5FF] hover:bg-[#14325c] dark:hover:bg-[#2BEBFF] text-white dark:text-[#030F14] px-4 py-2 text-xs font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#0c2340] dark:bg-[#00E5FF] hover:bg-[#14325c] dark:hover:bg-[#2BEBFF] text-white dark:text-[#030F14] px-3.5 py-2 text-xs font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer shrink-0 whitespace-nowrap"
                 >
                   <Plus className="w-4 h-4" />
                   <span>New Report</span>
                 </button>
-
-                {/* Toggle between user report & demo gallery if user has 1 report */}
-                {hasRealUserReports && (
-                  <button
-                    type="button"
-                    onClick={() => setForceDemoMode(!forceDemoMode)}
-                    className="text-[11px] font-semibold text-[#2563eb] dark:text-[#00E5FF] hover:underline cursor-pointer ml-1"
-                  >
-                    {forceDemoMode ? "View My 1 Report" : "View 5 Reference Demo Reports"}
-                  </button>
-                )}
               </div>
             </div>
 
             {/* Filter Tabs */}
             <div className="px-6 sm:px-7 pt-4 pb-2 border-b border-slate-100 dark:border-[rgba(94,183,201,0.16)] flex items-center gap-2 overflow-x-auto no-scrollbar">
-              {["All Reports", "Verified", "Dispatched", "Under Review", "Resolved"].map((tab) => {
+              {["All Reports", "Verified", "Dispatched", "In Progress", "Under Review", "Resolved"].map((tab) => {
                 const isActive = activeTab === tab;
                 const count =
                   tab === "All Reports"
@@ -779,17 +682,15 @@ export function MySubmittedReports() {
                     key={tab}
                     type="button"
                     onClick={() => setActiveTab(tab)}
-                    className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                      isActive
-                        ? "bg-[#2563eb] dark:bg-[#00E5FF] text-white dark:text-[#030F14] shadow-sm"
-                        : "bg-slate-100 dark:bg-[#10313E] text-slate-600 dark:text-[#B2D2D9] hover:bg-slate-200/70 dark:hover:bg-[#163F4E]"
-                    }`}
+                    className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${isActive
+                      ? "bg-[#2563eb] dark:bg-[#00E5FF] text-white dark:text-[#030F14] shadow-sm"
+                      : "bg-slate-100 dark:bg-[#10313E] text-slate-600 dark:text-[#B2D2D9] hover:bg-slate-200/70 dark:hover:bg-[#163F4E]"
+                      }`}
                   >
                     <span>{tab}</span>
                     <span
-                      className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                        isActive ? "bg-white/20 dark:bg-black/20 text-white dark:text-[#030F14]" : "bg-white dark:bg-[#061820] text-slate-500 dark:text-[#6D949D]"
-                      }`}
+                      className={`px-1.5 py-0.2 rounded-full text-[10px] ${isActive ? "bg-white/20 dark:bg-black/20 text-white dark:text-[#030F14]" : "bg-white dark:bg-[#061820] text-slate-500 dark:text-[#6D949D]"
+                        }`}
                     >
                       {count}
                     </span>
@@ -970,7 +871,11 @@ export function MySubmittedReports() {
 
                           {/* Dispatched To */}
                           <td className="py-3.5 px-4 text-xs font-semibold text-slate-600 dark:text-[#B2D2D9]">
-                            {report.dispatched_to || report.dispatchedTo || "—"}
+                            {report.dispatched_to ||
+                              report.dispatchedTo ||
+                              (normStatus === "Dispatched" || normStatus === "In Progress" || normStatus === "Resolved"
+                                ? (report.assigned_ulb_name || (report.ward ? `Ward ${report.ward}` : "Municipal Rapid Response"))
+                                : "—")}
                           </td>
 
                           {/* Action */}
@@ -1041,10 +946,32 @@ export function MySubmittedReports() {
 
                   {filteredReports.length === 0 && (
                     <tr>
-                      <td colSpan={9} className="py-12 text-center text-slate-400 dark:text-[#6D949D]">
-                        <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm font-semibold">No reports found matching your criteria.</p>
-                        <p className="text-xs mt-1 text-slate-400 dark:text-[#6E9298]">Try adjusting your search query or filter tags.</p>
+                      <td colSpan={9} className="py-14 text-center text-slate-400 dark:text-[#6D949D]">
+                        {activeReportsList.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 flex items-center justify-center text-blue-500 mb-3">
+                              <FileText className="w-6 h-6" />
+                            </div>
+                            <p className="text-sm font-bold text-slate-700 dark:text-[#F2FBFD]">No submitted reports in database</p>
+                            <p className="text-xs mt-1 text-slate-400 dark:text-[#6E9298] leading-relaxed">
+                              There are currently no reports recorded in the system. Newly submitted citizen reports will automatically appear here.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={handleNewReport}
+                              className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-[#0c2340] dark:bg-[#00E5FF] hover:bg-[#14325c] dark:hover:bg-[#2BEBFF] text-white dark:text-[#030F14] px-4 py-2 text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+                            >
+                              <Plus className="w-4 h-4" />
+                              <span>Submit a Report</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm font-semibold">No reports found matching your criteria.</p>
+                            <p className="text-xs mt-1 text-slate-400 dark:text-[#6E9298]">Try adjusting your search query or filter tags.</p>
+                          </>
+                        )}
                       </td>
                     </tr>
                   )}
@@ -1105,7 +1032,8 @@ function ReportDetailsModal({ report, onClose, onEnlarge }) {
   const confidence = Math.round(Number(report.ai_confidence || report.aiConfidence || 85));
 
   const currentStageIndex = (() => {
-    if (normStatus === "Resolved") return 5;
+    if (normStatus === "Resolved") return 6;
+    if (normStatus === "In Progress") return 5;
     if (normStatus === "Dispatched") return 4;
     if (normStatus === "Under Review") return 3;
     if (normStatus === "Verified") return 2;
@@ -1174,7 +1102,7 @@ function ReportDetailsModal({ report, onClose, onEnlarge }) {
         {/* Modal Body */}
         <div className="p-6 space-y-6">
           {/* Metadata Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <div className="rounded-xl p-3 bg-slate-50 dark:bg-[#10313E] border border-slate-100 dark:border-[rgba(94,183,201,0.16)]">
               <div className="text-[10px] uppercase font-bold text-slate-400 dark:text-[#6D949D]">Submit Time</div>
               <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-1">
@@ -1203,6 +1131,12 @@ function ReportDetailsModal({ report, onClose, onEnlarge }) {
               <div className="text-[10px] uppercase font-bold text-slate-400 dark:text-[#6D949D]">Water Depth</div>
               <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-1">
                 {report.water_depth ? `${report.water_depth} cm` : "15–30 cm"}
+              </div>
+            </div>
+            <div className="rounded-xl p-3 bg-slate-50 dark:bg-[#10313E] border border-slate-100 dark:border-[rgba(94,183,201,0.16)] col-span-2 sm:col-span-1">
+              <div className="text-[10px] uppercase font-bold text-slate-400 dark:text-[#6D949D]">Dispatched To</div>
+              <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-1 truncate" title={report.dispatched_to || report.dispatchedTo || report.assigned_ulb_name || "—"}>
+                {report.dispatched_to || report.dispatchedTo || report.assigned_ulb_name || "—"}
               </div>
             </div>
           </div>
@@ -1257,17 +1191,15 @@ function ReportDetailsModal({ report, onClose, onEnlarge }) {
                   <div key={stage.key} className="flex-1 flex flex-col items-center relative text-center">
                     {i !== 0 && (
                       <div
-                        className={`absolute top-4 right-1/2 w-full h-[2px] ${
-                          i <= currentStageIndex ? "bg-cyan-500 dark:bg-[#00E5FF]" : "bg-slate-200 dark:bg-[rgba(94,183,201,0.16)]"
-                        }`}
+                        className={`absolute top-4 right-1/2 w-full h-[2px] ${i <= currentStageIndex ? "bg-cyan-500 dark:bg-[#00E5FF]" : "bg-slate-200 dark:bg-[rgba(94,183,201,0.16)]"
+                          }`}
                       />
                     )}
                     <div
-                      className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs transition-all ${
-                        isPassed
-                          ? "bg-cyan-500 dark:bg-[#00E5FF] border-cyan-500 dark:border-[#00E5FF] text-white dark:text-[#030F14] shadow-sm"
-                          : "bg-white dark:bg-[#10313E] border-slate-300 dark:border-[rgba(94,183,201,0.16)] text-slate-400 dark:text-[#6D949D]"
-                      }`}
+                      className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs transition-all ${isPassed
+                        ? "bg-cyan-500 dark:bg-[#00E5FF] border-cyan-500 dark:border-[#00E5FF] text-white dark:text-[#030F14] shadow-sm"
+                        : "bg-white dark:bg-[#10313E] border-slate-300 dark:border-[rgba(94,183,201,0.16)] text-slate-400 dark:text-[#6D949D]"
+                        }`}
                     >
                       <StageIcon className="w-3.5 h-3.5" />
                     </div>
