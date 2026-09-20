@@ -733,11 +733,10 @@ export function ProfileView() {
                                   setIsDropdownOpen(false);
                                   audioEngine?.playUiChirp(880);
                                 }}
-                                className={`w-full text-left px-3 py-1.5 text-xs font-medium cursor-pointer ${
-                                  contribTimeRange === opt.val
-                                    ? "bg-blue-50 text-[#1677ff] font-semibold"
-                                    : "text-[#14213D] hover:bg-slate-50"
-                                }`}
+                                className={`w-full text-left px-3 py-1.5 text-xs font-medium cursor-pointer ${contribTimeRange === opt.val
+                                  ? "bg-blue-50 text-[#1677ff] font-semibold"
+                                  : "text-[#14213D] hover:bg-slate-50"
+                                  }`}
                               >
                                 {opt.label}
                               </button>
@@ -1091,11 +1090,10 @@ export function ProfileView() {
                             </span>
                           </div>
                           <div
-                            className={`text-[14.5px] font-bold ${
-                              isNotAdded
-                                ? "text-[#64748b] italic font-normal"
-                                : "text-[#0F1F3D] dark:text-white"
-                            }`}
+                            className={`text-[14.5px] font-bold ${isNotAdded
+                              ? "text-[#64748b] italic font-normal"
+                              : "text-[#0F1F3D] dark:text-white"
+                              }`}
                           >
                             {item.val}
                           </div>
@@ -1170,11 +1168,10 @@ export function ProfileView() {
                             opt.id === "dark" ? 720 : 960,
                           );
                         }}
-                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
-                          theme === opt.id
-                            ? "bg-blue-50 border-[#1677ff] text-[#1677ff] font-bold"
-                            : "bg-white dark:bg-slate-800 border-slate-300 text-[#14213D] dark:text-slate-200 hover:bg-slate-50"
-                        }`}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${theme === opt.id
+                          ? "bg-blue-50 border-[#1677ff] text-[#1677ff] font-bold"
+                          : "bg-white dark:bg-slate-800 border-slate-300 text-[#14213D] dark:text-slate-200 hover:bg-slate-50"
+                          }`}
                       >
                         {opt.icon}
                         <span>{opt.label}</span>

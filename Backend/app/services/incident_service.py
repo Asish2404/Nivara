@@ -2,7 +2,7 @@ import math
 from collections import Counter
 from datetime import datetime
 from typing import List, Optional, Union
-from sqlalchemy import select, or_, and_
+from sqlalchemy import select, or_, and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.incident_queue import IncidentQueue
@@ -176,7 +176,7 @@ class IncidentQueueService:
         # Query all active / ongoing incidents to find match
         result = await db.execute(
             select(IncidentQueue).where(
-                IncidentQueue.status != "RESOLVED"
+                func.upper(IncidentQueue.status) != "RESOLVED"
             )
         )
         active_incidents = list(result.scalars().all())
@@ -324,7 +324,7 @@ class IncidentQueueService:
         """Fetch all active incidents ordered by risk level, report count, water depth, and first submitted."""
         result = await db.execute(
             select(IncidentQueue).where(
-                IncidentQueue.status != "RESOLVED"
+                func.upper(IncidentQueue.status) != "RESOLVED"
             )
         )
         incidents = list(result.scalars().all())

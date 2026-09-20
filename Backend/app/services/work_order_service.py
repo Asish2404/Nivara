@@ -135,10 +135,19 @@ class WorkOrderService:
             )
             db.add(target_wo)
 
-        # Update status of incident in incident_queue to 'Dispatched' if linked
-        if linked_inc:
-            linked_inc.status = "Dispatched"
-            linked_inc.updated_at = now
+        # Synchronize status to linked incident_queue and reports tables
+        target_status = target_wo.status or "Dispatched"
+        await cls.sync_linked_incident_and_reports(
+            db=db,
+            incident_id=clean_inc_id,
+            location=target_wo.location,
+            latitude=lat,
+            longitude=lon,
+            assigned_ulb_name=assigned_ulb_name,
+            work_id=clean_work_id,
+            target_status=target_status,
+            now=now,
+        )
 
         await db.commit()
         await db.refresh(target_wo)
@@ -147,6 +156,129 @@ class WorkOrderService:
         target_wo.dispatched_at = ensure_kolkata_tz(target_wo.dispatched_at)
         target_wo.updated_at = ensure_kolkata_tz(target_wo.updated_at)
         return target_wo
+
+    @classmethod
+    async def sync_linked_incident_and_reports(
+        cls,
+        db: AsyncSession,
+        incident_id: str,
+        location: str,
+        latitude: float,
+        longitude: float,
+        assigned_ulb_name: str,
+        work_id: str,
+        target_status: str,
+        now: datetime,
+    ) -> None:
+        """Propagates work order lifecycle status directly to linked incident_queue and reports tables."""
+        clean_inc = str(incident_id or "").replace("WO-", "").replace("#", "").strip()
+        wo_loc = str(location or "").strip()
+        wo_lat = float(latitude or 0.0)
+        wo_lon = float(longitude or 0.0)
+        wo_ulb = str(assigned_ulb_name or "").strip().lower()
+        wo_primary = wo_loc.split(",")[0].strip().lower() if wo_loc else ""
+
+        # 1. Update linked incident_queue record(s)
+        inc_res = await db.execute(select(IncidentQueue))
+        all_incidents = list(inc_res.scalars().all())
+        for inc in all_incidents:
+            clean_i = str(inc.incident_id or "").replace("#", "").strip()
+            is_inc_match = False
+            if clean_inc and (clean_i == clean_inc or clean_i == clean_inc.replace("-", "")):
+                is_inc_match = True
+            elif wo_loc and inc.location and (inc.location.strip().lower() == wo_loc.lower()):
+                is_inc_match = True
+            elif wo_loc and inc.location and is_same_place(inc.location, wo_loc, float(inc.latitude or 0), float(inc.longitude or 0), wo_lat, wo_lon):
+                is_inc_match = True
+
+            if is_inc_match:
+                if target_status.lower() == "resolved":
+                    await db.delete(inc)
+                else:
+                    inc.status = target_status
+                    inc.updated_at = now
+
+        # 2. Update linked reports record(s)
+        rep_res = await db.execute(select(Report))
+        all_reports = list(rep_res.scalars().all())
+        for rep in all_reports:
+            r_loc = str(rep.location or "").strip().lower()
+            r_ulb = str(rep.assigned_ulb_name or "").strip().lower()
+            r_primary = r_loc.split(",")[0].strip() if r_loc else ""
+
+            is_match = False
+            if clean_inc and clean_inc.lower() in str(getattr(rep, "incident_id", "") or "").lower():
+                is_match = True
+            elif wo_loc and (wo_loc.lower() == r_loc or wo_loc.lower() in r_loc or r_loc in wo_loc.lower()):
+                is_match = True
+            elif is_same_place(wo_loc, r_loc, wo_lat, wo_lon, float(rep.latitude or 0), float(rep.longitude or 0)):
+                is_match = True
+            elif ("salt lake" in wo_loc.lower() and "salt lake" in r_loc and "sector v" in wo_loc.lower() and "sector v" in r_loc):
+                is_match = True
+            elif ("college more" in wo_loc.lower() and "college more" in r_loc) or ("behala" in wo_loc.lower() and "behala" in r_loc) or ("park street" in wo_loc.lower() and "park street" in r_loc) or ("howrah" in wo_loc.lower() and "howrah" in r_loc):
+                is_match = True
+            elif wo_ulb and r_ulb and wo_ulb == r_ulb and wo_primary and r_primary and (wo_primary in r_primary or r_primary in wo_primary):
+                is_match = True
+
+            if is_match:
+                rep.status = target_status
+                if target_status.lower() == "resolved":
+                    rep.dispatch_status = "Resolved"
+                elif target_status.lower() == "in progress":
+                    rep.dispatch_status = f"In Progress – Field Team on Site ({work_id})"
+                elif target_status.lower() == "dispatched":
+                    rep.dispatch_status = f"Dispatched – Rapid Response Assigned ({work_id})"
+                else:
+                    rep.dispatch_status = target_status
+
+                # Populate dispatched_to with the municipal authority or ward team
+                if not rep.dispatched_to or rep.dispatched_to == "—":
+                    dept = assigned_ulb_name or rep.assigned_ulb_name or "KMC Emergency Response"
+                    if rep.ward:
+                        rep.dispatched_to = f"{dept} - Ward {rep.ward}"
+                    else:
+                        rep.dispatched_to = dept
+
+                rep.updated_at = now
+
+    @classmethod
+    async def sync_all_database_statuses(cls, db: AsyncSession) -> None:
+        """One-pass reconciliation ensuring historical_place and active work_orders statuses
+        are properly mirrored into incident_queue and reports tables.
+        """
+        now = get_current_time()
+
+        # 1. Sync from historical_place (all resolved incidents)
+        hist_res = await db.execute(select(HistoricalPlace))
+        for hp in hist_res.scalars().all():
+            await cls.sync_linked_incident_and_reports(
+                db=db,
+                incident_id=hp.incident_id,
+                location=hp.location,
+                latitude=hp.latitude,
+                longitude=hp.longitude,
+                assigned_ulb_name=hp.assigned_ulb_name,
+                work_id=hp.work_id or f"WO-{hp.incident_id}",
+                target_status="Resolved",
+                now=now,
+            )
+
+        # 2. Sync from active work_orders (e.g. In Progress, Dispatched)
+        wo_res = await db.execute(select(WorkOrder))
+        for wo in wo_res.scalars().all():
+            await cls.sync_linked_incident_and_reports(
+                db=db,
+                incident_id=wo.incident_id,
+                location=wo.location,
+                latitude=wo.latitude,
+                longitude=wo.longitude,
+                assigned_ulb_name=wo.assigned_ulb_name,
+                work_id=wo.work_id,
+                target_status=wo.status or "Dispatched",
+                now=now,
+            )
+
+        await db.commit()
 
     @classmethod
     async def get_all_work_orders(cls, db: AsyncSession) -> List[WorkOrder]:
@@ -230,47 +362,18 @@ class WorkOrderService:
             )
             db.add(hist_place)
 
-            # 2. Remove linked incident from incident_queue table
-            inc_res = await db.execute(
-                select(IncidentQueue).where(
-                    or_(
-                        IncidentQueue.incident_id == clean_inc,
-                        IncidentQueue.incident_id == f"#{clean_inc}",
-                        IncidentQueue.incident_id == clean_inc.replace("-", ""),
-                        IncidentQueue.location == wo.location,
-                    )
-                )
+            # 2. Update status of linked incident_queue and reports to 'Resolved'
+            await cls.sync_linked_incident_and_reports(
+                db=db,
+                incident_id=clean_inc,
+                location=wo.location,
+                latitude=wo.latitude,
+                longitude=wo.longitude,
+                assigned_ulb_name=wo.assigned_ulb_name,
+                work_id=work_order_id,
+                target_status="Resolved",
+                now=now,
             )
-            linked_incidents = list(inc_res.scalars().all())
-            for linked_inc in linked_incidents:
-                await db.delete(linked_inc)
-
-            # 3. Mark linked reports in reports table as Resolved
-            rep_res = await db.execute(select(Report))
-            wo_loc = str(wo.location or "").strip().lower()
-            wo_ulb = str(wo.assigned_ulb_name or "").strip().lower()
-            wo_primary = wo_loc.split(",")[0].strip() if wo_loc else ""
-            for rep in rep_res.scalars().all():
-                r_loc = str(rep.location or "").strip().lower()
-                r_ulb = str(rep.assigned_ulb_name or "").strip().lower()
-                r_primary = r_loc.split(",")[0].strip() if r_loc else ""
-
-                is_match = False
-                if wo_loc and (wo_loc == r_loc or wo_loc in r_loc or r_loc in wo_loc):
-                    is_match = True
-                elif is_same_place(wo_loc, r_loc, float(wo.latitude or 0), float(wo.longitude or 0), float(rep.latitude or 0), float(rep.longitude or 0)):
-                    is_match = True
-                elif ("salt lake" in wo_loc and "salt lake" in r_loc and "sector v" in wo_loc and "sector v" in r_loc):
-                    is_match = True
-                elif ("college more" in wo_loc and "college more" in r_loc) or ("behala" in wo_loc and "behala" in r_loc) or ("park street" in wo_loc and "park street" in r_loc):
-                    is_match = True
-                elif wo_ulb and r_ulb and wo_ulb == r_ulb and wo_primary and r_primary and (wo_primary in r_primary or r_primary in wo_primary):
-                    is_match = True
-
-                if is_match:
-                    rep.status = "Resolved"
-                    rep.dispatch_status = "Resolved"
-                    rep.updated_at = now
 
             # Snapshot data for response before removing from work_orders
             resolved_dict = {
@@ -311,6 +414,20 @@ class WorkOrderService:
             wo.started_at = now
 
         wo.updated_at = now
+
+        # Update linked incident_queue and reports to matching status
+        await cls.sync_linked_incident_and_reports(
+            db=db,
+            incident_id=wo.incident_id,
+            location=wo.location,
+            latitude=wo.latitude,
+            longitude=wo.longitude,
+            assigned_ulb_name=wo.assigned_ulb_name,
+            work_id=wo.work_id,
+            target_status=norm_status,
+            now=now,
+        )
+
         await db.commit()
         await db.refresh(wo)
         return wo
