@@ -265,6 +265,13 @@ async def init_db() -> None:
                         if col_name not in existing_wo_cols:
                             connection.execute(text(f"ALTER TABLE work_orders ADD COLUMN {col_name} {col_type}"))
 
+            if "historical_place" in table_names:
+                existing_hp_cols = {col["name"] for col in inspector.get_columns("historical_place")}
+                if "created_at" not in existing_hp_cols:
+                    connection.execute(text("ALTER TABLE historical_place ADD COLUMN created_at DATETIME"))
+                if "resolved_at" not in existing_hp_cols:
+                    connection.execute(text("ALTER TABLE historical_place ADD COLUMN resolved_at DATETIME"))
+
         await conn.run_sync(sync_migrate)
 
 

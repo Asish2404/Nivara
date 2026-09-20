@@ -887,47 +887,167 @@ export function AdminDashboardView() {
 
   // ---------------------------------------------------------------------------
   // 4. BOTTOM-RIGHT: AVERAGE RESOLUTION TIME BY RISK LEVEL
-  // High priority / critical areas are resolved in shortest turnaround time (4.5 hrs)
-  // followed by medium (18.0 hrs) and routine low-priority maintenance (36.5 hrs)
+  // In historical_place, created_at is fetched from incident_queue and resolved_at is fetched from work_orders.
+  // Resolution time is calculated from resolved_at and created_at.
+  // Logic:
+  // - Total resolved incidents with similar risk level: average resolution times
+  //   and store according to the risk level / priorities (Critical, High, Medium, Low)
+  // - Total average resolution time is calculated using all 4 priorities' average resolution times:
+  //   total_average = (critical_avg + high_avg + medium_avg + low_avg) / 4
   // ---------------------------------------------------------------------------
-  const resolutionBreakdown = [
-    {
-      level: "Critical",
-      hours: "4.5 hrs",
-      percentage: 22,
-      subtext: "Emergency heavy pumps & rapid breach containment",
-      dotColor: "bg-rose-500",
-      barColor: "bg-rose-500 dark:bg-rose-600",
-      trackColor: "bg-rose-100 dark:bg-rose-950/40"
-    },
-    {
-      level: "High",
-      hours: "8.2 hrs",
-      percentage: 38,
-      subtext: "Mobile dewatering units & road clearance",
-      dotColor: "bg-orange-500",
-      barColor: "bg-orange-500 dark:bg-orange-600",
-      trackColor: "bg-orange-100 dark:bg-orange-950/40"
-    },
-    {
-      level: "Medium",
-      hours: "18.0 hrs",
-      percentage: 62,
-      subtext: "Culvert de-silting & drain unblocking",
-      dotColor: "bg-amber-400",
-      barColor: "bg-amber-400 dark:bg-amber-500",
-      trackColor: "bg-amber-100 dark:bg-amber-950/40"
-    },
-    {
-      level: "Low",
-      hours: "36.5 hrs",
-      percentage: 90,
-      subtext: "Scheduled routine municipal maintenance",
-      dotColor: "bg-emerald-500",
-      barColor: "bg-emerald-500 dark:bg-emerald-600",
-      trackColor: "bg-emerald-100 dark:bg-emerald-950/40"
+  const resolutionBreakdownData = useMemo(() => {
+    const benchmarks = {
+      Critical: {
+        subtext: "Emergency heavy pumps & rapid breach containment",
+        dotColor: "bg-rose-500",
+        barColor: "bg-rose-500 dark:bg-rose-600",
+        trackColor: "bg-rose-100 dark:bg-rose-950/40"
+      },
+      High: {
+        subtext: "Mobile dewatering units & road clearance",
+        dotColor: "bg-orange-500",
+        barColor: "bg-orange-500 dark:bg-orange-600",
+        trackColor: "bg-orange-100 dark:bg-orange-950/40"
+      },
+      Medium: {
+        subtext: "Culvert de-silting & drain unblocking",
+        dotColor: "bg-amber-400",
+        barColor: "bg-amber-400 dark:bg-amber-500",
+        trackColor: "bg-amber-100 dark:bg-amber-950/40"
+      },
+      Low: {
+        subtext: "Scheduled routine municipal maintenance",
+        dotColor: "bg-emerald-500",
+        barColor: "bg-emerald-500 dark:bg-emerald-600",
+        trackColor: "bg-emerald-100 dark:bg-emerald-950/40"
+      }
+    };
+
+    const getPriorityCategory = (item) => {
+      if (!item) return "Low";
+      const raw = String(item.risk_level || item.priority || item.severity || "").toUpperCase();
+      if (raw.includes("CRIT")) return "Critical";
+      if (raw.includes("HIGH") || raw.includes("SEV") || (item.water_depth && Number(item.water_depth) >= 25)) return "High";
+      if (raw.includes("MOD") || raw.includes("MED") || (item.water_depth && Number(item.water_depth) >= 15)) return "Medium";
+      if (raw.includes("LOW")) return "Low";
+      if (item.water_depth && Number(item.water_depth) >= 25) return "Critical";
+      if (item.water_depth && Number(item.water_depth) >= 20) return "High";
+      if (item.water_depth && Number(item.water_depth) >= 15) return "Medium";
+      return "Low";
+    };
+
+    const durationsByPriority = {
+      Critical: [],
+      High: [],
+      Medium: [],
+      Low: []
+    };
+
+    // Filter by timeframe
+    const now = new Date();
+    let cutoff = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+    if (resTimeTimeframe === "Last 30 Days") {
+      cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    } else if (resTimeTimeframe === "Year 2026") {
+      cutoff = new Date(2026, 0, 1);
     }
-  ];
+
+    const collectResolutionTime = (createdRaw, resolvedRaw, priority) => {
+      if (!createdRaw || !resolvedRaw) return;
+      const created = new Date(createdRaw);
+      const resolved = new Date(resolvedRaw);
+      if (isNaN(created.getTime()) || isNaN(resolved.getTime())) return;
+      if (resolved < cutoff) return;
+
+      const diffMs = resolved.getTime() - created.getTime();
+      const diffHours = Math.max(0.1, diffMs / (1000 * 60 * 60));
+      if (durationsByPriority[priority]) {
+        durationsByPriority[priority].push(diffHours);
+      }
+    };
+
+    // Track unique IDs to prevent duplicate counting
+    const processedIds = new Set();
+
+    // 1. Process items from historicalPlaces (created_at from incident_queue, resolved_at from work_orders)
+    (historicalPlaces || []).forEach((hp) => {
+      const key = hp.work_id || hp.incident_id || String(hp.id);
+      if (key) processedIds.add(key);
+      const priority = getPriorityCategory(hp);
+      collectResolutionTime(hp.created_at, hp.resolved_at || hp.updated_at, priority);
+    });
+
+    // 2. Process items from workOrdersList if resolved
+    (workOrdersList || []).forEach((wo) => {
+      const key = wo.work_id || wo.id;
+      if (key && processedIds.has(key)) return;
+      if (wo.status?.toLowerCase() === "resolved" || wo.statusVariant === "resolved" || wo.resolved_at) {
+        const priority = getPriorityCategory(wo);
+        collectResolutionTime(wo.created_at || wo.assignedOn, wo.resolved_at || wo.updated_at, priority);
+      }
+    });
+
+    // Calculate real average resolution time for each risk level / priority from database
+    const priorityAverages = {};
+    const activePriorities = [];
+    let totalResolvedCount = 0;
+
+    ["Critical", "High", "Medium", "Low"].forEach((lvl) => {
+      const list = durationsByPriority[lvl] || [];
+      totalResolvedCount += list.length;
+      if (list.length > 0) {
+        priorityAverages[lvl] = Number((list.reduce((sum, val) => sum + val, 0) / list.length).toFixed(1));
+        activePriorities.push(lvl);
+      } else {
+        // Strictly 0 if no incidents resolved in database (no dummy fallback!)
+        priorityAverages[lvl] = 0;
+      }
+    });
+
+    // Total average resolution time calculated using all 4 priorities' average resolution times
+    // If only some priorities have resolved incidents, calculate across active resolved priorities
+    // When all 4 have resolved incidents, it divides by 4: (Critical + High + Medium + Low) / 4
+    let totalAvg = 0;
+    if (activePriorities.length > 0) {
+      const sumActive = activePriorities.reduce((sum, lvl) => sum + priorityAverages[lvl], 0);
+      totalAvg = Number((sumActive / activePriorities.length).toFixed(1));
+    }
+
+    // Scale progress bars relative to the highest duration among active records
+    const nonZeroValues = Object.values(priorityAverages).filter((v) => v > 0);
+    const maxVal = nonZeroValues.length > 0 ? Math.max(...nonZeroValues) : 1;
+
+    const breakdown = ["Critical", "High", "Medium", "Low"].map((level) => {
+      const hrs = priorityAverages[level];
+      const count = (durationsByPriority[level] || []).length;
+      const hasData = count > 0;
+      // 0% progress bar if no resolved incidents in database
+      const percentage = hasData && maxVal > 0 ? Math.min(95, Math.max(15, Math.round((hrs / maxVal) * 90))) : 0;
+      return {
+        level,
+        hours: `${hrs.toFixed(1)} hrs`,
+        hoursValue: hrs,
+        hasData,
+        count,
+        percentage,
+        subtext: benchmarks[level].subtext,
+        dotColor: benchmarks[level].dotColor,
+        barColor: benchmarks[level].barColor,
+        trackColor: benchmarks[level].trackColor
+      };
+    });
+
+    return {
+      breakdown,
+      totalAverageFormatted: `${totalAvg.toFixed(1)} hrs`,
+      totalResolvedCount,
+      activePrioritiesCount: activePriorities.length
+    };
+  }, [historicalPlaces, workOrdersList, resTimeTimeframe]);
+
+  const resolutionBreakdown = resolutionBreakdownData.breakdown;
+  const overallAverageResolutionTime = resolutionBreakdownData.totalAverageFormatted;
+
 
   return (
     <div className="w-full min-h-screen bg-[#f3f7fb] dark:bg-[#070c14] text-slate-900 dark:text-[#F0F9FA] transition-colors duration-300 pb-16 font-sans relative">
@@ -2082,11 +2202,15 @@ export function AdminDashboardView() {
                     Overall Average Resolution Time
                   </div>
                   <div className="text-3xl sm:text-4xl font-black font-mono text-slate-900 dark:text-white mt-1.5">
-                    16.8 hrs
+                    {overallAverageResolutionTime}
                   </div>
                   <div className="text-xs font-semibold font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-1.5">
-                    <span>↓ 24%</span>
-                    <span className="text-[10.5px] text-slate-400 dark:text-slate-500 font-normal">vs prev 6 months</span>
+                    <span>• Real-time</span>
+                    <span className="text-[10.5px] text-slate-400 dark:text-slate-500 font-normal">
+                      {resolutionBreakdownData.totalResolvedCount > 0
+                        ? `${resolutionBreakdownData.totalResolvedCount} resolved incident${resolutionBreakdownData.totalResolvedCount > 1 ? "s" : ""}`
+                        : "No resolved incidents"}
+                    </span>
                   </div>
                 </div>
 

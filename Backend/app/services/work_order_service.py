@@ -213,7 +213,22 @@ class WorkOrderService:
             clean_inc = str(wo.incident_id or "").replace("#", "").strip()
             work_order_id = f"WO-{clean_inc}"
 
-            # 1. Add to historical_place table with all required column data
+            # Fetch linked incident from incident_queue to get its created_at
+            inc_res = await db.execute(
+                select(IncidentQueue).where(
+                    or_(
+                        IncidentQueue.incident_id == clean_inc,
+                        IncidentQueue.incident_id == f"#{clean_inc}",
+                        IncidentQueue.incident_id == clean_inc.replace("-", ""),
+                        IncidentQueue.location == wo.location,
+                    )
+                )
+            )
+            linked_incidents = list(inc_res.scalars().all())
+            inc_created_at = linked_incidents[0].created_at if (linked_incidents and linked_incidents[0].created_at) else (wo.created_at or now)
+            wo_resolved_at = wo.resolved_at or now
+
+            # 1. Add to historical_place table with all required column data (created_at from incident_queue, resolved_at from work_orders)
             hist_place = HistoricalPlace(
                 incident_id=clean_inc,
                 location=str(wo.location or ""),
@@ -227,21 +242,12 @@ class WorkOrderService:
                 jurisdiction_type=str(wo.jurisdiction_type or ""),
                 ward=str(wo.ward or ""),
                 status="Resolved",
+                created_at=inc_created_at,
+                resolved_at=wo_resolved_at,
             )
             db.add(hist_place)
 
             # 2. Remove linked incident from incident_queue table
-            inc_res = await db.execute(
-                select(IncidentQueue).where(
-                    or_(
-                        IncidentQueue.incident_id == clean_inc,
-                        IncidentQueue.incident_id == f"#{clean_inc}",
-                        IncidentQueue.incident_id == clean_inc.replace("-", ""),
-                        IncidentQueue.location == wo.location,
-                    )
-                )
-            )
-            linked_incidents = list(inc_res.scalars().all())
             for linked_inc in linked_incidents:
                 await db.delete(linked_inc)
 

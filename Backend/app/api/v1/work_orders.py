@@ -79,6 +79,8 @@ async def list_historical_places(
             "jurisdiction_type": hp.jurisdiction_type,
             "ward": hp.ward,
             "status": hp.status or "Resolved",
+            "created_at": hp.created_at.isoformat() if hp.created_at else None,
+            "resolved_at": hp.resolved_at.isoformat() if hp.resolved_at else None,
         }
         for hp in places
     ]
