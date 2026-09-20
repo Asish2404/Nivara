@@ -759,23 +759,23 @@ export function LandingPage() {
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/95 dark:bg-[#061820]/90 backdrop-blur-md border border-sky-200/90 dark:border-cyan-500/30 shadow-[0_2px_12px_rgba(6,182,212,0.12)] mb-3.5 text-xs font-mono font-bold tracking-wider text-slate-800 dark:text-slate-200"
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-white/95 dark:bg-[#061820]/90 backdrop-blur-md border border-sky-200/90 dark:border-cyan-500/30 shadow-[0_2px_12px_rgba(6,182,212,0.12)] mb-3.5 text-[11px] sm:text-xs font-mono font-bold tracking-wider text-slate-800 dark:text-slate-200 max-w-[94vw]"
           >
-            <span className="flex h-2 w-2 relative">
+            <span className="flex h-2 w-2 relative shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-80" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-600 dark:bg-cyan-400" />
             </span>
-            <span className="text-cyan-950 dark:text-cyan-300 uppercase font-black">
-              ● LIVE KOLKATA
+            <span className="text-cyan-950 dark:text-cyan-300 uppercase font-black shrink-0">
+              LIVE KOLKATA
             </span>
-            <span className="text-slate-300 dark:text-slate-600">|</span>
-            <span className="text-slate-600 dark:text-slate-300 font-medium">
+            <span className="hidden sm:inline text-slate-300 dark:text-slate-600">|</span>
+            <span className="hidden sm:inline text-slate-600 dark:text-slate-300 font-medium truncate">
               Real Geographic Intelligence
             </span>
             <span className="text-slate-300 dark:text-slate-600">·</span>
-            <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold">
+            <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              AI Monitoring Active
+              <span>AI Monitoring Active</span>
             </span>
           </motion.div>
 

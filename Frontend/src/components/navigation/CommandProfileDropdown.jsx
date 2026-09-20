@@ -115,10 +115,11 @@ export function CommandProfileDropdown({ isDarkMode }) {
           onClick={handleToggle}
           aria-expanded={isOpen}
           aria-haspopup="true"
-          className={`group relative flex items-center gap-2.5 px-3 py-1.5 rounded-full cursor-pointer select-none transition-all duration-200 border ${isDarkMode
+          className={`group relative flex items-center gap-1.5 sm:gap-2.5 p-1 sm:px-3 sm:py-1.5 rounded-full cursor-pointer select-none transition-all duration-200 border ${isDarkMode
             ? "bg-[#10313E] hover:bg-[#163F4E] text-[#F2FBFD] border-[rgba(94,183,201,0.18)] shadow-[0_2px_12px_rgba(3,15,20,0.6)]"
             : "bg-white/95 hover:bg-slate-50 text-slate-900 border-slate-200/90 shadow-[0_1px_4px_rgba(15,23,42,0.06)]"
             }`}
+          title={userName}
         >
           {/* Real Avatar or Initials Fallback */}
           <div className="relative w-[30px] h-[30px] rounded-full overflow-hidden shrink-0">
@@ -135,8 +136,8 @@ export function CommandProfileDropdown({ isDarkMode }) {
             )}
           </div>
 
-          {/* User Name */}
-          <span className="text-[13px] font-semibold tracking-tight truncate max-w-[130px] sm:max-w-[160px] text-slate-900 dark:text-[#F2FBFD]">
+          {/* User Name (displayed on tablet and desktop) */}
+          <span className="hidden sm:inline text-[13px] font-semibold tracking-tight truncate max-w-[130px] sm:max-w-[160px] text-slate-900 dark:text-[#F2FBFD]">
             {userName}
           </span>
 
@@ -144,7 +145,7 @@ export function CommandProfileDropdown({ isDarkMode }) {
           <motion.div
             animate={{ rotate: isOpen ? 180 : 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="flex items-center justify-center text-slate-400 group-hover:text-[#00E5FF] transition-colors"
+            className="hidden sm:flex items-center justify-center text-slate-400 group-hover:text-[#00E5FF] transition-colors"
           >
             <ChevronDown className="w-3.5 h-3.5" />
           </motion.div>
@@ -155,22 +156,29 @@ export function CommandProfileDropdown({ isDarkMode }) {
         {/* ========================================================= */}
         <AnimatePresence>
           {isOpen && (
-            <motion.div
-              variants={dropdownVariants}
-              initial="closed"
-              animate="open"
-              exit="closed"
-              style={{
-                transformOrigin: "top right",
-                boxShadow: isDarkMode
-                  ? "0 20px 45px -10px rgba(3, 15, 20, 0.95), 0 0 0 1px rgba(94, 183, 201, 0.16)"
-                  : "0 20px 45px -12px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.05)",
-              }}
-              className={`absolute right-0 top-full mt-2 w-[300px] sm:w-[320px] rounded-2xl overflow-hidden z-50 pointer-events-auto backdrop-blur-xl ${isDarkMode
-                ? "bg-[#061820]/98 border border-[rgba(94,183,201,0.18)] text-[#F2FBFD]"
-                : "bg-white/95 border border-slate-200/90 text-slate-900"
-                }`}
-            >
+            <>
+              {/* Mobile Backdrop Overlay */}
+              <div
+                className="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 sm:hidden"
+                onClick={() => setIsOpen(false)}
+              />
+
+              <motion.div
+                variants={dropdownVariants}
+                initial="closed"
+                animate="open"
+                exit="closed"
+                style={{
+                  transformOrigin: "top right",
+                  boxShadow: isDarkMode
+                    ? "0 20px 45px -10px rgba(3, 15, 20, 0.95), 0 0 0 1px rgba(94, 183, 201, 0.16)"
+                    : "0 20px 45px -12px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.05)",
+                }}
+                className={`fixed inset-x-3 top-18 sm:top-full sm:absolute sm:right-0 sm:inset-x-auto mt-2 w-auto sm:w-[320px] max-w-[340px] mx-auto sm:mx-0 rounded-2xl overflow-hidden z-50 pointer-events-auto backdrop-blur-xl ${isDarkMode
+                  ? "bg-[#061820]/98 border border-[rgba(94,183,201,0.18)] text-[#F2FBFD]"
+                  : "bg-white/95 border border-slate-200/90 text-slate-900"
+                  }`}
+              >
               {/* PROFILE HEADER (Real Avatar, Name, Org) */}
               <div
                 className={`p-5 flex flex-col items-center text-center border-b ${isDarkMode
@@ -422,8 +430,9 @@ export function CommandProfileDropdown({ isDarkMode }) {
                 </button>
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
+          </>
+        )}
+      </AnimatePresence>
       </div>
 
       {/* Interactive Profile Modal to View / Change Photo & Account Info */}

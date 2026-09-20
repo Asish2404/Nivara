@@ -42,6 +42,18 @@ const AccordionGallery = ({
   const mediaSizeRef = useRef(320);
 
   const vertical = orientation === 'vertical';
+  const [isMobileScreen, setIsMobileScreen] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth <= 640
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleResize = () => setIsMobileScreen(window.innerWidth <= 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isEffectiveVertical = vertical || isMobileScreen;
   const count = items.length;
   const [active, setActive] = useState(Math.min(Math.max(defaultIndex, 0), count - 1));
 
@@ -58,7 +70,7 @@ const AccordionGallery = ({
       if (!panels.length) return;
 
       const r = Math.min(Math.max(expandRatio, 0.2), 0.9);
-      const grow = count > 1 ? (r * (count - 1)) / (1 - r) : 1;
+      const grow = isMobileScreen ? (count > 1 ? 4.5 : 1) : (count > 1 ? (r * (count - 1)) / (1 - r) : 1);
       const mediaSize = mediaSizeRef.current;
 
       tlRef.current?.kill();
@@ -74,7 +86,11 @@ const AccordionGallery = ({
         const details = detailsRefs.current[i];
 
         const rot = isActive ? 0 : i < active ? tilt : -tilt;
-        const rotProp = vertical ? { rotateX: -rot } : { rotateY: rot };
+        const rotProp = isMobileScreen
+          ? { rotateX: 0, rotateY: 0 }
+          : isEffectiveVertical
+            ? { rotateX: -rot }
+            : { rotateY: rot };
 
         tl.to(panel, { flexGrow: isActive ? grow : 1, ...rotProp, duration: dur, ease }, 0);
 
@@ -87,8 +103,8 @@ const AccordionGallery = ({
             {
               xPercent: -50,
               yPercent: -50,
-              x: vertical ? 0 : isActive ? 0 : shift,
-              y: vertical ? (isActive ? 0 : shift) : 0,
+              x: isEffectiveVertical ? 0 : isActive ? 0 : shift,
+              y: isEffectiveVertical ? (isActive ? 0 : shift) : 0,
               '--ag-gray': gray,
               '--ag-dim': isActive ? 0 : 0.35,
               duration: dur,
@@ -108,8 +124,10 @@ const AccordionGallery = ({
 
         if (details) {
           if (isActive) {
+            details.style.pointerEvents = 'auto';
             tl.to(details, { opacity: 1, y: 0, duration: dur, ease }, 0.05);
           } else {
+            details.style.pointerEvents = 'none';
             tl.to(details, { opacity: 0, y: 15, duration: dur * 0.4, ease }, 0);
           }
         }
@@ -123,7 +141,8 @@ const AccordionGallery = ({
       expandRatio,
       duration,
       ease,
-      vertical,
+      isEffectiveVertical,
+      isMobileScreen,
       tilt,
       parallax,
       grayscale,
@@ -139,7 +158,7 @@ const AccordionGallery = ({
 
     const measure = () => {
       const rect = el.getBoundingClientRect();
-      const total = vertical ? rect.height : rect.width;
+      const total = isEffectiveVertical ? rect.height : rect.width;
       const usable = Math.max(total - gap * (count - 1), 120);
       const size = Math.max(140, usable * Math.min(Math.max(expandRatio, 0.2), 0.9) * 1.22);
       mediaSizeRef.current = size;
@@ -151,7 +170,7 @@ const AccordionGallery = ({
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [applyLayout, gap, count, expandRatio, vertical]);
+  }, [applyLayout, gap, count, expandRatio, isEffectiveVertical]);
 
   useEffect(() => {
     applyLayout(!firstRunRef.current);
@@ -166,15 +185,18 @@ const AccordionGallery = ({
   );
 
   const handleEnter = i => {
-    if (trigger === 'hover') setActive(i);
+    if (trigger === 'hover' || isMobileScreen) setActive(i);
+  };
+
+  const handleActivate = i => {
+    setActive(i);
   };
 
   const handleClick = (item, i, e) => {
     if (i !== active) {
       e.preventDefault();
+      e.stopPropagation();
       setActive(i);
-    } else if (item.onViewOnMap) {
-      item.onViewOnMap(item);
     }
   };
 
@@ -192,14 +214,16 @@ const AccordionGallery = ({
     }
   };
 
+  const mobileHeight = Math.max(300, 245 + (count - 1) * 56 + (count - 1) * 8);
+
   return (
     <div
       ref={rootRef}
-      className={`flex ${vertical ? 'flex-col' : 'flex-row'} w-full max-w-full [perspective:1400px] max-[640px]:!flex-col max-[640px]:[perspective:none] ${className}`}
+      className={`flex ${isEffectiveVertical ? 'flex-col' : 'flex-row'} w-full max-w-full ${isMobileScreen ? '[perspective:none]' : '[perspective:1400px]'} ${className}`}
       style={{
-        gap: `${gap}px`,
-        height: vertical ? `${Math.round(height * 1.6)}px` : `${height}px`,
-        minHeight: `${height}px`
+        gap: isMobileScreen ? '8px' : `${gap}px`,
+        height: isMobileScreen ? `${mobileHeight}px` : isEffectiveVertical ? `${Math.max(540, count * 106)}px` : `${height}px`,
+        minHeight: isMobileScreen ? `${mobileHeight}px` : isEffectiveVertical ? `${Math.max(540, count * 106)}px` : `${height}px`
       }}
       role="list"
       aria-label="Image accordion gallery"
@@ -215,14 +239,17 @@ const AccordionGallery = ({
           <div
             key={item.id || i}
             ref={el => (panelRefs.current[i] = el)}
-            className="group relative block min-w-0 min-h-0 flex-[1_1_0] cursor-pointer overflow-hidden bg-[#0a0713] no-underline outline-none [transform-style:preserve-3d] [transform-origin:center] shadow-[0_12px_36px_rgba(15,23,42,0.12)] focus-visible:ring-2 focus-visible:ring-cyan-400 max-[640px]:min-h-[140px] max-[640px]:!transform-none transition-shadow"
+            className={`group relative block min-w-0 min-h-0 flex-[1_1_0] cursor-pointer overflow-hidden bg-[#0a0713] no-underline outline-none ${isMobileScreen ? '!transform-none min-h-[54px]' : '[transform-style:preserve-3d] [transform-origin:center]'} shadow-[0_12px_36px_rgba(15,23,42,0.12)] focus-visible:ring-2 focus-visible:ring-cyan-400 transition-shadow select-none`}
             style={{
               borderRadius: `${radius}px`,
               '--ag-accent': accentColor,
               willChange: 'flex-grow, transform'
             }}
             onClick={e => handleClick(item, i, e)}
+            onPointerEnter={() => handleEnter(i)}
             onMouseEnter={() => handleEnter(i)}
+            onPointerDown={() => handleActivate(i)}
+            onTouchStart={() => handleActivate(i)}
             onFocus={() => setActive(i)}
             onKeyDown={e => handleKeyDown(i, e)}
             role="listitem"
@@ -236,8 +263,8 @@ const AccordionGallery = ({
                 ref={el => (mediaRefs.current[i] = el)}
                 className="absolute top-1/2 left-1/2 [filter:grayscale(var(--ag-gray,1))]"
                 style={{
-                  width: vertical ? '100%' : 'var(--ag-media-size, 320px)',
-                  height: vertical ? 'var(--ag-media-size, 320px)' : '100%',
+                  width: isEffectiveVertical ? '100%' : 'var(--ag-media-size, 320px)',
+                  height: isEffectiveVertical ? 'var(--ag-media-size, 320px)' : '100%',
                   willChange: 'transform, filter'
                 }}
               >
@@ -256,16 +283,16 @@ const AccordionGallery = ({
             </span>
 
             {/* Top Bar Badges (Always visible for clarity & context) */}
-            <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between gap-2 pointer-events-none">
-              <div className="flex items-center gap-2">
+            <div className="absolute top-3 sm:top-4 left-3 sm:left-4 right-3 sm:right-4 z-10 flex items-center justify-between gap-2 pointer-events-none">
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                 {item.id && (
-                  <span className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md text-white border border-white/20 shadow-sm">
+                  <span className="text-[10px] sm:text-[11px] font-mono font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-black/60 backdrop-blur-md text-white border border-white/20 shadow-sm shrink-0">
                     {item.id}
                   </span>
                 )}
                 {item.severity && (
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-md uppercase tracking-wide border shadow-sm ${
+                    className={`text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-md backdrop-blur-md uppercase tracking-wide border shadow-sm shrink-0 ${
                       isCrit
                         ? 'bg-rose-500/30 text-rose-200 border-rose-400/50'
                         : 'bg-amber-500/30 text-amber-200 border-amber-400/50'
@@ -274,18 +301,24 @@ const AccordionGallery = ({
                     {item.severity}
                   </span>
                 )}
+                {/* On mobile collapsed card, show location next to badge so user immediately sees what card it is without scrolling */}
+                {!isActive && isMobileScreen && (
+                  <span className="text-xs font-bold text-white tracking-wide truncate ml-1 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+                    {item.location || item.label}
+                  </span>
+                )}
               </div>
 
               {item.timestamp && (
-                <div className="flex items-center gap-1 text-[10px] font-mono text-white/90 bg-black/50 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/15">
-                  <MapPin className="w-3 h-3 text-cyan-300" />
-                  <span className="font-semibold">{item.timestamp}</span>
+                <div className="hidden min-[420px]:flex items-center gap-1 text-[9.5px] sm:text-[10px] font-mono text-white/95 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/20 shrink-0 shadow-xs">
+                  <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-cyan-300" />
+                  <span className="font-semibold truncate max-w-[100px] sm:max-w-none">{item.timestamp}</span>
                 </div>
               )}
             </div>
 
-            {/* Standard Accordion Label (Shows when not expanded) */}
-            {showLabels && !isActive && (
+            {/* Standard Accordion Label (Shows when not expanded on desktop) */}
+            {showLabels && !isActive && !isMobileScreen && (
               <span
                 className="pointer-events-none absolute bottom-5 left-5 right-5 z-[2] flex items-center gap-3 transition-opacity duration-300"
                 aria-hidden="true"
@@ -312,18 +345,18 @@ const AccordionGallery = ({
             {hasRichHotspotData ? (
               <div
                 ref={el => (detailsRefs.current[i] = el)}
-                className={`absolute inset-x-0 bottom-0 p-5 sm:p-6 z-20 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/60 to-transparent ${
+                className={`absolute inset-x-0 bottom-0 p-3.5 sm:p-6 z-20 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/75 to-transparent ${
                   isActive ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                 }`}
                 style={{ willChange: 'opacity, transform' }}
               >
                 {/* Location & Subdivision */}
-                <div className="mb-3">
-                  <h3 className="text-base sm:text-lg font-bold text-white tracking-tight drop-shadow-md line-clamp-1">
+                <div className="mb-2 sm:mb-3">
+                  <h3 className="text-sm sm:text-lg font-bold text-white tracking-tight drop-shadow-md line-clamp-1">
                     {item.location || item.label}
                   </h3>
                   {item.subdivision && (
-                    <div className="text-[11px] text-cyan-300 font-mono tracking-wider mt-0.5 drop-shadow-sm">
+                    <div className="text-[10.5px] sm:text-[11.5px] text-cyan-300 font-mono font-semibold tracking-wider mt-0.5 drop-shadow-sm">
                       {item.subdivision}
                     </div>
                   )}
@@ -331,10 +364,10 @@ const AccordionGallery = ({
 
                 {/* Water Depth Progress Indicator */}
                 {item.waterDepth && (
-                  <div className="mb-4 space-y-1.5 p-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15">
-                    <div className="flex justify-between text-xs items-center">
-                      <span className="text-white/80 text-[11px] font-medium">Water Depth:</span>
-                      <span className="font-bold text-rose-400 font-mono text-xs">{item.waterDepth}</span>
+                  <div className="mb-2.5 sm:mb-4 space-y-1 sm:space-y-1.5 p-2 sm:p-2.5 rounded-xl bg-white/12 backdrop-blur-md border border-white/20">
+                    <div className="flex justify-between text-[11px] sm:text-xs items-center">
+                      <span className="text-white font-medium">Water Depth:</span>
+                      <span className="font-bold text-rose-300 font-mono text-[11px] sm:text-xs">{item.waterDepth}</span>
                     </div>
                     <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
                       <div
@@ -346,10 +379,10 @@ const AccordionGallery = ({
                 )}
 
                 {/* Bottom Metadata & View on Map CTA */}
-                <div className="flex items-center justify-between pt-2 border-t border-white/15 text-xs">
+                <div className="flex items-center justify-between pt-1.5 sm:pt-2 border-t border-white/20 text-[11px] sm:text-xs">
                   {item.verifiedReports !== undefined ? (
-                    <span className="text-white/80 font-mono text-[11px]">
-                      {item.verifiedReports} verified reports
+                    <span className="text-white/90 font-mono text-[10.5px] sm:text-[11px] font-medium truncate max-w-[170px] sm:max-w-none">
+                      {item.verifiedReports}
                     </span>
                   ) : (
                     <span />
@@ -357,6 +390,8 @@ const AccordionGallery = ({
 
                   <button
                     type="button"
+                    onPointerDown={e => e.stopPropagation()}
+                    onTouchStart={e => e.stopPropagation()}
                     onClick={e => {
                       e.stopPropagation();
                       if (item.onViewOnMap) {

@@ -276,7 +276,7 @@ export function MySubmittedReports() {
       {/* 1. CINEMATIC RIVERSIDE DUSK PANORAMA HERO BANNER             */}
       {/* State-of-the-Art Frosted Glassmorphism Architecture          */}
       {/* ============================================================ */}
-      <header className="relative w-full overflow-hidden bg-[#071326] min-h-[400px] sm:min-h-[450px] lg:min-h-[490px] flex items-center select-none isolate">
+      <header className="relative w-full overflow-hidden bg-[#071326] min-h-0 sm:min-h-[420px] lg:min-h-[490px] flex items-center select-none isolate">
         {/* Authentic 4K Ultra-Crisp Howrah Bridge Sunset Photography */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           <img
@@ -290,25 +290,25 @@ export function MySubmittedReports() {
         </div>
 
         {/* Floating Glassmorphic Content Containers */}
-        <div className="relative z-10 max-w-[1360px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+        <div className="relative z-10 max-w-[1360px] w-full mx-auto px-2.5 min-[380px]:px-3.5 sm:px-6 lg:px-8 py-5 sm:py-14 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-8">
           {/* Left Column: Frosted Glass Hero Panel */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="relative rounded-[32px] p-6 sm:p-8 md:p-9 max-w-2xl bg-white/[0.12] dark:bg-[#061820]/[0.65] backdrop-blur-2xl border border-white/30 dark:border-[rgba(94,183,201,0.2)] shadow-[0_20px_60px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.45)] text-left"
+            className="relative rounded-[20px] sm:rounded-[32px] p-3.5 min-[380px]:p-4.5 sm:p-8 md:p-9 max-w-2xl bg-slate-950/75 dark:bg-[#061820]/80 backdrop-blur-2xl border border-white/20 dark:border-[rgba(94,183,201,0.2)] shadow-[0_20px_60px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.45)] text-left"
           >
             {/* Ambient subtle cyan glow corner */}
             <div className="absolute -top-10 -left-10 w-36 h-36 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none" />
 
             {/* Tag */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 text-[10px] font-extrabold tracking-[0.25em] uppercase font-mono mb-3.5 backdrop-blur-md shadow-sm">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 text-[9px] sm:text-[10px] font-extrabold tracking-[0.2em] sm:tracking-[0.25em] uppercase font-mono mb-2.5 sm:mb-3.5 backdrop-blur-md shadow-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_6px_#22d3ee]" />
               <span>Citizen Reporting</span>
             </div>
 
             {/* Main Title */}
-            <h1 className="text-3xl sm:text-4xl lg:text-[45px] font-extrabold tracking-tight text-white leading-[1.08] font-serif drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
+            <h1 className="text-xl min-[360px]:text-2xl sm:text-4xl lg:text-[45px] font-extrabold tracking-tight text-white leading-[1.1] font-serif drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
               My Submitted{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-sky-200 to-white">
                 Reports
@@ -316,49 +316,49 @@ export function MySubmittedReports() {
             </h1>
 
             {/* Subtitle */}
-            <p className="mt-2.5 text-xs sm:text-sm md:text-base font-medium text-white/90 max-w-xl leading-relaxed drop-shadow-sm">
+            <p className="mt-1.5 sm:mt-2.5 text-[11px] min-[360px]:text-xs sm:text-sm md:text-base font-medium text-white/90 max-w-xl leading-relaxed drop-shadow-sm">
               Your reports make Kolkata cleaner, healthier and more water-resilient.
             </p>
 
             {/* 4 Frosted Glass Value Badges */}
-            <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-              <div className="flex items-center gap-2 rounded-2xl bg-white/[0.12] dark:bg-white/[0.06] backdrop-blur-xl px-3 py-2 border border-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] hover:bg-white/[0.18] transition-all">
-                <div className="w-6 h-6 rounded-xl bg-emerald-400/25 border border-emerald-300/40 flex items-center justify-center text-emerald-300 shrink-0">
-                  <Leaf className="w-3.5 h-3.5" />
+            <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-1.5 min-[380px]:gap-2 sm:gap-3">
+              <div className="flex items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-2xl bg-white/[0.12] dark:bg-white/[0.06] backdrop-blur-xl px-2 sm:px-3 py-1.5 sm:py-2 border border-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] hover:bg-white/[0.18] transition-all min-w-0">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-xl bg-emerald-400/25 border border-emerald-300/40 flex items-center justify-center text-emerald-300 shrink-0">
+                  <Leaf className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 </div>
-                <div className="text-left">
-                  <div className="text-[11px] font-bold text-white leading-tight">Cleaner City</div>
-                  <div className="text-[9px] text-white/70">Report issues</div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 rounded-2xl bg-white/[0.12] dark:bg-white/[0.06] backdrop-blur-xl px-3 py-2 border border-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] hover:bg-white/[0.18] transition-all">
-                <div className="w-6 h-6 rounded-xl bg-blue-400/25 border border-blue-300/40 flex items-center justify-center text-blue-300 shrink-0">
-                  <Users className="w-3.5 h-3.5" />
-                </div>
-                <div className="text-left">
-                  <div className="text-[11px] font-bold text-white leading-tight">Safer Comm.</div>
-                  <div className="text-[9px] text-white/70">Faster action</div>
+                <div className="text-left min-w-0 truncate">
+                  <div className="text-[9.5px] sm:text-[11px] font-bold text-white leading-tight truncate">Cleaner City</div>
+                  <div className="text-[8px] sm:text-[9px] text-white/70 truncate">Report issues</div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 rounded-2xl bg-white/[0.12] dark:bg-white/[0.06] backdrop-blur-xl px-3 py-2 border border-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] hover:bg-white/[0.18] transition-all">
-                <div className="w-6 h-6 rounded-xl bg-cyan-400/25 border border-cyan-300/40 flex items-center justify-center text-cyan-300 shrink-0">
-                  <BarChart3 className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-2xl bg-white/[0.12] dark:bg-white/[0.06] backdrop-blur-xl px-2 sm:px-3 py-1.5 sm:py-2 border border-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] hover:bg-white/[0.18] transition-all min-w-0">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-xl bg-blue-400/25 border border-blue-300/40 flex items-center justify-center text-blue-300 shrink-0">
+                  <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 </div>
-                <div className="text-left">
-                  <div className="text-[11px] font-bold text-white leading-tight">Governance</div>
-                  <div className="text-[9px] text-white/70">Real impact</div>
+                <div className="text-left min-w-0 truncate">
+                  <div className="text-[9.5px] sm:text-[11px] font-bold text-white leading-tight truncate">Safer Comm.</div>
+                  <div className="text-[8px] sm:text-[9px] text-white/70 truncate">Faster action</div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 rounded-2xl bg-white/[0.12] dark:bg-white/[0.06] backdrop-blur-xl px-3 py-2 border border-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] hover:bg-white/[0.18] transition-all">
-                <div className="w-6 h-6 rounded-xl bg-rose-400/25 border border-rose-300/40 flex items-center justify-center text-rose-300 shrink-0">
-                  <Heart className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-2xl bg-white/[0.12] dark:bg-white/[0.06] backdrop-blur-xl px-2 sm:px-3 py-1.5 sm:py-2 border border-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] hover:bg-white/[0.18] transition-all min-w-0">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-xl bg-cyan-400/25 border border-cyan-300/40 flex items-center justify-center text-cyan-300 shrink-0">
+                  <BarChart3 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 </div>
-                <div className="text-left">
-                  <div className="text-[11px] font-bold text-white leading-tight">Tomorrow</div>
-                  <div className="text-[9px] text-white/70">Together</div>
+                <div className="text-left min-w-0 truncate">
+                  <div className="text-[9.5px] sm:text-[11px] font-bold text-white leading-tight truncate">Governance</div>
+                  <div className="text-[8px] sm:text-[9px] text-white/70 truncate">Real impact</div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-2xl bg-white/[0.12] dark:bg-white/[0.06] backdrop-blur-xl px-2 sm:px-3 py-1.5 sm:py-2 border border-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] hover:bg-white/[0.18] transition-all min-w-0">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-xl bg-rose-400/25 border border-rose-300/40 flex items-center justify-center text-rose-300 shrink-0">
+                  <Heart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                </div>
+                <div className="text-left min-w-0 truncate">
+                  <div className="text-[9.5px] sm:text-[11px] font-bold text-white leading-tight truncate">Tomorrow</div>
+                  <div className="text-[8px] sm:text-[9px] text-white/70 truncate">Together</div>
                 </div>
               </div>
             </div>
@@ -369,18 +369,18 @@ export function MySubmittedReports() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className="flex flex-col items-start lg:items-end shrink-0"
+            className="flex flex-col items-start lg:items-end shrink-0 w-full lg:w-auto"
           >
-            <div className="relative rounded-[24px] p-5 sm:p-6 max-w-[280px] sm:max-w-[300px] bg-white/[0.12] dark:bg-[#030F14]/[0.85] backdrop-blur-2xl border border-white/25 dark:border-[rgba(94,183,201,0.2)] shadow-[0_16px_45px_rgba(0,0,0,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] text-left text-white overflow-hidden">
-              <div className="text-3xl sm:text-4xl text-white/80 font-serif leading-none mb-2 select-none">
+            <div className="relative rounded-2xl sm:rounded-[24px] p-3.5 min-[380px]:p-4 sm:p-6 w-full max-w-full sm:max-w-[300px] bg-slate-950/75 dark:bg-[#030F14]/[0.85] backdrop-blur-2xl border border-white/20 dark:border-[rgba(94,183,201,0.2)] shadow-[0_16px_45px_rgba(0,0,0,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] text-left text-white overflow-hidden">
+              <div className="text-2xl sm:text-4xl text-white/80 font-serif leading-none mb-1.5 sm:mb-2 select-none">
                 “
               </div>
-              <p className="text-xs sm:text-[13px] text-white/95 font-medium leading-relaxed drop-shadow-sm">
+              <p className="text-[11px] min-[360px]:text-xs sm:text-[13px] text-white/95 font-medium leading-relaxed drop-shadow-sm">
                 A cleaner Kolkata flows from informed citizens.
               </p>
-              <div className="flex items-center justify-end gap-2 pt-3 mt-3 border-t border-white/20">
-                <span className="w-6 h-[1px] bg-white/35 inline-block" />
-                <span className="text-[11px] font-bold tracking-wider text-white/90 uppercase font-sans">
+              <div className="flex items-center justify-end gap-2 pt-2.5 sm:pt-3 mt-2.5 sm:mt-3 border-t border-white/20">
+                <span className="w-5 sm:w-6 h-[1px] bg-white/35 inline-block" />
+                <span className="text-[10px] sm:text-[11px] font-bold tracking-wider text-white/90 uppercase font-sans">
                   KMC
                 </span>
               </div>
@@ -393,35 +393,35 @@ export function MySubmittedReports() {
       {/* 2. REPORT SUMMARY CARDS (DYNAMIC 4-CARD METRIC GRID)         */}
       {/* Floating frosted glass cards with radiant gradient sparkline */}
       {/* ============================================================ */}
-      <section className="relative z-10 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 -mt-10 sm:-mt-14 md:-mt-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+      <section className="relative z-10 max-w-[1360px] mx-auto px-2.5 min-[380px]:px-3.5 sm:px-6 lg:px-8 -mt-6 sm:-mt-14 md:-mt-16">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 min-[380px]:gap-2.5 sm:gap-5">
           {/* Card 1: Total Reports */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -4 }}
             transition={{ duration: 0.25 }}
-            className="relative rounded-[24px] bg-white dark:bg-[#10313E] backdrop-blur-xl p-5 border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_12px_32px_-10px_rgba(15,35,65,0.1)] flex items-center justify-between overflow-hidden"
+            className="relative rounded-2xl sm:rounded-[24px] bg-white dark:bg-[#10313E] backdrop-blur-xl p-3 min-[380px]:p-3.5 sm:p-5 border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_12px_32px_-10px_rgba(15,35,65,0.1)] flex items-center justify-between overflow-hidden"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#edf5ff] dark:bg-blue-500/15 border border-[#d5e6ff] dark:border-blue-500/20 flex items-center justify-center text-[#2563eb] dark:text-[#38BDF8] shrink-0 shadow-sm">
-                <FileText className="w-6 h-6" />
+            <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+              <div className="w-9 h-9 min-[380px]:w-10 min-[380px]:h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#edf5ff] dark:bg-blue-500/15 border border-[#d5e6ff] dark:border-blue-500/20 flex items-center justify-center text-[#2563eb] dark:text-[#38BDF8] shrink-0 shadow-xs">
+                <FileText className="w-4.5 h-4.5 min-[380px]:w-5 min-[380px]:h-5 sm:w-6 sm:h-6" />
               </div>
-              <div>
-                <div className="text-3xl font-extrabold text-slate-900 dark:text-[#F2FBFD] leading-none font-sans">
+              <div className="min-w-0">
+                <div className="text-xl min-[380px]:text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#F2FBFD] leading-none font-sans">
                   {summaryCounts.total}
                 </div>
-                <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-1">
+                <div className="text-[11px] min-[380px]:text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-0.5 sm:mt-1 truncate">
                   Total Reports
                 </div>
-                <div className="text-[11px] text-slate-400 dark:text-[#6D949D]">
+                <div className="hidden sm:block text-[11px] text-slate-400 dark:text-[#6D949D]">
                   Reports submitted by you
                 </div>
               </div>
             </div>
 
             {/* Sparkline wave visual */}
-            <svg viewBox="0 0 70 32" className="w-16 h-9 shrink-0" fill="none">
+            <svg viewBox="0 0 70 32" className="hidden sm:block w-16 h-9 shrink-0" fill="none">
               <defs>
                 <linearGradient id="sparkBlue" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
@@ -439,27 +439,27 @@ export function MySubmittedReports() {
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -4 }}
             transition={{ duration: 0.25, delay: 0.08 }}
-            className="relative rounded-[24px] bg-white dark:bg-[#10313E] backdrop-blur-xl p-5 border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_12px_32px_-10px_rgba(15,35,65,0.1)] flex items-center justify-between overflow-hidden"
+            className="relative rounded-2xl sm:rounded-[24px] bg-white dark:bg-[#10313E] backdrop-blur-xl p-3 min-[380px]:p-3.5 sm:p-5 border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_12px_32px_-10px_rgba(15,35,65,0.1)] flex items-center justify-between overflow-hidden"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#eafaf0] dark:bg-emerald-500/15 border border-[#c4f0d3] dark:border-emerald-500/20 flex items-center justify-center text-[#16a34a] dark:text-[#35D39E] shrink-0 shadow-sm">
-                <CheckCircle2 className="w-6 h-6" />
+            <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+              <div className="w-9 h-9 min-[380px]:w-10 min-[380px]:h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#eafaf0] dark:bg-emerald-500/15 border border-[#c4f0d3] dark:border-emerald-500/20 flex items-center justify-center text-[#16a34a] dark:text-[#35D39E] shrink-0 shadow-xs">
+                <CheckCircle2 className="w-4.5 h-4.5 min-[380px]:w-5 min-[380px]:h-5 sm:w-6 sm:h-6" />
               </div>
-              <div>
-                <div className="text-3xl font-extrabold text-slate-900 dark:text-[#F2FBFD] leading-none font-sans">
+              <div className="min-w-0">
+                <div className="text-xl min-[380px]:text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#F2FBFD] leading-none font-sans">
                   {summaryCounts.verified}
                 </div>
-                <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-1">
+                <div className="text-[11px] min-[380px]:text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-0.5 sm:mt-1 truncate">
                   Verified Reports
                 </div>
-                <div className="text-[11px] text-slate-400 dark:text-[#6D949D]">
+                <div className="hidden sm:block text-[11px] text-slate-400 dark:text-[#6D949D]">
                   AI verification completed
                 </div>
               </div>
             </div>
 
             {/* Sparkline wave visual */}
-            <svg viewBox="0 0 70 32" className="w-16 h-9 shrink-0" fill="none">
+            <svg viewBox="0 0 70 32" className="hidden sm:block w-16 h-9 shrink-0" fill="none">
               <defs>
                 <linearGradient id="sparkGreen" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#22c55e" stopOpacity="0.25" />
@@ -477,27 +477,27 @@ export function MySubmittedReports() {
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -4 }}
             transition={{ duration: 0.25, delay: 0.16 }}
-            className="relative rounded-[24px] bg-white dark:bg-[#10313E] backdrop-blur-xl p-5 border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_12px_32px_-10px_rgba(15,35,65,0.1)] flex items-center justify-between overflow-hidden"
+            className="relative rounded-2xl sm:rounded-[24px] bg-white dark:bg-[#10313E] backdrop-blur-xl p-3 min-[380px]:p-3.5 sm:p-5 border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_12px_32px_-10px_rgba(15,35,65,0.1)] flex items-center justify-between overflow-hidden"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#fff8eb] dark:bg-amber-500/15 border border-[#fee6b8] dark:border-amber-500/20 flex items-center justify-center text-[#d97706] dark:text-[#F6B84C] shrink-0 shadow-sm">
-                <Clock className="w-6 h-6" />
+            <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+              <div className="w-9 h-9 min-[380px]:w-10 min-[380px]:h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#fff8eb] dark:bg-amber-500/15 border border-[#fee6b8] dark:border-amber-500/20 flex items-center justify-center text-[#d97706] dark:text-[#F6B84C] shrink-0 shadow-xs">
+                <Clock className="w-4.5 h-4.5 min-[380px]:w-5 min-[380px]:h-5 sm:w-6 sm:h-6" />
               </div>
-              <div>
-                <div className="text-3xl font-extrabold text-slate-900 dark:text-[#F2FBFD] leading-none font-sans">
+              <div className="min-w-0">
+                <div className="text-xl min-[380px]:text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#F2FBFD] leading-none font-sans">
                   {summaryCounts.review}
                 </div>
-                <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-1">
+                <div className="text-[11px] min-[380px]:text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-0.5 sm:mt-1 truncate">
                   Under Review
                 </div>
-                <div className="text-[11px] text-slate-400 dark:text-[#6D949D]">
+                <div className="hidden sm:block text-[11px] text-slate-400 dark:text-[#6D949D]">
                   Being analyzed by AI team
                 </div>
               </div>
             </div>
 
             {/* Sparkline wave visual */}
-            <svg viewBox="0 0 70 32" className="w-16 h-9 shrink-0" fill="none">
+            <svg viewBox="0 0 70 32" className="hidden sm:block w-16 h-9 shrink-0" fill="none">
               <defs>
                 <linearGradient id="sparkAmber" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.25" />
@@ -515,27 +515,27 @@ export function MySubmittedReports() {
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -4 }}
             transition={{ duration: 0.25, delay: 0.24 }}
-            className="relative rounded-[24px] bg-white dark:bg-[#10313E] backdrop-blur-xl p-5 border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_12px_32px_-10px_rgba(15,35,65,0.1)] flex items-center justify-between overflow-hidden"
+            className="relative rounded-2xl sm:rounded-[24px] bg-white dark:bg-[#10313E] backdrop-blur-xl p-3 min-[380px]:p-3.5 sm:p-5 border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_12px_32px_-10px_rgba(15,35,65,0.1)] flex items-center justify-between overflow-hidden"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#f5f3ff] dark:bg-purple-500/15 border border-[#e4ddff] dark:border-purple-500/20 flex items-center justify-center text-[#7c3aed] dark:text-purple-400 shrink-0 shadow-sm">
-                <Truck className="w-6 h-6" />
+            <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+              <div className="w-9 h-9 min-[380px]:w-10 min-[380px]:h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#f5f3ff] dark:bg-purple-500/15 border border-[#e4ddff] dark:border-purple-500/20 flex items-center justify-center text-[#7c3aed] dark:text-purple-400 shrink-0 shadow-xs">
+                <Truck className="w-4.5 h-4.5 min-[380px]:w-5 min-[380px]:h-5 sm:w-6 sm:h-6" />
               </div>
-              <div>
-                <div className="text-3xl font-extrabold text-slate-900 dark:text-[#F2FBFD] leading-none font-sans">
+              <div className="min-w-0">
+                <div className="text-xl min-[380px]:text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#F2FBFD] leading-none font-sans">
                   {summaryCounts.dispatched}
                 </div>
-                <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-1">
+                <div className="text-[11px] min-[380px]:text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-0.5 sm:mt-1 truncate">
                   Dispatched
                 </div>
-                <div className="text-[11px] text-slate-400 dark:text-[#6D949D]">
+                <div className="hidden sm:block text-[11px] text-slate-400 dark:text-[#6D949D]">
                   Field teams sent to site
                 </div>
               </div>
             </div>
 
             {/* Sparkline wave visual */}
-            <svg viewBox="0 0 70 32" className="w-16 h-9 shrink-0" fill="none">
+            <svg viewBox="0 0 70 32" className="hidden sm:block w-16 h-9 shrink-0" fill="none">
               <defs>
                 <linearGradient id="sparkPurple" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#a855f7" stopOpacity="0.25" />
@@ -552,7 +552,7 @@ export function MySubmittedReports() {
       {/* ============================================================ */}
       {/* 3. MAIN SECTION: VINTAGE ACCENT + SUBMITTED REPORTS TABLE    */}
       {/* ============================================================ */}
-      <section className="relative max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+      <section className="relative max-w-[1360px] mx-auto px-2.5 min-[380px]:px-3.5 sm:px-6 lg:px-8 mt-5 sm:mt-8">
         <div className="flex flex-col xl:flex-row gap-5 items-stretch">
           {/* Left Decorative Kolkata Heritage Street Lamp Banner */}
           <div className="hidden xl:flex flex-col justify-between w-[96px] shrink-0 rounded-[28px] bg-gradient-to-b from-[#e3f0fc]/90 via-[#edf5fc]/85 to-[#d6eafc]/90 dark:from-[#061820] dark:via-[#0B2430] dark:to-[#030F14] p-4 shadow-sm border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] relative overflow-hidden text-center select-none">
@@ -588,32 +588,32 @@ export function MySubmittedReports() {
           </div>
 
           {/* Main White Dashboard Card */}
-          <div className="flex-1 rounded-[28px] bg-white dark:bg-[#061820] border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_18px_45px_-15px_rgba(15,35,65,0.08)] overflow-hidden">
+          <div className="flex-1 rounded-2xl sm:rounded-[28px] bg-white dark:bg-[#061820] border border-slate-200/80 dark:border-[rgba(94,183,201,0.16)] shadow-[0_18px_45px_-15px_rgba(15,35,65,0.08)] overflow-hidden">
             {/* Header & Controls Toolbar */}
-            <div className="p-6 sm:p-7 border-b border-slate-100 dark:border-[rgba(94,183,201,0.16)] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+            <div className="p-3 min-[380px]:p-4 sm:p-7 border-b border-slate-100 dark:border-[rgba(94,183,201,0.16)] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-5">
               <div>
-                <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-6 rounded-full bg-[#2563eb] dark:bg-[#00E5FF]" />
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-[#F2FBFD] tracking-tight">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-1.5 h-4.5 sm:h-6 rounded-full bg-[#2563eb] dark:bg-[#00E5FF]" />
+                  <h2 className="text-base min-[380px]:text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-[#F2FBFD] tracking-tight">
                     Your Submitted Reports
                   </h2>
                 </div>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-[#B2D2D9] mt-1 pl-4.5">
+                <p className="text-[11px] min-[380px]:text-xs sm:text-sm text-slate-500 dark:text-[#B2D2D9] mt-0.5 sm:mt-1 pl-3.5 sm:pl-4.5">
                   Track, manage and see the impact of your civic contributions.
                 </p>
               </div>
 
               {/* Action Controls */}
-              <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-2.5">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
                 {/* Search Bar */}
                 <div className="relative w-full sm:w-48 md:w-52 lg:w-56 xl:w-64">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-[#6D949D] pointer-events-none" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 dark:text-[#6D949D] pointer-events-none" />
                   <input
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search by report ID, location..."
-                    className="w-full rounded-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] bg-slate-50 dark:bg-[#10313E] pl-9 pr-7 py-2 text-xs text-slate-800 dark:text-[#F2FBFD] placeholder:text-slate-400 dark:placeholder:text-[#6D949D] focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
+                    placeholder="Search reports..."
+                    className="w-full rounded-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] bg-slate-50 dark:bg-[#10313E] pl-8.5 pr-7 py-1.5 sm:py-2 text-xs text-slate-800 dark:text-[#F2FBFD] placeholder:text-slate-400 dark:placeholder:text-[#6D949D] focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
                   />
                   {search && (
                     <button
@@ -626,51 +626,56 @@ export function MySubmittedReports() {
                   )}
                 </div>
 
-                {/* Date Dropdown */}
-                <div className="relative shrink-0">
-                  <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] bg-slate-50 dark:bg-[#10313E] px-3 py-2 text-xs font-semibold text-slate-700 dark:text-[#F2FBFD]">
-                    <Calendar className="w-3.5 h-3.5 text-slate-500 dark:text-[#B2D2D9]" />
-                    <select
-                      value={dateFilter}
-                      onChange={(e) => setDateFilter(e.target.value)}
-                      className="bg-transparent focus:outline-none cursor-pointer pr-2 appearance-none"
-                    >
-                      {["Today", "Last 7 Days", "Last 3 Months", "Last 6 Months", "Last Year", "All Time"].map((opt) => (
-                        <option key={opt} value={opt} className="dark:bg-[#061820]">
-                          {opt}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-3 h-3 text-slate-400 dark:text-[#6D949D] pointer-events-none" />
+                {/* Secondary Controls: Date, Filter, New Report */}
+                <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
+                  {/* Date Dropdown */}
+                  <div className="relative flex-1 min-w-0 sm:flex-none">
+                    <div className="w-full inline-flex items-center justify-between gap-1 rounded-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] bg-slate-50 dark:bg-[#10313E] px-2 min-[380px]:px-2.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold text-slate-700 dark:text-[#F2FBFD]">
+                      <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                        <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500 dark:text-[#B2D2D9] shrink-0" />
+                        <select
+                          value={dateFilter}
+                          onChange={(e) => setDateFilter(e.target.value)}
+                          className="bg-transparent focus:outline-none cursor-pointer appearance-none text-[11px] sm:text-xs truncate max-w-[70px] min-[360px]:max-w-[85px] sm:max-w-none"
+                        >
+                          {["Today", "Last 7 Days", "Last 3 Months", "Last 6 Months", "Last Year", "All Time"].map((opt) => (
+                            <option key={opt} value={opt} className="dark:bg-[#061820]">
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <ChevronDown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-400 dark:text-[#6D949D] pointer-events-none shrink-0" />
+                    </div>
                   </div>
+
+                  {/* Filter Refresh Button */}
+                  <button
+                    type="button"
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="inline-flex items-center justify-center gap-1 rounded-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] bg-slate-50 dark:bg-[#10313E] px-2 min-[380px]:px-2.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold text-slate-700 dark:text-[#F2FBFD] hover:bg-slate-100 dark:hover:bg-[#163F4E] transition-all cursor-pointer shrink-0"
+                  >
+                    <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500 dark:text-[#B2D2D9]" />
+                    <span>Filter</span>
+                    {refreshing && <RotateCw className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-spin text-blue-500 ml-0.5" />}
+                  </button>
+
+                  {/* + New Report Button */}
+                  <button
+                    type="button"
+                    onClick={handleNewReport}
+                    className="inline-flex items-center justify-center gap-1 rounded-xl bg-[#0c2340] dark:bg-[#00E5FF] hover:bg-[#14325c] dark:hover:bg-[#2BEBFF] text-white dark:text-[#030F14] px-2.5 min-[380px]:px-3 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold shadow-xs hover:shadow-md transition-all active:scale-[0.98] cursor-pointer shrink-0 whitespace-nowrap"
+                  >
+                    <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span>New Report</span>
+                  </button>
                 </div>
-
-                {/* Filter Refresh Button */}
-                <button
-                  type="button"
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] bg-slate-50 dark:bg-[#10313E] px-3 py-2 text-xs font-semibold text-slate-700 dark:text-[#F2FBFD] hover:bg-slate-100 dark:hover:bg-[#163F4E] transition-all cursor-pointer shrink-0"
-                >
-                  <Filter className="w-3.5 h-3.5 text-slate-500 dark:text-[#B2D2D9]" />
-                  <span>Filter</span>
-                  {refreshing && <RotateCw className="w-3 h-3 animate-spin text-blue-500 ml-1" />}
-                </button>
-
-                {/* + New Report Button */}
-                <button
-                  type="button"
-                  onClick={handleNewReport}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#0c2340] dark:bg-[#00E5FF] hover:bg-[#14325c] dark:hover:bg-[#2BEBFF] text-white dark:text-[#030F14] px-3.5 py-2 text-xs font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer shrink-0 whitespace-nowrap"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>New Report</span>
-                </button>
               </div>
             </div>
 
             {/* Filter Tabs */}
-            <div className="px-6 sm:px-7 pt-4 pb-2 border-b border-slate-100 dark:border-[rgba(94,183,201,0.16)] flex items-center gap-2 overflow-x-auto no-scrollbar">
+            <div className="px-3 sm:px-7 pt-2.5 sm:pt-4 pb-2 border-b border-slate-100 dark:border-[rgba(94,183,201,0.16)] flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar">
               {["All Reports", "Verified", "Dispatched", "In Progress", "Under Review", "Resolved"].map((tab) => {
                 const isActive = activeTab === tab;
                 const count =
@@ -682,14 +687,14 @@ export function MySubmittedReports() {
                     key={tab}
                     type="button"
                     onClick={() => setActiveTab(tab)}
-                    className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${isActive
-                      ? "bg-[#2563eb] dark:bg-[#00E5FF] text-white dark:text-[#030F14] shadow-sm"
+                    className={`inline-flex items-center gap-1.5 sm:gap-2 px-2.5 min-[380px]:px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${isActive
+                      ? "bg-[#2563eb] dark:bg-[#00E5FF] text-white dark:text-[#030F14] shadow-xs"
                       : "bg-slate-100 dark:bg-[#10313E] text-slate-600 dark:text-[#B2D2D9] hover:bg-slate-200/70 dark:hover:bg-[#163F4E]"
                       }`}
                   >
                     <span>{tab}</span>
                     <span
-                      className={`px-1.5 py-0.2 rounded-full text-[10px] ${isActive ? "bg-white/20 dark:bg-black/20 text-white dark:text-[#030F14]" : "bg-white dark:bg-[#061820] text-slate-500 dark:text-[#6D949D]"
+                      className={`px-1.5 py-0.2 rounded-full text-[9.5px] sm:text-[10px] ${isActive ? "bg-white/20 dark:bg-black/20 text-white dark:text-[#030F14]" : "bg-white dark:bg-[#061820] text-slate-500 dark:text-[#6D949D]"
                         }`}
                     >
                       {count}
@@ -699,8 +704,8 @@ export function MySubmittedReports() {
               })}
             </div>
 
-            {/* Data Table */}
-            <div className="overflow-x-auto">
+            {/* Data Table (Desktop / Tablet Landscape) */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[960px]">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-[rgba(94,183,201,0.16)] bg-slate-50/60 dark:bg-[#0B2430] text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-[#B2D2D9]">
@@ -979,13 +984,188 @@ export function MySubmittedReports() {
               </table>
             </div>
 
+            {/* Mobile Cards View (Native phone & portrait tablet experience) */}
+            <div className="block md:hidden p-2.5 min-[380px]:p-3.5 space-y-3">
+              {filteredReports.map((report, idx) => {
+                const reportId = report.report_id || report.reportId || `KWI-2025-${idx + 100}`;
+                const imageUrl = resolveReportImage(report);
+                const normStatus = normalizeStatus(report.status);
+                const statusInfo = STATUS_CONFIG[normStatus] || STATUS_CONFIG["Under Review"];
+                const StatusIcon = statusInfo.icon;
+                const issueInfo = ISSUE_TYPE_CONFIG[report.issue_type || report.issueType] || ISSUE_TYPE_CONFIG.Waterlogging;
+                const IssueIcon = issueInfo.icon;
+                const confidence = Math.round(Number(report.ai_confidence || report.aiConfidence || 85));
+                const dispatchedTo = report.dispatched_to ||
+                  report.dispatchedTo ||
+                  (normStatus === "Dispatched" || normStatus === "In Progress" || normStatus === "Resolved"
+                    ? (report.assigned_ulb_name || (report.ward ? `Ward ${report.ward}` : "Municipal Rapid Response"))
+                    : "—");
+
+                return (
+                  <div
+                    key={`mob-${reportId}`}
+                    className="p-3 min-[380px]:p-3.5 rounded-xl sm:rounded-2xl bg-white dark:bg-[#0c2330] border border-slate-200/80 dark:border-[rgba(94,183,201,0.2)] shadow-xs space-y-2.5 text-left"
+                  >
+                    {/* Header Row: ID + Status */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-mono font-semibold text-slate-400 dark:text-[#6D949D]">#{idx + 1}</span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedReport(report)}
+                          className="font-mono text-xs font-bold text-slate-900 dark:text-[#F2FBFD] hover:text-blue-600 dark:hover:text-[#00E5FF] transition-colors cursor-pointer"
+                        >
+                          {reportId}
+                        </button>
+                      </div>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}>
+                        <StatusIcon className={`w-2.5 h-2.5 ${statusInfo.iconColor}`} />
+                        <span>{normStatus}</span>
+                      </span>
+                    </div>
+
+                    {/* Image and Locality Row */}
+                    <div className="flex items-center gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setLightboxImage(imageUrl)}
+                        className="relative w-14 h-12 rounded-lg overflow-hidden shrink-0 border border-slate-200 dark:border-[rgba(94,183,201,0.16)] bg-slate-100 dark:bg-[#10313E] shadow-xs"
+                        title="Enlarge photo"
+                      >
+                        {imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt={report.location}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400 dark:text-[#6D949D]">
+                            <Droplet className="w-3.5 h-3.5" />
+                          </div>
+                        )}
+                      </button>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start gap-1">
+                          <MapPin className="w-3 h-3 text-[#2563eb] dark:text-[#00E5FF] shrink-0 mt-0.5" />
+                          <div className="truncate">
+                            <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD] truncate">
+                              {report.location}
+                            </div>
+                            <div className="text-[10px] text-slate-400 dark:text-[#6D949D]">
+                              {report.sub_location || "Kolkata"}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Issue Type */}
+                        <div className="mt-1">
+                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md text-[9.5px] font-semibold border ${issueInfo.bg} ${issueInfo.text} ${issueInfo.border}`}>
+                            <IssueIcon className={`w-2.5 h-2.5 ${issueInfo.iconColor}`} />
+                            <span>{report.issue_type || report.issueType || "Waterlogging"}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Meta details: AI Confidence & Submitted Date */}
+                    <div className="pt-2 border-t border-slate-100 dark:border-[rgba(94,183,201,0.14)] grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <div className="text-[9.5px] uppercase font-bold text-slate-400 dark:text-[#6D949D]">Submitted On</div>
+                        <div className="font-semibold text-slate-700 dark:text-[#B2D2D9] text-[10.5px] mt-0.5">
+                          {formatDate(report.submitted_at || report.submittedAt)}
+                        </div>
+                        <div className="text-[9.5px] text-blue-600 dark:text-[#00E5FF] font-semibold">
+                          {formatTime(report.submitted_at || report.submittedAt)}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="text-[9.5px] uppercase font-bold text-slate-400 dark:text-[#6D949D]">AI Confidence</div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <div className="flex-1 h-1.5 rounded-full bg-slate-100 dark:bg-white/10 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${statusInfo.barColor}`}
+                              style={{ width: `${confidence}%` }}
+                            />
+                          </div>
+                          <span className="text-[10.5px] font-bold text-slate-700 dark:text-[#B2D2D9]">{confidence}%</span>
+                        </div>
+                        <div className="text-[9.5px] text-slate-400 dark:text-[#6D949D] mt-0.5 truncate">
+                          To: <span className="font-semibold text-slate-600 dark:text-slate-300">{dispatchedTo}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Bar */}
+                    <div className="pt-2 flex items-center justify-between gap-1.5 border-t border-slate-100 dark:border-[rgba(94,183,201,0.14)]">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedReport(report)}
+                        className="flex-1 inline-flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-xl text-[11px] font-bold text-[#1d4ed8] dark:text-[#00E5FF] bg-[#eff6ff] dark:bg-[#00E5FF]/10 hover:bg-[#dbeafe] dark:hover:bg-[#00E5FF]/20 border border-[#bfdbfe] dark:border-[#00E5FF]/25 transition-all cursor-pointer"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>View Details</span>
+                      </button>
+
+                      {imageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setLightboxImage(imageUrl)}
+                          className="p-1.5 rounded-xl border border-slate-200 dark:border-[rgba(94,183,201,0.2)] text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
+                          title="Enlarge Photo"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => navigator.clipboard?.writeText(reportId)}
+                        className="p-1.5 rounded-xl border border-slate-200 dark:border-[rgba(94,183,201,0.2)] text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
+                        title="Copy Report ID"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {filteredReports.length === 0 && (
+                <div className="py-8 text-center text-slate-400 dark:text-[#6D949D] bg-slate-50/50 dark:bg-[#10313E]/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-4 sm:p-6">
+                  {activeReportsList.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center max-w-xs mx-auto">
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 flex items-center justify-center text-blue-500 mb-2">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <p className="text-xs font-bold text-slate-700 dark:text-[#F2FBFD]">No submitted reports</p>
+                      <button
+                        type="button"
+                        onClick={handleNewReport}
+                        className="mt-2.5 inline-flex items-center gap-1.5 rounded-xl bg-[#0c2340] dark:bg-[#00E5FF] hover:bg-[#14325c] dark:hover:bg-[#2BEBFF] text-white dark:text-[#030F14] px-3 py-1.5 text-xs font-bold shadow-xs cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Submit a Report</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <Search className="w-5 h-5 mx-auto mb-1.5 opacity-50" />
+                      <p className="text-xs font-semibold">No reports match your filters.</p>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Bottom Status Feed Footer */}
-            <div className="px-6 py-4 border-t border-slate-100 dark:border-[rgba(94,183,201,0.16)] flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-[#A8C5C9]">
+            <div className="px-3.5 min-[380px]:px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 dark:border-[rgba(94,183,201,0.16)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-500 dark:text-[#A8C5C9]">
               <div>
                 Showing <span className="font-bold text-slate-800 dark:text-slate-200">{filteredReports.length}</span> of{" "}
                 <span className="font-bold text-slate-800 dark:text-slate-200">{activeReportsList.length}</span> reports
               </div>
-              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold">
+              <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 Live municipal telemetry synced
               </div>
@@ -1183,32 +1363,34 @@ function ReportDetailsModal({ report, onClose, onEnlarge }) {
                 </div>
               )}
             </div>
-            <div className="flex items-center justify-between relative">
-              {PIPELINE.map((stage, i) => {
-                const isPassed = i <= currentStageIndex;
-                const StageIcon = stage.icon;
-                return (
-                  <div key={stage.key} className="flex-1 flex flex-col items-center relative text-center">
-                    {i !== 0 && (
+            <div className="overflow-x-auto no-scrollbar -mx-1 px-1 py-1">
+              <div className="flex items-center justify-between relative min-w-[480px] sm:min-w-0">
+                {PIPELINE.map((stage, i) => {
+                  const isPassed = i <= currentStageIndex;
+                  const StageIcon = stage.icon;
+                  return (
+                    <div key={stage.key} className="flex-1 flex flex-col items-center relative text-center">
+                      {i !== 0 && (
+                        <div
+                          className={`absolute top-4 right-1/2 w-full h-[2px] ${i <= currentStageIndex ? "bg-cyan-500 dark:bg-[#00E5FF]" : "bg-slate-200 dark:bg-[rgba(94,183,201,0.16)]"
+                            }`}
+                        />
+                      )}
                       <div
-                        className={`absolute top-4 right-1/2 w-full h-[2px] ${i <= currentStageIndex ? "bg-cyan-500 dark:bg-[#00E5FF]" : "bg-slate-200 dark:bg-[rgba(94,183,201,0.16)]"
+                        className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs transition-all ${isPassed
+                          ? "bg-cyan-500 dark:bg-[#00E5FF] border-cyan-500 dark:border-[#00E5FF] text-white dark:text-[#030F14] shadow-sm"
+                          : "bg-white dark:bg-[#10313E] border-slate-300 dark:border-[rgba(94,183,201,0.16)] text-slate-400 dark:text-[#6D949D]"
                           }`}
-                      />
-                    )}
-                    <div
-                      className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs transition-all ${isPassed
-                        ? "bg-cyan-500 dark:bg-[#00E5FF] border-cyan-500 dark:border-[#00E5FF] text-white dark:text-[#030F14] shadow-sm"
-                        : "bg-white dark:bg-[#10313E] border-slate-300 dark:border-[rgba(94,183,201,0.16)] text-slate-400 dark:text-[#6D949D]"
-                        }`}
-                    >
-                      <StageIcon className="w-3.5 h-3.5" />
+                      >
+                        <StageIcon className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-600 dark:text-[#B2D2D9] mt-2">
+                        {stage.label}
+                      </span>
                     </div>
-                    <span className="text-[10px] font-bold text-slate-600 dark:text-[#B2D2D9] mt-2">
-                      {stage.label}
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>

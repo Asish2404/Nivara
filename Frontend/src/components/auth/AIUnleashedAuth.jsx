@@ -1002,15 +1002,15 @@ export default function AIUnleashedAuth() {
             initial={{ opacity: 0, x: -25 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-7 flex flex-col text-left pt-2 lg:pt-[8vh] pb-1"
+            className="lg:col-span-7 flex flex-col text-left pt-2 lg:pt-[8vh] pb-1 order-2 lg:order-1"
           >
             {/* Top Hero Section */}
             <div className="max-w-[680px]">
-              <div className="text-white/90 text-xs sm:text-[14px] font-medium tracking-[0.24em] uppercase mb-3">
+              <div className="text-white/90 text-xs sm:text-[14px] font-medium tracking-[0.24em] uppercase mb-2 sm:mb-3">
                 Kolkata Water Intelligence
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-[56px] xl:text-[56px] font-extrabold tracking-tight text-white leading-[1.12]">
+              <h1 className="text-3xl sm:text-5xl lg:text-[56px] xl:text-[56px] font-extrabold tracking-tight text-white leading-[1.12]">
                 A Cleaner Kolkata <br />
                 Through{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00d2ff] via-[#38bdf8] to-[#00f0ff] drop-shadow-[0_0_30px_rgba(0,210,255,0.45)]">
@@ -1018,22 +1018,22 @@ export default function AIUnleashedAuth() {
                 </span>
               </h1>
 
-              <p className="text-slate-200/90 text-base sm:text-lg lg:text-[18px] xl:text-[18px] font-normal mt-4 sm:mt-5 max-w-[560px] leading-relaxed">
+              <p className="text-slate-200/90 text-sm sm:text-lg lg:text-[18px] xl:text-[18px] font-normal mt-3 sm:mt-5 max-w-[560px] leading-relaxed">
                 AI-powered drainage intelligence for a healthier, safer and more
                 resilient city.
               </p>
 
               {/* Cyan Accent Line */}
-              <div className="h-[2px] w-16 bg-gradient-to-r from-[#00d2ff] to-[#0070f3] rounded-full my-5 sm:my-6 shadow-[0_0_12px_rgba(0,210,255,0.7)]" />
+              <div className="h-[2px] w-16 bg-gradient-to-r from-[#00d2ff] to-[#0070f3] rounded-full my-4 sm:my-6 shadow-[0_0_12px_rgba(0,210,255,0.7)]" />
 
               {/* Quote */}
-              <p className="text-slate-300 italic text-sm sm:text-base tracking-wide max-w-[500px]">
+              <p className="text-slate-300 italic text-xs sm:text-base tracking-wide max-w-[500px]">
                 “Resilient infrastructure for a brighter tomorrow.”
               </p>
             </div>
 
             {/* Bottom 4 Feature Cards (Clean, sleek, distinctive glowing icons) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mt-8 lg:mt-24 max-w-[660px]">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mt-6 lg:mt-24 max-w-[660px]">
               {FEATURE_CARDS.map((card, idx) => {
                 const Icon = card.icon;
                 return (
@@ -1047,18 +1047,18 @@ export default function AIUnleashedAuth() {
                       ease: [0.16, 1, 0.3, 1],
                     }}
                     whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                    className={`rounded-2xl bg-[#0c1f3d]/50 dark:bg-[#061820]/70 hover:bg-[#0f284e]/70 dark:hover:bg-[#10313E]/80 backdrop-blur-xl border border-white/20 dark:border-[rgba(94,183,201,0.16)] ${card.hoverBorder} p-4 sm:p-5 flex flex-col justify-between min-h-[175px] sm:min-h-[195px] shadow-[0_15px_35px_rgba(0,0,0,0.35)] ${card.hoverShadow} transition-all duration-300 cursor-default text-left group`}
+                    className={`rounded-2xl bg-[#0c1f3d]/50 dark:bg-[#061820]/70 hover:bg-[#0f284e]/70 dark:hover:bg-[#10313E]/80 backdrop-blur-xl border border-white/20 dark:border-[rgba(94,183,201,0.16)] ${card.hoverBorder} p-3.5 sm:p-5 flex flex-col justify-between min-h-[160px] sm:min-h-[195px] shadow-[0_15px_35px_rgba(0,0,0,0.35)] ${card.hoverShadow} transition-all duration-300 cursor-default text-left group`}
                   >
                     <div
-                      className={`${card.color} ${card.glow} mb-3 transition-transform duration-200 group-hover:scale-110`}
+                      className={`${card.color} ${card.glow} mb-2.5 sm:mb-3 transition-transform duration-200 group-hover:scale-110`}
                     >
-                      <Icon className="w-7 h-7 sm:w-8 sm:h-8" />
+                      <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
                     <div>
-                      <h3 className="text-white font-bold text-[13.5px] sm:text-[15px] leading-snug whitespace-pre-line">
+                      <h3 className="text-white font-bold text-[12.5px] sm:text-[15px] leading-snug whitespace-pre-line">
                         {card.title}
                       </h3>
-                      <p className="text-slate-300/80 text-[11px] sm:text-[12px] leading-relaxed mt-1.5 font-normal">
+                      <p className="text-slate-300/80 text-[10.5px] sm:text-[12px] leading-relaxed mt-1 font-normal">
                         {card.desc}
                       </p>
                     </div>
@@ -1075,14 +1075,10 @@ export default function AIUnleashedAuth() {
             initial={{ opacity: 0, x: 25 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-5 flex flex-col justify-center w-full"
+            className="lg:col-span-5 flex flex-col justify-center w-full order-1 lg:order-2"
           >
             <div
-              className={`w-full mx-auto lg:ml-auto bg-[#0a172e]/95 dark:bg-[#061820]/95 backdrop-blur-2xl border border-white/10 dark:border-[rgba(94,183,201,0.16)] rounded-[28px] text-left transition-all duration-300 relative overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] ${
-                isOtpStep
-                  ? "max-w-[450px] p-6 sm:p-7 min-h-0"
-                  : "max-w-[460px] p-6 sm:p-7 min-h-0"
-              }`}
+              className={`w-full mx-auto lg:ml-auto bg-[#0a172e]/95 dark:bg-[#061820]/95 backdrop-blur-2xl border border-white/10 dark:border-[rgba(94,183,201,0.16)] rounded-[24px] sm:rounded-[28px] text-left transition-all duration-300 relative overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] max-w-[460px] p-4 sm:p-7 min-h-0`}
             >
               {/* Subtle top specular accent line */}
               <div className="absolute top-0 inset-x-8 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
@@ -1232,7 +1228,7 @@ export default function AIUnleashedAuth() {
                         />
 
                         {/* 6 Squircle Visual Slots with Neon Focused Outline from Pinterest */}
-                        <div className="flex justify-center items-center gap-2.5 sm:gap-3 select-none">
+                        <div className="flex justify-center items-center gap-1.5 min-[380px]:gap-2.5 sm:gap-3 select-none">
                           {otpDigits.map((digit, idx) => {
                             const firstEmptyIdx = otpDigits.findIndex(
                               (d) => d === "",
@@ -1248,7 +1244,7 @@ export default function AIUnleashedAuth() {
                                 key={idx}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className={`w-11 h-14 sm:w-13 sm:h-16 flex items-center justify-center text-2xl sm:text-3xl font-mono font-bold rounded-2xl transition-all duration-200 ${
+                                className={`w-9 h-12 min-[380px]:w-11 min-[380px]:h-14 sm:w-13 sm:h-16 flex items-center justify-center text-xl min-[380px]:text-2xl sm:text-3xl font-mono font-bold rounded-xl sm:rounded-2xl transition-all duration-200 ${
                                   isFilled
                                     ? "bg-[#151a24] dark:bg-[#10313E] border-2 border-white/25 dark:border-cyan-400/40 text-white shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
                                     : isFocused

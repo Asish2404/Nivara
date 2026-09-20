@@ -830,7 +830,7 @@ export function CitizenReportingSection() {
       {/* THE CENTERPIECE: FLAGSHIP LUXURY 3D SMARTPHONE (TURNTABLE)      */}
       {/* ================================================================ */}
       <div
-        className="relative flex flex-col items-center justify-center py-4 select-none"
+        className="relative flex flex-col items-center justify-center py-4 select-none scale-[0.68] min-[360px]:scale-[0.74] min-[400px]:scale-[0.84] sm:scale-100 origin-top -mb-60 min-[360px]:-mb-48 min-[400px]:-mb-28 sm:mb-0"
         style={{
           perspective: "1500px",
           perspectiveOrigin: "50% 50%",

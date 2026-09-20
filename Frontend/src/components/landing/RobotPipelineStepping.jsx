@@ -175,8 +175,8 @@ const STAIR_PLATFORMS = [
     anchorX: 205,
     anchorY: 465,
     camX: 80,
-    camY: -35,
-    camScale: 1.04,
+    camY: -20,
+    camScale: 1.02,
   },
   {
     x: 310,
@@ -187,8 +187,8 @@ const STAIR_PLATFORMS = [
     anchorX: 360,
     anchorY: 410,
     camX: 35,
-    camY: -15,
-    camScale: 1.03,
+    camY: -5,
+    camScale: 1.02,
   },
   {
     x: 395,
@@ -199,7 +199,7 @@ const STAIR_PLATFORMS = [
     anchorX: 445,
     anchorY: 350,
     camX: -10,
-    camY: 5,
+    camY: 12,
     camScale: 1.03,
   },
   {
@@ -211,46 +211,46 @@ const STAIR_PLATFORMS = [
     anchorX: 535,
     anchorY: 290,
     camX: -45,
-    camY: 25,
-    camScale: 1.04,
+    camY: 28,
+    camScale: 1.03,
   },
   {
     x: 570,
-    y: 225,
+    y: 230,
     label: "PREDICT",
     portalX: 615,
     portalY: 195,
     anchorX: 620,
-    anchorY: 230,
+    anchorY: 235,
     openDown: true,
     camX: -80,
-    camY: 40,
+    camY: 44,
     camScale: 1.04,
   },
   {
     x: 655,
-    y: 185,
+    y: 188,
     label: "ALERT",
     portalX: 625,
     portalY: 210,
     anchorX: 705,
-    anchorY: 190,
+    anchorY: 193,
     openDown: true,
     camX: -115,
-    camY: 55,
-    camScale: 1.05,
+    camY: 58,
+    camScale: 1.04,
   },
   {
     x: 740,
-    y: 130,
+    y: 142,
     label: "ACT",
     portalX: 370,
-    portalY: 185,
+    portalY: 195,
     anchorX: 740,
-    anchorY: 135,
+    anchorY: 147,
     openLeft: true,
     camX: -60,
-    camY: 50,
+    camY: 72,
     camScale: 1.04,
   },
 ];
@@ -312,6 +312,7 @@ const ArchitecturalGlassPlatform = ({
   isArrivalRipple,
   isLandingDeflect,
   onClick,
+  isMobile,
 }) => {
   return (
     <motion.div
@@ -334,7 +335,7 @@ const ArchitecturalGlassPlatform = ({
             animate={{ scale: 1.4, opacity: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35, ease: "easeOut" }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-12 rounded-[50%] border-2 border-[#22D3EE] pointer-events-none z-0"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[110%] rounded-[50%] border-2 border-[#22D3EE] pointer-events-none z-0"
           />
         )}
       </AnimatePresence>
@@ -347,18 +348,16 @@ const ArchitecturalGlassPlatform = ({
             animate={{ scale: 1.55, opacity: 0, borderColor: "#08B8F5" }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.42, ease: "easeOut" }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-11 rounded-[50%] border-2 pointer-events-none z-0"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[130%] h-[100%] rounded-[50%] border-2 pointer-events-none z-0"
           />
         )}
       </AnimatePresence>
 
       <svg
-        width="114"
-        height="58"
-        viewBox="0 0 114 58"
+        viewBox="0 0 114 62"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="relative z-10"
+        className="relative z-10 w-[60px] h-[33px] min-[360px]:w-[65px] min-[360px]:h-[35px] min-[390px]:w-[72px] min-[390px]:h-[39px] sm:w-[90px] sm:h-[49px] md:w-[114px] md:h-[62px]"
       >
         {/* Soft Realistic Contact Shadow */}
         <ellipse
@@ -403,6 +402,58 @@ const ArchitecturalGlassPlatform = ({
           />
         )}
 
+        {/* Stage Number Permanently Positioned on Top Surface Diamond */}
+        <text
+          x="57"
+          y="27"
+          textAnchor="middle"
+          dominantBaseline="central"
+          fill={isActive ? "#0284c7" : "#0f172a"}
+          fontSize={isMobile ? "13" : "14"}
+          fontWeight="900"
+          fontFamily="ui-monospace, monospace"
+          letterSpacing="-0.02em"
+          style={{ pointerEvents: "none" }}
+        >
+          {stage.num}
+        </text>
+
+        {/* Stage Name Permanently Positioned Beneath Front Face Rim with Crisp White Contour */}
+        <text
+          x="57"
+          y={isMobile ? "55" : "56"}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fill={isActive ? "#0284c7" : "#0f172a"}
+          stroke="#ffffff"
+          strokeWidth={isMobile ? "1.5" : "1.8"}
+          strokeLinejoin="round"
+          paintOrder="stroke fill"
+          fontSize={isMobile ? "10" : "9.8"}
+          fontWeight="900"
+          fontFamily="ui-monospace, monospace"
+          letterSpacing={isMobile ? "0.04em" : "0.08em"}
+          style={{ pointerEvents: "none" }}
+        >
+          {stage.name}
+        </text>
+
+        {/* Corner Technical Node Pin */}
+        <circle
+          cx="106"
+          cy="25"
+          r="2.5"
+          fill={isActive ? "#08B8F5" : "#cbd5e1"}
+        />
+        {isActive && (
+          <circle
+            cx="106"
+            cy="25"
+            r="4.5"
+            fill="rgba(8,184,245,0.3)"
+          />
+        )}
+
         <defs>
           <linearGradient
             id="activeStairRefract"
@@ -416,31 +467,6 @@ const ArchitecturalGlassPlatform = ({
           </linearGradient>
         </defs>
       </svg>
-
-      {/* Stage Number on Front Glass Face */}
-      <span
-        className={`absolute top-[29px] left-[57px] transform -translate-x-1/2 -translate-y-1/2 text-[11px] font-mono font-bold tracking-tight pointer-events-none transition-colors z-20 ${
-          isActive ? "text-[#08B8F5]" : "text-slate-700"
-        }`}
-      >
-        {stage.num}
-      </span>
-
-      {/* Slanted Stage Label Underneath Front Face */}
-      <span
-        className={`absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-[8px] font-mono font-bold tracking-wider uppercase pointer-events-none transition-colors z-20 ${
-          isActive ? "text-[#08B8F5]" : "text-slate-500"
-        }`}
-      >
-        {stage.name}
-      </span>
-
-      {/* Corner Technical Node Pin */}
-      <div
-        className={`absolute top-[23px] right-2 w-1.5 h-1.5 rounded-full pointer-events-none transition-all z-20 ${
-          isActive ? "bg-[#08B8F5] shadow-[0_0_8px_#08B8F5]" : "bg-slate-300"
-        }`}
-      />
     </motion.div>
   );
 };
@@ -472,96 +498,98 @@ const ProtagonistRobot = ({
   }, [isTraversing]);
 
   return (
-    <motion.div
-      className="relative flex flex-col items-center select-none pointer-events-none z-40"
-      style={{ width: "52px" }}
-      animate={
-        shouldReduceMotion
-          ? {}
-          : isAnticipating
-            ? {
-                y: 5.5,
-                scaleY: 0.93,
-                scaleX: 1.05,
-                rotate: 6.5,
-              }
-            : isTraversing
-              ? {
-                  y: [0, -7, 0],
-                  scaleY: [0.98, 1.03, 0.98],
-                  scaleX: [1.02, 0.98, 1.02],
-                  rotate: [6.5, 4.5, 7.5, 6.5],
-                }
-              : isLanding
-                ? {
-                    y: [0, 4.5, 0],
-                    scaleY: [1, 0.96, 1],
-                    scaleX: [1, 1.04, 1],
-                    rotate: 0,
-                  }
-                : {
-                    y: [0, -2.5, 0],
-                    scaleY: [1, 1.015, 1],
-                    rotate: [-0.6, 1.0, -0.6],
-                  }
-      }
-      transition={
-        shouldReduceMotion
-          ? { duration: 0.01 }
-          : isAnticipating
-            ? { duration: 0.18, ease: "easeIn" }
-            : isTraversing
-              ? { duration: 0.68, ease: [0.25, 1, 0.5, 1] }
-              : isLanding
-                ? { duration: 0.24, ease: [0.22, 1, 0.36, 1] }
-                : { repeat: Infinity, duration: 2.2, ease: "easeInOut" }
-      }
-    >
-      {/* Ambient Cyan Glow behind robot */}
-      <div className="absolute inset-x-0 bottom-0 h-10 rounded-full bg-[#08B8F5]/18 blur-lg -z-10" />
-
-      {/* KWI Standing Bot Image */}
-      <img
-        src="/assets/kwi-standing-bot.png"
-        alt="KWI AI Robot"
-        className="h-[110px] w-auto object-contain filter drop-shadow-[0_6px_18px_rgba(8,184,245,0.42)] drop-shadow-[0_12px_28px_rgba(15,23,42,0.18)]"
-        draggable="false"
-      />
-
-      {/* Dynamic Floor Contact Shadow */}
+    <div className="relative flex flex-col items-center select-none pointer-events-none z-40 origin-bottom scale-[0.68] min-[360px]:scale-[0.72] min-[390px]:scale-[0.78] sm:scale-90 md:scale-100">
       <motion.div
-        className="w-10 h-2 bg-slate-950/38 rounded-full blur-[1.5px] -mt-1"
+        className="relative flex flex-col items-center"
+        style={{ width: "52px" }}
         animate={
-          isAnticipating
-            ? { scaleX: 1.18, scaleY: 1.1, opacity: 0.55 }
-            : isTraversing
+          shouldReduceMotion
+            ? {}
+            : isAnticipating
               ? {
-                  scaleX: [1.1, 0.6, 1.05],
-                  scaleY: [1, 0.5, 0.95],
-                  opacity: [0.5, 0.18, 0.46],
+                  y: 5.5,
+                  scaleY: 0.93,
+                  scaleX: 1.05,
+                  rotate: 6.5,
                 }
-              : isLanding
+              : isTraversing
                 ? {
-                    scaleX: [1, 1.35, 1],
-                    scaleY: [1, 1.22, 1],
-                    opacity: [0.45, 0.78, 0.45],
+                    y: [0, -7, 0],
+                    scaleY: [0.98, 1.03, 0.98],
+                    scaleX: [1.02, 0.98, 1.02],
+                    rotate: [6.5, 4.5, 7.5, 6.5],
                   }
-                : {
-                    scaleX: [1, 0.93, 1],
-                    opacity: [0.44, 0.3, 0.44],
-                  }
+                : isLanding
+                  ? {
+                      y: [0, 4.5, 0],
+                      scaleY: [1, 0.96, 1],
+                      scaleX: [1, 1.04, 1],
+                      rotate: 0,
+                    }
+                  : {
+                      y: [0, -2.5, 0],
+                      scaleY: [1, 1.015, 1],
+                      rotate: [-0.6, 1.0, -0.6],
+                    }
         }
         transition={
-          isAnticipating
-            ? { duration: 0.18 }
-            : isTraversing
-              ? { duration: 0.68, ease: "easeInOut" }
-              : isLanding
-                ? { duration: 0.24, ease: "easeOut" }
-                : { repeat: Infinity, duration: 2.2, ease: "easeInOut" }
+          shouldReduceMotion
+            ? { duration: 0.01 }
+            : isAnticipating
+              ? { duration: 0.18, ease: "easeIn" }
+              : isTraversing
+                ? { duration: 0.68, ease: [0.25, 1, 0.5, 1] }
+                : isLanding
+                  ? { duration: 0.24, ease: [0.22, 1, 0.36, 1] }
+                  : { repeat: Infinity, duration: 2.2, ease: "easeInOut" }
         }
-      />
-    </motion.div>
+      >
+        {/* Ambient Cyan Glow behind robot */}
+        <div className="absolute inset-x-0 bottom-0 h-10 rounded-full bg-[#08B8F5]/18 blur-lg -z-10" />
+
+        {/* KWI Standing Bot Image */}
+        <img
+          src="/assets/kwi-standing-bot.png"
+          alt="KWI AI Robot"
+          className="h-[84px] sm:h-[96px] md:h-[110px] w-auto object-contain filter drop-shadow-[0_6px_18px_rgba(8,184,245,0.42)] drop-shadow-[0_12px_28px_rgba(15,23,42,0.18)]"
+          draggable="false"
+        />
+
+        {/* Dynamic Floor Contact Shadow */}
+        <motion.div
+          className="w-10 h-2 bg-slate-950/38 rounded-full blur-[1.5px] -mt-1"
+          animate={
+            isAnticipating
+              ? { scaleX: 1.18, scaleY: 1.1, opacity: 0.55 }
+              : isTraversing
+                ? {
+                    scaleX: [1.1, 0.6, 1.05],
+                    scaleY: [1, 0.5, 0.95],
+                    opacity: [0.5, 0.18, 0.46],
+                  }
+                : isLanding
+                  ? {
+                      scaleX: [1, 1.35, 1],
+                      scaleY: [1, 1.22, 1],
+                      opacity: [0.45, 0.78, 0.45],
+                    }
+                  : {
+                      scaleX: [1, 0.93, 1],
+                      opacity: [0.44, 0.3, 0.44],
+                    }
+          }
+          transition={
+            isAnticipating
+              ? { duration: 0.18 }
+              : isTraversing
+                ? { duration: 0.68, ease: "easeInOut" }
+                : isLanding
+                  ? { duration: 0.24, ease: "easeOut" }
+                  : { repeat: Infinity, duration: 2.2, ease: "easeInOut" }
+          }
+        />
+      </motion.div>
+    </div>
   );
 };
 
@@ -597,9 +625,9 @@ const DetectArtVisual = () => {
           initial={{ opacity: 0, x: 8 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
-          className="rounded-lg bg-sky-50/70 border border-sky-100 p-2 flex flex-col justify-between text-[8px]"
+          className="rounded-lg bg-sky-50/80 border border-sky-100 p-2 flex flex-col justify-between text-[9px]"
         >
-          <div className="text-slate-400">GPS ACCURACY: ±1.2m</div>
+          <div className="text-slate-500 font-semibold">GPS ACCURACY: ±1.2m</div>
           <div className="flex items-center justify-center my-1">
             <div className="w-5 h-5 rounded-full bg-[#0070F3] text-white flex items-center justify-center shadow-xs">
               <MapPin className="w-3 h-3" />
@@ -615,10 +643,10 @@ const DetectArtVisual = () => {
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.25 }}
-        className="flex justify-between items-center border-t border-slate-100 pt-1.5 text-[9px]"
+        className="flex justify-between items-center border-t border-slate-100 pt-1.5 text-[10px]"
       >
         <div>
-          <span className="text-slate-400 block text-[7px] uppercase">
+          <span className="text-slate-500 block text-[8px] uppercase font-semibold">
             MEASURED DEPTH
           </span>
           <span className="font-extrabold text-[#08B8F5] text-xs">
@@ -626,7 +654,7 @@ const DetectArtVisual = () => {
           </span>
         </div>
         <div className="text-right">
-          <span className="text-slate-400 block text-[7px] uppercase">
+          <span className="text-slate-500 block text-[8px] uppercase font-semibold">
             STATUS
           </span>
           <span className="font-semibold text-emerald-600">
@@ -660,14 +688,14 @@ const VerifyArtVisual = () => {
           className="absolute top-0 bottom-0 w-[2px] bg-[#08B8F5] shadow-[0_0_8px_#08B8F5] z-10 pointer-events-none"
         />
 
-        <div className="flex items-center justify-between text-[8px] text-[#08B8F5] z-10">
+        <div className="flex items-center justify-between text-[9px] text-[#08B8F5] z-10 font-bold">
           <span>SPATIAL CV SCANNER</span>
           <span className="bg-sky-950/80 border border-sky-500/40 px-1.5 py-0.5 rounded text-sky-300 font-bold">
             CONFIDENCE: {conf}%
           </span>
         </div>
 
-        <div className="flex items-center justify-between px-1 text-[8px] text-slate-300 z-10">
+        <div className="flex items-center justify-between px-1 text-[9px] text-slate-300 z-10 font-medium">
           <div>
             CURB DATUM: <span className="text-white font-bold">{datum} cm</span>
           </div>
@@ -682,9 +710,9 @@ const VerifyArtVisual = () => {
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.25 }}
-        className="flex justify-between items-center text-[9px] border-t border-slate-100 pt-1.5"
+        className="flex justify-between items-center text-[10px] border-t border-slate-100 pt-1.5"
       >
-        <span className="text-slate-500">EDGE INFERENCE TIME</span>
+        <span className="text-slate-500 font-medium">EDGE INFERENCE TIME</span>
         <span className="font-bold text-[#08B8F5]">3.2s Validated</span>
       </motion.div>
     </div>
@@ -703,7 +731,7 @@ const CorrelateArtVisual = () => {
         transition={{ duration: 0.3, delay: 0.15 }}
         className="rounded-lg bg-slate-900 border border-slate-800 p-2"
       >
-        <div className="flex justify-between text-[7px] text-sky-400 mb-1">
+        <div className="flex justify-between text-[8.5px] text-sky-400 mb-1 font-bold">
           <span>CONDUIT TOPOLOGY GRAPH</span>
           <span>41 NODES LINKED</span>
         </div>
@@ -750,9 +778,9 @@ const CorrelateArtVisual = () => {
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.25 }}
-        className="flex justify-between text-[9px] border-t border-slate-100 pt-1.5"
+        className="flex justify-between text-[10px] border-t border-slate-100 pt-1.5"
       >
-        <span className="text-slate-500">TRUNK SATURATION</span>
+        <span className="text-slate-500 font-medium">TRUNK SATURATION</span>
         <span className="font-bold text-[#08B8F5]">
           {sat}% Capacity (Flow: 2.1 m/s)
         </span>
@@ -776,14 +804,14 @@ const CatchmentArtVisual = () => {
           transition={{ duration: 0.3, delay: 0.15 }}
           className="rounded-lg bg-rose-50 border border-rose-200/70 p-2 flex flex-col justify-between"
         >
-          <span className="text-[7px] text-rose-700 font-bold uppercase">
+          <span className="text-[8px] text-rose-700 font-bold uppercase">
             CATCHMENT RISK
           </span>
           <div className="text-xl font-black text-rose-600 my-0.5">
             {score}
             <span className="text-xs text-rose-400 font-bold">/100</span>
           </div>
-          <span className="text-[7px] text-slate-500">Borough VII Basin</span>
+          <span className="text-[8px] text-slate-500 font-medium">Borough VII Basin</span>
         </motion.div>
 
         <motion.div
@@ -793,7 +821,7 @@ const CatchmentArtVisual = () => {
           className="rounded-lg bg-slate-50 border border-slate-200/80 p-2 flex flex-col justify-center space-y-1"
         >
           <div className="space-y-0.5">
-            <div className="flex justify-between text-[7px] text-slate-600">
+            <div className="flex justify-between text-[8px] text-slate-600 font-medium">
               <span>Soil Saturation</span>
               <span className="text-rose-600 font-bold">{soil}%</span>
             </div>
@@ -807,7 +835,7 @@ const CatchmentArtVisual = () => {
             </div>
           </div>
           <div className="space-y-0.5">
-            <div className="flex justify-between text-[7px] text-slate-600">
+            <div className="flex justify-between text-[8px] text-slate-600 font-medium">
               <span>Runoff Index</span>
               <span className="text-amber-600 font-bold">{runoff}%</span>
             </div>
@@ -831,7 +859,7 @@ const CatchmentArtVisual = () => {
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.25 }}
-        className="text-[8px] text-slate-600 border-t border-slate-100 pt-1.5"
+        className="text-[9px] text-slate-600 border-t border-slate-100 pt-1.5"
       >
         <span className="font-bold text-amber-700">BOTTLENECK:</span> Palmer
         Bridge conduit sill (-62% throughput).
@@ -852,7 +880,7 @@ const PredictArtVisual = () => {
         transition={{ duration: 0.3, delay: 0.15 }}
         className="rounded-lg bg-slate-950 border border-slate-800 p-2"
       >
-        <div className="flex justify-between text-[7px] text-indigo-300 mb-1">
+        <div className="flex justify-between text-[8.5px] text-indigo-300 mb-1 font-bold">
           <span>60-MIN RUNOFF PROJECTION</span>
           <span className="text-rose-400 font-bold">HOOGHLY LOCK: +3.8M</span>
         </div>
@@ -870,7 +898,7 @@ const PredictArtVisual = () => {
             x="100"
             y="6"
             fill="#f87171"
-            fontSize="6"
+            fontSize="6.5"
             fontWeight="bold"
             textAnchor="middle"
           >
@@ -883,9 +911,9 @@ const PredictArtVisual = () => {
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.25 }}
-        className="flex justify-between text-[9px] border-t border-slate-100 pt-1.5"
+        className="flex justify-between text-[10px] border-t border-slate-100 pt-1.5"
       >
-        <span className="text-slate-500">TIDAL CREST LOCKOUT</span>
+        <span className="text-slate-500 font-medium">TIDAL CREST LOCKOUT</span>
         <span className="font-bold text-rose-500">
           Gravity Gates Constrained
         </span>
@@ -906,7 +934,7 @@ const SimulateArtVisual = () => {
         transition={{ duration: 0.3, delay: 0.15 }}
         className="rounded-lg bg-slate-950 border border-slate-800 p-2"
       >
-        <div className="flex justify-between text-[7px] text-emerald-400 mb-1">
+        <div className="flex justify-between text-[8.5px] text-emerald-400 mb-1 font-bold">
           <span>DIGITAL TWIN INTERVENTION</span>
           <span>3 MOBILE PUMPS</span>
         </div>
@@ -925,7 +953,7 @@ const SimulateArtVisual = () => {
             stroke="#10b981"
             strokeWidth="2"
           />
-          <text x="130" y="16" fill="#08B8F5" fontSize="7" fontWeight="bold">
+          <text x="130" y="16" fill="#08B8F5" fontSize="7.5" fontWeight="bold">
             Δ -{relief} cm RELIEF
           </text>
         </svg>
@@ -935,9 +963,9 @@ const SimulateArtVisual = () => {
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.25 }}
-        className="flex justify-between text-[9px] border-t border-slate-100 pt-1.5"
+        className="flex justify-between text-[10px] border-t border-slate-100 pt-1.5"
       >
-        <span className="text-slate-500">SIMULATED RELIEF</span>
+        <span className="text-slate-500 font-medium">SIMULATED RELIEF</span>
         <span className="font-bold text-emerald-600">
           -{relief} cm (-4.5 hrs)
         </span>
@@ -956,14 +984,14 @@ const ActArtVisual = ({ onNavigateCity }) => {
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3, delay: 0.15 }}
-        className="rounded-lg bg-slate-900 border border-slate-800 p-2 text-white text-[8px]"
+        className="rounded-lg bg-slate-900 border border-slate-800 p-2.5 text-white text-[9px]"
       >
         <div className="flex justify-between text-[#08B8F5] font-bold mb-1">
           <span>KMC WORK ORDER #9418</span>
           <span className="text-emerald-400">DISPATCHED</span>
         </div>
-        <div>CREW: Borough VII Rapid Unit #4</div>
-        <div className="text-sky-300 font-bold">
+        <div className="font-medium">CREW: Borough VII Rapid Unit #4</div>
+        <div className="text-sky-300 font-bold mt-0.5">
           ESTIMATED ARRIVAL: {eta} MINS
         </div>
       </motion.div>
@@ -977,7 +1005,7 @@ const ActArtVisual = ({ onNavigateCity }) => {
           audioEngine.playUiChirp(1000);
           if (onNavigateCity) onNavigateCity();
         }}
-        className="w-full py-1.5 rounded-lg bg-[#0070F3] hover:bg-[#005bbd] text-white text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs"
+        className="w-full py-2.5 rounded-xl bg-[#0070F3] hover:bg-[#005bbd] active:scale-[0.98] text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md"
       >
         <span>Open Live Control Room →</span>
       </motion.button>
@@ -1136,10 +1164,98 @@ export const RobotPipelineStepping = ({
   const showConnector =
     phase === "CONNECTOR" || phase === "PORTAL_EXPAND" || phase === "HOLDING";
 
-  // Optical Camera Pan/Zoom target to keep active platform in center-right
-  const cameraX = activeCoord.camX || 0;
-  const cameraY = activeCoord.camY || 0;
-  const cameraScale = activeCoord.camScale || 1.03;
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== "undefined" && window.innerWidth < 768
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Optical Camera Pan/Zoom target to keep active platform in center-right with full robot headroom
+  const cameraX = isMobile ? 20 + (activeCoord.camX || 0) * 0.45 : (activeCoord.camX || 0);
+  const cameraY = isMobile ? 24 + (activeCoord.camY || 0) * 0.8 : (activeCoord.camY || 0);
+  const cameraScale = isMobile ? 1.06 : (activeCoord.camScale || 1.03);
+
+  const renderChapterCardContent = () => (
+    <>
+      {/* 1. Header Bar: Stage Badge + Micro Label + Close (Fades first 100ms) */}
+      <motion.div
+        initial={{ opacity: 0, y: -4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, delay: 0.05 }}
+        className="flex items-center justify-between border-b border-slate-100 pb-1.5 mb-2"
+      >
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="px-2 py-0.5 rounded-md bg-sky-50 text-[#0070F3] border border-sky-200/80 font-mono font-bold text-[10px] tracking-wider uppercase">
+            STAGE {currentStage.num} // {currentStage.name}
+          </span>
+          <span className="text-[10px] font-mono text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wide">
+            {currentStage.microLabel}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsChapterOpen(false)}
+          className="text-slate-400 hover:text-slate-700 w-6 h-6 rounded-md flex items-center justify-center hover:bg-slate-100 text-xs font-bold transition-colors cursor-pointer flex-shrink-0"
+          title="Close"
+        >
+          ✕
+        </button>
+      </motion.div>
+
+      {/* 2. Unified Robot Speech / Live Signal Banner (150ms delay) */}
+      <motion.div
+        initial={{ opacity: 0, x: -6 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.28, delay: 0.12 }}
+        className="flex items-start gap-2 bg-gradient-to-r from-sky-50/95 via-sky-50/50 to-transparent border border-sky-200/80 rounded-xl p-2 sm:p-2.5 mb-2"
+      >
+        <div className="w-5 h-5 rounded-lg bg-white shadow-xs border border-sky-200/80 flex items-center justify-center text-[#08B8F5] flex-shrink-0 mt-0.5">
+          <Sparkles className="w-3 h-3 text-[#08B8F5]" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[12px] sm:text-[12.5px] font-bold text-slate-900 leading-tight">
+            {currentStage.speechTitle}
+          </div>
+          <div className="text-[10.5px] sm:text-[11px] text-slate-700 leading-snug mt-0.5 font-medium">
+            {currentStage.speechSub}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* 3. Stage Analysis Title & Quantified Subtitle */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.25, delay: 0.18 }}
+        className="mb-2"
+      >
+        <h4 className="text-[12.5px] sm:text-[13.5px] font-bold text-slate-900 leading-snug">
+          {currentStage.cardTitle}
+        </h4>
+        <p className="text-[10.5px] sm:text-[11px] text-slate-600 leading-relaxed mt-0.5 font-medium">
+          {currentStage.cardSubtitle}
+        </p>
+      </motion.div>
+
+      {/* 4. Analytical Micro-Visual (Staggered data rows & counting numbers) */}
+      <div>
+        {activeStageIdx === 0 && <DetectArtVisual />}
+        {activeStageIdx === 1 && <VerifyArtVisual />}
+        {activeStageIdx === 2 && <CorrelateArtVisual />}
+        {activeStageIdx === 3 && <CatchmentArtVisual />}
+        {activeStageIdx === 4 && <PredictArtVisual />}
+        {activeStageIdx === 5 && <SimulateArtVisual />}
+        {activeStageIdx === 6 && (
+          <ActArtVisual onNavigateCity={onNavigateCity} />
+        )}
+      </div>
+    </>
+  );
 
   return (
     <div className="w-full select-none font-sans flex items-center justify-center py-4">
@@ -1150,7 +1266,7 @@ export const RobotPipelineStepping = ({
       */}
       <div
         onMouseMove={handleMouseMove}
-        className="relative w-full max-w-[1440px] aspect-[1024/560] min-h-[640px] sm:min-h-[700px] rounded-[32px] sm:rounded-[44px] border border-slate-200/90 shadow-[0_30px_70px_rgba(15,23,42,0.07)] overflow-hidden bg-gradient-to-br from-[#f8fbfe] via-[#ffffff] to-[#f0f6fc]"
+        className="relative w-full max-w-[1440px] md:aspect-[1024/560] md:min-h-[560px] lg:min-h-[640px] rounded-[24px] sm:rounded-[36px] lg:rounded-[44px] border border-slate-200/90 shadow-[0_30px_70px_rgba(15,23,42,0.07)] overflow-hidden bg-gradient-to-br from-[#f8fbfe] via-[#ffffff] to-[#f0f6fc] flex flex-col md:block"
       >
         {/*
           ============================================================
@@ -1196,9 +1312,9 @@ export const RobotPipelineStepping = ({
           2. LAYER 2: TOP HEADER & NAVIGATION (FOREGROUND STABLE)
           ============================================================
         */}
-        <div className="absolute top-6 sm:top-8 left-6 sm:left-10 right-6 sm:right-10 z-30 flex flex-col justify-between pointer-events-auto">
+        <div className="relative md:absolute md:top-8 md:left-10 md:right-10 z-30 pt-2.5 sm:pt-3 px-3 sm:px-6 pb-0.5 md:p-0 flex flex-col justify-between pointer-events-auto">
           {/* Top Row: Title + CTA */}
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-2.5 sm:gap-4">
             {/* Left Header Title & 7 Dynamic Steps */}
             <div className="text-left max-w-2xl sm:max-w-3xl">
               <div className="flex items-center gap-1.5 mb-1 sm:mb-1.5">
@@ -1208,7 +1324,7 @@ export const RobotPipelineStepping = ({
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-4xl lg:text-[40px] font-extrabold tracking-tight text-[#07152F] font-sans leading-tight">
+              <h1 className="text-xl sm:text-3xl lg:text-[40px] font-extrabold tracking-tight text-[#07152F] font-sans leading-tight">
                 One report{" "}
                 <span className="font-normal text-[#243A5A]">
                   becomes city intelligence.
@@ -1216,7 +1332,7 @@ export const RobotPipelineStepping = ({
               </h1>
 
               {/* Row of 7 Compact Dynamic Stage Navigation Steps */}
-              <div className="flex items-center gap-1.5 sm:gap-2 mt-2.5 sm:mt-3 overflow-x-auto py-1 max-w-full">
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-1 sm:gap-2 mt-1.5 sm:mt-3 py-0.5 sm:py-1 max-w-full">
                 {KWI_PIPELINE_STAGES.map((stg, i) => {
                   const isActive = i === activeStageIdx;
 
@@ -1225,10 +1341,10 @@ export const RobotPipelineStepping = ({
                       key={stg.id}
                       type="button"
                       onClick={() => handleSelectStage(i)}
-                      className={`px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                      className={`px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[9.5px] min-[360px]:text-[10px] sm:text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1 sm:gap-1.5 whitespace-nowrap ${
                         isActive
                           ? "bg-[#0070F3] text-white font-bold shadow-[0_4px_12px_rgba(0,112,243,0.35)]"
-                          : "bg-white/85 hover:bg-white text-slate-600 font-semibold border border-slate-200/80 shadow-2xs"
+                          : "bg-white/90 hover:bg-white text-slate-700 font-semibold border border-slate-200/90 shadow-2xs"
                       }`}
                     >
                       <span
@@ -1244,7 +1360,7 @@ export const RobotPipelineStepping = ({
             </div>
 
             {/* Right Top CTA & Autoplay Toggle */}
-            <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0 pt-1">
+            <div className="flex items-center gap-2.5 sm:gap-4 flex-shrink-0 pt-0.5 sm:pt-1">
               {/* Pill Button: ▶ LET'S BEGIN → */}
               <button
                 type="button"
@@ -1252,17 +1368,16 @@ export const RobotPipelineStepping = ({
                   audioEngine.playUiChirp(900);
                   setActiveStageIdx(0);
                   setAutoplay(true);
-                  setPhase("ANTICIPATING");
                 }}
-                className="bg-gradient-to-r from-[#0070F3] to-[#08B8F5] hover:opacity-95 text-white font-mono font-bold text-xs sm:text-[13px] px-5 sm:px-6 py-2.5 rounded-full shadow-[0_6px_20px_rgba(8,184,245,0.4)] transition-all cursor-pointer flex items-center gap-2"
+                className="group relative px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full bg-[#0070F3] hover:bg-[#005bb5] text-white font-mono font-bold text-xs sm:text-[13px] tracking-wide transition-all shadow-[0_4px_14px_rgba(0,112,243,0.35)] hover:shadow-[0_6px_20px_rgba(0,112,243,0.45)] active:scale-95 cursor-pointer flex items-center gap-1.5 overflow-hidden"
               >
-                <Play className="w-3.5 h-3.5 fill-white" />
+                <Play className="w-3.5 h-3.5 fill-current" />
                 <span>LET'S BEGIN</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </button>
 
               {/* Autoplay Toggle Switch */}
-              <div className="flex items-center gap-2 font-mono text-[10px] sm:text-[11px] font-bold text-slate-600">
+              <div className="flex items-center gap-1.5 sm:gap-2 font-mono text-[10px] sm:text-[11px] font-bold text-slate-600">
                 <span className="hidden sm:inline">AUTOPLAY</span>
                 <button
                   type="button"
@@ -1292,25 +1407,27 @@ export const RobotPipelineStepping = ({
           3. CINEMATIC VIEWPORT CAMERA SYSTEM (PANS & ZOOMS AS ROBOT CLIMBS)
           ============================================================
         */}
-        <motion.div
-          className="absolute inset-0 w-full h-full pointer-events-none"
-          animate={
-            shouldReduceMotion
-              ? {}
-              : {
-                  x: cameraX,
-                  y: cameraY,
-                  scale: cameraScale,
-                }
-          }
-          transition={{ duration: 0.7, ease: [0.25, 1, 0.5, 1] }}
-        >
+        <div className="relative md:absolute md:inset-0 w-full h-[280px] min-[360px]:h-[300px] min-[390px]:h-[320px] sm:h-[360px] md:h-full pointer-events-none overflow-hidden my-0">
+          <motion.div
+            className="w-full h-full relative"
+            animate={
+              shouldReduceMotion
+                ? {}
+                : {
+                    x: cameraX,
+                    y: cameraY,
+                    scale: cameraScale,
+                  }
+            }
+            transition={{ duration: 0.7, ease: [0.25, 1, 0.5, 1] }}
+          >
           {/*
             VECTOR DATA CONNECTOR PATH (CONNECTING STAIRS) WITH TRAIL LIGHTING
           */}
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none z-10"
             viewBox="0 0 1024 560"
+            preserveAspectRatio="none"
           >
             {/* Base Dotted Platform Path */}
             <path
@@ -1363,6 +1480,7 @@ export const RobotPipelineStepping = ({
                     isArrivalRipple={isActive && isLanding}
                     isLandingDeflect={isActive && isLandingDeflect}
                     onClick={() => handleSelectStage(idx)}
+                    isMobile={isMobile}
                   />
                 </div>
               );
@@ -1393,7 +1511,7 @@ export const RobotPipelineStepping = ({
 
             {showConnector && activeCoord.anchorX && (
               <svg
-                className="absolute inset-0 w-full h-full pointer-events-none z-25"
+                className="hidden md:block absolute inset-0 w-full h-full pointer-events-none z-25"
                 viewBox="0 0 1024 560"
               >
                 <motion.path
@@ -1432,8 +1550,8 @@ export const RobotPipelineStepping = ({
               style={{ transform: "translate(-50%, -100%)" }}
             >
               {/* Concentric Active Holographic Stepping Ring on Active Landing */}
-              <div className="absolute -bottom-1 w-16 h-6 flex items-center justify-center -z-10 pointer-events-none">
-                <div className="w-12 h-3 rounded-full bg-[#08B8F5]/25 blur-sm" />
+              <div className="absolute -bottom-1 w-11 h-4 sm:w-16 sm:h-6 flex items-center justify-center -z-10 pointer-events-none">
+                <div className="w-9 h-2.5 sm:w-12 sm:h-3 rounded-full bg-[#08B8F5]/30 blur-xs sm:blur-sm" />
               </div>
 
               <ProtagonistRobot
@@ -1445,12 +1563,12 @@ export const RobotPipelineStepping = ({
             </motion.div>
 
             {/*
-              UNIFIED REAL-TIME ASSEMBLED CHAPTER CARD (STAGGERED ASSEMBLY)
+              DESKTOP ASSEMBLED CHAPTER CARD (Positioned in isometric camera coordinate space)
             */}
             <AnimatePresence>
-              {isChapterOpen && (
+              {!isMobile && isChapterOpen && (
                 <motion.div
-                  key={`analytical-chapter-${currentStage.id}`}
+                  key={`analytical-chapter-desktop-${currentStage.id}`}
                   initial={{
                     opacity: 0,
                     scale: 0.94,
@@ -1464,92 +1582,44 @@ export const RobotPipelineStepping = ({
                     left: `${(activeCoord.portalX / 1024) * 100}%`,
                     top: `${(activeCoord.portalY / 560) * 100}%`,
                   }}
-                  className="absolute z-40 w-[325px] sm:w-[355px] md:w-[375px] bg-white/95 backdrop-blur-xl rounded-2xl border border-sky-200/90 shadow-[0_20px_50px_rgba(15,23,42,0.14)] p-3.5 sm:p-4 pointer-events-auto text-left font-sans"
+                  className="w-[375px] absolute z-40 bg-white/95 backdrop-blur-xl rounded-2xl border border-sky-200/90 shadow-[0_20px_50px_rgba(15,23,42,0.14)] p-4 pointer-events-auto text-left font-sans"
                 >
-                  {/* 1. Header Bar: Stage Badge + Micro Label + Close (Fades first 100ms) */}
-                  <motion.div
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.25, delay: 0.05 }}
-                    className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2.5"
-                  >
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="px-2 py-0.5 rounded-md bg-sky-50 text-[#0070F3] border border-sky-200/70 font-mono font-bold text-[9.5px] tracking-wider uppercase">
-                        STAGE {currentStage.num} // {currentStage.name}
-                      </span>
-                      <span className="text-[8.5px] font-mono text-slate-400 uppercase tracking-wide">
-                        {currentStage.microLabel}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsChapterOpen(false)}
-                      className="text-slate-400 hover:text-slate-600 w-5 h-5 rounded-md flex items-center justify-center hover:bg-slate-100 text-xs font-bold transition-colors cursor-pointer flex-shrink-0"
-                      title="Close"
-                    >
-                      ✕
-                    </button>
-                  </motion.div>
-
-                  {/* 2. Unified Robot Speech / Live Signal Banner (150ms delay) */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -6 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.28, delay: 0.12 }}
-                    className="flex items-start gap-2 bg-gradient-to-r from-sky-50/90 via-sky-50/40 to-transparent border border-sky-200/70 rounded-xl p-2 sm:p-2.5 mb-2.5"
-                  >
-                    <div className="w-5 h-5 rounded-lg bg-white shadow-xs border border-sky-200/80 flex items-center justify-center text-[#08B8F5] flex-shrink-0 mt-0.5">
-                      <Sparkles className="w-3 h-3 text-[#08B8F5]" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[11.5px] font-bold text-slate-900 leading-tight">
-                        {currentStage.speechTitle}
-                      </div>
-                      <div className="text-[10px] text-slate-600 leading-snug mt-0.5 font-medium">
-                        {currentStage.speechSub}
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {/* 3. Stage Analysis Title & Quantified Subtitle */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.25, delay: 0.18 }}
-                    className="mb-2.5"
-                  >
-                    <h4 className="text-[12px] sm:text-[13px] font-bold text-slate-900 leading-snug">
-                      {currentStage.cardTitle}
-                    </h4>
-                    <p className="text-[9.5px] sm:text-[10px] text-slate-500 leading-relaxed mt-0.5">
-                      {currentStage.cardSubtitle}
-                    </p>
-                  </motion.div>
-
-                  {/* 4. Analytical Micro-Visual (Staggered data rows & counting numbers) */}
-                  <div>
-                    {activeStageIdx === 0 && <DetectArtVisual />}
-                    {activeStageIdx === 1 && <VerifyArtVisual />}
-                    {activeStageIdx === 2 && <CorrelateArtVisual />}
-                    {activeStageIdx === 3 && <CatchmentArtVisual />}
-                    {activeStageIdx === 4 && <PredictArtVisual />}
-                    {activeStageIdx === 5 && <SimulateArtVisual />}
-                    {activeStageIdx === 6 && (
-                      <ActArtVisual onNavigateCity={onNavigateCity} />
-                    )}
-                  </div>
+                  {renderChapterCardContent()}
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </motion.div>
+      </div>
+
+        {/*
+          MOBILE ASSEMBLED CHAPTER CARD
+          Cleanly docked below the 3D staircase so it never covers the robot or steps
+        */}
+        <div className="block md:hidden relative z-30 px-3 pb-3 w-full pointer-events-auto">
+          <AnimatePresence mode="wait">
+            {isMobile && (
+              <motion.div
+                key={`analytical-chapter-mobile-${currentStage.id}`}
+                onClick={() => setAutoplay(false)}
+                initial={{ opacity: 0, y: 8, scale: 0.99 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 6, scale: 0.99 }}
+                transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+                className="w-full bg-white/98 backdrop-blur-xl rounded-2xl border border-sky-200/90 shadow-[0_12px_32px_rgba(15,23,42,0.12)] p-3 text-left font-sans"
+              >
+                {renderChapterCardContent()}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/*
           ============================================================
           4. BOTTOM-RIGHT CONCEPTUAL RELATIONSHIP BANNER
           ============================================================
         */}
-        <div className="absolute right-6 sm:right-10 bottom-8 sm:bottom-10 z-20 flex flex-col items-end pointer-events-auto">
+        <div className="hidden sm:flex absolute right-6 sm:right-10 bottom-8 sm:bottom-10 z-20 flex-col items-end pointer-events-auto">
           {/* White Pill Banner */}
           <div className="bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 px-4 py-2.5 shadow-xs flex items-center gap-3 text-xs">
             {/* 1. Citizens Reports */}
@@ -1608,7 +1678,7 @@ export const RobotPipelineStepping = ({
           5. BOTTOM FOOTNOTE LABELS
           ============================================================
         */}
-        <div className="absolute bottom-3 left-6 sm:left-10 right-6 sm:right-10 z-20 flex items-center justify-between text-[8px] sm:text-[9px] font-mono text-slate-400 uppercase tracking-wider pointer-events-none">
+        <div className="relative md:absolute md:bottom-3 left-0 right-0 py-2.5 px-4 md:px-10 z-20 flex items-center justify-between text-[8px] sm:text-[9px] font-mono text-slate-400 uppercase tracking-wider pointer-events-none">
           <span>7-STAGE AUTONOMOUS WATER INTELLIGENCE MATRIX</span>
         </div>
       </div>

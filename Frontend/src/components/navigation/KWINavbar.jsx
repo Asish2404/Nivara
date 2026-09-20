@@ -184,16 +184,16 @@ export function KWINavbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full pt-3.5 pb-2 px-3 sm:px-6 pointer-events-none select-none transition-all">
+    <header className="sticky top-0 z-50 w-full pt-2 sm:pt-3.5 pb-1.5 sm:pb-2 px-2.5 sm:px-6 pointer-events-none select-none transition-all">
       {/* ===================================================== */}
       {/* SEAMLESS LIQUID GLASS NAVBAR CONTAINER                */}
       {/* ===================================================== */}
-      <div className="relative pointer-events-auto max-w-[1380px] mx-auto rounded-[30px] group/nav shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_14px_45px_rgba(0,0,0,0.35)]">
+      <div className="relative pointer-events-auto max-w-[1380px] mx-auto rounded-[24px] sm:rounded-[30px] group/nav shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_14px_45px_rgba(0,0,0,0.35)]">
         {/* ===================================================== */}
         {/* LIQUID GLASS MAIN CAPSULE CONTAINER                   */}
         {/* ===================================================== */}
         <div
-          className={`relative rounded-[30px] px-4 sm:px-6 py-2.5 backdrop-blur-3xl backdrop-saturate-[180%] transition-all duration-300 ${
+          className={`relative rounded-[24px] sm:rounded-[30px] px-3 sm:px-6 py-2 sm:py-2.5 backdrop-blur-3xl backdrop-saturate-[180%] transition-all duration-300 ${
             isDarkMode
               ? "border border-[rgba(94,183,201,0.18)] text-[#F2FBFD]"
               : "border border-white/80 text-slate-900"
@@ -209,22 +209,22 @@ export function KWINavbar() {
         >
           {/* Internal Refractive Glass Caustic Sheen */}
           <div
-            className="absolute inset-0 rounded-[30px] bg-gradient-to-tr from-white/[0.12] via-transparent to-white/[0.22] pointer-events-none"
+            className="absolute inset-0 rounded-[24px] sm:rounded-[30px] bg-gradient-to-tr from-white/[0.12] via-transparent to-white/[0.22] pointer-events-none"
             aria-hidden="true"
           />
 
-          <div className="relative flex items-center justify-between gap-4 z-10">
+          <div className="relative flex items-center justify-between gap-2 sm:gap-4 z-10">
             {/* ================================================= */}
             {/* BRAND IDENTITY (Preserving exact existing logo)  */}
             {/* ================================================= */}
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               <button
                 type="button"
                 onClick={() => handleNavClick("/")}
-                className="flex items-center gap-3 text-left group cursor-pointer focus:outline-none"
+                className="flex items-center gap-2 sm:gap-3 text-left group cursor-pointer focus:outline-none"
               >
                 {/* KWI Emblem Logo - Left exactly as is */}
-                <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-white border border-slate-200/80 shadow-xs flex items-center justify-center p-0.5 group-hover:scale-105 group-hover:shadow-sm transition-all duration-200 shrink-0">
+                <div className="relative w-8 sm:w-10 h-8 sm:h-10 rounded-xl overflow-hidden bg-white border border-slate-200/80 shadow-xs flex items-center justify-center p-0.5 group-hover:scale-105 group-hover:shadow-sm transition-all duration-200 shrink-0">
                   <img
                     src="/textures/NIVARA_LOGO.png"
                     alt="NIVARA Logo"
@@ -235,7 +235,7 @@ export function KWINavbar() {
                 <div>
                   <div className="flex items-center gap-2">
                     <div
-                      className={`text-[15px] sm:text-[17px] font-extrabold tracking-[0.18em] uppercase font-sans leading-none transition-all duration-300 flex items-baseline ${
+                      className={`text-[14px] sm:text-[17px] font-extrabold tracking-[0.16em] sm:tracking-[0.18em] uppercase font-sans leading-none transition-all duration-300 flex items-baseline ${
                         isDarkMode ? "text-[#F2FBFD]" : "text-slate-900"
                       }`}
                     >
@@ -251,16 +251,16 @@ export function KWINavbar() {
                     {/*  */}
                   </div>
 
-                  <div className="flex items-center gap-1.5 mt-1">
+                  <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1">
                     <span className="relative flex h-1.5 w-1.5 shrink-0">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500 dark:bg-[#00E5FF]" />
                     </span>
                     <span
-                      className={`text-[9.5px] font-medium tracking-wide uppercase leading-tight transition-colors truncate max-w-[210px] sm:max-w-none ${
+                      className={`inline text-[8px] min-[360px]:text-[8.5px] sm:text-[9.5px] font-semibold tracking-wide uppercase leading-tight transition-colors truncate max-w-[170px] min-[360px]:max-w-[210px] sm:max-w-none ${
                         isDarkMode
                           ? "text-[#B2D2D9] group-hover:text-[#F2FBFD]"
-                          : "text-slate-500 group-hover:text-slate-700"
+                          : "text-slate-600 group-hover:text-slate-900"
                       }`}
                     >
                       Predict. Prepare. Prevent.
@@ -339,7 +339,7 @@ export function KWINavbar() {
             {/* ================================================= */}
             {/* RIGHT ACTION CONTROLS                             */}
             {/* ================================================= */}
-            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
               {/* ----------------------------------------------- */}
               {/* SIGN IN ACTION BUTTON / COMMAND PROFILE DROPDOWN*/}
               {/* ----------------------------------------------- */}
@@ -412,7 +412,7 @@ export function KWINavbar() {
                 aria-label={
                   isDarkMode ? "Switch to Light mode" : "Switch to Dark mode"
                 }
-                className={`relative w-[114px] h-[38px] rounded-full p-[3px] flex items-center cursor-pointer transition-all duration-500 select-none overflow-hidden group shadow-md border ${
+                className={`hidden md:flex relative w-[114px] h-[38px] rounded-full p-[3px] items-center cursor-pointer transition-all duration-500 select-none overflow-hidden group shadow-md border ${
                   isDarkMode
                     ? "justify-between border-slate-700/60"
                     : "justify-between border-slate-300/60"
@@ -495,7 +495,7 @@ export function KWINavbar() {
                   audioEngine.playUiChirp(880);
                   toggleAskKolkata();
                 }}
-                className="flex items-center gap-2 px-4.5 py-2.5 rounded-2xl text-xs font-semibold text-white bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 hover:from-blue-600 hover:to-cyan-400 transition-all cursor-pointer shadow-[0_4px_16px_rgba(0,112,243,0.35)] active:scale-[0.98] border border-blue-400/25 whitespace-nowrap"
+                className="hidden sm:flex items-center gap-2 px-4.5 py-2.5 rounded-2xl text-xs font-semibold text-white bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 hover:from-blue-600 hover:to-cyan-400 transition-all cursor-pointer shadow-[0_4px_16px_rgba(0,112,243,0.35)] active:scale-[0.98] border border-blue-400/25 whitespace-nowrap"
               >
                 <Sparkles className="w-3.5 h-3.5 text-white" />
                 <span>Ask Kolkata</span>
@@ -556,8 +556,40 @@ export function KWINavbar() {
                 );
               })}
 
+              {/* Mobile Quick Action Buttons (Ask Kolkata & Theme Toggle) */}
+              <div className={`pt-2 pb-1 border-t flex items-center justify-between gap-2 ${
+                isDarkMode ? "border-white/10" : "border-slate-200"
+              }`}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    audioEngine.playUiChirp(880);
+                    toggleAskKolkata();
+                  }}
+                  className="flex-1 py-2 px-3 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 flex items-center justify-center gap-1.5 shadow-sm active:scale-98 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-white" />
+                  <span>Ask Kolkata</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border ${
+                    isDarkMode
+                      ? "bg-slate-800 text-amber-300 border-white/10"
+                      : "bg-slate-100 text-slate-700 border-slate-200"
+                  }`}
+                >
+                  <span>{isDarkMode ? "☀️ Light" : "🌙 Dark"}</span>
+                </button>
+              </div>
+
               {/* Mobile Login / User Profile Action */}
-              <div className="pt-2 border-t border-white/10">
+              <div className={`pt-1 border-t ${
+                isDarkMode ? "border-white/10" : "border-slate-200"
+              }`}>
                 {!currentUser ? (
                   <button
                     type="button"
@@ -571,16 +603,24 @@ export function KWINavbar() {
                     <span>Sign Up // Join</span>
                   </button>
                 ) : (
-                  <div className="p-2.5 rounded-xl bg-white/5 border border-emerald-500/30 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base">
+                  <div className={`p-2.5 rounded-xl border flex items-center justify-between transition-colors ${
+                    isDarkMode
+                      ? "bg-white/5 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.08)]"
+                      : "bg-slate-50/95 border-emerald-500/40 shadow-xs"
+                  }`}>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="text-base shrink-0">
                         {currentUser.avatar || "👨‍✈️"}
                       </span>
-                      <div>
-                        <div className="text-xs font-bold text-white">
+                      <div className="min-w-0">
+                        <div className={`text-xs font-bold truncate ${
+                          isDarkMode ? "text-white" : "text-slate-900"
+                        }`}>
                           {currentUser.name}
                         </div>
-                        <div className="text-[10px] font-mono text-emerald-400">
+                        <div className={`text-[10px] font-mono font-semibold tracking-tight ${
+                          isDarkMode ? "text-emerald-400" : "text-emerald-600"
+                        }`}>
                           {currentUser.badgeId}
                         </div>
                       </div>
@@ -591,7 +631,11 @@ export function KWINavbar() {
                         logoutUser();
                         setMobileMenuOpen(false);
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 text-[10px] font-semibold"
+                      className={`shrink-0 ml-2 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors cursor-pointer ${
+                        isDarkMode
+                          ? "bg-rose-500/20 text-rose-300 hover:bg-rose-500/30"
+                          : "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200/80 shadow-2xs"
+                      }`}
                     >
                       Sign Out
                     </button>

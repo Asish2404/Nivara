@@ -394,13 +394,13 @@ export function LiveCityPage() {
           <BorderBeam size={400} duration={14} colorFrom="#00f0ff" colorTo="#3b82f6" />
 
           {/* Cybernetic HUD Corner Brackets */}
-          <div className="absolute top-3 left-3 w-5 h-5 border-t-2 border-cyan-400 z-[400] pointer-events-none" />
-          <div className="absolute top-3 right-3 w-5 h-5 border-t-2 border-r-2 border-cyan-400 z-[400] pointer-events-none" />
-          <div className="absolute bottom-3 left-3 w-5 h-5 border-b-2 border-l-2 border-cyan-400 z-[400] pointer-events-none" />
-          <div className="absolute bottom-3 right-3 w-5 h-5 border-b-2 border-r-2 border-cyan-400 z-[400] pointer-events-none" />
+          <div className="absolute top-3 left-3 w-5 h-5 border-t-2 border-cyan-400 z-10 pointer-events-none" />
+          <div className="absolute top-3 right-3 w-5 h-5 border-t-2 border-r-2 border-cyan-400 z-10 pointer-events-none" />
+          <div className="absolute bottom-3 left-3 w-5 h-5 border-b-2 border-l-2 border-cyan-400 z-10 pointer-events-none" />
+          <div className="absolute bottom-3 right-3 w-5 h-5 border-b-2 border-r-2 border-cyan-400 z-10 pointer-events-none" />
 
           {/* Top-Left Geographic Coordinates Readout Chip */}
-          <div className="absolute top-4 left-4 z-[400] flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-900/85 backdrop-blur-md border border-cyan-500/30 text-white font-mono text-[10px] shadow-lg">
+          <div className="absolute top-4 left-4 z-10 hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-900/85 backdrop-blur-md border border-cyan-500/30 text-white font-mono text-[10px] shadow-lg">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
             <span className="text-cyan-300 font-bold">GRID: 22.5726° N, 88.3639° E</span>
             <span className="text-slate-500 dark:text-[#6D949D]">|</span>
@@ -408,7 +408,7 @@ export function LiveCityPage() {
           </div>
 
           {/* Bottom-Right Hooghly River Telemetry Pill */}
-          <div className="absolute bottom-4 right-4 z-[400] hidden sm:flex items-center gap-3 px-3.5 py-2 rounded-xl bg-slate-900/85 backdrop-blur-md border border-cyan-500/25 text-white font-mono text-[10px] shadow-lg">
+          <div className="absolute bottom-4 right-4 z-10 hidden sm:flex items-center gap-3 px-3.5 py-2 rounded-xl bg-slate-900/85 backdrop-blur-md border border-cyan-500/25 text-white font-mono text-[10px] shadow-lg">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-blue-400" />
               <span className="font-bold text-slate-200">Hooghly River (Live)</span>
@@ -431,7 +431,7 @@ export function LiveCityPage() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="absolute top-4 right-4 z-20 w-full max-w-sm bg-white/95 dark:bg-[#061820]/95 backdrop-blur-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] rounded-2xl p-5 shadow-2xl space-y-3 pointer-events-auto"
+                className="absolute top-3 left-3 right-3 sm:left-auto sm:top-4 sm:right-4 z-30 w-auto sm:w-full sm:max-w-sm bg-white/95 dark:bg-[#061820]/95 backdrop-blur-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] rounded-2xl p-3.5 sm:p-5 shadow-2xl space-y-2.5 sm:space-y-3 pointer-events-auto max-h-[82vh] overflow-y-auto"
               >
                 <div className="flex items-start justify-between pb-2 border-b border-slate-100 dark:border-[rgba(94,183,201,0.16)]">
                   <div>
@@ -445,7 +445,7 @@ export function LiveCityPage() {
                   <button
                     type="button"
                     onClick={clearSelections}
-                    className="p-1 text-slate-400 dark:text-[#6D949D] hover:text-slate-800 dark:hover:text-[#F2FBFD] rounded-lg cursor-pointer transition-colors"
+                    className="p-1.5 text-slate-400 dark:text-[#6D949D] hover:text-slate-800 dark:hover:text-[#F2FBFD] rounded-lg cursor-pointer transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -497,7 +497,7 @@ export function LiveCityPage() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="absolute top-4 right-4 z-20 w-full max-w-sm bg-white/95 dark:bg-[#061820]/95 backdrop-blur-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] rounded-2xl p-5 shadow-2xl space-y-3 pointer-events-auto"
+                className="absolute top-3 left-3 right-3 sm:left-auto sm:top-4 sm:right-4 z-30 w-auto sm:w-full sm:max-w-sm bg-white/95 dark:bg-[#061820]/95 backdrop-blur-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] rounded-2xl p-3.5 sm:p-5 shadow-2xl space-y-2.5 sm:space-y-3 pointer-events-auto max-h-[82vh] overflow-y-auto"
               >
                 <div className="flex items-start justify-between pb-2 border-b border-slate-100 dark:border-[rgba(94,183,201,0.16)]">
                   <div>
@@ -511,7 +511,7 @@ export function LiveCityPage() {
                   <button
                     type="button"
                     onClick={clearSelections}
-                    className="p-1 text-slate-400 dark:text-[#6D949D] hover:text-slate-800 dark:hover:text-[#F2FBFD] rounded-lg cursor-pointer transition-colors"
+                    className="p-1.5 text-slate-400 dark:text-[#6D949D] hover:text-slate-800 dark:hover:text-[#F2FBFD] rounded-lg cursor-pointer transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -564,7 +564,7 @@ export function LiveCityPage() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="absolute top-4 right-4 z-20 w-full max-w-sm bg-white/95 dark:bg-[#061820]/95 backdrop-blur-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] rounded-2xl p-5 shadow-2xl space-y-3 pointer-events-auto"
+                className="absolute top-3 left-3 right-3 sm:left-auto sm:top-4 sm:right-4 z-30 w-auto sm:w-full sm:max-w-sm bg-white/95 dark:bg-[#061820]/95 backdrop-blur-xl border border-slate-200 dark:border-[rgba(94,183,201,0.16)] rounded-2xl p-3.5 sm:p-5 shadow-2xl space-y-2.5 sm:space-y-3 pointer-events-auto max-h-[82vh] overflow-y-auto"
               >
                 <div className="flex items-start justify-between pb-2 border-b border-slate-100 dark:border-[rgba(94,183,201,0.16)]">
                   <div>
@@ -578,24 +578,24 @@ export function LiveCityPage() {
                   <button
                     type="button"
                     onClick={clearSelections}
-                    className="p-1 text-slate-400 dark:text-[#6D949D] hover:text-slate-800 dark:hover:text-[#F2FBFD] rounded-lg cursor-pointer transition-colors"
+                    className="p-1.5 text-slate-400 dark:text-[#6D949D] hover:text-slate-800 dark:hover:text-[#F2FBFD] rounded-lg cursor-pointer transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#10313E] border border-slate-100 dark:border-[rgba(94,183,201,0.16)]">
-                    <span className="text-[10px] text-slate-500 dark:text-[#6D949D] block">Affected Area</span>
-                    <span className="font-bold text-slate-900 dark:text-[#F2FBFD]">{selectedRiskZone.affectedArea}</span>
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2 text-xs">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-[#10313E] border border-slate-100 dark:border-[rgba(94,183,201,0.16)]">
+                    <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-[#6D949D] block">Affected Area</span>
+                    <span className="font-bold text-slate-900 dark:text-[#F2FBFD] text-[11px] sm:text-xs">{selectedRiskZone.affectedArea}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#10313E] border border-slate-100 dark:border-[rgba(94,183,201,0.16)]">
-                    <span className="text-[10px] text-slate-500 dark:text-[#6D949D] block">Rainfall</span>
-                    <span className="font-bold text-slate-900 dark:text-[#F2FBFD]">{selectedRiskZone.rainfall}</span>
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-[#10313E] border border-slate-100 dark:border-[rgba(94,183,201,0.16)]">
+                    <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-[#6D949D] block">Rainfall</span>
+                    <span className="font-bold text-slate-900 dark:text-[#F2FBFD] text-[11px] sm:text-xs">{selectedRiskZone.rainfall}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#10313E] border border-slate-100 dark:border-[rgba(94,183,201,0.16)]">
-                    <span className="text-[10px] text-slate-500 dark:text-[#6D949D] block">Drainage Load</span>
-                    <span className="font-bold text-slate-900 dark:text-[#F2FBFD]">{selectedRiskZone.drainageLoad}</span>
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-[#10313E] border border-slate-100 dark:border-[rgba(94,183,201,0.16)]">
+                    <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-[#6D949D] block">Drainage Load</span>
+                    <span className="font-bold text-slate-900 dark:text-[#F2FBFD] text-[11px] sm:text-xs">{selectedRiskZone.drainageLoad}</span>
                   </div>
                 </div>
 

@@ -1097,7 +1097,7 @@ export function AdminDashboardView() {
               ADMIN DASHBOARD
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-[#082038] dark:text-[#F2FBFD] tracking-tight leading-tight drop-shadow-[0_4px_24px_rgba(59,130,246,0.25)] dark:drop-shadow-[0_4px_30px_rgba(0,229,255,0.35)]">
+            <h1 className="text-2xl sm:text-4xl lg:text-[42px] font-extrabold text-[#082038] dark:text-[#F2FBFD] tracking-tight leading-tight">
               City Response Center
             </h1>
 
@@ -1179,7 +1179,7 @@ export function AdminDashboardView() {
               </div>
 
               {/* Month & Days Dual Dropdowns */}
-              <div className="flex items-center gap-2 self-start sm:self-auto">
+              <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
                 {/* Month Dropdown */}
                 <div className="relative">
                   <select
@@ -1569,7 +1569,7 @@ export function AdminDashboardView() {
               </div>
 
               {/* 3 Top Mini Stats Cards Row */}
-              <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-5">
+              <div className="grid grid-cols-1 min-[440px]:grid-cols-3 gap-2.5 sm:gap-4 mb-5">
                 {/* Total Reports */}
                 <div className="bg-slate-50/90 dark:bg-slate-800/50 rounded-xl p-3.5 sm:p-4 border border-slate-100 dark:border-slate-800 shadow-2xs">
                   <div className="flex items-center gap-2 mb-1.5">
@@ -2001,8 +2001,8 @@ export function AdminDashboardView() {
                 </div>
               </div>
 
-              {/* Work Queue Table */}
-              <div className="w-full overflow-x-auto">
+              {/* Desktop Table View */}
+              <div className="hidden sm:block w-full overflow-x-auto">
                 <table className="w-full text-left border-collapse min-w-[620px]">
                   <thead>
                     <tr className="border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -2114,6 +2114,69 @@ export function AdminDashboardView() {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Work Queue Cards View */}
+              <div className="block sm:hidden space-y-3 pt-2">
+                {filteredWorkQueue.length === 0 ? (
+                  <div className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs font-medium bg-slate-50/50 dark:bg-slate-800/30 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                    No active work orders or resolved historical records found.
+                  </div>
+                ) : (
+                  filteredWorkQueue.map((wo) => {
+                    const TypeIcon = wo.typeIcon;
+                    const isHigh = wo.priority === "High";
+                    const isMed = wo.priority === "Medium";
+                    const priorityPillClass = isHigh
+                      ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/50"
+                      : isMed
+                        ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/50"
+                        : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/50";
+
+                    const statusPillClass =
+                      wo.statusVariant === "in-progress"
+                        ? "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800"
+                        : wo.statusVariant === "assigned"
+                          ? "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800"
+                          : wo.statusVariant === "resolved"
+                            ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                            : wo.statusVariant === "needs-intervention"
+                              ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800"
+                              : "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
+
+                    return (
+                      <div
+                        key={`mob-${wo.id}`}
+                        className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 space-y-2.5 text-xs"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-slate-400 font-semibold text-[11px]">#{wo.orderNum}</span>
+                            <span className="font-mono font-bold text-slate-900 dark:text-white">{wo.id}</span>
+                          </div>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10.5px] font-semibold border ${statusPillClass}`}>
+                            {wo.status}
+                          </span>
+                        </div>
+
+                        <div>
+                          <div className="font-medium text-slate-800 dark:text-slate-200">{wo.title}</div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{wo.location}</div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-slate-700/60 text-[11px]">
+                          <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                            {TypeIcon && <TypeIcon className="w-3.5 h-3.5 text-slate-400" />}
+                            <span>{wo.type}</span>
+                          </span>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10.5px] font-semibold border ${priorityPillClass}`}>
+                            {wo.priority}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           </motion.div>

@@ -1,4 +1,4 @@
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { Suspense, useRef, useState, useEffect, useCallback } from "react";
 import * as THREE from "three";
 import { Sparkles } from "@react-three/drei";
@@ -23,6 +23,26 @@ import AIUnleashedAuth from "./components/auth/AIUnleashedAuth";
 import { useKWIStore, isUserAdmin } from "./store/useKWIStore";
 import "./App.css";
 
+function ResponsiveEarthCamera() {
+  const { camera, size } = useThree();
+
+  useEffect(() => {
+    if (!camera || !size) return;
+    const aspect = size.width / Math.max(size.height, 1);
+    camera.fov = 35;
+    if (aspect < 1) {
+      // In portrait orientation (mobile/tablets), scale camera distance inversely with aspect
+      // so Earth maintains the exact same comfortable ~70% framing across all screen sizes
+      camera.position.z = 9.5 / Math.max(0.42, aspect);
+    } else {
+      camera.position.z = 9.5;
+    }
+    camera.updateProjectionMatrix();
+  }, [camera, size]);
+
+  return null;
+}
+
 function EarthScene({
   zoomStarted,
   earthRef,
@@ -33,7 +53,7 @@ function EarthScene({
 }) {
   return (
     <Canvas
-      camera={{ position: [0, 0.05, 7.8], fov: 35 }}
+      camera={{ position: [0, 0.05, 9.5], fov: 35 }}
       dpr={[1, 2]}
       gl={{ antialias: true, powerPreference: "high-performance" }}
       onCreated={({ gl }) => {
@@ -42,6 +62,7 @@ function EarthScene({
         gl.outputColorSpace = THREE.SRGBColorSpace;
       }}
     >
+      <ResponsiveEarthCamera />
       <color attach="background" args={["#000000"]} />
       <ambientLight intensity={0.16} color="#668ca4" />
       <directionalLight

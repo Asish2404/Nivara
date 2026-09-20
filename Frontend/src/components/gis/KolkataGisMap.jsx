@@ -739,6 +739,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
           const coords = kmToGeoCoord(ps.x, ps.y);
           const isCap = ps.isAtCapacity;
 
+          const isMobileScreen = typeof window !== "undefined" && window.innerWidth <= 640;
           const el = document.createElement("div");
           el.className = "cursor-pointer group flex items-center gap-1";
           el.setAttribute("data-cursor", "pump");
@@ -749,7 +750,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
               PS
             </div>
             <div style="background: rgba(15,23,42,0.88); color: ${isCap ? "#fca5a5" : "#7dd3fc"
-            }; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); font-family: monospace; white-space: nowrap;">
+            }; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); font-family: monospace; white-space: nowrap; ${isMobileScreen ? 'display: none;' : ''}">
               ${ps.id}: ${ps.capacity}
             </div>
           `;
@@ -776,7 +777,16 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
 
       // 3. KEY REAL KOLKATA LANDMARKS (Minimal clean geographic anchors)
       if (activeLayers.landmarks) {
+        const currentZoom = map.getZoom ? map.getZoom() : 12;
+        const isMobileScreen = typeof window !== "undefined" && window.innerWidth <= 640;
+
         REAL_KOLKATA_LANDMARKS.forEach((lm) => {
+          // On mobile or zoom < 13.0, keep major hubs to avoid label piling
+          if (isMobileScreen && currentZoom < 13.0) {
+            const majorHubs = ["howrah_bridge", "esplanade", "salt_lake", "behala", "victoria_memorial"];
+            if (!majorHubs.includes(lm.id)) return;
+          }
+
           const el = document.createElement("div");
           el.className =
             "pointer-events-auto px-2 py-0.5 rounded-md bg-slate-950/75 backdrop-blur-xs border border-white/20 text-[10px] font-semibold text-slate-200 tracking-tight shadow-xs hover:border-cyan-400 hover:text-white transition-all cursor-pointer font-sans select-none";
@@ -803,49 +813,47 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       }
 
       // 4. TEMPORARY CALIBRATION CONTROL POINTS FOR WARD 63 / VICTORIA OVERLAY
+      // Only render at high zoom (>= 15.2) to prevent obstructing citywide overview
       if (activeLayers.drainage) {
-        WARD63_CALIBRATION_POINTS.forEach((cp) => {
-          const el = document.createElement("div");
-          el.className = "cursor-pointer group relative flex flex-col items-center select-none";
-          el.setAttribute("data-cursor", "target");
-          el.setAttribute("title", `${cp.id}: ${cp.name}`);
-          el.innerHTML = `
-            <div style="position: relative; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;">
-              <!-- Outer calibration reticle ripple -->
-              <span style="position: absolute; inset: 0; border-radius: 9999px; border: 1.5px dashed #06b6d4; animation: spin 8s linear infinite; background: rgba(6, 182, 212, 0.2);"></span>
+        const currentZoom = map.getZoom ? map.getZoom() : 12;
+        if (currentZoom >= 15.2) {
+          WARD63_CALIBRATION_POINTS.forEach((cp) => {
+            const el = document.createElement("div");
+            el.className = "cursor-pointer group relative flex flex-col items-center select-none";
+            el.setAttribute("data-cursor", "target");
+            el.setAttribute("title", `${cp.id}: ${cp.name}`);
+            el.innerHTML = `
+              <div style="position: relative; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;">
+                <span style="position: absolute; inset: 0; border-radius: 9999px; border: 1.5px dashed #06b6d4; animation: spin 8s linear infinite; background: rgba(6, 182, 212, 0.2);"></span>
+                <span style="position: relative; width: 10px; height: 10px; border-radius: 9999px; background-color: #22d3ee; border: 2px solid #ffffff; box-shadow: 0 0 10px #06b6d4;"></span>
+                <span style="position: absolute; width: 24px; height: 1px; background: rgba(34, 211, 238, 0.7); pointer-events: none;"></span>
+                <span style="position: absolute; width: 1px; height: 24px; background: rgba(34, 211, 238, 0.7); pointer-events: none;"></span>
+              </div>
               
-              <!-- Center crosshair node -->
-              <span style="position: relative; width: 10px; height: 10px; border-radius: 9999px; background-color: #22d3ee; border: 2px solid #ffffff; box-shadow: 0 0 10px #06b6d4;"></span>
-              
-              <!-- Target Crosshair Lines -->
-              <span style="position: absolute; width: 24px; height: 1px; background: rgba(34, 211, 238, 0.7); pointer-events: none;"></span>
-              <span style="position: absolute; width: 1px; height: 24px; background: rgba(34, 211, 238, 0.7); pointer-events: none;"></span>
-            </div>
-            
-            <!-- Calibration ID & Landmark Label Tag -->
-            <div style="margin-top: 2px; background: rgba(15, 23, 42, 0.94); color: #e2e8f0; font-size: 8.5px; font-weight: 700; padding: 2px 6px; border-radius: 6px; border: 1px solid rgba(6, 182, 212, 0.6); font-family: monospace; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 4px; pointer-events: none;">
-              <span style="color: #22d3ee; font-weight: 800;">[${cp.id}]</span>
-              <span>${cp.name}</span>
-            </div>
-          `;
+              <div style="margin-top: 2px; background: rgba(15, 23, 42, 0.94); color: #e2e8f0; font-size: 8.5px; font-weight: 700; padding: 2px 6px; border-radius: 6px; border: 1px solid rgba(6, 182, 212, 0.6); font-family: monospace; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 4px; pointer-events: none;">
+                <span style="color: #22d3ee; font-weight: 800;">[${cp.id}]</span>
+                <span>${cp.name}</span>
+              </div>
+            `;
 
-          el.addEventListener("click", (e) => {
-            e.stopPropagation();
-            audioEngine.playUiChirp(1350);
-            map.flyTo({
-              center: cp.coords,
-              zoom: 16.0,
-              pitch: is3DMode ? 42 : 0,
-              duration: 1200,
+            el.addEventListener("click", (e) => {
+              e.stopPropagation();
+              audioEngine.playUiChirp(1350);
+              map.flyTo({
+                center: cp.coords,
+                zoom: 16.0,
+                pitch: is3DMode ? 42 : 0,
+                duration: 1200,
+              });
             });
+
+            const marker = new maplibregl.Marker({ element: el, anchor: "center" })
+              .setLngLat(cp.coords)
+              .addTo(map);
+
+            markersRef.current.push(marker);
           });
-
-          const marker = new maplibregl.Marker({ element: el, anchor: "center" })
-            .setLngLat(cp.coords)
-            .addTo(map);
-
-          markersRef.current.push(marker);
-        });
+        }
       }
     },
     [activeLayers.incidents, activeLayers.pumps, activeLayers.landmarks, activeLayers.drainage, is3DMode, store.waterloggingPredictions, activeSeverityFilter]
@@ -1293,16 +1301,17 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       {/* ------------------------------------------------------------- */}
       {/* Top Left: Enterprise GIS Municipal Telemetry Badge */}
       {/* ------------------------------------------------------------- */}
-      <div className="absolute top-4 left-4 z-20 flex flex-col gap-1.5 pointer-events-none">
-        <div className="pointer-events-auto flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-slate-900/90 backdrop-blur-md border border-cyan-500/30 text-white font-mono text-[11px] shadow-xl">
+      <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-20 flex flex-col gap-1.5 pointer-events-none">
+        <div className="pointer-events-auto flex items-center gap-2 sm:gap-2.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-slate-900/90 backdrop-blur-md border border-cyan-500/30 text-white font-mono text-[10px] sm:text-[11px] shadow-xl">
           <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
           <span className="text-cyan-300 font-bold tracking-tight">
-            KOLKATA MUNICIPAL GRID
+            <span className="inline sm:hidden">KOLKATA GIS</span>
+            <span className="hidden sm:inline">KOLKATA MUNICIPAL GRID</span>
           </span>
-          <span className="text-slate-600">|</span>
-          <span className="text-slate-300">WGS84 22.57°N, 88.36°E</span>
           <span className="text-slate-600 hidden sm:inline">|</span>
-          <span className="text-emerald-400 font-bold hidden sm:inline">
+          <span className="text-slate-300 hidden sm:inline">WGS84 22.57°N, 88.36°E</span>
+          <span className="text-slate-600 hidden md:inline">|</span>
+          <span className="text-emerald-400 font-bold hidden md:inline">
             REAL GEOGRAPHIC SATELLITE
           </span>
         </div>
@@ -1384,12 +1393,12 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       {/* Bottom Center: AI Spread Timeline Scrubber + Run Button */}
       {/* ------------------------------------------------------------- */}
       {!simulateState && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex items-center gap-2 max-w-[96vw]">
+        <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex items-center gap-1 sm:gap-2 max-w-[96vw]">
           {/* AI Spread Full Bar */}
           {activeLayers.spread && (
-            <div className="flex items-center gap-1 sm:gap-2 px-3 py-1.5 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-cyan-500/30 text-white shadow-2xl">
-              <div className="flex items-center gap-1.5 pr-2 border-r border-white/15 text-cyan-400 font-mono text-[11px] font-bold uppercase">
-                <Clock className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-0.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-cyan-500/30 text-white shadow-2xl">
+              <div className="flex items-center gap-1 sm:gap-1.5 pr-1.5 sm:pr-2 border-r border-white/15 text-cyan-400 font-mono text-[10px] sm:text-[11px] font-bold uppercase">
+                <Clock className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                 <span className="hidden sm:inline">AI Spread:</span>
               </div>
               {[0, 15, 30, 45, 60].map((mins) => {
@@ -1402,7 +1411,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                       setTimelineStep(mins);
                       audioEngine.playUiChirp(800 + mins * 10);
                     }}
-                    className={`px-2.5 py-1 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer ${
+                    className={`px-1.5 sm:px-2.5 py-1 rounded-lg font-mono text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
                       active
                         ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_12px_rgba(6,182,212,0.5)] border border-cyan-300/40"
                         : "text-slate-400 hover:text-white hover:bg-white/10"
@@ -1485,7 +1494,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       {/* ------------------------------------------------------------- */}
       {/* Bottom Right: Operational Layers Selector Drawer Button */}
       {/* ------------------------------------------------------------- */}
-      <div className="absolute bottom-4 right-4 z-20 pointer-events-auto flex flex-col items-end gap-2">
+      <div className="absolute bottom-16 sm:bottom-4 right-3 sm:right-4 z-20 pointer-events-auto flex flex-col items-end gap-2">
         {showLayerMenu && (
           <div className="p-3 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-white/15 shadow-2xl text-xs space-y-2 min-w-[200px] animate-in fade-in slide-in-from-bottom-2">
             <div className="flex items-center justify-between pb-1.5 border-b border-white/10 font-bold text-slate-300 text-[11px] font-mono uppercase tracking-wider">
@@ -1593,13 +1602,13 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
         <button
           type="button"
           onClick={() => setShowLayerMenu(!showLayerMenu)}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl backdrop-blur-md border shadow-xl text-xs font-semibold transition-all cursor-pointer ${showLayerMenu
+          className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl backdrop-blur-md border shadow-xl text-[11px] sm:text-xs font-semibold transition-all cursor-pointer ${showLayerMenu
             ? "bg-cyan-500 text-slate-950 border-cyan-400"
             : "bg-slate-900/90 text-slate-200 border-white/15 hover:bg-slate-800"
             }`}
         >
-          <Layers className="w-4 h-4" />
-          <span>Overlays & Layers</span>
+          <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <span className="hidden sm:inline">Overlays & </span><span>Layers</span>
         </button>
       </div>
 
@@ -1715,7 +1724,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       {/* Docked AI VERIFIED INCIDENT Intelligence Panel */}
       {/* ------------------------------------------------------------- */}
       {selectedIncident && (
-        <div className="absolute top-16 right-4 z-30 w-full max-w-sm sm:max-w-md bg-slate-900/98 backdrop-blur-2xl border border-cyan-500/40 rounded-2xl p-5 shadow-2xl text-white space-y-4 pointer-events-auto animate-in fade-in slide-in-from-right-3">
+        <div className="absolute top-12 left-2 right-2 sm:left-auto sm:right-4 z-30 w-auto sm:w-full sm:max-w-md max-h-[82vh] overflow-y-auto bg-slate-900/98 backdrop-blur-2xl border border-cyan-500/40 rounded-2xl p-4 sm:p-5 shadow-2xl text-white space-y-3.5 pointer-events-auto animate-in fade-in slide-in-from-right-3">
           {/* Header */}
           <div className="flex items-start justify-between pb-3 border-b border-white/10">
             <div>

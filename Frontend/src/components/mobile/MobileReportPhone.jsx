@@ -105,7 +105,7 @@ export function MobileReportPhone() {
     <div className="w-full flex flex-col items-center justify-center py-2 select-none">
       {/* 3D Perspective Stage Container - Fixed Camera */}
       <div
-        className="relative flex items-center justify-center"
+        className="relative flex items-center justify-center scale-[0.68] min-[360px]:scale-[0.74] min-[400px]:scale-[0.84] sm:scale-100 origin-top -mb-60 min-[360px]:-mb-48 min-[400px]:-mb-28 sm:mb-0"
         style={{
           perspective: '1500px',
           perspectiveOrigin: '50% 50%',

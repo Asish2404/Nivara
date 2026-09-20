@@ -65,9 +65,9 @@ function Toggle({ checked, onChange }) {
 /* ── Premium Simulation Workflow Stepper ────────────────────────── */
 function TimelineStep({ num, label, sublabel, active, done, isSimulating }) {
   return (
-    <div className="flex items-center gap-3 flex-1 min-w-0">
+    <div className="flex items-center gap-1.5 sm:gap-3 flex-1 min-w-0">
       <div
-        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs border transition-all duration-300 shrink-0 ${
+        className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10.5px] sm:text-xs border transition-all duration-300 shrink-0 ${
           done
             ? "bg-emerald-600 border-emerald-600 text-white font-medium shadow-xs"
             : active
@@ -76,16 +76,16 @@ function TimelineStep({ num, label, sublabel, active, done, isSimulating }) {
         }`}
       >
         {done ? (
-          <CheckCircle2 className="w-4 h-4 text-white stroke-[2.5]" />
+          <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white stroke-[2.5]" />
         ) : isSimulating && active ? (
-          <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+          <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin text-blue-600" />
         ) : (
           num
         )}
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <div
-          className={`text-[12.5px] truncate ${
+          className={`text-[11px] sm:text-[12.5px] leading-tight truncate ${
             done
               ? "text-emerald-700 font-semibold"
               : active
@@ -95,7 +95,7 @@ function TimelineStep({ num, label, sublabel, active, done, isSimulating }) {
         >
           {label}
         </div>
-        <div className="text-[11px] text-slate-500 font-normal truncate">
+        <div className="hidden sm:block text-[11px] text-slate-500 font-normal truncate mt-0.5">
           {sublabel}
         </div>
       </div>
@@ -538,47 +538,42 @@ export function SimulateView() {
      * SimulateView content area:
      *   - Shows panoramic Kolkata Golden Sunset with Heritage Dome, Yellow Taxis & Vintage Tram edge-to-edge
      */
-    <div
-      className="relative w-full overflow-hidden -mt-[104px] bg-[#e8f1f8] dark:bg-[#070c14]"
-      style={{
-        minHeight: "calc(100vh - 40px)",
-      }}
-    >
-      {/* ── 100% Full-Width Edge-to-Edge Panoramic Heritage Background Layer ── */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 pointer-events-none overflow-hidden"
-      >
-        <img
-          src="/images/kolkata_golden_sunset_trams.jpg"
-          alt="Kolkata Heritage Building at Golden Sunset with Yellow Taxis and Vintage Tram"
-          className="w-full h-full object-cover object-[center_35%] sm:object-[center_30%] filter contrast-[0.84] brightness-[0.98] saturate-[0.82] opacity-[0.82] transition-all duration-300"
-        />
+    <div className="w-full min-h-screen bg-[#f3f7fb] dark:bg-[#070c14] text-slate-900 dark:text-[#F0F9FA] transition-colors duration-300 pb-16 font-sans relative">
+      {/* ── Panoramic Heritage Header Banner (Premium Light & Dark Atmospheric Blend) ── */}
+      <div className="relative w-full overflow-hidden bg-[#e8f1f8] dark:bg-[#070c14]">
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          {/* Light Theme Golden Sunset Tram Photography */}
+          <img
+            src="/images/kolkata_golden_sunset_trams.jpg"
+            alt="Kolkata Heritage Building at Golden Sunset with Yellow Taxis and Vintage Tram"
+            className="w-full h-full object-cover object-[center_36%] sm:object-[center_32%] filter contrast-[1.04] brightness-[1.01] saturate-[1.02] dark:hidden transition-all duration-300"
+            onError={(e) => {
+              e.currentTarget.src = "/images/kolkata_heritage_street_extreme_wide.jpg";
+            }}
+          />
 
-        {/* Subtle, soft atmospheric gradient (Reduced smokiness to let vibrant scenery shine) */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#e8f1f8]/55 via-[#e8f1f8]/25 via-25% to-transparent to-55% dark:from-[#070c14]/65 dark:via-[#070c14]/30 dark:via-25% dark:to-transparent" />
+          {/* Dark Theme Night Tram & Illuminated Heritage Photography */}
+          <img
+            src="/images/kolkata_golden_sunset_trams_dark.png"
+            alt="Kolkata Heritage Golden Sunset Dark"
+            className="w-full h-full object-cover object-[center_36%] sm:object-[center_32%] filter contrast-[1.06] brightness-[1.0] saturate-[1.06] hidden dark:block transition-all duration-300"
+            onError={(e) => {
+              e.currentTarget.src = "/images/kolkata_heritage_wide_ultra_dark.png";
+            }}
+          />
 
-        {/* Soft top blend into navbar */}
-        <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-[#e8f1f8]/60 to-transparent dark:from-[#070c14]/65" />
+          {/* Cinematic atmospheric overlays for text contrast and seamless blending */}
+          <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#e8f1f8] via-[#e8f1f8]/60 to-transparent dark:from-[#070c14] dark:via-[#070c14]/70 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#e8f1f8] via-[#e8f1f8]/88 via-32% md:via-42% to-transparent to-78% dark:from-[#070c14] dark:via-[#070c14]/90 dark:via-32% md:dark:via-42% dark:to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#f3f7fb] via-[#f3f7fb]/85 to-transparent dark:from-[#070c14] dark:via-[#070c14]/85 pointer-events-none" />
+        </div>
 
-        {/* Soft bottom edge transition to footer */}
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#e8f1f8]/60 to-transparent dark:from-[#070c14]/65" />
-      </div>
-
-      {/* Main Content Container */}
-      <motion.div
-        className="relative max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-[156px] pb-24 font-sans"
-        style={{ zIndex: 2 }}
-        variants={stagger}
-        initial="hidden"
-        animate="show"
-      >
-        {/* ── 1. Hero Section with Blue Glow Effect ─────────────────── */}
-        <motion.div variants={fadeUp} className="mb-6 relative">
+        {/* ── 1. Hero Section with Header Content & Target Selector ── */}
+        <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-7 pb-12 sm:pt-10 sm:pb-16 font-sans">
           {/* Ambient Blue/Cyan Glow Sphere behind Header */}
-          <div className="absolute -left-10 -top-8 w-80 h-44 bg-gradient-to-br from-blue-500/25 via-cyan-400/20 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+          <div className="absolute -left-10 -top-8 w-80 h-44 bg-gradient-to-br from-blue-500/20 via-cyan-400/15 to-transparent dark:from-[#00E5FF]/20 dark:via-[#38BDF8]/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
-          <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/60 dark:bg-slate-900/60 border border-white/70 dark:border-slate-700/60 text-[12px] text-slate-700 dark:text-slate-200 mb-3 shadow-[0_4px_16px_rgba(15,23,42,0.05),0_0_12px_rgba(59,130,246,0.12)] backdrop-blur-xl">
+          <div className="inline-flex flex-wrap items-center gap-1.5 sm:gap-2.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/70 dark:bg-slate-900/70 border border-white/80 dark:border-slate-700/60 text-[11px] sm:text-[12px] text-slate-700 dark:text-slate-200 mb-3 shadow-[0_4px_16px_rgba(15,23,42,0.05),0_0_12px_rgba(59,130,246,0.12)] backdrop-blur-xl max-w-full">
             <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
             <span className="font-bold text-slate-900 dark:text-white">Hydraulic Intervention Modeling</span>
             <span className="text-slate-400 dark:text-slate-500">·</span>
@@ -587,10 +582,10 @@ export function SimulateView() {
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <h1 className="text-3xl sm:text-[35px] font-bold tracking-[-0.025em] text-[#0a325c] dark:text-white mb-2 leading-tight drop-shadow-[0_0_24px_rgba(59,130,246,0.45)] dark:drop-shadow-[0_0_30px_rgba(6,182,212,0.6)]">
+              <h1 className="text-2xl sm:text-3xl md:text-[35px] font-extrabold tracking-tight text-[#0a325c] dark:text-[#F2FBFD] mb-2 leading-tight">
                 Simulate Drainage Interventions
               </h1>
-              <p className="text-[13.5px] text-[#1c4774] dark:text-cyan-100/90 max-w-2xl leading-relaxed font-medium drop-shadow-[0_0_12px_rgba(59,130,246,0.25)]">
+              <p className="text-xs sm:text-[13.5px] text-slate-700 dark:text-[#B2D2D9] max-w-2xl leading-relaxed font-normal">
                 Test pumping station boosts, inlet desilting crews, and mobile
                 submersible units to predict flood reduction before dispatching
                 field teams.
@@ -598,7 +593,7 @@ export function SimulateView() {
             </div>
 
             {/* Target Hotspot & Incident Selector with 5-item scrollable dropdown */}
-            <div ref={dropdownRef} className="relative shrink-0 z-30">
+            <div ref={dropdownRef} className="relative shrink-0 z-30 w-full sm:w-auto">
               <button
                 type="button"
                 id="hotspot-dropdown-trigger"
@@ -606,7 +601,7 @@ export function SimulateView() {
                   audioEngine.playUiChirp(isDropdownOpen ? 700 : 950);
                   setIsDropdownOpen((prev) => !prev);
                 }}
-                className="flex items-center gap-3 p-2.5 px-3.5 rounded-2xl bg-white/95 dark:bg-[#131d31]/95 border border-slate-200/90 dark:border-slate-700/80 shadow-xs hover:border-slate-300 dark:hover:border-slate-600 transition-all text-left backdrop-blur-md cursor-pointer group max-w-[360px] sm:max-w-[440px]"
+                className="flex items-center gap-2.5 sm:gap-3 p-2.5 px-3 sm:px-3.5 rounded-2xl bg-white/95 dark:bg-[#131d31]/95 border border-slate-200/90 dark:border-slate-700/80 shadow-xs hover:border-slate-300 dark:hover:border-slate-600 transition-all text-left backdrop-blur-md cursor-pointer group w-full sm:w-auto max-w-full sm:max-w-[440px]"
                 aria-expanded={isDropdownOpen}
                 aria-haspopup="listbox"
               >
@@ -668,7 +663,7 @@ export function SimulateView() {
                     transition={{ duration: 0.16, ease: "easeOut" }}
                     data-lenis-prevent="true"
                     data-lenis-prevent-wheel="true"
-                    className="absolute right-0 top-full mt-2 w-[340px] sm:w-[420px] md:w-[460px] max-w-[94vw] bg-white dark:bg-[#131d31] border border-slate-200/90 dark:border-slate-700/80 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.14)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden backdrop-blur-xl"
+                    className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-[420px] md:w-[460px] max-w-[460px] bg-white dark:bg-[#131d31] border border-slate-200/90 dark:border-slate-700/80 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.14)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden backdrop-blur-xl"
                   >
                     {/* Header with count & scroll indicator */}
                     <div className="flex items-center justify-between px-3.5 py-2 bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-700/60 text-[11px] font-mono text-slate-500 dark:text-slate-400">
@@ -769,11 +764,20 @@ export function SimulateView() {
               </AnimatePresence>
             </div>
           </div>
-        </motion.div>
+        </div>
+      </div>
+
+      {/* ── Main Interactive Simulation Content ── */}
+      <motion.div
+        className="relative z-10 max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-6 pb-16 sm:pb-24 font-sans"
+        variants={stagger}
+        initial="hidden"
+        animate="show"
+      >
 
         {/* ── 2. Redesigned 3-Step Progress Stepper ──────────────────── */}
-        <motion.div variants={fadeUp} className="mb-6 max-w-2xl">
-          <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+        <motion.div variants={fadeUp} className="mb-5 sm:mb-6 max-w-2xl">
+          <div className="flex items-center justify-between p-2 sm:p-3.5 rounded-2xl bg-white/90 dark:bg-[#0c1a2e]/90 backdrop-blur-md border border-slate-200/90 dark:border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
             <TimelineStep
               num="1"
               label="Baseline"
@@ -783,25 +787,30 @@ export function SimulateView() {
               isSimulating={false}
             />
             <div
-              className={`h-[2px] w-8 sm:w-16 mx-2 rounded-full transition-all duration-500 ${
+              className={`h-[2px] w-3 sm:w-16 mx-1 sm:mx-2 rounded-full transition-all duration-500 shrink-0 ${
                 simState === "SIMULATING" || simState === "RESULT"
                   ? "bg-blue-600"
-                  : "bg-slate-200"
+                  : "bg-slate-200 dark:bg-slate-700"
               }`}
             />
             <TimelineStep
               num="2"
-              label="Solving PDE"
+              label={
+                <>
+                  <span className="sm:hidden">Solving</span>
+                  <span className="hidden sm:inline">Solving PDE</span>
+                </>
+              }
               sublabel="Hydraulic computation"
               active={simState === "SIMULATING"}
               done={simState === "RESULT"}
               isSimulating={simState === "SIMULATING"}
             />
             <div
-              className={`h-[2px] w-8 sm:w-16 mx-2 rounded-full transition-all duration-500 ${
+              className={`h-[2px] w-3 sm:w-16 mx-1 sm:mx-2 rounded-full transition-all duration-500 shrink-0 ${
                 simState === "RESULT"
                   ? "bg-emerald-600"
-                  : "bg-slate-200"
+                  : "bg-slate-200 dark:bg-slate-700"
               }`}
             />
             <TimelineStep
@@ -821,39 +830,39 @@ export function SimulateView() {
           className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch"
         >
           {/* ── CARD 1: Intervention Parameters ────────────────────── */}
-          <div className="rounded-2xl bg-white/92 backdrop-blur-md border border-slate-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] p-6 flex flex-col justify-between gap-5 transition-shadow hover:shadow-[0_12px_36px_rgba(0,0,0,0.06)]">
+          <div className="rounded-2xl bg-white/92 dark:bg-[#131d31]/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-700/80 shadow-[0_8px_30px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] p-4 sm:p-6 flex flex-col justify-between gap-4 sm:gap-5 transition-shadow hover:shadow-[0_12px_36px_rgba(0,0,0,0.06)]">
             {/* Header */}
-            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-xs">
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0 shadow-xs">
                   <Cpu className="w-4 h-4" />
                 </div>
-                <div>
-                  <h2 className="text-[14px] font-semibold text-slate-900 tracking-[-0.01em]">
+                <div className="min-w-0">
+                  <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white tracking-[-0.01em] truncate">
                     Intervention Parameters
                   </h2>
-                  <p className="text-[12px] text-slate-500 font-normal">
+                  <p className="text-[12px] text-slate-500 dark:text-slate-400 font-normal truncate">
                     Configure field interventions for simulation
                   </p>
                 </div>
               </div>
-              <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/80">
+              <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-cyan-300 border border-blue-200/80 dark:border-blue-800/60 shrink-0">
                 Station {activeStation.id}
               </span>
             </div>
 
             {/* Turbine Load Section */}
-            <div className="rounded-xl bg-slate-50/80 border border-slate-100 p-4">
+            <div className="rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60 p-3.5 sm:p-4">
               <div className="flex justify-between items-center mb-3">
-                <div>
-                  <span className="text-[13px] font-medium text-slate-900 block">
+                <div className="min-w-0">
+                  <span className="text-[13px] font-medium text-slate-900 dark:text-slate-100 block truncate">
                     Station {activeStation.id} Turbine Load
                   </span>
-                  <span className="text-[11.5px] text-slate-500 font-normal">
+                  <span className="text-[11.5px] text-slate-500 dark:text-slate-400 font-normal block truncate">
                     Discharge pump control ({simulationResult.pumpDischargeCusecs} cusecs)
                   </span>
                 </div>
-                <span className="text-[26px] font-semibold tracking-tight text-blue-600 tabular-nums">
+                <span className="text-[24px] sm:text-[26px] font-semibold tracking-tight text-blue-600 dark:text-cyan-400 tabular-nums shrink-0 ml-2">
                   {pumpCapacity}%
                 </span>
               </div>
@@ -872,23 +881,23 @@ export function SimulateView() {
                     }%, #e2e8f0 ${((pumpCapacity - 50) / 50) * 100}%, #e2e8f0 100%)`,
                 }}
               />
-              <div className="flex justify-between text-[11px] text-slate-500 mt-1.5 font-normal">
+              <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 font-normal">
                 <span>50% ({Math.round(stationCapacityCusecs * 0.5)} cusecs)</span>
                 <span>100% ({stationCapacityCusecs} cusecs)</span>
               </div>
             </div>
 
             {/* Desilting Mobile Unit Row */}
-            <div className="flex items-center justify-between rounded-xl bg-slate-50/80 border border-slate-100 p-3.5">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+            <div className="flex items-center justify-between rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60 p-3 sm:p-3.5 gap-2.5">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
                   <Waves className="w-4 h-4" />
                 </div>
-                <div>
-                  <span className="text-[13px] font-medium text-slate-900 block">
+                <div className="min-w-0">
+                  <span className="text-[12.5px] sm:text-[13px] font-medium text-slate-900 dark:text-slate-100 block truncate">
                     Inlet Desilting Mobile Unit
                   </span>
-                  <span className="text-[11.5px] text-slate-500 font-normal">
+                  <span className="text-[11px] sm:text-[11.5px] text-slate-500 dark:text-slate-400 font-normal block truncate">
                     Deploy Rapid Action Unit 04 (+22% culvert draw)
                   </span>
                 </div>
@@ -903,16 +912,16 @@ export function SimulateView() {
             </div>
 
             {/* Mobile Submersible Pump Row */}
-            <div className="flex items-center justify-between rounded-xl bg-slate-50/80 border border-slate-100 p-3.5">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-cyan-50 border border-cyan-100 flex items-center justify-center text-cyan-600 shrink-0">
+            <div className="flex items-center justify-between rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60 p-3 sm:p-3.5 gap-2.5">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-950/50 border border-cyan-100 dark:border-cyan-800/60 flex items-center justify-center text-cyan-600 dark:text-cyan-400 shrink-0">
                   <Zap className="w-4 h-4" />
                 </div>
-                <div>
-                  <span className="text-[13px] font-medium text-slate-900 block">
+                <div className="min-w-0">
+                  <span className="text-[12.5px] sm:text-[13px] font-medium text-slate-900 dark:text-slate-100 block truncate">
                     Mobile Submersible Pump
                   </span>
-                  <span className="text-[11.5px] text-slate-500 font-normal">
+                  <span className="text-[11px] sm:text-[11.5px] text-slate-500 dark:text-slate-400 font-normal block truncate">
                     20 HP Godwin high-head unit (+19% relief)
                   </span>
                 </div>
@@ -927,11 +936,11 @@ export function SimulateView() {
             </div>
 
             {/* Hooghly River Tide Indicator */}
-            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-600">
+            <div className="flex flex-wrap items-center justify-between gap-1.5 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60 text-[11px] text-slate-600 dark:text-slate-300">
               <div className="flex items-center gap-1.5">
-                <Gauge className="w-3.5 h-3.5 text-blue-600" />
+                <Gauge className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400" />
                 <span>Hooghly Tide:</span>
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-slate-900 dark:text-white">
                   {hooghlyTideLevel || 3.42}m ({hooghlyTideTrend || "RISING"})
                 </span>
               </div>
@@ -995,36 +1004,36 @@ export function SimulateView() {
           </div>
 
           {/* ── CARD 2: Baseline Risk (Visual Focal Point) ─────────── */}
-          <div className="rounded-2xl bg-white/92 backdrop-blur-md border border-slate-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] p-6 flex flex-col justify-between gap-4 transition-shadow hover:shadow-[0_12px_36px_rgba(0,0,0,0.06)] ring-1 ring-rose-500/10">
+          <div className="rounded-2xl bg-white/92 dark:bg-[#131d31]/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-700/80 shadow-[0_8px_30px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] p-4 sm:p-6 flex flex-col justify-between gap-3.5 sm:gap-4 transition-shadow hover:shadow-[0_12px_36px_rgba(0,0,0,0.06)] ring-1 ring-rose-500/10">
             {/* Header */}
-            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shadow-xs">
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-100 dark:border-rose-800/60 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0 shadow-xs">
                   <Activity className="w-4 h-4" />
                 </div>
-                <div>
-                  <h2 className="text-[14px] font-semibold text-slate-900 tracking-[-0.01em]">
+                <div className="min-w-0">
+                  <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white tracking-[-0.01em] truncate">
                     Baseline Risk
                   </h2>
-                  <p className="text-[12px] text-slate-500 font-normal">
+                  <p className="text-[12px] text-slate-500 dark:text-slate-400 font-normal truncate">
                     Pre-intervention state
                   </p>
                 </div>
               </div>
-              <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border ${
+              <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border shrink-0 ${
                 isQueueEmpty
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                  : "bg-rose-50 text-rose-700 border-rose-200"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60"
+                  : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/60"
               }`}>
                 {isQueueEmpty ? "No Active Order" : (activeIncident.severity || "Critical")}
               </span>
             </div>
 
             {/* Main Risk Circular Gauge */}
-            <div className={`rounded-2xl border p-5 flex flex-col items-center justify-center text-center relative overflow-hidden ${
+            <div className={`rounded-2xl border p-3.5 sm:p-5 flex flex-col items-center justify-center text-center relative overflow-hidden ${
               isQueueEmpty
-                ? "bg-gradient-to-b from-emerald-50/70 via-emerald-50/30 to-white/40 border-emerald-100/80"
-                : "bg-gradient-to-b from-rose-50/70 via-rose-50/30 to-white/40 border-rose-100/80"
+                ? "bg-gradient-to-b from-emerald-50/70 via-emerald-50/30 to-white/40 dark:from-emerald-950/30 dark:via-emerald-950/10 dark:to-transparent border-emerald-100/80 dark:border-emerald-800/60"
+                : "bg-gradient-to-b from-rose-50/70 via-rose-50/30 to-white/40 dark:from-rose-950/30 dark:via-rose-950/10 dark:to-transparent border-rose-100/80 dark:border-rose-800/60"
             }`}>
               {/* Circular Gauge Ring */}
               <div className="relative w-24 h-24 flex items-center justify-center">
@@ -1059,19 +1068,19 @@ export function SimulateView() {
                 {/* Center Value */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                   <span className={`text-[34px] font-semibold tracking-tight leading-none tabular-nums ${
-                    isQueueEmpty ? "text-emerald-600" : "text-rose-600"
+                    isQueueEmpty ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
                   }`}>
                     {baselineDepthCm}
                   </span>
                   <span className={`text-[11px] font-medium mt-0.5 ${
-                    isQueueEmpty ? "text-emerald-500" : "text-rose-500"
+                    isQueueEmpty ? "text-emerald-500 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"
                   }`}>
                     cm
                   </span>
                 </div>
               </div>
 
-              <div className="text-[13.5px] font-semibold text-slate-900 mt-2.5">
+              <div className="text-[13.5px] font-semibold text-slate-900 dark:text-slate-100 mt-2.5">
                 {isQueueEmpty
                   ? "No Active Inundation"
                   : baselineDepthCm >= 20
@@ -1080,11 +1089,11 @@ export function SimulateView() {
                       ? "Moderate Waterlogging"
                       : "Surface Water Accumulation"}
               </div>
-              <div className="text-[11.5px] text-slate-600 mt-0.5 flex items-center gap-1.5 font-normal">
+              <div className="text-[11.5px] text-slate-600 dark:text-slate-400 mt-0.5 flex items-center gap-1.5 font-normal">
                 <span>{isQueueEmpty ? "All Hotspots Dispatched" : (activeIncident?.ward || activeIncident?.subdivision?.split("//")[0]?.trim() || "Kolkata Grid")}</span>
-                <span className="text-slate-300">·</span>
+                <span className="text-slate-300 dark:text-slate-600">·</span>
                 <span className={`font-medium truncate max-w-[200px] ${
-                  isQueueEmpty ? "text-emerald-700" : "text-rose-700"
+                  isQueueEmpty ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"
                 }`}>
                   {isQueueEmpty ? "Queue All-Clear" : (activeIncident?.location ? activeIncident.location.split("(")[0].trim() : "Hotspot")}
                 </span>
@@ -1096,15 +1105,15 @@ export function SimulateView() {
               {/* Row 1: Drainage Load */}
               <div className="text-[12px]">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-slate-600 font-normal flex items-center gap-1.5">
+                  <span className="text-slate-600 dark:text-slate-400 font-normal flex items-center gap-1.5">
                     <Droplets className="w-3.5 h-3.5 text-amber-500" />
                     Drainage Load
                   </span>
-                  <span className="font-semibold text-slate-900 tabular-nums">
+                  <span className="font-semibold text-slate-900 dark:text-white tabular-nums">
                     {baselineDrainageLoad}%
                   </span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                   <div
                     className="h-full rounded-full bg-amber-400 transition-all duration-700"
                     style={{ width: `${baselineDrainageLoad}%` }}
@@ -1115,15 +1124,15 @@ export function SimulateView() {
               {/* Row 2: Risk Score */}
               <div className="text-[12px]">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-slate-600 font-normal flex items-center gap-1.5">
+                  <span className="text-slate-600 dark:text-slate-400 font-normal flex items-center gap-1.5">
                     <BarChart3 className="w-3.5 h-3.5 text-rose-500" />
                     Risk Score
                   </span>
-                  <span className="font-semibold text-slate-900 tabular-nums">
+                  <span className="font-semibold text-slate-900 dark:text-white tabular-nums">
                     {baselineRiskScore} / 100
                   </span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                   <div
                     className="h-full rounded-full bg-rose-500 transition-all duration-700"
                     style={{ width: `${baselineRiskScore}%` }}
@@ -1134,15 +1143,15 @@ export function SimulateView() {
               {/* Row 3: Affected Area */}
               <div className="text-[12px]">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-slate-600 font-normal flex items-center gap-1.5">
+                  <span className="text-slate-600 dark:text-slate-400 font-normal flex items-center gap-1.5">
                     <Grid3X3 className="w-3.5 h-3.5 text-rose-400" />
                     Affected Area
                   </span>
-                  <span className="font-semibold text-slate-900 tabular-nums">
+                  <span className="font-semibold text-slate-900 dark:text-white tabular-nums">
                     {baselineAreaM2.toLocaleString()} m²
                   </span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                   <div
                     className="h-full rounded-full bg-rose-400 transition-all duration-700"
                     style={{ width: `${Math.min(100, Math.round((baselineAreaM2 / 16000) * 100))}%` }}
@@ -1152,17 +1161,17 @@ export function SimulateView() {
             </div>
 
             {/* Subtle Risk Warning Panel */}
-            <div className={`rounded-xl px-3.5 py-2 text-[11.5px] flex items-center gap-2 font-normal ${
+            <div className={`rounded-xl px-3 sm:px-3.5 py-2 text-[11.5px] flex items-center gap-2 font-normal ${
               isQueueEmpty
-                ? "bg-emerald-50/90 border border-emerald-200/80 text-emerald-900"
-                : "bg-amber-50/90 border border-amber-200/80 text-amber-900"
+                ? "bg-emerald-50/90 border border-emerald-200/80 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-800/60 dark:text-emerald-300"
+                : "bg-amber-50/90 border border-amber-200/80 text-amber-900 dark:bg-amber-950/40 dark:border-amber-800/60 dark:text-amber-300"
             }`}>
               {isQueueEmpty ? (
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
               ) : (
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
               )}
-              <span className="truncate">
+              <span className="line-clamp-2 leading-tight">
                 {isQueueEmpty
                   ? "All municipal hotspots have been dispatched. No active orders pending simulation."
                   : (activeIncident.probableCause || "High risk of further inundation if no intervention is taken.")}
@@ -1171,24 +1180,24 @@ export function SimulateView() {
           </div>
 
           {/* ── CARD 3: Simulated Outcome ──────────────────────────── */}
-          <div className="rounded-2xl bg-white/92 backdrop-blur-md border border-slate-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] p-6 flex flex-col justify-between gap-4 transition-shadow hover:shadow-[0_12px_36px_rgba(0,0,0,0.06)] relative overflow-hidden">
+          <div className="rounded-2xl bg-white/92 dark:bg-[#131d31]/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-700/80 shadow-[0_8px_30px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] p-4 sm:p-6 flex flex-col justify-between gap-3.5 sm:gap-4 transition-shadow hover:shadow-[0_12px_36px_rgba(0,0,0,0.06)] relative overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                 <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all duration-300 shadow-xs ${
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all duration-300 shadow-xs shrink-0 ${
                     simState === "RESULT"
-                      ? "bg-emerald-50 border-emerald-200 text-emerald-600"
-                      : "bg-blue-50 border-blue-100 text-blue-600"
+                      ? "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/50 dark:border-emerald-800/60 dark:text-emerald-400"
+                      : "bg-blue-50 border-blue-100 text-blue-600 dark:bg-blue-950/50 dark:border-blue-800/60 dark:text-blue-400"
                   }`}
                 >
                   <TrendingDown className="w-4 h-4" />
                 </div>
-                <div>
-                  <h2 className="text-[14px] font-semibold text-slate-900 tracking-[-0.01em]">
+                <div className="min-w-0">
+                  <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white tracking-[-0.01em] truncate">
                     Simulated Outcome
                   </h2>
-                  <p className="text-[12px] text-slate-500 font-normal">
+                  <p className="text-[12px] text-slate-500 dark:text-slate-400 font-normal truncate">
                     {simState === "RESULT"
                       ? "Relief verified"
                       : "Awaiting simulation"}
@@ -1196,10 +1205,10 @@ export function SimulateView() {
                 </div>
               </div>
               <span
-                className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border transition-all duration-300 ${
+                className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border transition-all duration-300 shrink-0 ${
                   simState === "RESULT"
-                    ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                    : "bg-slate-100 border-slate-200 text-slate-600"
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60"
+                    : "bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700/60"
                 }`}
               >
                 {simState === "RESULT" ? "Verified" : "Pending"}
@@ -1208,10 +1217,10 @@ export function SimulateView() {
 
             {/* Center Visual Area */}
             <div
-              className={`rounded-2xl border p-5 flex flex-col items-center justify-center text-center gap-2 transition-all duration-300 min-h-[175px] ${
+              className={`rounded-2xl border p-3.5 sm:p-5 flex flex-col items-center justify-center text-center gap-2 transition-all duration-300 min-h-[160px] sm:min-h-[175px] ${
                 simState === "RESULT"
-                  ? "bg-gradient-to-b from-emerald-50/70 via-emerald-50/30 to-white/40 border-emerald-200/80"
-                  : "bg-slate-50/70 border-slate-100"
+                  ? "bg-gradient-to-b from-emerald-50/70 via-emerald-50/30 to-white/40 dark:from-emerald-950/30 dark:via-emerald-950/10 dark:to-transparent border-emerald-200/80 dark:border-emerald-800/60"
+                  : "bg-slate-50/70 dark:bg-slate-800/30 border-slate-100 dark:border-slate-800/60"
               }`}
             >
               <AnimatePresence mode="wait">
@@ -1224,13 +1233,13 @@ export function SimulateView() {
                     className="flex flex-col items-center gap-2.5 py-3"
                   >
                     <div className="relative w-14 h-14 flex items-center justify-center">
-                      <div className="absolute inset-0 rounded-full border-2 border-blue-200 animate-ping opacity-30" />
-                      <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                      <div className="absolute inset-0 rounded-full border-2 border-blue-200 dark:border-cyan-500/40 animate-ping opacity-30" />
+                      <Loader2 className="w-8 h-8 text-blue-600 dark:text-cyan-400 animate-spin" />
                     </div>
-                    <div className="text-[13px] font-semibold text-blue-700">
+                    <div className="text-[13px] font-semibold text-blue-700 dark:text-cyan-300">
                       Solving Hydraulic PDE Grid…
                     </div>
-                    <div className="text-[11.5px] text-slate-500 font-normal">
+                    <div className="text-[11.5px] text-slate-500 dark:text-slate-400 font-normal">
                       Running transient flow solver for {activeIncident.id}
                     </div>
                   </motion.div>
@@ -1266,20 +1275,20 @@ export function SimulateView() {
                         />
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-[34px] font-semibold tracking-tight text-emerald-600 leading-none tabular-nums">
+                        <span className="text-[34px] font-semibold tracking-tight text-emerald-600 dark:text-emerald-400 leading-none tabular-nums">
                           {simulationResult.simulatedDepthCm}
                         </span>
-                        <span className="text-[11px] font-medium text-emerald-500 mt-0.5">
+                        <span className="text-[11px] font-medium text-emerald-500 dark:text-emerald-400 mt-0.5">
                           cm
                         </span>
                       </div>
                     </div>
 
                     <div>
-                      <div className="text-[13.5px] font-semibold text-slate-900 mt-1">
+                      <div className="text-[13.5px] font-semibold text-slate-900 dark:text-slate-100 mt-1">
                         {simulationResult.clearanceStatus}
                       </div>
-                      <div className="text-[11.5px] text-emerald-700 font-medium mt-0.5">
+                      <div className="text-[11.5px] text-emerald-700 dark:text-emerald-300 font-medium mt-0.5">
                         {simulationResult.depthReductionPct}% water depth reduction ({simulationResult.depthReductionCm} cm relief)
                       </div>
                     </div>
@@ -1293,7 +1302,7 @@ export function SimulateView() {
                   >
                     {/* Clean analytics visual */}
                     <div className={`relative w-14 h-14 rounded-full border flex items-center justify-center shadow-xs ${
-                      isQueueEmpty ? "border-emerald-200 bg-emerald-50/60 text-emerald-600" : "border-slate-200 bg-white text-slate-400"
+                      isQueueEmpty ? "border-emerald-200 bg-emerald-50/60 text-emerald-600 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400" : "border-slate-200 bg-white text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                     }`}>
                       {isQueueEmpty ? (
                         <CheckCircle2 className="w-6 h-6" />
@@ -1301,10 +1310,10 @@ export function SimulateView() {
                         <TrendingDown className="w-5 h-5" />
                       )}
                     </div>
-                    <div className="text-[13px] font-medium text-slate-900 mt-1">
+                    <div className="text-[13px] font-medium text-slate-900 dark:text-slate-100 mt-1">
                       {isQueueEmpty ? "No Active Order to Simulate" : "Trigger simulation to model relief"}
                     </div>
-                    <div className="text-[11.5px] text-slate-500 max-w-[240px] leading-relaxed font-normal">
+                    <div className="text-[11.5px] text-slate-500 dark:text-slate-400 max-w-[240px] leading-relaxed font-normal">
                       {isQueueEmpty
                         ? "All municipal hotspots are either dispatched into active field units or resolved."
                         : "Run the hydraulic model to see projected reduction in water levels and affected area."}
@@ -1319,20 +1328,20 @@ export function SimulateView() {
               {/* Row 1: Projected Drainage Load */}
               <div className="text-[12px]">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-slate-600 font-normal flex items-center gap-1.5">
-                    <Droplets className={`w-3.5 h-3.5 ${simState === "RESULT" ? "text-blue-500" : "text-slate-300"}`} />
+                  <span className="text-slate-600 dark:text-slate-400 font-normal flex items-center gap-1.5">
+                    <Droplets className={`w-3.5 h-3.5 ${simState === "RESULT" ? "text-blue-500 dark:text-cyan-400" : "text-slate-300 dark:text-slate-600"}`} />
                     Drainage Load
                   </span>
                   <span
-                    className={`font-semibold tabular-nums ${simState === "RESULT" ? "text-blue-700" : "text-slate-400"
+                    className={`font-semibold tabular-nums ${simState === "RESULT" ? "text-blue-700 dark:text-cyan-300" : "text-slate-400"
                       }`}
                   >
                     {simState === "RESULT" ? `${simulationResult.simulatedDrainageLoad}%` : "—"}
                   </span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                   <motion.div
-                    className="h-full rounded-full bg-blue-600"
+                    className="h-full rounded-full bg-blue-600 dark:bg-cyan-400"
                     initial={{ width: 0 }}
                     animate={{
                       width: simState === "RESULT" ? `${simulationResult.simulatedDrainageLoad}%` : "0%",
@@ -1345,20 +1354,20 @@ export function SimulateView() {
               {/* Row 2: Projected Risk Score */}
               <div className="text-[12px]">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-slate-600 font-normal flex items-center gap-1.5">
-                    <BarChart3 className={`w-3.5 h-3.5 ${simState === "RESULT" ? "text-emerald-500" : "text-slate-300"}`} />
+                  <span className="text-slate-600 dark:text-slate-400 font-normal flex items-center gap-1.5">
+                    <BarChart3 className={`w-3.5 h-3.5 ${simState === "RESULT" ? "text-emerald-500 dark:text-emerald-400" : "text-slate-300 dark:text-slate-600"}`} />
                     Risk Score
                   </span>
                   <span
-                    className={`font-semibold tabular-nums ${simState === "RESULT" ? "text-emerald-700" : "text-slate-400"
+                    className={`font-semibold tabular-nums ${simState === "RESULT" ? "text-emerald-700 dark:text-emerald-300" : "text-slate-400"
                       }`}
                   >
                     {simState === "RESULT" ? `${simulationResult.simulatedRiskScore} / 100` : "—"}
                   </span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                   <motion.div
-                    className="h-full rounded-full bg-emerald-600"
+                    className="h-full rounded-full bg-emerald-600 dark:bg-emerald-400"
                     initial={{ width: 0 }}
                     animate={{
                       width: simState === "RESULT" ? `${simulationResult.simulatedRiskScore}%` : "0%",
@@ -1371,18 +1380,18 @@ export function SimulateView() {
               {/* Row 3: Projected Affected Area */}
               <div className="text-[12px]">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-slate-600 font-normal flex items-center gap-1.5">
-                    <Grid3X3 className={`w-3.5 h-3.5 ${simState === "RESULT" ? "text-teal-500" : "text-slate-300"}`} />
+                  <span className="text-slate-600 dark:text-slate-400 font-normal flex items-center gap-1.5">
+                    <Grid3X3 className={`w-3.5 h-3.5 ${simState === "RESULT" ? "text-teal-500 dark:text-teal-400" : "text-slate-300 dark:text-slate-600"}`} />
                     Affected Area
                   </span>
                   <span
-                    className={`font-semibold tabular-nums ${simState === "RESULT" ? "text-teal-700" : "text-slate-400"
+                    className={`font-semibold tabular-nums ${simState === "RESULT" ? "text-teal-700 dark:text-teal-300" : "text-slate-400"
                       }`}
                   >
                     {simState === "RESULT" ? `${simulationResult.simulatedAreaM2.toLocaleString()} m²` : "—"}
                   </span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                   <motion.div
                     className="h-full rounded-full bg-teal-500"
                     initial={{ width: 0 }}
@@ -1399,9 +1408,9 @@ export function SimulateView() {
             </div>
 
             {/* Footer Message Strip */}
-            <div className="rounded-xl bg-slate-50 border border-slate-100 px-3.5 py-2 text-[11.5px] text-slate-500 flex items-center gap-1.5 font-normal">
-              <Info className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-              <span className="truncate">
+            <div className="rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60 px-3 sm:px-3.5 py-2 text-[11.5px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-normal">
+              <Info className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400 shrink-0" />
+              <span className="line-clamp-2 leading-tight">
                 {simState === "RESULT"
                   ? `Evacuation completes ~${simulationResult.clearanceHours} hrs ahead of flood crest.`
                   : "Results will appear after simulation is completed."}
