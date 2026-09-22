@@ -97,23 +97,45 @@ export default function Footer() {
         }}
         aria-hidden="true"
       />
-      {/* Dark Mode Edge Blend (Abyssal Marine Canvas #030F14) */}
+      {/* Dark Mode Edge Blend */}
       <div
-        className="absolute top-0 inset-x-0 h-40 sm:h-48 lg:h-56 z-0 pointer-events-none hidden dark:block"
+        className="absolute top-0 inset-x-0 h-56 sm:h-64 lg:h-72 z-0 pointer-events-none hidden dark:block"
         style={{
-          background:
-            "linear-gradient(to bottom, #030F14 0%, rgba(3,15,20,0.85) 20%, rgba(3,15,20,0.55) 40%, rgba(3,15,20,0.25) 60%, rgba(3,15,20,0.10) 80%, rgba(3,15,20,0.04) 90%, rgba(3,15,20,0) 100%)",
+          background: `
+      linear-gradient(
+        to bottom,
+        var(--nivara-bg-primary) 0%,
+        rgba(10, 30, 59, 0.96) 12%,
+        rgba(10, 30, 59, 0.82) 27%,
+        rgba(10, 30, 59, 0.62) 42%,
+        rgba(10, 30, 59, 0.42) 57%,
+        rgba(10, 30, 59, 0.24) 72%,
+        rgba(10, 30, 59, 0.10) 86%,
+        rgba(10, 30, 59, 0.03) 94%,
+        rgba(10, 30, 59, 0) 100%
+      )
+    `,
+        }}
+        aria-hidden="true"
+      />
+      {/* ===================================================== */}
+      {/* 2. THEME-AWARE BACKGROUND PANORAMA                   */}
+      {/* ===================================================== */}
+
+      {/* LIGHT THEME BACKGROUND */}
+      <div
+        className="absolute inset-0 -z-20 bg-cover bg-bottom md:bg-[center_42%] bg-no-repeat contrast-[1.05] brightness-[0.82] saturate-[1.15] opacity-100 dark:opacity-0 transition-opacity duration-700 ease-in-out"
+        style={{
+          backgroundImage: "url('/textures/Footer_bg5.png')",
         }}
         aria-hidden="true"
       />
 
-      {/* ===================================================== */}
-      {/* 2. BACKGROUND PANORAMA - HOWRAH BRIDGE AT NIGHT       */}
-      {/* ===================================================== */}
+      {/* DARK THEME BACKGROUND */}
       <div
-        className="absolute inset-0 -z-20 bg-cover bg-bottom md:bg-[center_42%] bg-no-repeat contrast-[1.05] brightness-[0.82] saturate-[1.15]"
+        className="absolute inset-0 -z-20 bg-cover bg-bottom md:bg-[center_42%] bg-no-repeat contrast-[1.05] brightness-[0.82] saturate-[1.15] opacity-0 dark:opacity-100 transition-opacity duration-700 ease-in-out"
         style={{
-          backgroundImage: "url('/textures/Footer_bg5.png')",
+          backgroundImage: "url('/textures/Sample.png')",
         }}
         aria-hidden="true"
       />
