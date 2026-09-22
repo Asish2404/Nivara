@@ -19,7 +19,6 @@ import { KWINavbar } from "../navigation/KWINavbar";
 import { AskKolkataDrawer } from "../navigation/AskKolkataDrawer";
 import { KolkataGisMap } from "../gis/KolkataGisMap";
 import { BorderBeam } from "../ui/BorderBeam";
-import { CardSpotlight } from "../ui/CardSpotlight";
 import { AnimatedNumber } from "../ui/AnimatedNumber";
 import Footer from "../Footer";
 import { useKWIStore, isUserAdmin } from "../../store/useKWIStore";

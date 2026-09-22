@@ -15,8 +15,6 @@ import {
   MapPin,
   CheckCircle2,
   Key,
-  ShieldCheck,
-  AlertTriangle,
   Activity,
   Clock,
   TrendingUp,
@@ -24,43 +22,25 @@ import {
   Pencil,
   Mail,
   Phone,
-  Building2,
   BookOpen,
   FileText,
   ChevronRight,
   ChevronDown,
-  Eye,
-  EyeOff,
   Palette,
   Sun,
   Moon,
   Monitor,
-  MessageSquare,
-  Globe,
-  BarChart2,
-  BarChart3,
   Leaf,
   ArrowRight,
   Settings,
-  Zap,
   RefreshCw,
-  Image as ImageIcon,
-  Shield,
   Users,
-  Droplet,
-  Waves,
-  Compass,
-  ExternalLink,
   X,
   Navigation,
 } from "lucide-react";
 import { useKWIStore } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
-import {
-  formatDate,
-  formatTime12Hour,
-  formatDateTime12Hour,
-} from "../../utils/dateTimeUtils";
+import { formatDateTime12Hour } from "../../utils/dateTimeUtils";
 
 /* ═══════════════════════════════════════════════════════════════
    NIVARA — PROFILE & DASHBOARD
@@ -73,7 +53,6 @@ export function ProfileView() {
     updateUserProfile,
     logoutUser,
     navigate,
-    unreadNotificationsCount = 3,
     theme,
     setTheme,
     profileActiveTab,
@@ -89,7 +68,6 @@ export function ProfileView() {
     email: currentUser?.email || "user@kolkata-water.gov.in",
     phone: currentUser?.phone || "",
     location: currentUser?.location || "Kolkata, West Bengal",
-    institution: currentUser?.institution || "",
     department: currentUser?.department || "NIVARA",
     bio:
       currentUser?.bio ||
@@ -108,7 +86,6 @@ export function ProfileView() {
         email: currentUser.email || prev.email,
         phone: currentUser.phone || prev.phone,
         location: currentUser.location || prev.location,
-        institution: currentUser.institution || prev.institution,
         department: currentUser.department || prev.department,
         bio: currentUser.bio || prev.bio,
         profileImage: currentUser.avatarUrl || prev.profileImage,
@@ -188,18 +165,6 @@ export function ProfileView() {
     return clean.slice(0, 2).toUpperCase() || "KU";
   }, [profile.fullName, currentUser?.name]);
 
-  const userInitial = userInitials;
-
-  const memberSince = useMemo(() => {
-    try {
-      if (!profile.createdAt) return "September 2026";
-      const dateStr = formatDate(profile.createdAt);
-      const timeStr = formatTime12Hour(profile.createdAt);
-      return timeStr ? `${dateStr} • ${timeStr}` : dateStr;
-    } catch {
-      return "September 2026";
-    }
-  }, [profile.createdAt]);
 
   const accountCreatedAtFormatted = useMemo(() => {
     return formatDateTime12Hour(profile.createdAt);
@@ -268,7 +233,6 @@ export function ProfileView() {
           email: updated.email,
           phone: updated.phone,
           location: updated.location,
-          institution: updated.institution,
           department: updated.department,
           bio: updated.bio,
           avatarUrl: updated.profileImage,
@@ -553,72 +517,6 @@ export function ProfileView() {
               transition={{ duration: 0.18 }}
               className="space-y-6"
             >
-              {/* ── 4 SUMMARY STAT CARDS ── */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Card 1: Days Active */}
-                <div className="kwi-stat-card">
-                  <div className="kwi-stat-icon-wrap bg-[#ebf5ff] text-[#1677ff]">
-                    <Droplet size={20} className="fill-[#1677ff]/20" />
-                  </div>
-                  <div className="kwi-stat-body">
-                    <div className="kwi-stat-val-row">
-                      <span className="kwi-stat-num">{stats.daysActive}</span>
-                      <span className="kwi-badge-trend green">↑ 12%</span>
-                    </div>
-                    <div className="kwi-stat-label">Days Active</div>
-                    <div className="kwi-stat-sub">from last month</div>
-                  </div>
-                </div>
-
-                {/* Card 2: Reports Submitted */}
-                <div className="kwi-stat-card">
-                  <div className="kwi-stat-icon-wrap bg-[#ebf5ff] text-[#1677ff]">
-                    <FileText size={20} />
-                  </div>
-                  <div className="kwi-stat-body">
-                    <div className="kwi-stat-val-row">
-                      <span className="kwi-stat-num">
-                        {stats.reportsSubmitted}
-                      </span>
-                      <span className="kwi-badge-trend green">↑ 33%</span>
-                    </div>
-                    <div className="kwi-stat-label">Reports Submitted</div>
-                    <div className="kwi-stat-sub">from last month</div>
-                  </div>
-                </div>
-
-                {/* Card 3: Alerts Received */}
-                <div className="kwi-stat-card">
-                  <div className="kwi-stat-icon-wrap bg-[#fef2f2] text-[#ef4444]">
-                    <Bell size={20} />
-                  </div>
-                  <div className="kwi-stat-body">
-                    <div className="kwi-stat-val-row">
-                      <span className="kwi-stat-num">
-                        {stats.alertsReceived}
-                      </span>
-                      <span className="kwi-badge-trend red">↓ 25%</span>
-                    </div>
-                    <div className="kwi-stat-label">Alerts Received</div>
-                    <div className="kwi-stat-sub">from last month</div>
-                  </div>
-                </div>
-
-                {/* Card 4: System Status */}
-                <div className="kwi-stat-card">
-                  <div className="kwi-stat-icon-wrap bg-[#ecfdf5] text-[#10b981]">
-                    <BarChart2 size={20} />
-                  </div>
-                  <div className="kwi-stat-body">
-                    <div className="flex items-center gap-1.5 font-bold text-[#0F1F3D] dark:text-white text-base">
-                      <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                      <span>Online</span>
-                    </div>
-                    <div className="kwi-stat-label">System Status</div>
-                    <div className="kwi-stat-sub">All systems operational</div>
-                  </div>
-                </div>
-              </div>
 
               {/* ── THREE-COLUMN MAIN GRID (1 : 1.55 : 1) ── */}
               <div className="kwi-three-col-grid">
@@ -677,21 +575,6 @@ export function ProfileView() {
                             <div className="kwi-field-label-tag">Location</div>
                             <div className="kwi-field-val-text">
                               {profile.location || "Kolkata, West Bengal"}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Institution */}
-                        <div className="flex items-center gap-3.5 pt-3.5 border-t border-slate-100 dark:border-slate-800">
-                          <div className="w-9 h-9 rounded-xl bg-[#f3eeff] text-[#7c3aed] flex items-center justify-center shrink-0">
-                            <Building2 size={16} />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="kwi-field-label-tag">
-                              Institution
-                            </div>
-                            <div className="kwi-field-val-text">
-                              {profile.institution || "Not added"}
                             </div>
                           </div>
                         </div>
@@ -1060,14 +943,7 @@ export function ProfileView() {
                         icon: <MapPin size={15} className="text-[#d97706]" />,
                       },
                       {
-                        label: "INSTITUTION / ORGANIZATION",
-                        val: profile.institution || "Not added",
-                        icon: (
-                          <Building2 size={15} className="text-[#7c3aed]" />
-                        ),
-                      },
-                      {
-                        label: "DEPARTMENT",
+                        label: "DEPARTMENT / ORGANIZATION",
                         val: profile.department,
                         icon: <BookOpen size={15} className="text-[#1677ff]" />,
                       },
