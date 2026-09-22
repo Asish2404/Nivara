@@ -886,9 +886,9 @@ export function LandingPage() {
       </section>
 
       {/* ======================================================== */}
-      {/* SECTION: CITIZEN REPORTING + AI VERIFICATION (Logged-in Citizen only) */}
+      {/* SECTION: CITIZEN REPORTING & SIMULATION (Judges & Citizens) */}
       {/* ======================================================== */}
-      {isCitizenUser && <CitizenReportingSection />}
+      {!isAdmin && <CitizenReportingSection />}
 
       {/* ========================================================================= */}
       {/* SECTION: FIELD SENSOR STREAM & CENTERED HOTSPOT HEADING                    */}

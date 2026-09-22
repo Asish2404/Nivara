@@ -31,6 +31,7 @@ import {
 import { useKWIStore } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
 import { MobileReportForm } from "../mobile/MobileReportForm";
+import { useDeviceType } from "../../utils/deviceDetector";
 import SplitText from "../views/SplitText";
 
 // Ambient Floating Monsoon Water Droplets (Soft, Subtle, Organic)
@@ -73,6 +74,7 @@ export function CitizenReportingSection() {
     navigate,
   } = useKWIStore();
 
+  const { isMobileOrTablet } = useDeviceType();
   const prefersReducedMotion = useReducedMotion();
   const sectionRef = useRef(null);
   const phoneWrapperRef = useRef(null);
@@ -791,7 +793,12 @@ export function CitizenReportingSection() {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full min-h-[920px] sm:min-h-[980px] py-16 sm:py-24 px-4 flex flex-col items-center justify-center border-t border-slate-200/60 dark:border-[rgba(94,183,201,0.16)] bg-gradient-to-b from-[#f8fafc] via-[#f1f5f9] to-[#f8fafc] dark:bg-[#0A1E3B] dark:from-[#0A1E3B] dark:via-[#0A1E3B] dark:to-[#0A1E3B] select-none scroll-smooth overflow-hidden transition-colors duration-300"
+      id="citizen-reporting"
+      className={`relative w-full ${
+        isMobileOrTablet
+          ? "py-10 sm:py-14 min-h-0"
+          : "min-h-[920px] sm:min-h-[980px] py-16 sm:py-24"
+      } px-4 flex flex-col items-center justify-center border-t border-slate-200/60 dark:border-[rgba(94,183,201,0.16)] bg-gradient-to-b from-[#f8fafc] via-[#f1f5f9] to-[#f8fafc] dark:bg-[#0A1E3B] dark:from-[#0A1E3B] dark:via-[#0A1E3B] dark:to-[#0A1E3B] select-none scroll-smooth scroll-mt-20 overflow-hidden transition-colors duration-300`}
     >
       {/* ================================================================ */}
       {/* SOFT STUDIO LIGHTING & DIFFUSED AMBIENT BACKGROUND               */}
@@ -806,7 +813,7 @@ export function CitizenReportingSection() {
       {/* ================================================================ */}
       {/* SECTION HEADER: ONE-LINE BOLD PURPOSE STATEMENT                  */}
       {/* ================================================================ */}
-      <div className="relative z-10 text-center max-w-3xl mx-auto mb-8 sm:mb-12 px-4">
+      <div className="relative z-10 text-center max-w-3xl mx-auto mb-6 sm:mb-12 px-4">
         <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-blue-600 dark:text-[#20C5D8] font-mono block mb-2">
           CITIZEN REPORTING & AI VERIFICATION
         </span>
@@ -826,16 +833,37 @@ export function CitizenReportingSection() {
         />
       </div>
 
-      {/* ================================================================ */}
-      {/* THE CENTERPIECE: FLAGSHIP LUXURY 3D SMARTPHONE (TURNTABLE)      */}
-      {/* ================================================================ */}
-      <div
-        className="relative flex flex-col items-center justify-center py-4 select-none scale-[0.68] min-[360px]:scale-[0.74] min-[400px]:scale-[0.84] sm:scale-100 origin-top -mb-60 min-[360px]:-mb-48 min-[400px]:-mb-28 sm:mb-0"
-        style={{
-          perspective: "1500px",
-          perspectiveOrigin: "50% 50%",
-        }}
-      >
+      {isMobileOrTablet ? (
+        /* ================================================================ */
+        /* MOBILE / TABLET: DIRECT "RAISE A COMPLAINT" ACTION BUTTON        */
+        /* Streamlined & space-efficient, redirects to Field Reports page   */
+        /* ================================================================ */
+        <div className="relative z-10 w-full max-w-xs mx-auto px-4 mt-1 flex justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              if (audioEngine) audioEngine.playUiChirp(1200);
+              navigate("/reports");
+            }}
+            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-600 hover:from-blue-600 hover:to-cyan-500 active:scale-[0.98] text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2.5 cursor-pointer transition-all"
+          >
+            <AlertTriangle className="w-4 h-4 text-amber-300 shrink-0" />
+            <span>Raise a Complaint</span>
+            <ArrowRight className="w-4 h-4 shrink-0" />
+          </button>
+        </div>
+      ) : (
+        /* ================================================================ */
+        /* THE CENTERPIECE: FLAGSHIP LUXURY 3D SMARTPHONE (TURNTABLE)      */
+        /* (PRESERVED FOR HACKATHON JUDGES ON DESKTOPS & LAPTOPS)           */
+        /* ================================================================ */
+        <div
+          className="relative flex flex-col items-center justify-center py-4 select-none scale-[0.68] min-[360px]:scale-[0.74] min-[400px]:scale-[0.84] sm:scale-100 origin-top -mb-60 min-[360px]:-mb-48 min-[400px]:-mb-28 sm:mb-0"
+          style={{
+            perspective: "1500px",
+            perspectiveOrigin: "50% 50%",
+          }}
+        >
         {/* ================================================================ */}
         {/* TRUE 3D TURNTABLE OBJECT - ROTATES 720° (2 FULL ROTATIONS)       */}
         {/* ================================================================ */}
@@ -2166,6 +2194,7 @@ export function CitizenReportingSection() {
           </motion.button>
         )}
       </div>
+      )}
     </section>
   );
 }
