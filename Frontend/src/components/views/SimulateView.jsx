@@ -187,9 +187,11 @@ export function SimulateView() {
     }
     if (isDropdownOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside, { passive: true });
       document.addEventListener("keydown", handleKeyDown);
       return () => {
         document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("touchstart", handleClickOutside);
         document.removeEventListener("keydown", handleKeyDown);
       };
     }
@@ -593,8 +595,8 @@ export function SimulateView() {
             </p>
           </div>
 
-          {/* Target Hotspot & Incident Selector with 5-item scrollable dropdown */}
-          <div ref={dropdownRef} className="relative shrink-0 z-30 w-full sm:w-auto">
+          {/* Target Hotspot & Incident Selector with scrollable dropdown */}
+          <div ref={dropdownRef} className="relative shrink-0 z-40 w-full sm:w-auto">
             <button
               type="button"
               id="hotspot-dropdown-trigger"
@@ -674,15 +676,14 @@ export function SimulateView() {
                     </span>
                   </div>
 
-                  {/* Scrollable list strictly calibrated for exactly 5 visible items with custom high-contrast scrollbar */}
+                  {/* Scrollable list calibrated to dynamically wrap 1-5 items, scrolling if >5 items */}
                   <div
                     ref={scrollContainerRef}
                     data-lenis-prevent="true"
                     data-lenis-prevent-wheel="true"
-                    className="kwi-dropdown-scroll divide-y divide-slate-100 dark:divide-slate-800/70"
+                    className="kwi-dropdown-scroll divide-y divide-slate-100 dark:divide-slate-800/70 overflow-y-auto"
                     style={{
                       maxHeight: "340px",
-                      height: availableIncidents.length === 0 ? "auto" : "340px",
                     }}
                   >
                     {availableIncidents.length === 0 ? (

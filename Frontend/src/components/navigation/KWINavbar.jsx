@@ -501,149 +501,191 @@ export function KWINavbar() {
                 <span>Ask Kolkata</span>
               </button>
 
-              {/* Mobile Menu Toggle Button */}
+              {/* Mobile Menu Toggle Button with Glassmorphism & Micro-Interaction */}
               <button
                 type="button"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className={`lg:hidden p-2 rounded-xl transition-colors cursor-pointer ${
-                  isDarkMode
-                    ? "text-slate-300 hover:text-white hover:bg-white/10"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                onClick={() => {
+                  audioEngine.playUiChirp(mobileMenuOpen ? 720 : 960);
+                  setMobileMenuOpen(!mobileMenuOpen);
+                }}
+                className={`lg:hidden p-2 sm:p-2.5 rounded-xl transition-all duration-200 cursor-pointer backdrop-blur-md border ${
+                  mobileMenuOpen
+                    ? isDarkMode
+                      ? "bg-cyan-500/20 text-cyan-300 border-cyan-400/50 shadow-[0_0_15px_rgba(0,229,255,0.3)]"
+                      : "bg-blue-50 text-blue-600 border-blue-300 shadow-sm"
+                    : isDarkMode
+                      ? "text-slate-300 hover:text-white bg-white/5 border-white/10 hover:bg-white/10"
+                      : "text-slate-600 hover:text-slate-900 bg-slate-100/80 border-slate-200/80 hover:bg-slate-200/60"
                 }`}
                 aria-label="Toggle navigation menu"
               >
-                {mobileMenuOpen ? (
-                  <X className="w-5 h-5" />
-                ) : (
-                  <Menu className="w-5 h-5" />
-                )}
+                <motion.div
+                  initial={false}
+                  animate={{ rotate: mobileMenuOpen ? 90 : 0, scale: mobileMenuOpen ? 1.05 : 1 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  {mobileMenuOpen ? (
+                    <X className="w-5 h-5" />
+                  ) : (
+                    <Menu className="w-5 h-5" />
+                  )}
+                </motion.div>
               </button>
             </div>
           </div>
 
           {/* ================================================= */}
-          {/* RESPONSIVE MOBILE DRAWER                          */}
+          {/* RESPONSIVE MOBILE DRAWER (Glassmorphic Redesign)  */}
           {/* ================================================= */}
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className={`lg:hidden pt-3 mt-3 border-t space-y-1 ${
-                isDarkMode ? "border-[rgba(94,183,201,0.16)]" : "border-slate-100"
-              }`}
-            >
-              {NAV_ITEMS.map((item) => {
-                const isItemActive = item.isActive;
-                return (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => handleNavClick(item.path)}
-                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition-colors cursor-pointer ${
-                      isItemActive
-                        ? isDarkMode
-                          ? "text-[#00E5FF] font-semibold bg-[#10313E]"
-                          : "text-blue-600 font-semibold bg-blue-50/90"
-                        : isDarkMode
-                          ? "text-[#B2D2D9] hover:text-[#F2FBFD] hover:bg-[#163F4E]/60"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, y: -8 }}
+                animate={{ opacity: 1, height: "auto", y: 0 }}
+                exit={{ opacity: 0, height: 0, y: -8 }}
+                transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                className={`lg:hidden pt-3 mt-3 border-t overflow-hidden ${
+                  isDarkMode
+                    ? "border-cyan-500/20"
+                    : "border-slate-200/70"
+                }`}
+              >
+                {/* Ambient glass glow container */}
+                <div className="relative rounded-2xl p-2 sm:p-3 bg-white/75 dark:bg-[#071928]/85 backdrop-blur-2xl border border-white/50 dark:border-cyan-500/20 shadow-[0_16px_40px_rgba(0,0,0,0.15)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] space-y-1.5 overflow-hidden">
+                  <div className="absolute -top-12 -right-12 w-36 h-36 rounded-full bg-cyan-400/15 blur-2xl pointer-events-none" />
+
+                  {/* Nav Item Pills with Staggered Entrance */}
+                  {NAV_ITEMS.map((item, index) => {
+                    const isItemActive = item.isActive;
+                    return (
+                      <motion.button
+                        key={item.key}
+                        type="button"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.035, duration: 0.2 }}
+                        onClick={() => handleNavClick(item.path)}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer ${
+                          isItemActive
+                            ? isDarkMode
+                              ? "text-cyan-300 font-semibold bg-cyan-500/15 border border-cyan-400/35 shadow-[0_0_15px_rgba(6,182,212,0.25)]"
+                              : "text-white font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 shadow-md shadow-blue-500/20"
+                            : isDarkMode
+                              ? "text-[#B2D2D9] hover:text-[#F2FBFD] hover:bg-white/8 border border-transparent"
+                              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/90 border border-transparent"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <item.icon className={`w-4 h-4 ${isItemActive ? (isDarkMode ? "text-cyan-300" : "text-white") : "opacity-75"}`} />
+                          <span>{item.label}</span>
+                        </div>
+                        {isItemActive && (
+                          <span className={`w-1.5 h-1.5 rounded-full ${isDarkMode ? "bg-cyan-400 shadow-[0_0_6px_#22d3ee]" : "bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]"}`} />
+                        )}
+                      </motion.button>
+                    );
+                  })}
+
+                  {/* Mobile Quick Action Buttons (Ask Kolkata & Theme Toggle) */}
+                  <div
+                    className={`pt-2.5 pb-1 border-t flex items-center justify-between gap-2 ${
+                      isDarkMode ? "border-white/10" : "border-slate-200/80"
                     }`}
                   >
-                    <item.icon className="w-4 h-4" />
-                    <span>{item.label}</span>
-                  </button>
-                );
-              })}
-
-              {/* Mobile Quick Action Buttons (Ask Kolkata & Theme Toggle) */}
-              <div className={`pt-2 pb-1 border-t flex items-center justify-between gap-2 ${
-                isDarkMode ? "border-white/10" : "border-slate-200"
-              }`}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    audioEngine.playUiChirp(880);
-                    toggleAskKolkata();
-                  }}
-                  className="flex-1 py-2 px-3 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 flex items-center justify-center gap-1.5 shadow-sm active:scale-98 cursor-pointer"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-white" />
-                  <span>Ask Kolkata</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border ${
-                    isDarkMode
-                      ? "bg-slate-800 text-amber-300 border-white/10"
-                      : "bg-slate-100 text-slate-700 border-slate-200"
-                  }`}
-                >
-                  <span>{isDarkMode ? "☀️ Light" : "🌙 Dark"}</span>
-                </button>
-              </div>
-
-              {/* Mobile Login / User Profile Action */}
-              <div className={`pt-1 border-t ${
-                isDarkMode ? "border-white/10" : "border-slate-200"
-              }`}>
-                {!currentUser ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      navigate("/signup");
-                    }}
-                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-700 via-cyan-600 to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,240,255,0.3)]"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    <span>Sign Up // Join</span>
-                  </button>
-                ) : (
-                  <div className={`p-2.5 rounded-xl border flex items-center justify-between transition-colors ${
-                    isDarkMode
-                      ? "bg-white/5 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.08)]"
-                      : "bg-slate-50/95 border-emerald-500/40 shadow-xs"
-                  }`}>
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="text-base shrink-0">
-                        {currentUser.avatar || "👨‍✈️"}
-                      </span>
-                      <div className="min-w-0">
-                        <div className={`text-xs font-bold truncate ${
-                          isDarkMode ? "text-white" : "text-slate-900"
-                        }`}>
-                          {currentUser.name}
-                        </div>
-                        <div className={`text-[10px] font-mono font-semibold tracking-tight ${
-                          isDarkMode ? "text-emerald-400" : "text-emerald-600"
-                        }`}>
-                          {currentUser.badgeId}
-                        </div>
-                      </div>
-                    </div>
                     <button
                       type="button"
                       onClick={() => {
-                        logoutUser();
                         setMobileMenuOpen(false);
+                        audioEngine.playUiChirp(880);
+                        toggleAskKolkata();
                       }}
-                      className={`shrink-0 ml-2 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors cursor-pointer ${
+                      className="flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 flex items-center justify-center gap-1.5 shadow-[0_4px_16px_rgba(0,112,243,0.3)] active:scale-[0.98] transition-transform cursor-pointer border border-cyan-400/25"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-white" />
+                      <span>Ask Kolkata</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={toggleTheme}
+                      className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border ${
                         isDarkMode
-                          ? "bg-rose-500/20 text-rose-300 hover:bg-rose-500/30"
-                          : "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200/80 shadow-2xs"
+                          ? "bg-slate-800/90 text-amber-300 border-white/10 hover:bg-slate-800"
+                          : "bg-slate-100 text-slate-700 border-slate-200/80 hover:bg-slate-200/70"
                       }`}
                     >
-                      Sign Out
+                      <span>{isDarkMode ? "☀️ Light" : "🌙 Dark"}</span>
                     </button>
                   </div>
-                )}
-              </div>
-            </motion.div>
-          )}
+
+                  {/* Mobile Login / User Profile Action */}
+                  <div
+                    className={`pt-1 border-t ${
+                      isDarkMode ? "border-white/10" : "border-slate-200/80"
+                    }`}
+                  >
+                    {!currentUser ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          navigate("/signup");
+                        }}
+                        className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-700 via-cyan-600 to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,240,255,0.3)] cursor-pointer"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        <span>Sign Up // Join</span>
+                      </button>
+                    ) : (
+                      <div
+                        className={`p-2.5 rounded-xl border flex items-center justify-between transition-colors ${
+                          isDarkMode
+                            ? "bg-white/5 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.08)]"
+                            : "bg-slate-50/95 border-emerald-500/40 shadow-xs"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="text-base shrink-0">
+                            {currentUser.avatar || "👨‍✈️"}
+                          </span>
+                          <div className="min-w-0">
+                            <div
+                              className={`text-xs font-bold truncate ${
+                                isDarkMode ? "text-white" : "text-slate-900"
+                              }`}
+                            >
+                              {currentUser.name}
+                            </div>
+                            <div
+                              className={`text-[10px] font-mono font-semibold tracking-tight ${
+                                isDarkMode ? "text-emerald-400" : "text-emerald-600"
+                              }`}
+                            >
+                              {currentUser.badgeId}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            logoutUser();
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`shrink-0 ml-2 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors cursor-pointer ${
+                            isDarkMode
+                              ? "bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 border border-rose-500/30"
+                              : "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200/80 shadow-2xs"
+                          }`}
+                        >
+                          Sign Out
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </header>

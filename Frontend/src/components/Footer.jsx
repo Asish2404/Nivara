@@ -35,7 +35,7 @@ const InstagramIcon = () => (
 );
 
 const ChevronRightIcon = () => (
-  <span className="text-white/30 text-xs group-hover:text-cyan-400 group-hover:translate-x-1 transition-all duration-150 font-mono">
+  <span className="text-white/30 text-xs group-hover:text-cyan-400 group-hover:translate-x-1 transition-all duration-150 font-mono hidden sm:inline-block">
     &gt;
   </span>
 );
@@ -90,7 +90,7 @@ export default function Footer() {
       {/* ===================================================== */}
       {/* Light Mode Edge Blend */}
       <div
-        className="absolute top-0 inset-x-0 h-40 sm:h-48 lg:h-56 z-0 pointer-events-none block dark:hidden"
+        className="absolute top-0 inset-x-0 h-24 sm:h-48 lg:h-56 z-0 pointer-events-none block dark:hidden"
         style={{
           background:
             "linear-gradient(to bottom, #ffffff 0%, rgba(255,255,255,0.75) 20%, rgba(255,255,255,0.45) 40%, rgba(255,255,255,0.22) 60%, rgba(255,255,255,0.08) 80%, rgba(255,255,255,0.04) 90%, rgba(255,255,255,0) 100%)",
@@ -99,7 +99,7 @@ export default function Footer() {
       />
       {/* Dark Mode Edge Blend */}
       <div
-        className="absolute top-0 inset-x-0 h-56 sm:h-64 lg:h-72 z-0 pointer-events-none hidden dark:block"
+        className="absolute top-0 inset-x-0 h-28 sm:h-64 lg:h-72 z-0 pointer-events-none hidden dark:block"
         style={{
           background: `
       linear-gradient(
@@ -167,9 +167,9 @@ export default function Footer() {
       {/* ===================================================== */}
       {/* 3. MAIN FOOTER CONTENT CONTAINER                      */}
       {/* ===================================================== */}
-      <div className="relative z-20 max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-14 pt-16 sm:pt-20 pb-8 flex flex-col justify-between">
+      <div className="relative z-20 max-w-[1400px] mx-auto px-5 sm:px-10 lg:px-14 pt-10 sm:pt-20 pb-6 sm:pb-8 flex flex-col justify-between">
         {/* Top 5-Column Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-6 mb-2 pt-16 sm:pt-20 lg:pt-24 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-6 mb-2 pt-6 sm:pt-16 lg:pt-24 items-start">
           {/* ------------------------------------------------- */}
           {/* Column 1: BRAND + TAGLINE + SOCIALS (Span 4)     */}
           {/* ------------------------------------------------- */}
@@ -181,10 +181,10 @@ export default function Footer() {
                 if (audioEngine) audioEngine.playUiChirp(920);
                 navigate("/");
               }}
-              className="flex items-center gap-3.5 mb-4 text-left cursor-pointer group focus:outline-none"
+              className="flex items-center gap-3 sm:gap-3.5 mb-3 sm:mb-4 text-left cursor-pointer group focus:outline-none"
             >
               {/* Official KWI Emblem Logo */}
-              <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-white border border-cyan-400/40 shadow-[0_0_20px_rgba(6,182,212,0.3)] flex items-center justify-center p-0.5 shrink-0 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(0,240,255,0.45)] transition-all duration-300">
+              <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden bg-white border border-cyan-400/40 shadow-[0_0_20px_rgba(6,182,212,0.3)] flex items-center justify-center p-0.5 shrink-0 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(0,240,255,0.45)] transition-all duration-300">
                 <img
                   src="/textures/NIVARA_LOGO.png"
                   alt="NIVARA Logo"
@@ -194,8 +194,8 @@ export default function Footer() {
 
               {/* Title Text */}
               <div className="flex flex-col justify-center">
-                <div className="flex items-baseline text-[20px] sm:text-[22px] font-extrabold tracking-[0.18em] uppercase font-sans leading-none text-white transition-all duration-300">
-                  <span className="relative text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
+                <div className="flex items-baseline text-[19px] sm:text-[22px] font-extrabold tracking-[0.18em] uppercase font-sans leading-none text-white transition-all duration-300">
+                  <span className="relative text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
                     NIV
                     <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </span>
@@ -204,12 +204,12 @@ export default function Footer() {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1.5 mt-1.5">
+                <div className="flex items-center gap-1.5 mt-1 sm:mt-1.5">
                   <span className="relative flex h-1.5 w-1.5 shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-400" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-400 shadow-[0_0_6px_#22d3ee]" />
                   </span>
-                  <span className="text-[9.5px] font-mono font-bold tracking-[0.22em] text-cyan-400/90 uppercase leading-none group-hover:text-cyan-300 transition-colors">
+                  <span className="text-[9px] sm:text-[9.5px] font-mono font-bold tracking-[0.2em] sm:tracking-[0.22em] text-cyan-400/90 uppercase leading-none group-hover:text-cyan-300 transition-colors drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]">
                     Predict. Prepare. Prevent.
                   </span>
                 </div>
@@ -217,14 +217,14 @@ export default function Footer() {
             </button>
 
             {/* Tagline Description */}
-            <p className="text-[15px] leading-[1.6] text-slate-200/95 max-w-[340px] mb-6 font-normal">
+            <p className="text-[13.5px] sm:text-[15px] leading-[1.55] sm:leading-[1.6] text-slate-200/95 max-w-[340px] mb-4 sm:mb-6 font-normal drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]">
               Empowering Kolkata with real-time water intelligence, predictive
               insights, and rapid response systems for a resilient, flood-safe
               future.
             </p>
 
             {/* Social Pill Buttons */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 sm:gap-3">
               {[
                 {
                   href: "https://github.com",
@@ -262,59 +262,62 @@ export default function Footer() {
           </div>
 
           {/* ------------------------------------------------- */}
-          {/* Columns 2, 3, 4: NAV COLUMNS (Each Span 2)        */}
+          {/* Columns 2, 3, 4: NAV COLUMNS (Each Span 2 on lg)  */}
+          {/* Grouped in a 3-column responsive subgrid for mobile */}
           {/* ------------------------------------------------- */}
-          {NAV_COLUMNS.map((col) => (
-            <div key={col.title} className="lg:col-span-2 flex flex-col">
-              <div className="mb-4 font-mono text-[18px] font-bold tracking-[0.2em] text-400 uppercase">
-                {col.title}
-              </div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-6 lg:contents col-span-1 md:col-span-2 lg:col-span-6">
+            {NAV_COLUMNS.map((col) => (
+              <div key={col.title} className="lg:col-span-2 flex flex-col">
+                <div className="mb-2.5 sm:mb-4 font-mono text-[12.5px] sm:text-[16px] lg:text-[18px] font-bold tracking-[0.16em] sm:tracking-[0.2em] text-white/90 uppercase drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]">
+                  {col.title}
+                </div>
 
-              <div className="flex flex-col gap-2.5">
-                {col.links.map((link) => (
-                  <button
-                    key={link.label}
-                    type="button"
-                    onClick={() => handleLinkClick(link)}
-                    className="group flex items-center justify-between gap-2 text-[14px] text-slate-200 hover:text-white transition-colors duration-150 text-left cursor-pointer w-full max-w-[160px]"
-                  >
-                    <span className="group-hover:translate-x-0.5 transition-transform duration-150 font-normal">
-                      {link.label}
-                    </span>
-                    <ChevronRightIcon />
-                  </button>
-                ))}
+                <div className="flex flex-col gap-1.5 sm:gap-2.5">
+                  {col.links.map((link) => (
+                    <button
+                      key={link.label}
+                      type="button"
+                      onClick={() => handleLinkClick(link)}
+                      className="group flex items-center justify-between gap-1 sm:gap-2 text-[12px] sm:text-[14px] text-slate-200 hover:text-white transition-colors duration-150 text-left cursor-pointer w-full max-w-[160px] py-0.5 sm:py-0"
+                    >
+                      <span className="group-hover:translate-x-0.5 transition-transform duration-150 font-normal">
+                        {link.label}
+                      </span>
+                      <ChevronRightIcon />
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
 
           {/* ------------------------------------------------- */}
           {/* Column 5: LIVE STATUS CARD (Span 2)               */}
           {/* ------------------------------------------------- */}
           <div className="lg:col-span-2 flex flex-col">
-            <div className="mb-4 font-mono text-[18px] font-bold tracking-[0.2em] text-400 uppercase">
+            <div className="mb-2.5 sm:mb-4 font-mono text-[12.5px] sm:text-[16px] lg:text-[18px] font-bold tracking-[0.16em] sm:tracking-[0.2em] text-white/90 uppercase drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]">
               LIVE STATUS
             </div>
 
-            <div className="w-full rounded-2xl border border-cyan-500/25 bg-[#031518]/75 backdrop-blur-xl p-4 sm:p-5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+            <div className="w-full rounded-xl sm:rounded-2xl border border-cyan-500/25 bg-[#031518]/75 backdrop-blur-xl p-3.5 sm:p-5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
               {/* Operational Indicator */}
-              <div className="flex items-center gap-2.5 mb-2">
+              <div className="flex items-center gap-2 sm:gap-2.5 mb-1.5 sm:mb-2">
                 <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400 shadow-[0_0_10px_#34d399]" />
                 </span>
-                <span className="font-mono text-[11px] font-bold tracking-[0.16em] text-cyan-300 uppercase">
+                <span className="font-mono text-[10.5px] sm:text-[11px] font-bold tracking-[0.16em] text-cyan-300 uppercase">
                   SYSTEM OPERATIONAL
                 </span>
               </div>
 
               {/* Status Message */}
-              <p className="text-[12.5px] text-slate-300/90 leading-normal mb-3 font-normal">
+              <p className="text-[12px] sm:text-[12.5px] text-slate-300/90 leading-snug sm:leading-normal mb-2 sm:mb-3 font-normal">
                 All systems are running smoothly.
               </p>
 
               {/* Last Updated Timestamp */}
-              <div className="flex items-center text-[11px] font-mono text-slate-400">
+              <div className="flex items-center text-[10.5px] sm:text-[11px] font-mono text-slate-400">
                 <span>Last updated</span>
                 <span className="text-cyan-400 font-bold ml-1.5">
                   2 min ago
@@ -327,18 +330,18 @@ export default function Footer() {
         {/* ===================================================== */}
         {/* 4. DIVIDER LINE & BOTTOM COPYRIGHT / LEGAL BAR        */}
         {/* ===================================================== */}
-        <div className="w-full h-[1px] bg-white/10 mt-6 mb-6" />
+        <div className="w-full h-[1px] bg-white/10 mt-4 sm:mt-6 mb-4 sm:mb-6" />
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[14px] font-mono tracking-[0.16em] text-slate-400 uppercase">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 text-[11px] sm:text-[14px] font-mono tracking-[0.14em] sm:tracking-[0.16em] text-slate-400 uppercase">
           {/* Copyright */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             <span>© 2026 KWI COMMAND</span>
             <span className="text-slate-600">•</span>
             <span>ALL RIGHTS RESERVED</span>
           </div>
 
           {/* Legal Links */}
-          <div className="flex items-center gap-6 sm:gap-8">
+          <div className="flex items-center gap-4 sm:gap-8">
             <a
               href="#privacy"
               className="hover:text-cyan-300 transition-colors duration-150"

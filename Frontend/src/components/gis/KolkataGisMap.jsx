@@ -39,6 +39,7 @@ import {
   Clock,
   Waves,
   RefreshCw,
+  ChevronDown,
 } from "lucide-react";
 
 // Professional GIS Basemap Styles for Kolkata
@@ -111,6 +112,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
   const [timelineStep, setTimelineStep] = useState(0); // 0, 15, 30, 45, 60 mins
   const [simulateState, setSimulateState] = useState(null); // null | 'BEFORE' | 'AFTER'
   const [activeSeverityFilter, setActiveSeverityFilter] = useState("ALL"); // "ALL" | "CRITICAL" | "HIGH" | "MODERATE" | "LOW"
+  const [isLegendExpanded, setIsLegendExpanded] = useState(true);
 
   const handleFilterSelect = useCallback((filterKey) => {
     audioEngine.playUiChirp(1150);
@@ -1494,7 +1496,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       {/* ------------------------------------------------------------- */}
       {/* Bottom Right: Operational Layers Selector Drawer Button */}
       {/* ------------------------------------------------------------- */}
-      <div className="absolute bottom-16 sm:bottom-4 right-3 sm:right-4 z-20 pointer-events-auto flex flex-col items-end gap-2">
+      <div className="absolute bottom-[60px] sm:bottom-[68px] xl:bottom-4 right-3 sm:right-4 z-20 pointer-events-auto flex flex-col items-end gap-2">
         {showLayerMenu && (
           <div className="p-3 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-white/15 shadow-2xl text-xs space-y-2 min-w-[200px] animate-in fade-in slide-in-from-bottom-2">
             <div className="flex items-center justify-between pb-1.5 border-b border-white/10 font-bold text-slate-300 text-[11px] font-mono uppercase tracking-wider">
@@ -1613,24 +1615,25 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* Bottom Left: Quiet GIS Map Legend & Color Filter */}
+      {/* Bottom Left: Quiet GIS Map Legend & Color Filter (Separate tier from bottom timeline) */}
       {/* ------------------------------------------------------------- */}
       {showLegend && (
-        <div className="absolute bottom-4 left-4 z-20 pointer-events-auto bg-slate-900/90 backdrop-blur-md border border-white/15 rounded-xl p-3 text-[11px] text-slate-300 shadow-xl space-y-2 hidden sm:block">
+        <div className="absolute bottom-[60px] sm:bottom-[68px] xl:bottom-4 left-2 sm:left-4 z-20 pointer-events-auto bg-slate-900/95 backdrop-blur-md border border-white/15 rounded-xl p-2 sm:p-3 text-[10.5px] sm:text-[11px] text-slate-300 shadow-xl space-y-1.5 sm:space-y-2 max-w-[calc(100vw-1rem)] sm:max-w-none">
           <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5">
             <button
               type="button"
               onClick={() => handleFilterSelect("ALL")}
               title="Show all points (Reset filter)"
-              className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider font-mono transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider font-mono transition-all cursor-pointer ${
                 activeSeverityFilter === "ALL"
                   ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
-              <span>Hydrological Legend</span>
+              <span className="hidden min-[380px]:inline">Hydrological Legend</span>
+              <span className="min-[380px]:hidden">Legend</span>
               <span
-                className={`text-[9px] px-1.5 py-0.5 rounded font-sans font-semibold transition-all ${
+                className={`text-[8.5px] sm:text-[9px] px-1.5 py-0.5 rounded font-sans font-semibold transition-all ${
                   activeSeverityFilter === "ALL"
                     ? "bg-cyan-500/25 text-cyan-300 border border-cyan-400/40"
                     : "bg-slate-800 text-slate-400 hover:text-slate-200 border border-white/5"
@@ -1639,84 +1642,96 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                 ALL
               </span>
             </button>
-          </div>
-
-          <div className="flex items-center gap-1">
             <button
               type="button"
-              onClick={() => handleFilterSelect("LOW")}
-              title="Filter: Low severity points only (Green)"
-              className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10.5px] transition-all cursor-pointer ${
-                activeSeverityFilter === "LOW"
-                  ? "bg-emerald-500/25 text-emerald-300 border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.3)] font-semibold"
-                  : "hover:bg-slate-800/80 text-slate-300 border border-transparent"
-              }`}
+              onClick={() => setIsLegendExpanded(!isLegendExpanded)}
+              className="text-slate-400 hover:text-white p-0.5 rounded transition-colors cursor-pointer"
+              title={isLegendExpanded ? "Collapse Legend" : "Expand Legend"}
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e] shadow-[0_0_6px_#22c55e]" />
-              <span>Low</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleFilterSelect("MODERATE")}
-              title="Filter: Moderate severity points only (Yellow)"
-              className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10.5px] transition-all cursor-pointer ${
-                activeSeverityFilter === "MODERATE"
-                  ? "bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.3)] font-semibold"
-                  : "hover:bg-slate-800/80 text-slate-300 border border-transparent"
-              }`}
-            >
-              <span className="w-2.5 h-2.5 rounded-full bg-[#eab308] shadow-[0_0_6px_#eab308]" />
-              <span>Moderate</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleFilterSelect("HIGH")}
-              title="Filter: High severity points only (Orange)"
-              className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10.5px] transition-all cursor-pointer ${
-                activeSeverityFilter === "HIGH"
-                  ? "bg-orange-500/25 text-orange-300 border border-orange-500/50 shadow-[0_0_10px_rgba(249,115,22,0.3)] font-semibold"
-                  : "hover:bg-slate-800/80 text-slate-300 border border-transparent"
-              }`}
-            >
-              <span className="w-2.5 h-2.5 rounded-full bg-[#f97316] shadow-[0_0_6px_#f97316]" />
-              <span>High</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleFilterSelect("CRITICAL")}
-              title="Filter: Critical points only (Red)"
-              className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10.5px] transition-all cursor-pointer ${
-                activeSeverityFilter === "CRITICAL"
-                  ? "bg-rose-500/25 text-rose-300 border border-rose-500/50 shadow-[0_0_10px_rgba(244,63,94,0.3)] font-semibold"
-                  : "hover:bg-slate-800/80 text-slate-300 border border-transparent"
-              }`}
-            >
-              <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444] shadow-[0_0_6px_#ef4444]" />
-              <span>Critical</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isLegendExpanded ? "rotate-180" : ""}`} />
             </button>
           </div>
 
-          <div className="flex items-center gap-3 pt-1 border-t border-white/10 text-[10px] text-slate-400">
-            <span className="flex items-center gap-1">
-              <span className="w-2.5 h-0.5 bg-cyan-400" />
-              Canal
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2.5 h-0.5 bg-blue-400 border-dashed" />
-              Conduit
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-xs bg-sky-500" />
-              Pump
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-rose-500" />
-              Incident
-            </span>
-          </div>
+          {isLegendExpanded && (
+            <>
+              <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap sm:flex-nowrap">
+                <button
+                  type="button"
+                  onClick={() => handleFilterSelect("LOW")}
+                  title="Filter: Low severity points only (Green)"
+                  className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[9.5px] sm:text-[10.5px] transition-all cursor-pointer ${
+                    activeSeverityFilter === "LOW"
+                      ? "bg-emerald-500/25 text-emerald-300 border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.3)] font-semibold"
+                      : "hover:bg-slate-800/80 text-slate-300 border border-transparent"
+                  }`}
+                >
+                  <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#22c55e] shadow-[0_0_6px_#22c55e]" />
+                  <span>Low</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleFilterSelect("MODERATE")}
+                  title="Filter: Moderate severity points only (Yellow)"
+                  className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[9.5px] sm:text-[10.5px] transition-all cursor-pointer ${
+                    activeSeverityFilter === "MODERATE"
+                      ? "bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.3)] font-semibold"
+                      : "hover:bg-slate-800/80 text-slate-300 border border-transparent"
+                  }`}
+                >
+                  <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#eab308] shadow-[0_0_6px_#eab308]" />
+                  <span>Moderate</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleFilterSelect("HIGH")}
+                  title="Filter: High severity points only (Orange)"
+                  className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[9.5px] sm:text-[10.5px] transition-all cursor-pointer ${
+                    activeSeverityFilter === "HIGH"
+                      ? "bg-orange-500/25 text-orange-300 border border-orange-500/50 shadow-[0_0_10px_rgba(249,115,22,0.3)] font-semibold"
+                      : "hover:bg-slate-800/80 text-slate-300 border border-transparent"
+                  }`}
+                >
+                  <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#f97316] shadow-[0_0_6px_#f97316]" />
+                  <span>High</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleFilterSelect("CRITICAL")}
+                  title="Filter: Critical points only (Red)"
+                  className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[9.5px] sm:text-[10.5px] transition-all cursor-pointer ${
+                    activeSeverityFilter === "CRITICAL"
+                      ? "bg-rose-500/25 text-rose-300 border border-rose-500/50 shadow-[0_0_10px_rgba(244,63,94,0.3)] font-semibold"
+                      : "hover:bg-slate-800/80 text-slate-300 border border-transparent"
+                  }`}
+                >
+                  <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#ef4444] shadow-[0_0_6px_#ef4444]" />
+                  <span>Critical</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 sm:gap-3 pt-1 border-t border-white/10 text-[9.5px] sm:text-[10px] text-slate-400 flex-wrap sm:flex-nowrap">
+                <span className="flex items-center gap-1">
+                  <span className="w-2 sm:w-2.5 h-0.5 bg-cyan-400" />
+                  Canal
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 sm:w-2.5 h-0.5 bg-blue-400 border-dashed" />
+                  Conduit
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-xs bg-sky-500" />
+                  Pump
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-rose-500" />
+                  Incident
+                </span>
+              </div>
+            </>
+          )}
         </div>
       )}
 

@@ -290,7 +290,7 @@ export function MySubmittedReports() {
         </div>
 
         {/* Floating Glassmorphic Content Containers */}
-        <div className="relative z-10 max-w-[1360px] w-full mx-auto px-2.5 min-[380px]:px-3.5 sm:px-6 lg:px-8 py-5 sm:py-14 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-8">
+        <div className="relative z-10 max-w-[1360px] w-full mx-auto px-2.5 min-[380px]:px-3.5 sm:px-6 lg:px-8 py-5 sm:py-14 pb-8 sm:pb-14 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-8">
           {/* Left Column: Frosted Glass Hero Panel */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -307,8 +307,8 @@ export function MySubmittedReports() {
               <span>Citizen Reporting</span>
             </div>
 
-            {/* Main Title */}
-            <h1 className="text-xl min-[360px]:text-2xl sm:text-4xl lg:text-[45px] font-extrabold tracking-tight text-white leading-[1.1] font-serif drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
+            {/* Main Title - Unified Modern Sans */}
+            <h1 className="text-xl min-[360px]:text-2xl sm:text-4xl lg:text-[45px] font-extrabold tracking-tight text-white leading-[1.1] font-sans drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
               My Submitted{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-sky-200 to-white">
                 Reports
@@ -316,7 +316,7 @@ export function MySubmittedReports() {
             </h1>
 
             {/* Subtitle */}
-            <p className="mt-1.5 sm:mt-2.5 text-[11px] min-[360px]:text-xs sm:text-sm md:text-base font-medium text-white/90 max-w-xl leading-relaxed drop-shadow-sm">
+            <p className="mt-1.5 sm:mt-2.5 text-[11px] min-[360px]:text-xs sm:text-sm md:text-base font-medium text-white/90 max-w-xl leading-relaxed drop-shadow-sm font-sans">
               Your reports make Kolkata cleaner, healthier and more water-resilient.
             </p>
 
@@ -327,8 +327,8 @@ export function MySubmittedReports() {
                   <Leaf className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 </div>
                 <div className="text-left min-w-0 truncate">
-                  <div className="text-[9.5px] sm:text-[11px] font-bold text-white leading-tight truncate">Cleaner City</div>
-                  <div className="text-[8px] sm:text-[9px] text-white/70 truncate">Report issues</div>
+                  <div className="text-[9.5px] sm:text-[11px] font-bold text-white leading-tight truncate font-sans">Cleaner City</div>
+                  <div className="text-[8px] sm:text-[9px] text-white/70 truncate font-sans">Report issues</div>
                 </div>
               </div>
 
@@ -337,8 +337,8 @@ export function MySubmittedReports() {
                   <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 </div>
                 <div className="text-left min-w-0 truncate">
-                  <div className="text-[9.5px] sm:text-[11px] font-bold text-white leading-tight truncate">Safer Comm.</div>
-                  <div className="text-[8px] sm:text-[9px] text-white/70 truncate">Faster action</div>
+                  <div className="text-[9.5px] sm:text-[11px] font-bold text-white leading-tight truncate font-sans">Safer Comm.</div>
+                  <div className="text-[8px] sm:text-[9px] text-white/70 truncate font-sans">Faster action</div>
                 </div>
               </div>
 
@@ -347,8 +347,8 @@ export function MySubmittedReports() {
                   <BarChart3 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 </div>
                 <div className="text-left min-w-0 truncate">
-                  <div className="text-[9.5px] sm:text-[11px] font-bold text-white leading-tight truncate">Governance</div>
-                  <div className="text-[8px] sm:text-[9px] text-white/70 truncate">Real impact</div>
+                  <div className="text-[9.5px] sm:text-[11px] font-bold text-white leading-tight truncate font-sans">Governance</div>
+                  <div className="text-[8px] sm:text-[9px] text-white/70 truncate font-sans">Real impact</div>
                 </div>
               </div>
 
@@ -357,25 +357,25 @@ export function MySubmittedReports() {
                   <Heart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 </div>
                 <div className="text-left min-w-0 truncate">
-                  <div className="text-[9.5px] sm:text-[11px] font-bold text-white leading-tight truncate">Tomorrow</div>
-                  <div className="text-[8px] sm:text-[9px] text-white/70 truncate">Together</div>
+                  <div className="text-[9.5px] sm:text-[11px] font-bold text-white leading-tight truncate font-sans">Tomorrow</div>
+                  <div className="text-[8px] sm:text-[9px] text-white/70 truncate font-sans">Together</div>
                 </div>
               </div>
             </div>
           </motion.div>
 
-          {/* Right Column: Frosted Glass Quote Card */}
+          {/* Right Column: Frosted Glass Quote Card (Comfortable spacing on mobile) */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className="flex flex-col items-start lg:items-end shrink-0 w-full lg:w-auto"
+            className="flex flex-col items-start lg:items-end shrink-0 w-full lg:w-auto mt-2 lg:mt-0"
           >
             <div className="relative rounded-2xl sm:rounded-[24px] p-3.5 min-[380px]:p-4 sm:p-6 w-full max-w-full sm:max-w-[300px] bg-slate-950/75 dark:bg-[#030F14]/[0.85] backdrop-blur-2xl border border-white/20 dark:border-[rgba(94,183,201,0.2)] shadow-[0_16px_45px_rgba(0,0,0,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] text-left text-white overflow-hidden">
-              <div className="text-2xl sm:text-4xl text-white/80 font-serif leading-none mb-1.5 sm:mb-2 select-none">
+              <div className="text-2xl sm:text-3xl text-cyan-300 font-sans font-bold leading-none mb-1.5 sm:mb-2 select-none">
                 “
               </div>
-              <p className="text-[11px] min-[360px]:text-xs sm:text-[13px] text-white/95 font-medium leading-relaxed drop-shadow-sm">
+              <p className="text-[11px] min-[360px]:text-xs sm:text-[13px] text-white/95 font-medium leading-relaxed drop-shadow-sm font-sans">
                 A cleaner Kolkata flows from informed citizens.
               </p>
               <div className="flex items-center justify-end gap-2 pt-2.5 sm:pt-3 mt-2.5 sm:mt-3 border-t border-white/20">
@@ -393,7 +393,7 @@ export function MySubmittedReports() {
       {/* 2. REPORT SUMMARY CARDS (DYNAMIC 4-CARD METRIC GRID)         */}
       {/* Floating frosted glass cards with radiant gradient sparkline */}
       {/* ============================================================ */}
-      <section className="relative z-10 max-w-[1360px] mx-auto px-2.5 min-[380px]:px-3.5 sm:px-6 lg:px-8 -mt-6 sm:-mt-14 md:-mt-16">
+      <section className="relative z-10 max-w-[1360px] mx-auto px-2.5 min-[380px]:px-3.5 sm:px-6 lg:px-8 mt-4 sm:-mt-14 md:-mt-16">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 min-[380px]:gap-2.5 sm:gap-5">
           {/* Card 1: Total Reports */}
           <motion.div
@@ -570,7 +570,7 @@ export function MySubmittedReports() {
 
             {/* Vertical Script Typography */}
             <div className="py-6 flex flex-col items-center justify-center">
-              <span className="text-[14px] font-serif font-bold italic text-[#16467f] dark:text-[#00E5FF] tracking-wide [writing-mode:vertical-rl] rotate-180 drop-shadow-sm">
+              <span className="text-[13px] font-sans font-bold text-[#16467f] dark:text-[#00E5FF] tracking-wider uppercase [writing-mode:vertical-rl] rotate-180 drop-shadow-sm">
                 Cleaner Waters, Brighter Kolkata
               </span>
             </div>
