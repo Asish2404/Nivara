@@ -47,16 +47,14 @@ function Toggle({ checked, onChange }) {
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative w-11 h-6 rounded-full transition-all duration-300 focus:outline-none shrink-0 cursor-pointer ${
-      checked
+      className={`relative w-11 h-6 rounded-full transition-all duration-300 focus:outline-none shrink-0 cursor-pointer ${checked
         ? "bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_12px_rgba(6,182,212,0.45)]"
         : "bg-slate-200"
-    }`}
+        }`}
     >
       <span
-        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full shadow-sm transition-transform duration-300 ${
-          checked ? "translate-x-5 bg-white" : "translate-x-0 bg-white"
-        }`}
+        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full shadow-sm transition-transform duration-300 ${checked ? "translate-x-5 bg-white" : "translate-x-0 bg-white"
+          }`}
       />
     </button>
   );
@@ -67,13 +65,12 @@ function TimelineStep({ num, label, sublabel, active, done, isSimulating }) {
   return (
     <div className="flex items-center gap-1.5 sm:gap-3 flex-1 min-w-0">
       <div
-        className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10.5px] sm:text-xs border transition-all duration-300 shrink-0 ${
-          done
-            ? "bg-emerald-600 border-emerald-600 text-white font-medium shadow-xs"
-            : active
-              ? "bg-blue-50 border-blue-600 text-blue-700 font-semibold ring-2 ring-blue-100 shadow-xs"
-              : "bg-slate-50 border-slate-200 text-slate-500 font-medium"
-        }`}
+        className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10.5px] sm:text-xs border transition-all duration-300 shrink-0 ${done
+          ? "bg-emerald-600 border-emerald-600 text-white font-medium shadow-xs"
+          : active
+            ? "bg-blue-50 border-blue-600 text-blue-700 font-semibold ring-2 ring-blue-100 shadow-xs"
+            : "bg-slate-50 border-slate-200 text-slate-500 font-medium"
+          }`}
       >
         {done ? (
           <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white stroke-[2.5]" />
@@ -85,13 +82,12 @@ function TimelineStep({ num, label, sublabel, active, done, isSimulating }) {
       </div>
       <div className="min-w-0 flex-1">
         <div
-          className={`text-[11px] sm:text-[12.5px] leading-tight truncate ${
-            done
-              ? "text-emerald-700 font-semibold"
-              : active
-                ? "text-blue-700 font-semibold"
-                : "text-slate-700 font-medium"
-          }`}
+          className={`text-[11px] sm:text-[12.5px] leading-tight truncate ${done
+            ? "text-emerald-700 font-semibold"
+            : active
+              ? "text-blue-700 font-semibold"
+              : "text-slate-700 font-medium"
+            }`}
         >
           {label}
         </div>
@@ -130,8 +126,8 @@ export function SimulateView() {
 
   // Load municipal reports and active incident queue on mount + poll periodically
   useEffect(() => {
-    fetchAllReports?.().catch(() => {});
-    fetchIncidentQueue?.().catch(() => {});
+    fetchAllReports?.().catch(() => { });
+    fetchIncidentQueue?.().catch(() => { });
   }, [fetchAllReports, fetchIncidentQueue]);
 
   // Combine citizen reports from database & local preview
@@ -538,234 +534,236 @@ export function SimulateView() {
      * SimulateView content area:
      *   - Shows panoramic Kolkata Golden Sunset with Heritage Dome, Yellow Taxis & Vintage Tram edge-to-edge
      */
-    <div className="w-full min-h-screen bg-[#f3f7fb] dark:bg-[#070c14] text-slate-900 dark:text-[#F0F9FA] transition-colors duration-300 pb-16 font-sans relative">
-      {/* ── Panoramic Heritage Header Banner (Premium Light & Dark Atmospheric Blend) ── */}
-      <div className="relative w-full overflow-hidden bg-[#e8f1f8] dark:bg-[#070c14]">
-        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          {/* Light Theme Golden Sunset Tram Photography */}
-          <img
-            src="/images/kolkata_golden_sunset_trams.jpg"
-            alt="Kolkata Heritage Building at Golden Sunset with Yellow Taxis and Vintage Tram"
-            className="w-full h-full object-cover object-[center_36%] sm:object-[center_32%] filter contrast-[1.04] brightness-[1.01] saturate-[1.02] dark:hidden transition-all duration-300"
-            onError={(e) => {
-              e.currentTarget.src = "/images/kolkata_heritage_street_extreme_wide.jpg";
-            }}
-          />
+    <div className="w-full min-h-screen bg-[#f3f7fb] dark:bg-[#0A1E3B] text-slate-900 dark:text-[#F0F9FA] transition-colors duration-300 pb-16 font-sans relative overflow-hidden">
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        {/* Light Theme Golden Sunset Tram Photography */}
+        <img
+          src="/images/sky3.png"
+          alt="Kolkata Heritage Building at Golden Sunset with Yellow Taxis and Vintage Tram"
+          className="w-full h-full object-cover object-[center_36%] sm:object-[center_32%] filter contrast-[1.04] brightness-[1.01] saturate-[1.02] dark:hidden transition-all duration-300"
+          onError={(e) => {
+            e.currentTarget.src = "/images/kolkata_heritage_street_extreme_wide.jpg";
+          }}
+        />
 
-          {/* Dark Theme Night Tram & Illuminated Heritage Photography */}
-          <img
-            src="/images/kolkata_golden_sunset_trams_dark.png"
-            alt="Kolkata Heritage Golden Sunset Dark"
-            className="w-full h-full object-cover object-[center_36%] sm:object-[center_32%] filter contrast-[1.06] brightness-[1.0] saturate-[1.06] hidden dark:block transition-all duration-300"
-            onError={(e) => {
-              e.currentTarget.src = "/images/kolkata_heritage_wide_ultra_dark.png";
-            }}
-          />
+        {/* Dark Theme Night Tram & Illuminated Heritage Photography */}
+        <img
+          src="/images/Simulate_Page_Dark_bg1.png"
+          alt="Kolkata Heritage Golden Sunset Dark"
+          className="w-full h-full object-cover object-[center_36%] sm:object-[center_32%] filter contrast-[1.06] brightness-[1.0] saturate-[1.06] hidden dark:block transition-all duration-300"
+          onError={(e) => {
+            e.currentTarget.src = "/images/Simulate_Page_Dark_bg.png";
+          }}
+        />
 
-          {/* Cinematic atmospheric overlays for text contrast and seamless blending */}
-          <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#e8f1f8] via-[#e8f1f8]/60 to-transparent dark:from-[#070c14] dark:via-[#070c14]/70 pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#e8f1f8] via-[#e8f1f8]/88 via-32% md:via-42% to-transparent to-78% dark:from-[#070c14] dark:via-[#070c14]/90 dark:via-32% md:dark:via-42% dark:to-transparent pointer-events-none" />
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#f3f7fb] via-[#f3f7fb]/85 to-transparent dark:from-[#070c14] dark:via-[#070c14]/85 pointer-events-none" />
+        {/* LIGHT ATMOSPHERIC LAYER */}
+        <div className="absolute inset-0 bg-white/10 dark:hidden" />
+
+        {/* Subtle dark atmospheric layer */}
+        <div className="absolute inset-0 bg-[#06152B]/45" />
+
+        {/* LIGHT FOOTER BLEND */}
+        <div className="absolute inset-x-0 bottom-0 h-[280px] bg-gradient-to-t from-[#F3F7FB] via-[#F3F7FB]/75 to-transparent dark:hidden" />
+
+        {/* Smooth Dark blend into fixed footer */}
+        <div className="absolute inset-x-0 bottom-0 h-[280px] bg-gradient-to-t from-[#0A1E3B] via-[#0A1E3B]/75 to-transparent" />
+      </div>
+
+      {/* ── 1. Hero Section with Header Content & Target Selector ── */}
+      <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-7 pb-12 sm:pt-10 sm:pb-16 font-sans">
+        {/* Ambient Blue/Cyan Glow Sphere behind Header */}
+        <div className="absolute -left-10 -top-8 w-80 h-44 bg-gradient-to-br from-blue-500/20 via-cyan-400/15 to-transparent dark:from-[#00E5FF]/20 dark:via-[#38BDF8]/10 rounded-full blur-3xl pointer-events-none -z-10" />
+
+        <div className="inline-flex flex-wrap items-center gap-1.5 sm:gap-2.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/70 dark:bg-slate-900/70 border border-white/80 dark:border-slate-700/60 text-[11px] sm:text-[12px] text-slate-700 dark:text-slate-200 mb-3 shadow-[0_4px_16px_rgba(15,23,42,0.05),0_0_12px_rgba(59,130,246,0.12)] backdrop-blur-xl max-w-full">
+          <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+          <span className="font-bold text-slate-900 dark:text-white">Hydraulic Intervention Modeling</span>
+          <span className="text-slate-400 dark:text-slate-500">·</span>
+          <span className="text-blue-600 dark:text-cyan-400 font-semibold">Scenario Simulator</span>
         </div>
 
-        {/* ── 1. Hero Section with Header Content & Target Selector ── */}
-        <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-7 pb-12 sm:pt-10 sm:pb-16 font-sans">
-          {/* Ambient Blue/Cyan Glow Sphere behind Header */}
-          <div className="absolute -left-10 -top-8 w-80 h-44 bg-gradient-to-br from-blue-500/20 via-cyan-400/15 to-transparent dark:from-[#00E5FF]/20 dark:via-[#38BDF8]/10 rounded-full blur-3xl pointer-events-none -z-10" />
-
-          <div className="inline-flex flex-wrap items-center gap-1.5 sm:gap-2.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/70 dark:bg-slate-900/70 border border-white/80 dark:border-slate-700/60 text-[11px] sm:text-[12px] text-slate-700 dark:text-slate-200 mb-3 shadow-[0_4px_16px_rgba(15,23,42,0.05),0_0_12px_rgba(59,130,246,0.12)] backdrop-blur-xl max-w-full">
-            <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
-            <span className="font-bold text-slate-900 dark:text-white">Hydraulic Intervention Modeling</span>
-            <span className="text-slate-400 dark:text-slate-500">·</span>
-            <span className="text-blue-600 dark:text-cyan-400 font-semibold">Scenario Simulator</span>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl md:text-[35px] font-extrabold tracking-tight text-white dark:text-[#F2FBFD] mb-2 leading-tight">
+              Simulate Drainage Interventions
+            </h1>
+            <p className="text-xs sm:text-[13.5px] text-white/90 dark:text-[#B2D2D9] max-w-2xl leading-relaxed font-normal">
+              Test pumping station boosts, inlet desilting crews, and mobile
+              submersible units to predict flood reduction before dispatching
+              field teams.
+            </p>
           </div>
 
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl md:text-[35px] font-extrabold tracking-tight text-[#0a325c] dark:text-[#F2FBFD] mb-2 leading-tight">
-                Simulate Drainage Interventions
-              </h1>
-              <p className="text-xs sm:text-[13.5px] text-slate-700 dark:text-[#B2D2D9] max-w-2xl leading-relaxed font-normal">
-                Test pumping station boosts, inlet desilting crews, and mobile
-                submersible units to predict flood reduction before dispatching
-                field teams.
-              </p>
-            </div>
-
-            {/* Target Hotspot & Incident Selector with 5-item scrollable dropdown */}
-            <div ref={dropdownRef} className="relative shrink-0 z-30 w-full sm:w-auto">
-              <button
-                type="button"
-                id="hotspot-dropdown-trigger"
-                onClick={() => {
-                  audioEngine.playUiChirp(isDropdownOpen ? 700 : 950);
-                  setIsDropdownOpen((prev) => !prev);
-                }}
-                className="flex items-center gap-2.5 sm:gap-3 p-2.5 px-3 sm:px-3.5 rounded-2xl bg-white/95 dark:bg-[#131d31]/95 border border-slate-200/90 dark:border-slate-700/80 shadow-xs hover:border-slate-300 dark:hover:border-slate-600 transition-all text-left backdrop-blur-md cursor-pointer group w-full sm:w-auto max-w-full sm:max-w-[440px]"
-                aria-expanded={isDropdownOpen}
-                aria-haspopup="listbox"
-              >
-                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0 group-hover:scale-105 transition-transform">
-                  <MapPin className="w-4 h-4" />
+          {/* Target Hotspot & Incident Selector with 5-item scrollable dropdown */}
+          <div ref={dropdownRef} className="relative shrink-0 z-30 w-full sm:w-auto">
+            <button
+              type="button"
+              id="hotspot-dropdown-trigger"
+              onClick={() => {
+                audioEngine.playUiChirp(isDropdownOpen ? 700 : 950);
+                setIsDropdownOpen((prev) => !prev);
+              }}
+              className="flex items-center gap-2.5 sm:gap-3 p-2.5 px-3 sm:px-3.5 rounded-2xl bg-white/95 dark:bg-[#131d31]/95 border border-slate-200/90 dark:border-slate-700/80 shadow-xs hover:border-slate-300 dark:hover:border-slate-600 transition-all text-left backdrop-blur-md cursor-pointer group w-full sm:w-auto max-w-full sm:max-w-[440px]"
+              aria-expanded={isDropdownOpen}
+              aria-haspopup="listbox"
+            >
+              <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0 group-hover:scale-105 transition-transform">
+                <MapPin className="w-4 h-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 leading-tight">
+                  TARGET HOTSPOT
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 leading-tight">
-                    TARGET HOTSPOT
-                  </div>
-                  <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate flex items-center gap-1.5 mt-0.5">
-                    <span className={`font-mono font-bold shrink-0 ${isQueueEmpty ? "text-emerald-600 dark:text-emerald-400" : "text-blue-600 dark:text-blue-400"}`}>
-                      {isQueueEmpty ? "#ALL-CLEAR" : (activeIncident?.id || "#--")}
-                    </span>
-                    <span className="truncate">
-                      {isQueueEmpty
-                        ? "No Active Order · All Hotspots Dispatched"
-                        : (activeIncident?.location ? activeIncident.location.split("(")[0].trim() : "Select Hotspot")}
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 flex items-center gap-1.5 font-normal">
-                    <span>
-                      {isQueueEmpty
-                        ? "0 active incidents"
-                        : (activeIncident?.waterLevel ||
-                          (activeIncident?.waterDepth && !String(activeIncident.waterDepth).includes("Pending")
-                            ? activeIncident.waterDepth
-                            : "Telemetry Pending"))}
-                    </span>
-                    <span>•</span>
-                    <span>
-                      {isQueueEmpty
-                        ? "0 reports"
-                        : `${activeIncident?.verifiedReports ?? 0} ${(activeIncident?.verifiedReports ?? 0) === 1 ? "report" : "reports"}`}
-                    </span>
-                    <span className={`text-[9.5px] font-bold font-mono px-1.5 py-0.2 rounded border ${
-                      isQueueEmpty
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40"
-                        : (SEVERITY_BADGE_STYLE[activeIncident?.severity] || SEVERITY_BADGE_STYLE.MONITORING)
+                <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate flex items-center gap-1.5 mt-0.5">
+                  <span className={`font-mono font-bold shrink-0 ${isQueueEmpty ? "text-emerald-600 dark:text-emerald-400" : "text-blue-600 dark:text-blue-400"}`}>
+                    {isQueueEmpty ? "#ALL-CLEAR" : (activeIncident?.id || "#--")}
+                  </span>
+                  <span className="truncate">
+                    {isQueueEmpty
+                      ? "No Active Order · All Hotspots Dispatched"
+                      : (activeIncident?.location ? activeIncident.location.split("(")[0].trim() : "Select Hotspot")}
+                  </span>
+                </div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 flex items-center gap-1.5 font-normal">
+                  <span>
+                    {isQueueEmpty
+                      ? "0 active incidents"
+                      : (activeIncident?.waterLevel ||
+                        (activeIncident?.waterDepth && !String(activeIncident.waterDepth).includes("Pending")
+                          ? activeIncident.waterDepth
+                          : "Telemetry Pending"))}
+                  </span>
+                  <span>•</span>
+                  <span>
+                    {isQueueEmpty
+                      ? "0 reports"
+                      : `${activeIncident?.verifiedReports ?? 0} ${(activeIncident?.verifiedReports ?? 0) === 1 ? "report" : "reports"}`}
+                  </span>
+                  <span className={`text-[9.5px] font-bold font-mono px-1.5 py-0.2 rounded border ${isQueueEmpty
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40"
+                    : (SEVERITY_BADGE_STYLE[activeIncident?.severity] || SEVERITY_BADGE_STYLE.MONITORING)
                     }`}>
-                      {isQueueEmpty ? "NO ACTIVE ORDER" : (activeIncident?.severity || "MONITORING")}
+                    {isQueueEmpty ? "NO ACTIVE ORDER" : (activeIncident?.severity || "MONITORING")}
+                  </span>
+                </div>
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-200 shrink-0 ml-1 ${isDropdownOpen ? "rotate-180 text-blue-600 dark:text-blue-400" : ""
+                  }`}
+              />
+            </button>
+
+            {/* Dropdown Menu Panel: exactly 5 results visible, rest accessed using scrollbar */}
+            <AnimatePresence>
+              {isDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                  transition={{ duration: 0.16, ease: "easeOut" }}
+                  data-lenis-prevent="true"
+                  data-lenis-prevent-wheel="true"
+                  className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-[420px] md:w-[460px] max-w-[460px] bg-white dark:bg-[#131d31] border border-slate-200/90 dark:border-slate-700/80 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.14)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden backdrop-blur-xl"
+                >
+                  {/* Header with count & scroll indicator */}
+                  <div className="flex items-center justify-between px-3.5 py-2 bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-700/60 text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                    <span className="font-semibold text-slate-700 dark:text-slate-300 tracking-wider uppercase">
+                      HOTSPOTS ({availableIncidents.length})
+                    </span>
+                    <span className="text-[10.5px] text-blue-600 dark:text-blue-400 font-sans font-medium">
+                      {availableIncidents.length > 5 ? "5 visible • Scroll for more" : `${availableIncidents.length} available`}
                     </span>
                   </div>
-                </div>
-                <ChevronDown
-                  className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-200 shrink-0 ml-1 ${
-                    isDropdownOpen ? "rotate-180 text-blue-600 dark:text-blue-400" : ""
-                  }`}
-                />
-              </button>
 
-              {/* Dropdown Menu Panel: exactly 5 results visible, rest accessed using scrollbar */}
-              <AnimatePresence>
-                {isDropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                    transition={{ duration: 0.16, ease: "easeOut" }}
+                  {/* Scrollable list strictly calibrated for exactly 5 visible items with custom high-contrast scrollbar */}
+                  <div
+                    ref={scrollContainerRef}
                     data-lenis-prevent="true"
                     data-lenis-prevent-wheel="true"
-                    className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-[420px] md:w-[460px] max-w-[460px] bg-white dark:bg-[#131d31] border border-slate-200/90 dark:border-slate-700/80 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.14)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden backdrop-blur-xl"
+                    className="kwi-dropdown-scroll divide-y divide-slate-100 dark:divide-slate-800/70"
+                    style={{
+                      maxHeight: "340px",
+                      height: availableIncidents.length === 0 ? "auto" : "340px",
+                    }}
                   >
-                    {/* Header with count & scroll indicator */}
-                    <div className="flex items-center justify-between px-3.5 py-2 bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-700/60 text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                      <span className="font-semibold text-slate-700 dark:text-slate-300 tracking-wider uppercase">
-                        HOTSPOTS ({availableIncidents.length})
-                      </span>
-                      <span className="text-[10.5px] text-blue-600 dark:text-blue-400 font-sans font-medium">
-                        {availableIncidents.length > 5 ? "5 visible • Scroll for more" : `${availableIncidents.length} available`}
-                      </span>
-                    </div>
-
-                    {/* Scrollable list strictly calibrated for exactly 5 visible items with custom high-contrast scrollbar */}
-                    <div
-                      ref={scrollContainerRef}
-                      data-lenis-prevent="true"
-                      data-lenis-prevent-wheel="true"
-                      className="kwi-dropdown-scroll divide-y divide-slate-100 dark:divide-slate-800/70"
-                      style={{
-                        maxHeight: "340px",
-                        height: availableIncidents.length === 0 ? "auto" : "340px",
-                      }}
-                    >
-                      {availableIncidents.length === 0 ? (
-                        <div className="p-6 text-center text-xs text-slate-500 space-y-3">
-                          <div className="font-semibold text-slate-700 dark:text-slate-300">
-                            All municipal hotspots have been dispatched!
-                          </div>
-                          <p className="text-[11px] text-slate-400 leading-relaxed">
-                            Work orders are currently active on the Respond desk.
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              resetDispatchedHotspots();
-                              setIsDropdownOpen(false);
-                            }}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 dark:bg-blue-950/60 dark:text-cyan-400 hover:bg-blue-100 transition-colors cursor-pointer"
-                          >
-                            Reset Dispatched Hotspots
-                          </button>
+                    {availableIncidents.length === 0 ? (
+                      <div className="p-6 text-center text-xs text-slate-500 space-y-3">
+                        <div className="font-semibold text-slate-700 dark:text-slate-300">
+                          All municipal hotspots have been dispatched!
                         </div>
-                      ) : (
-                        availableIncidents.map((inc) => {
-                          const isSelected = inc.id === (activeIncident?.id || selectedIncidentId);
-                          const depthDisplay =
-                            inc.waterLevel ||
-                            (inc.waterDepth && !String(inc.waterDepth).includes("Pending")
-                              ? inc.waterDepth
-                              : "Telemetry Pending");
-                          const reports = inc.verifiedReports ?? 0;
-                          const cleanLoc = inc.location ? inc.location.split("(")[0].trim() : "Incident Hotspot";
-                          const badgeClass = SEVERITY_BADGE_STYLE[inc.severity] || SEVERITY_BADGE_STYLE.MONITORING;
+                        <p className="text-[11px] text-slate-400 leading-relaxed">
+                          Work orders are currently active on the Respond desk.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            resetDispatchedHotspots();
+                            setIsDropdownOpen(false);
+                          }}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 dark:bg-blue-950/60 dark:text-cyan-400 hover:bg-blue-100 transition-colors cursor-pointer"
+                        >
+                          Reset Dispatched Hotspots
+                        </button>
+                      </div>
+                    ) : (
+                      availableIncidents.map((inc) => {
+                        const isSelected = inc.id === (activeIncident?.id || selectedIncidentId);
+                        const depthDisplay =
+                          inc.waterLevel ||
+                          (inc.waterDepth && !String(inc.waterDepth).includes("Pending")
+                            ? inc.waterDepth
+                            : "Telemetry Pending");
+                        const reports = inc.verifiedReports ?? 0;
+                        const cleanLoc = inc.location ? inc.location.split("(")[0].trim() : "Incident Hotspot";
+                        const badgeClass = SEVERITY_BADGE_STYLE[inc.severity] || SEVERITY_BADGE_STYLE.MONITORING;
 
-                          return (
-                            <button
-                              key={inc.id}
-                              type="button"
-                              onClick={() => handleSelectIncident(inc.id)}
-                              className={`w-full text-left px-3.5 py-2 transition-colors flex items-center justify-between gap-3 cursor-pointer select-none ${
-                                isSelected
-                                  ? "bg-blue-500/15 dark:bg-blue-600/20 text-blue-900 dark:text-blue-100"
-                                  : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-800 dark:text-slate-200"
+                        return (
+                          <button
+                            key={inc.id}
+                            type="button"
+                            onClick={() => handleSelectIncident(inc.id)}
+                            className={`w-full text-left px-3.5 py-2 transition-colors flex items-center justify-between gap-3 cursor-pointer select-none ${isSelected
+                              ? "bg-blue-500/15 dark:bg-blue-600/20 text-blue-900 dark:text-blue-100"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-800 dark:text-slate-200"
                               }`}
-                              style={{ minHeight: "68px", height: "68px" }}
-                            >
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 mb-0.5">
-                                  <span className="font-mono text-xs font-bold text-sky-600 dark:text-sky-400">
-                                    {inc.id}
-                                  </span>
-                                  <span className={`text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded border ${badgeClass}`}>
-                                    {inc.severity || "MONITORING"}
-                                  </span>
-                                  <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                                    {depthDisplay}
-                                  </span>
-                                </div>
-                                <div className="text-[12.5px] font-semibold text-slate-900 dark:text-slate-100 truncate">
-                                  {cleanLoc}
-                                </div>
-                                <div className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                  {reports} verified {reports === 1 ? "report" : "reports"}
-                                </div>
+                            style={{ minHeight: "68px", height: "68px" }}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span className="font-mono text-xs font-bold text-sky-600 dark:text-sky-400">
+                                  {inc.id}
+                                </span>
+                                <span className={`text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded border ${badgeClass}`}>
+                                  {inc.severity || "MONITORING"}
+                                </span>
+                                <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                                  {depthDisplay}
+                                </span>
                               </div>
+                              <div className="text-[12.5px] font-semibold text-slate-900 dark:text-slate-100 truncate">
+                                {cleanLoc}
+                              </div>
+                              <div className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                {reports} verified {reports === 1 ? "report" : "reports"}
+                              </div>
+                            </div>
 
-                              {isSelected && (
-                                <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                                  <Check className="w-3 h-3 stroke-[3]" />
-                                </div>
-                              )}
-                            </button>
-                          );
-                        })
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                            {isSelected && (
+                              <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                <Check className="w-3 h-3 stroke-[3]" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
+
 
       {/* ── Main Interactive Simulation Content ── */}
       <motion.div
@@ -787,11 +785,10 @@ export function SimulateView() {
               isSimulating={false}
             />
             <div
-              className={`h-[2px] w-3 sm:w-16 mx-1 sm:mx-2 rounded-full transition-all duration-500 shrink-0 ${
-                simState === "SIMULATING" || simState === "RESULT"
-                  ? "bg-blue-600"
-                  : "bg-slate-200 dark:bg-slate-700"
-              }`}
+              className={`h-[2px] w-3 sm:w-16 mx-1 sm:mx-2 rounded-full transition-all duration-500 shrink-0 ${simState === "SIMULATING" || simState === "RESULT"
+                ? "bg-blue-600"
+                : "bg-slate-200 dark:bg-slate-700"
+                }`}
             />
             <TimelineStep
               num="2"
@@ -807,11 +804,10 @@ export function SimulateView() {
               isSimulating={simState === "SIMULATING"}
             />
             <div
-              className={`h-[2px] w-3 sm:w-16 mx-1 sm:mx-2 rounded-full transition-all duration-500 shrink-0 ${
-                simState === "RESULT"
-                  ? "bg-emerald-600"
-                  : "bg-slate-200 dark:bg-slate-700"
-              }`}
+              className={`h-[2px] w-3 sm:w-16 mx-1 sm:mx-2 rounded-full transition-all duration-500 shrink-0 ${simState === "RESULT"
+                ? "bg-emerald-600"
+                : "bg-slate-200 dark:bg-slate-700"
+                }`}
             />
             <TimelineStep
               num="3"
@@ -955,18 +951,17 @@ export function SimulateView() {
                 type="button"
                 onClick={handleRunSimulation}
                 disabled={simState === "SIMULATING" || isQueueEmpty}
-                className={`w-full relative overflow-hidden py-3 px-5 rounded-xl font-medium text-[13.5px] transition-all duration-200 flex items-center justify-center gap-2 group ${
-                  isQueueEmpty
-                    ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 cursor-not-allowed shadow-none"
-                    : "text-white active:translate-y-0 hover:-translate-y-0.5 cursor-pointer shadow-[0_4px_16px_rgba(37,99,235,0.28)] hover:shadow-[0_6px_22px_rgba(37,99,235,0.38)]"
-                }`}
+                className={`w-full relative overflow-hidden py-3 px-5 rounded-xl font-medium text-[13.5px] transition-all duration-200 flex items-center justify-center gap-2 group ${isQueueEmpty
+                  ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 cursor-not-allowed shadow-none"
+                  : "text-white active:translate-y-0 hover:-translate-y-0.5 cursor-pointer shadow-[0_4px_16px_rgba(37,99,235,0.28)] hover:shadow-[0_6px_22px_rgba(37,99,235,0.38)]"
+                  }`}
                 style={
                   isQueueEmpty
                     ? {}
                     : {
-                        background:
-                          "linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%)",
-                      }
+                      background:
+                        "linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%)",
+                    }
                 }
               >
                 {simState === "SIMULATING" ? (
@@ -1020,21 +1015,19 @@ export function SimulateView() {
                   </p>
                 </div>
               </div>
-              <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border shrink-0 ${
-                isQueueEmpty
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60"
-                  : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/60"
-              }`}>
+              <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border shrink-0 ${isQueueEmpty
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60"
+                : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/60"
+                }`}>
                 {isQueueEmpty ? "No Active Order" : (activeIncident.severity || "Critical")}
               </span>
             </div>
 
             {/* Main Risk Circular Gauge */}
-            <div className={`rounded-2xl border p-3.5 sm:p-5 flex flex-col items-center justify-center text-center relative overflow-hidden ${
-              isQueueEmpty
-                ? "bg-gradient-to-b from-emerald-50/70 via-emerald-50/30 to-white/40 dark:from-emerald-950/30 dark:via-emerald-950/10 dark:to-transparent border-emerald-100/80 dark:border-emerald-800/60"
-                : "bg-gradient-to-b from-rose-50/70 via-rose-50/30 to-white/40 dark:from-rose-950/30 dark:via-rose-950/10 dark:to-transparent border-rose-100/80 dark:border-rose-800/60"
-            }`}>
+            <div className={`rounded-2xl border p-3.5 sm:p-5 flex flex-col items-center justify-center text-center relative overflow-hidden ${isQueueEmpty
+              ? "bg-gradient-to-b from-emerald-50/70 via-emerald-50/30 to-white/40 dark:from-emerald-950/30 dark:via-emerald-950/10 dark:to-transparent border-emerald-100/80 dark:border-emerald-800/60"
+              : "bg-gradient-to-b from-rose-50/70 via-rose-50/30 to-white/40 dark:from-rose-950/30 dark:via-rose-950/10 dark:to-transparent border-rose-100/80 dark:border-rose-800/60"
+              }`}>
               {/* Circular Gauge Ring */}
               <div className="relative w-24 h-24 flex items-center justify-center">
                 <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
@@ -1067,14 +1060,12 @@ export function SimulateView() {
                 </svg>
                 {/* Center Value */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className={`text-[34px] font-semibold tracking-tight leading-none tabular-nums ${
-                    isQueueEmpty ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
-                  }`}>
+                  <span className={`text-[34px] font-semibold tracking-tight leading-none tabular-nums ${isQueueEmpty ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                    }`}>
                     {baselineDepthCm}
                   </span>
-                  <span className={`text-[11px] font-medium mt-0.5 ${
-                    isQueueEmpty ? "text-emerald-500 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"
-                  }`}>
+                  <span className={`text-[11px] font-medium mt-0.5 ${isQueueEmpty ? "text-emerald-500 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"
+                    }`}>
                     cm
                   </span>
                 </div>
@@ -1092,9 +1083,8 @@ export function SimulateView() {
               <div className="text-[11.5px] text-slate-600 dark:text-slate-400 mt-0.5 flex items-center gap-1.5 font-normal">
                 <span>{isQueueEmpty ? "All Hotspots Dispatched" : (activeIncident?.ward || activeIncident?.subdivision?.split("//")[0]?.trim() || "Kolkata Grid")}</span>
                 <span className="text-slate-300 dark:text-slate-600">·</span>
-                <span className={`font-medium truncate max-w-[200px] ${
-                  isQueueEmpty ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"
-                }`}>
+                <span className={`font-medium truncate max-w-[200px] ${isQueueEmpty ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"
+                  }`}>
                   {isQueueEmpty ? "Queue All-Clear" : (activeIncident?.location ? activeIncident.location.split("(")[0].trim() : "Hotspot")}
                 </span>
               </div>
@@ -1161,11 +1151,10 @@ export function SimulateView() {
             </div>
 
             {/* Subtle Risk Warning Panel */}
-            <div className={`rounded-xl px-3 sm:px-3.5 py-2 text-[11.5px] flex items-center gap-2 font-normal ${
-              isQueueEmpty
-                ? "bg-emerald-50/90 border border-emerald-200/80 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-800/60 dark:text-emerald-300"
-                : "bg-amber-50/90 border border-amber-200/80 text-amber-900 dark:bg-amber-950/40 dark:border-amber-800/60 dark:text-amber-300"
-            }`}>
+            <div className={`rounded-xl px-3 sm:px-3.5 py-2 text-[11.5px] flex items-center gap-2 font-normal ${isQueueEmpty
+              ? "bg-emerald-50/90 border border-emerald-200/80 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-800/60 dark:text-emerald-300"
+              : "bg-amber-50/90 border border-amber-200/80 text-amber-900 dark:bg-amber-950/40 dark:border-amber-800/60 dark:text-amber-300"
+              }`}>
               {isQueueEmpty ? (
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
               ) : (
@@ -1185,11 +1174,10 @@ export function SimulateView() {
             <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                 <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all duration-300 shadow-xs shrink-0 ${
-                    simState === "RESULT"
-                      ? "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/50 dark:border-emerald-800/60 dark:text-emerald-400"
-                      : "bg-blue-50 border-blue-100 text-blue-600 dark:bg-blue-950/50 dark:border-blue-800/60 dark:text-blue-400"
-                  }`}
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all duration-300 shadow-xs shrink-0 ${simState === "RESULT"
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/50 dark:border-emerald-800/60 dark:text-emerald-400"
+                    : "bg-blue-50 border-blue-100 text-blue-600 dark:bg-blue-950/50 dark:border-blue-800/60 dark:text-blue-400"
+                    }`}
                 >
                   <TrendingDown className="w-4 h-4" />
                 </div>
@@ -1205,11 +1193,10 @@ export function SimulateView() {
                 </div>
               </div>
               <span
-                className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border transition-all duration-300 shrink-0 ${
-                  simState === "RESULT"
-                    ? "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60"
-                    : "bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700/60"
-                }`}
+                className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border transition-all duration-300 shrink-0 ${simState === "RESULT"
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60"
+                  : "bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700/60"
+                  }`}
               >
                 {simState === "RESULT" ? "Verified" : "Pending"}
               </span>
@@ -1217,11 +1204,10 @@ export function SimulateView() {
 
             {/* Center Visual Area */}
             <div
-              className={`rounded-2xl border p-3.5 sm:p-5 flex flex-col items-center justify-center text-center gap-2 transition-all duration-300 min-h-[160px] sm:min-h-[175px] ${
-                simState === "RESULT"
-                  ? "bg-gradient-to-b from-emerald-50/70 via-emerald-50/30 to-white/40 dark:from-emerald-950/30 dark:via-emerald-950/10 dark:to-transparent border-emerald-200/80 dark:border-emerald-800/60"
-                  : "bg-slate-50/70 dark:bg-slate-800/30 border-slate-100 dark:border-slate-800/60"
-              }`}
+              className={`rounded-2xl border p-3.5 sm:p-5 flex flex-col items-center justify-center text-center gap-2 transition-all duration-300 min-h-[160px] sm:min-h-[175px] ${simState === "RESULT"
+                ? "bg-gradient-to-b from-emerald-50/70 via-emerald-50/30 to-white/40 dark:from-emerald-950/30 dark:via-emerald-950/10 dark:to-transparent border-emerald-200/80 dark:border-emerald-800/60"
+                : "bg-slate-50/70 dark:bg-slate-800/30 border-slate-100 dark:border-slate-800/60"
+                }`}
             >
               <AnimatePresence mode="wait">
                 {simState === "SIMULATING" ? (
@@ -1301,9 +1287,8 @@ export function SimulateView() {
                     className="flex flex-col items-center gap-2 py-1.5"
                   >
                     {/* Clean analytics visual */}
-                    <div className={`relative w-14 h-14 rounded-full border flex items-center justify-center shadow-xs ${
-                      isQueueEmpty ? "border-emerald-200 bg-emerald-50/60 text-emerald-600 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400" : "border-slate-200 bg-white text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                    }`}>
+                    <div className={`relative w-14 h-14 rounded-full border flex items-center justify-center shadow-xs ${isQueueEmpty ? "border-emerald-200 bg-emerald-50/60 text-emerald-600 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400" : "border-slate-200 bg-white text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                      }`}>
                       {isQueueEmpty ? (
                         <CheckCircle2 className="w-6 h-6" />
                       ) : (
@@ -1459,7 +1444,8 @@ export function SimulateView() {
           )}
         </AnimatePresence>
       </motion.div>
-    </div>
+
+    </div >
   );
 }
 
