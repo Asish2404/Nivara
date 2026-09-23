@@ -203,6 +203,23 @@ class ReportService:
         except Exception as queue_err:
             print(f"[KWI] IncidentQueue update warning: {queue_err}")
 
+        # Trigger 1: Save persistent Type 1 notification for the submitting citizen user
+        try:
+            from .notification_service import NotificationService
+            ward_str = f"Ward {report.ward}" if report.ward and "ward" not in str(report.ward).lower() else str(report.ward or "")
+            await NotificationService.create_notification(
+                db=db,
+                user_id=str(user.id),
+                type="report_submitted",
+                title="Report Submitted Successfully",
+                message=f"Your waterlogging report for {report.location} has been submitted successfully and registered with the municipal emergency response desk. Incident tracking ID #{report.report_id}.",
+                location=report.location or "",
+                ward=ward_str,
+                report_id=report.report_id or "",
+            )
+        except Exception as notif_err:
+            print(f"[KWI] Report submission notification DB error: {notif_err}")
+
         report.submitted_at = ensure_kolkata_tz(report.submitted_at)
         report.updated_at = ensure_kolkata_tz(report.updated_at)
         return report

@@ -57,6 +57,7 @@ export function AdminDashboardView() {
     workOrders = {},
     historicalPlaces = [],
     fetchAllReports,
+    fetchNotifications,
     token,
   } = useKWIStore();
   const isAdmin = isUserAdmin(currentUser);
@@ -880,6 +881,7 @@ export function AdminDashboardView() {
         status: newStatus,
       }).then(() => {
         if (fetchAllReports) fetchAllReports();
+        if (fetchNotifications) fetchNotifications();
       }).catch(() => { });
     }
     setActionMenuOpenId(null);

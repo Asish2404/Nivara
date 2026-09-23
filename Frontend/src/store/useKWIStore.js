@@ -83,7 +83,12 @@ export const isRouteAllowedForUser = (path, user) => {
     cleanPath === "/my-profile" ||
     cleanPath.startsWith("/profile/");
 
-  if (isProfileRoute) return true;
+  const isNotificationsRoute =
+    cleanPath === "/notifications" ||
+    cleanPath === "/alerts" ||
+    cleanPath.startsWith("/notifications/");
+
+  if (isProfileRoute || isNotificationsRoute) return true;
 
   if (admin) {
     // Admin can see home, live map, simulate, respond, profile; Report page is restricted from admin
@@ -148,6 +153,9 @@ const routeToSection = (path) => {
     case "/profile":
     case "/my-profile":
       return "PROFILE";
+    case "/notifications":
+    case "/alerts":
+      return "NOTIFICATIONS";
     case "/signup":
     case "/login":
     case "/auth":
@@ -155,6 +163,152 @@ const routeToSection = (path) => {
     default:
       return "HOME";
   }
+};
+
+// Helper for location matching between reported location and incident location
+export const isLocationMatch = (loc1, loc2) => {
+  if (!loc1 || !loc2) return false;
+  const l1 = String(loc1).toLowerCase().trim();
+  const l2 = String(loc2).toLowerCase().trim();
+  if (l1 === l2) return true;
+  if (l1.includes(l2) || l2.includes(l1)) return true;
+
+  const stopwords = new Set([
+    "ward", "street", "st", "road", "rd", "crossing", "lane",
+    "kolkata", "near", "opposite", "area", "more", "the", "and", "&"
+  ]);
+  const words1 = l1.split(/[\s,•\-\/]+/).filter((w) => w.length > 2 && !stopwords.has(w));
+  const words2 = l2.split(/[\s,•\-\/]+/).filter((w) => w.length > 2 && !stopwords.has(w));
+
+  return words1.some((w) => words2.includes(w));
+};
+
+// Citizen User Notifications: Strictly 3 Types:
+// 1. Report Submitted Successfully
+// 2. Incident Status In Progress (for reported location)
+// 3. Incident Status Resolved (for reported location)
+export const INITIAL_USER_NOTIFICATIONS = [];
+
+// Municipal Admin Broadcast Notifications
+export const INITIAL_ADMIN_NOTIFICATIONS = [
+  {
+    id: "NOTIF-KMC-001",
+    category: "urgent",
+    severity: "critical",
+    title: "IMD Red Alert: Flash Flood Warning in Ultadanga & Sector V",
+    message: "Convective cloudburst cell detected (74 mm/3hr recorded). Waterlogging depth exceeding 18 inches along College More and Ultadanga Underpass. Hooghly tidal lock (3.42m) active; traffic diversions deployed.",
+    location: "Ward 32 • Sector V & Ultadanga Underpass",
+    ward: "Ward 32",
+    timestamp: "12m ago",
+    isRead: false,
+    metrics: { label: "Water Depth", value: "+18 in", status: "Critical" },
+    action: { label: "View on GIS Map", route: "/live-city" },
+    recipientType: "admin",
+  },
+  {
+    id: "NOTIF-KMC-002",
+    category: "pumps",
+    severity: "high",
+    title: "Palmer Bazar PS-07: Turbines at Maximum Capacity",
+    message: "Main axial flow turbine running at 100% capacity (85 cusecs). Godwin auxiliary high-discharge diesel pumps dispatched to prevent canal overflow along Entally and Sealdah South basin.",
+    location: "Ward 55 • Palmer Bazar Pumping Station",
+    ward: "Ward 55",
+    timestamp: "38m ago",
+    isRead: false,
+    metrics: { label: "Discharge", value: "85 cusecs", status: "Peak" },
+    action: { label: "Inspect Drainage Action", route: "/action-center" },
+    recipientType: "admin",
+  },
+  {
+    id: "NOTIF-KMC-003",
+    category: "system",
+    severity: "info",
+    title: "River Telemetry Mesh: Hooghly Tide Surge Model Synchronized",
+    message: "Acoustic ultrasonic sensors across Bagjola Canal and Hooghly lock gates successfully calibrated. Tidal crest predicted at 3.65m at 14:30 IST. Automated sluice sequence primed.",
+    location: "River Telemetry Grid • Hooghly & Bagjola",
+    ward: "Telemetry Grid",
+    timestamp: "4h ago",
+    isRead: true,
+    metrics: { label: "Tidal Crest", value: "3.65 m", status: "Rising" },
+    action: { label: "Run Flood Simulation", route: "/simulate" },
+    recipientType: "admin",
+  },
+  {
+    id: "NOTIF-KMC-004",
+    category: "pumps",
+    severity: "high",
+    title: "Circular Canal Sluice Gate #3 Schedule Advisory",
+    message: "Automated lock-gate sequence scheduled for closure during peak tide to prevent river water reverse-flow into Beleghata, Maniktala, and Rajabazar low-lying wards.",
+    location: "Ward 29 • Circular Canal Outfall",
+    ward: "Ward 29",
+    timestamp: "5h ago",
+    isRead: true,
+    metrics: { label: "Gate Closure", value: "14:30 IST", status: "Scheduled" },
+    action: { label: "Inspect Drainage Action", route: "/action-center" },
+    recipientType: "admin",
+  },
+];
+
+export const INITIAL_NOTIFICATIONS = [
+  ...INITIAL_USER_NOTIFICATIONS,
+  ...INITIAL_ADMIN_NOTIFICATIONS,
+];
+
+// Helper to normalize notifications fetched from backend database
+export const mapBackendNotification = (n) => {
+  let category = "reports";
+  let severity = "medium";
+  let metrics = null;
+  let action = null;
+
+  if (n.type === "report_submitted") {
+    category = "reports";
+    severity = "medium";
+    metrics = { label: "Report Status", value: "Submitted", status: "Registered" };
+    action = { label: "View My Reports", route: "/my-reports" };
+  } else if (n.type === "incident_in_progress") {
+    category = "pumps";
+    severity = "high";
+    metrics = { label: "Incident Status", value: "In Progress", status: "Team on Site" };
+    action = { label: "Track Live Status", route: "/my-reports" };
+  } else if (n.type === "incident_resolved") {
+    category = "resolved";
+    severity = "resolved";
+    metrics = { label: "Incident Status", value: "Resolved", status: "Cleared" };
+    action = { label: "View My Reports", route: "/my-reports" };
+  } else if (n.type === "location_forecast") {
+    category = "system";
+    severity = "medium";
+    metrics = { label: "24h Rain Risk", value: "Forecast", status: "Active" };
+    action = { label: "View Location Reports", route: "/my-reports" };
+  } else {
+    category = n.category || (n.type === "urgent" ? "urgent" : n.type === "pumps" ? "pumps" : "system");
+    severity = n.severity || (category === "urgent" ? "critical" : "high");
+    metrics = n.metrics || null;
+    action = n.action || { label: "View on GIS Map", route: "/live-city" };
+  }
+
+  return {
+    id: n.notification_id || String(n.id),
+    dbId: n.id,
+    notification_id: n.notification_id || String(n.id),
+    type: n.type,
+    category,
+    severity,
+    title: n.title,
+    message: n.message,
+    location: n.location || "",
+    ward: n.ward || "",
+    timestamp: n.timestamp || "Recently",
+    created_at: n.created_at,
+    isRead: Boolean(n.is_read || n.isRead),
+    metrics,
+    action,
+    reportId: n.report_id,
+    workId: n.work_id,
+    recipientType: n.type?.startsWith("incident_") || n.type === "report_submitted" || n.type === "location_forecast" ? "user" : "admin",
+    relatedLocation: n.location,
+  };
 };
 
 export const useKWIStore = create((set, get) => ({
@@ -457,12 +611,15 @@ export const useKWIStore = create((set, get) => ({
       typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
     try {
       const reports = await api.get(token ? "/reports" : "/reports?all_reports=true", token);
+      const userReports = Array.isArray(reports) ? reports : [];
       set({
-        myReports: Array.isArray(reports) ? reports : [],
+        myReports: userReports,
         reportsLoaded: true,
         reportsError: null,
       });
       get().refreshDynamicIncidents();
+      get().syncReportNotifications(userReports);
+      get().fetchNotifications().catch(() => { });
     } catch (err) {
       set({ reportsError: err?.message || "Unable to load your reports." });
     }
@@ -542,6 +699,12 @@ export const useKWIStore = create((set, get) => ({
     }));
     get().refreshDynamicIncidents();
 
+    // Trigger 1: User gets a notification of report submitted successfully
+    get().addReportSubmittedNotification(
+      s.reportLocation || "Kolkata Waterlogging Site",
+      localReport.report_id
+    );
+
     // Persist to the backend so the report appears in "My Submitted Reports"
     const token =
       typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
@@ -583,6 +746,7 @@ export const useKWIStore = create((set, get) => ({
             }));
             get().refreshDynamicIncidents();
             get().fetchIncidentQueue().catch(() => { });
+            get().fetchNotifications().catch(() => { });
           }
         })
 
@@ -813,9 +977,11 @@ export const useKWIStore = create((set, get) => ({
     set({ currentUser: userData });
   },
 
-  // On app mount: refresh the profile and municipal reports from the backend
+  // On app mount: refresh the profile, device location, and municipal reports from backend
   initUser: async () => {
     if (typeof window === "undefined") return;
+    // Auto-fetch device location immediately when website opens
+    get().fetchDeviceLocation().catch(() => { });
     // Always fetch municipal reports and compute dynamic incidents on app load
     get().fetchAllReports().catch(() => { });
     const token = localStorage.getItem("kwi_token");
@@ -827,6 +993,7 @@ export const useKWIStore = create((set, get) => ({
       const me = await api.get("/auth/me", token);
       get().setCurrentUser(get().mapBackendUser(me));
       get().fetchMyReports().catch(() => { });
+      get().fetchNotifications().catch(() => { });
     } catch (err) {
       // Unauthorized / invalid token → drop the stale session.
       if (
@@ -850,6 +1017,7 @@ export const useKWIStore = create((set, get) => ({
     }
     const user = get().mapBackendUser(userData?.user || userData || {});
     get().setCurrentUser(user);
+    get().fetchNotifications().catch(() => { });
     set({ isLoginModalOpen: false });
   },
 
@@ -903,15 +1071,464 @@ export const useKWIStore = create((set, get) => ({
     get().navigate("/");
   },
 
-  unreadNotificationsCount: 3,
+  // Real-time device geolocation state
+  deviceLocation: (() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("kwi_device_location");
+        if (raw) return JSON.parse(raw);
+      } catch {}
+    }
+    return null;
+  })(),
+  locationPermission:
+    typeof window !== "undefined"
+      ? localStorage.getItem("kwi_location_perm") || "prompt"
+      : "prompt",
+  isLocatingDevice: false,
+
+  // Prompt device for geolocation permission and automatically fetch coordinates & locality
+  fetchDeviceLocation: async (force = false) => {
+    if (typeof window === "undefined" || !navigator.geolocation) {
+      set({ locationPermission: "unsupported", isLocatingDevice: false });
+      return null;
+    }
+
+    set({ isLocatingDevice: true });
+
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const accuracy = Math.round(position.coords.accuracy || 10);
+
+          let locality = "";
+          let city = "Kolkata, West Bengal";
+          let ward = "";
+
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3500);
+            const res = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
+              { signal: controller.signal }
+            );
+            clearTimeout(timeoutId);
+            if (res.ok) {
+              const data = await res.json();
+              locality =
+                data.address?.suburb ||
+                data.address?.neighbourhood ||
+                data.address?.road ||
+                data.address?.city_district ||
+                "";
+              city =
+                data.address?.city ||
+                data.address?.town ||
+                data.address?.state ||
+                "Kolkata, West Bengal";
+              const fullAddr = [locality, data.address?.road, data.address?.neighbourhood]
+                .filter(Boolean)
+                .join(" ");
+              const wardMatch = fullAddr.match(/ward\s*(\d+)/i);
+              if (wardMatch) ward = `Ward ${wardMatch[1]}`;
+            }
+          } catch {}
+
+          if (!locality) {
+            // Intelligent Kolkata metro zone resolver based on coordinates
+            if (lat >= 22.56 && lat <= 22.60 && lon >= 88.40 && lon <= 88.46) {
+              locality = "Salt Lake, Sector V";
+              ward = "Ward 32";
+            } else if (lat >= 22.58 && lat <= 22.62) {
+              locality = "Maniktala / Ultadanga";
+              ward = "Ward 14";
+            } else if (lat >= 22.50 && lat <= 22.54) {
+              locality = "Gariahat / Ballygunge";
+              ward = "Ward 85";
+            } else if (lat >= 22.48 && lat <= 22.52 && lon <= 88.35) {
+              locality = "Behala Chowrasta";
+              ward = "Ward 128";
+            } else {
+              locality = "Kolkata Municipal Area";
+            }
+          }
+
+          const fullLocation = `${locality}, ${city}`;
+          const locData = {
+            lat,
+            lon,
+            accuracy,
+            locality,
+            city,
+            location: fullLocation,
+            ward,
+            timestamp: new Date().toISOString(),
+          };
+
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem("kwi_device_location", JSON.stringify(locData));
+              localStorage.setItem("kwi_location_perm", "granted");
+            } catch {}
+          }
+
+          set({
+            deviceLocation: locData,
+            locationPermission: "granted",
+            isLocatingDevice: false,
+          });
+
+          // Automatically refresh notifications with this device location
+          get().fetchNotifications(locData).catch(() => {});
+
+          // Synchronize profile location if citizen user is logged in
+          const { currentUser } = get();
+          if (currentUser && !currentUser.location) {
+            const token = localStorage.getItem("kwi_token");
+            if (token) {
+              api.patch("/auth/me", { location: fullLocation }, token).catch(() => {});
+            }
+          }
+
+          resolve(locData);
+        },
+        (error) => {
+          console.warn("[KWI] Device geolocation lookup notice:", error?.message || error);
+          if (error.code === 1) {
+            // Permission Denied
+            if (typeof window !== "undefined") {
+              localStorage.setItem("kwi_location_perm", "denied");
+            }
+            set({ locationPermission: "denied", isLocatingDevice: false });
+          } else {
+            set({ isLocatingDevice: false });
+          }
+          resolve(get().deviceLocation || null);
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+      );
+    });
+  },
+
+  // Notifications & Alerts Center State (Synchronized with Backend SQLite Database)
+  notifications: INITIAL_NOTIFICATIONS,
+  unreadNotificationsCount: INITIAL_NOTIFICATIONS.filter((n) => !n.isRead).length,
   setUnreadNotificationsCount: (count) =>
     set({ unreadNotificationsCount: count }),
-  clearNotifications: () => set({ unreadNotificationsCount: 0 }),
 
-  adminMenuOpen: false,
-  setAdminMenuOpen: (open) => set({ adminMenuOpen: open }),
-  toggleAdminMenu: () =>
-    set((state) => ({ adminMenuOpen: !state.adminMenuOpen })),
+  // Fetch persisted notifications directly from Backend SQLite database with current location telemetry
+  fetchNotifications: async (locParams = null) => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
+    try {
+      let url = "/notifications";
+      const loc = locParams || get().deviceLocation || null;
+      if (loc) {
+        const params = new URLSearchParams();
+        if (loc.lat && loc.lon) {
+          params.append("lat", String(loc.lat));
+          params.append("lon", String(loc.lon));
+        }
+        if (loc.location || loc.locality) {
+          params.append("location", loc.location || loc.locality);
+        }
+        const qs = params.toString();
+        if (qs) url += `?${qs}`;
+      }
+
+      const res = await api.get(url, token);
+      if (Array.isArray(res)) {
+        const mapped = res.map(mapBackendNotification);
+        const { currentUser } = get();
+        const isAdmin = isUserAdmin(currentUser);
+        let merged = mapped;
+        if (isAdmin) {
+          const dbIds = new Set(mapped.map((n) => n.id));
+          const extraAdmin = INITIAL_ADMIN_NOTIFICATIONS.filter((an) => !dbIds.has(an.id));
+          merged = [...mapped, ...extraAdmin];
+        }
+
+        // Strict deduplication & single current-location forecast enforcement:
+        const seenIds = new Set();
+        const seenEvents = new Set();
+        let seenForecast = false;
+        const deduped = [];
+        for (const n of merged) {
+          const idKey = n.id || n.notification_id;
+          const locKey = String(n.location || n.relatedLocation || "").toLowerCase().trim();
+          const eventKey = n.type === "report_submitted" && n.reportId ? `${n.type}|${n.reportId}` : `${n.type || ""}|${locKey}`;
+
+          if (seenIds.has(idKey)) continue;
+
+          // For regular citizens, only allow ONE current-location forecast notification:
+          if (!isAdmin && n.type === "location_forecast") {
+            if (seenForecast) continue;
+            seenForecast = true;
+          }
+
+          if (n.recipientType === "user" && eventKey && seenEvents.has(eventKey)) continue;
+
+          seenIds.add(idKey);
+          if (n.recipientType === "user" && eventKey) {
+            seenEvents.add(eventKey);
+          }
+          deduped.push(n);
+        }
+
+        set({
+          notifications: deduped,
+          unreadNotificationsCount: deduped.filter((n) => !n.isRead).length,
+        });
+        return deduped;
+      }
+    } catch (err) {
+      console.warn("[KWI] fetchNotifications notice:", err?.message || err);
+    }
+    return [];
+  },
+
+  markNotificationAsRead: (id) => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
+    set((state) => {
+      const updated = state.notifications.map((n) =>
+        n.id === id || n.notification_id === id ? { ...n, isRead: true } : n
+      );
+      return {
+        notifications: updated,
+        unreadNotificationsCount: updated.filter((n) => !n.isRead).length,
+      };
+    });
+    // Async persist to backend database
+    api.patch(`/notifications/${encodeURIComponent(id)}/read`, {}, token).catch(() => { });
+  },
+
+  markAllNotificationsAsRead: () => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
+    set((state) => {
+      const updated = state.notifications.map((n) => ({ ...n, isRead: true }));
+      return {
+        notifications: updated,
+        unreadNotificationsCount: 0,
+      };
+    });
+    // Async persist to backend database
+    api.patch("/notifications/mark-all-read", {}, token).catch(() => { });
+  },
+
+  deleteNotification: (id) => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
+    set((state) => {
+      const updated = state.notifications.filter((n) => n.id !== id && n.notification_id !== id);
+      return {
+        notifications: updated,
+        unreadNotificationsCount: updated.filter((n) => !n.isRead).length,
+      };
+    });
+    // Async persist to backend database
+    api.delete(`/notifications/${encodeURIComponent(id)}`, token).catch(() => { });
+  },
+
+  clearAllNotifications: () => {
+    set({
+      notifications: [],
+      unreadNotificationsCount: 0,
+    });
+  },
+
+  clearReadNotifications: () => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
+    set((state) => {
+      const updated = state.notifications.filter((n) => !n.isRead);
+      return {
+        notifications: updated,
+        unreadNotificationsCount: updated.filter((n) => !n.isRead).length,
+      };
+    });
+    // Async persist to backend database
+    api.delete("/notifications/clear-read", token).catch(() => { });
+  },
+
+  // 1. Report Submitted Successfully Notification
+  addReportSubmittedNotification: (location, reportId) => {
+    const loc = location || "Kolkata Reported Site";
+    const repId = reportId || `RPT-${Date.now()}`;
+    const newNotif = {
+      id: `NOTIF-SUBMIT-${Date.now()}`,
+      type: "report_submitted",
+      category: "reports",
+      severity: "medium",
+      title: "Report Submitted Successfully",
+      message: `Your waterlogging report for ${loc} has been submitted successfully and registered with the municipal emergency response desk. Incident tracking ID #${repId}.`,
+      location: loc,
+      ward: loc,
+      timestamp: "Just now",
+      isRead: false,
+      metrics: { label: "Report Status", value: "Submitted", status: "Registered" },
+      action: { label: "View My Reports", route: "/my-reports" },
+      recipientType: "user",
+      relatedLocation: loc,
+    };
+
+    set((state) => {
+      const updated = [newNotif, ...state.notifications];
+      return {
+        notifications: updated,
+        unreadNotificationsCount: updated.filter((n) => !n.isRead).length,
+      };
+    });
+  },
+
+  // 2 & 3. Incident Status Change Notification:
+  // When an incident status changes to "In Progress" or "Resolved",
+  // all users who generated reports for that incident location get a message.
+  notifyIncidentStatusChange: (incidentLocation, newStatus, workId) => {
+    if (!incidentLocation || !newStatus) return;
+    const s = get();
+    const loc = String(incidentLocation).trim();
+    const statusNormalized = newStatus.trim().toLowerCase();
+
+    // Check if the user generated reports for that incident location
+    const matchingReports = (s.myReports || []).filter((r) =>
+      isLocationMatch(r.location, loc)
+    );
+
+    // If user generated reports for that incident location, dispatch notification
+    if (matchingReports.length > 0) {
+      const alreadyHasStatusNotif = (s.notifications || []).some(
+        (n) => n.type === (statusNormalized === "in progress" ? "incident_in_progress" : "incident_resolved") &&
+               isLocationMatch(n.relatedLocation || n.location, loc)
+      );
+      if (alreadyHasStatusNotif) return;
+
+      if (statusNormalized === "in progress") {
+        const inProgNotif = {
+          id: `NOTIF-IN_PROG-${workId || Date.now()}-${Date.now()}`,
+          type: "incident_in_progress",
+          category: "pumps",
+          severity: "high",
+          title: "Response In Progress: Field Team Deployed",
+          message: `Municipal response crews and high-capacity drainage units have been deployed to ${loc} for your reported incident. Active clearing operations in progress.`,
+          location: loc,
+          ward: matchingReports[0]?.ward ? `Ward ${matchingReports[0].ward}` : loc,
+          timestamp: "Just now",
+          isRead: false,
+          metrics: { label: "Incident Status", value: "In Progress", status: "Team on Site" },
+          action: { label: "Track Live Status", route: "/my-reports" },
+          recipientType: "user",
+          relatedLocation: loc,
+        };
+
+        set((state) => {
+          const updated = [inProgNotif, ...state.notifications];
+          return {
+            notifications: updated,
+            unreadNotificationsCount: updated.filter((n) => !n.isRead).length,
+          };
+        });
+      } else if (statusNormalized === "resolved") {
+        const resolvedNotif = {
+          id: `NOTIF-RESOLVED-${workId || Date.now()}-${Date.now()}`,
+          type: "incident_resolved",
+          category: "resolved",
+          severity: "resolved",
+          title: "Incident Resolved: Water Cleared",
+          message: `Waterlogging incident at ${loc} has been successfully resolved and drained. Municipal crews have completed road clearance and reopened traffic.`,
+          location: loc,
+          ward: matchingReports[0]?.ward ? `Ward ${matchingReports[0].ward}` : loc,
+          timestamp: "Just now",
+          isRead: false,
+          metrics: { label: "Incident Status", value: "Resolved", status: "Cleared" },
+          action: { label: "View My Reports", route: "/my-reports" },
+          recipientType: "user",
+          relatedLocation: loc,
+        };
+
+        set((state) => {
+          const updated = [resolvedNotif, ...state.notifications];
+          return {
+            notifications: updated,
+            unreadNotificationsCount: updated.filter((n) => !n.isRead).length,
+          };
+        });
+      }
+    }
+  },
+
+  // Synchronize reports status changes with user notifications
+  syncReportNotifications: (reports) => {
+    if (!Array.isArray(reports) || reports.length === 0) return;
+    const existing = get().notifications || [];
+    const newNotifs = [];
+
+    reports.forEach((rep) => {
+      const repLoc = rep.location || "Kolkata Site";
+      const repStatus = (rep.status || "").toLowerCase();
+
+      if (repStatus === "in progress" || (rep.dispatch_status && rep.dispatch_status.toLowerCase().includes("in progress"))) {
+        const alreadyExists = existing.some(
+          (n) => n.type === "incident_in_progress" && isLocationMatch(n.relatedLocation || n.location, repLoc)
+        );
+        if (!alreadyExists && !newNotifs.some((n) => n.type === "incident_in_progress" && isLocationMatch(n.relatedLocation || n.location, repLoc))) {
+          newNotifs.push({
+            id: `NOTIF-IN_PROG-${rep.report_id || Date.now()}`,
+            type: "incident_in_progress",
+            category: "pumps",
+            severity: "high",
+            title: "Response In Progress: Field Team Deployed",
+            message: `Municipal response crews and high-capacity drainage units have been deployed to ${repLoc} for your reported incident. Active clearing operations in progress.`,
+            location: repLoc,
+            ward: rep.ward ? `Ward ${rep.ward}` : repLoc,
+            timestamp: "Recently",
+            isRead: false,
+            metrics: { label: "Incident Status", value: "In Progress", status: "Team on Site" },
+            action: { label: "Track Live Status", route: "/my-reports" },
+            recipientType: "user",
+            relatedLocation: repLoc,
+          });
+        }
+      }
+
+      if (repStatus === "resolved") {
+        const alreadyExists = existing.some(
+          (n) => n.type === "incident_resolved" && isLocationMatch(n.relatedLocation || n.location, repLoc)
+        );
+        if (!alreadyExists && !newNotifs.some((n) => n.type === "incident_resolved" && isLocationMatch(n.relatedLocation || n.location, repLoc))) {
+          newNotifs.push({
+            id: `NOTIF-RESOLVED-${rep.report_id || Date.now()}`,
+            type: "incident_resolved",
+            category: "resolved",
+            severity: "resolved",
+            title: "Incident Resolved: Water Cleared",
+            message: `Waterlogging incident at ${repLoc} has been successfully resolved and drained. Municipal crews have completed road clearance and reopened traffic.`,
+            location: repLoc,
+            ward: rep.ward ? `Ward ${rep.ward}` : repLoc,
+            timestamp: "Recently",
+            isRead: false,
+            metrics: { label: "Incident Status", value: "Resolved", status: "Cleared" },
+            action: { label: "View My Reports", route: "/my-reports" },
+            recipientType: "user",
+            relatedLocation: repLoc,
+          });
+        }
+      }
+    });
+
+    if (newNotifs.length > 0) {
+      set((state) => {
+        const updated = [...newNotifs, ...state.notifications];
+        return {
+          notifications: updated,
+          unreadNotificationsCount: updated.filter((n) => !n.isRead).length,
+        };
+      });
+    }
+  },
+
+  clearNotifications: () => {
+    get().markAllNotificationsAsRead();
+  },
+
 
   mobileMenuOpen: false,
   setMobileMenuOpen: (open) => set({ mobileMenuOpen: open }),
@@ -1194,6 +1811,13 @@ export const useKWIStore = create((set, get) => ({
     const nextStatus = STAGE_NAMES[nextStage]
 
     if (nextStatus === 'Resolved') {
+      // Notify all users who reported this incident location that it is Resolved (Type 3)
+      get().notifyIncidentStatusChange(
+        existing.location || existing.hotspot_name || existing.title || "Kolkata Site",
+        'Resolved',
+        key
+      );
+
       // First update state to Resolved so resolved phase and arrow indication stay on screen for 3s
       set((state) => ({
         workOrders: {
@@ -1234,11 +1858,21 @@ export const useKWIStore = create((set, get) => ({
         }).then(() => {
           // Refresh incident queue and reports so resolved status is reflected across the app
           get().fetchAllReports().catch(() => { })
+          get().fetchNotifications().catch(() => { })
         }).catch((err) => {
           console.warn('[KWI] Backend work order status update notice:', err?.message || err)
         })
       }, 2000)
     } else {
+      if (nextStatus === 'In Progress') {
+        // Notify all users who reported this incident location that response is In Progress (Type 2)
+        get().notifyIncidentStatusChange(
+          existing.location || existing.hotspot_name || existing.title || "Kolkata Site",
+          'In Progress',
+          key
+        );
+      }
+
       set((state) => ({
         workOrders: {
           ...state.workOrders,
@@ -1259,8 +1893,9 @@ export const useKWIStore = create((set, get) => ({
         status: nextStatus,
         stage: nextStage,
       }).then(() => {
-        // Refresh incident queue and reports so resolved status is reflected across the app
+        // Refresh incident queue, reports, and notifications
         get().fetchAllReports().catch(() => { })
+        get().fetchNotifications().catch(() => { })
       }).catch((err) => {
         console.warn('[KWI] Backend work order status update notice:', err?.message || err)
       })

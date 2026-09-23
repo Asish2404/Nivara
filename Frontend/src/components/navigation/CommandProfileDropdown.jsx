@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -45,9 +45,23 @@ export function CommandProfileDropdown({ isDarkMode }) {
     currentUser,
     logoutUser,
     navigate,
+    notifications = [],
     unreadNotificationsCount = 3,
     setProfileActiveTab,
   } = useKWIStore();
+
+  const isAdmin = isUserAdmin(currentUser);
+  const effectiveUnreadCount = useMemo(() => {
+    if (isAdmin) return unreadNotificationsCount;
+    return (notifications || []).filter(
+      (n) =>
+        (n.type === "report_submitted" ||
+          n.type === "incident_in_progress" ||
+          n.type === "incident_resolved" ||
+          n.recipientType === "user") &&
+        !n.isRead
+    ).length;
+  }, [notifications, unreadNotificationsCount, isAdmin]);
 
   // Close dropdown when clicking outside or pressing Escape
   useEffect(() => {
@@ -296,7 +310,7 @@ export function CommandProfileDropdown({ isDarkMode }) {
                   type="button"
                   onClick={() =>
                     handleMenuClick(() => {
-                      navigate("/action-center");
+                      navigate("/notifications");
                     })
                   }
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${isDarkMode
@@ -321,11 +335,12 @@ export function CommandProfileDropdown({ isDarkMode }) {
                     </div>
                   </div>
                   {/* Real Dynamic Unread Badge */}
-                  {unreadNotificationsCount > 0 && (
+                  {effectiveUnreadCount > 0 && (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-[#0284c7] bg-blue-50 dark:bg-[#10313E] dark:text-[#00E5FF] border border-blue-200/80 dark:border-[rgba(0,229,255,0.35)]">
-                      {unreadNotificationsCount} NEW
+                      {effectiveUnreadCount} NEW
                     </span>
                   )}
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#00E5FF] group-hover:translate-x-0.5 transition-all duration-150" />
                 </button>
 
                 {/* 3. Settings */}

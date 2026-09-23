@@ -6,6 +6,7 @@ from .waterlogging import WaterloggingPrediction
 from .incident_queue import IncidentQueue
 from .work_order import WorkOrder
 from .historical_place import HistoricalPlace
+from .notification import Notification
 
-__all__ = ["User", "Admin", "Report", "WaterloggingPrediction", "IncidentQueue", "WorkOrder", "HistoricalPlace"]
+__all__ = ["User", "Admin", "Report", "WaterloggingPrediction", "IncidentQueue", "WorkOrder", "HistoricalPlace", "Notification"]
 

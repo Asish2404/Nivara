@@ -169,6 +169,7 @@ class WorkOrderService:
         work_id: str,
         target_status: str,
         now: datetime,
+        notify: bool = True,
     ) -> None:
         """Propagates work order lifecycle status directly to linked incident_queue and reports tables."""
         clean_inc = str(incident_id or "").replace("WO-", "").replace("#", "").strip()
@@ -241,10 +242,28 @@ class WorkOrderService:
 
                 rep.updated_at = now
 
+        # Triggers 2 & 3: Persistently notify all citizen users who reported this location
+        # (Only when notify=True; internal database reconciliation does not spam citizen users)
+        if notify and target_status.lower() in ["in progress", "resolved"]:
+            try:
+                from .notification_service import NotificationService
+                await NotificationService.notify_users_for_incident(
+                    db=db,
+                    location=wo_loc,
+                    ward="",
+                    target_status=target_status,
+                    work_id=work_id,
+                    latitude=wo_lat,
+                    longitude=wo_lon,
+                )
+            except Exception as notif_err:
+                print(f"[KWI] Status change notification DB warning: {notif_err}")
+
     @classmethod
     async def sync_all_database_statuses(cls, db: AsyncSession) -> None:
         """One-pass reconciliation ensuring historical_place and active work_orders statuses
         are properly mirrored into incident_queue and reports tables.
+        Internal reconciliation strictly disables notifications to avoid duplicate broadcasts.
         """
         now = get_current_time()
 
@@ -261,6 +280,7 @@ class WorkOrderService:
                 work_id=hp.work_id or f"WO-{hp.incident_id}",
                 target_status="Resolved",
                 now=now,
+                notify=False,
             )
 
         # 2. Sync from active work_orders (e.g. In Progress, Dispatched)
@@ -276,6 +296,7 @@ class WorkOrderService:
                 work_id=wo.work_id,
                 target_status=wo.status or "Dispatched",
                 now=now,
+                notify=False,
             )
 
         await db.commit()

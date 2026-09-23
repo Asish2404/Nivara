@@ -3,6 +3,7 @@ from .auth import router as auth_router
 from .reports import router as reports_router
 from .waterlogging import router as waterlogging_router
 from .work_orders import router as work_orders_router
+from .notifications import router as notifications_router
 
 api_router = APIRouter()
 
@@ -17,3 +18,6 @@ api_router.include_router(waterlogging_router, prefix="/waterlogging", tags=["Wa
 
 # Register Work Orders & Simulation Intervention Routes
 api_router.include_router(work_orders_router, tags=["Work Orders"])
+
+# Register Notifications & Alerts Center Routes
+api_router.include_router(notifications_router, tags=["Notifications & Alerts"])

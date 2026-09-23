@@ -40,8 +40,8 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 # 5. Startup table initializer with safe schema migration for SQLite
 async def init_db() -> None:
-    # Import models so Base.metadata knows about users, admin, reports, waterlogging predictions, incident_queue, work_orders, and historical_place
-    from app.models import User, Admin, Report, WaterloggingPrediction, IncidentQueue, WorkOrder, HistoricalPlace  # noqa: F401
+    # Import models so Base.metadata knows about users, admin, reports, waterlogging predictions, incident_queue, work_orders, historical_place, and notifications
+    from app.models import User, Admin, Report, WaterloggingPrediction, IncidentQueue, WorkOrder, HistoricalPlace, Notification  # noqa: F401
     from app.services.incident_service import IncidentQueueService
 
     async with engine.begin() as conn:
@@ -271,6 +271,25 @@ async def init_db() -> None:
                     connection.execute(text("ALTER TABLE historical_place ADD COLUMN created_at DATETIME"))
                 if "resolved_at" not in existing_hp_cols:
                     connection.execute(text("ALTER TABLE historical_place ADD COLUMN resolved_at DATETIME"))
+
+            if "notifications" in table_names:
+                existing_notif_cols = {col["name"] for col in inspector.get_columns("notifications")}
+                missing_notif_columns = {
+                    "notification_id": "VARCHAR(64)",
+                    "user_id": "VARCHAR(64)",
+                    "type": "VARCHAR(64)",
+                    "title": "VARCHAR(255)",
+                    "message": "TEXT",
+                    "location": "VARCHAR(255) DEFAULT ''",
+                    "ward": "VARCHAR(64) DEFAULT ''",
+                    "is_read": "BOOLEAN DEFAULT 0",
+                    "report_id": "VARCHAR(64) DEFAULT ''",
+                    "work_id": "VARCHAR(64) DEFAULT ''",
+                    "created_at": "DATETIME DEFAULT CURRENT_TIMESTAMP",
+                }
+                for col_name, col_type in missing_notif_columns.items():
+                    if col_name not in existing_notif_cols:
+                        connection.execute(text(f"ALTER TABLE notifications ADD COLUMN {col_name} {col_type}"))
 
         await conn.run_sync(sync_migrate)
 

@@ -16,6 +16,8 @@ export function SubpageLayout({ children }) {
   const isSimulateRoute = currentRoute === "/simulate";
   const isRespondRoute =
     currentRoute === "/action-center" || currentRoute === "/respond";
+  const isNotificationsRoute =
+    currentRoute === "/notifications" || currentRoute === "/alerts";
   const isFullWidth =
     isProfileRoute || isReportsRoute || isSimulateRoute || isDashboardRoute;
 
@@ -32,7 +34,9 @@ export function SubpageLayout({ children }) {
                 ? "bg-[#f3f7fb] dark:bg-[#070c14]"
                 : isRespondRoute
                   ? "bg-[#edf4fa] dark:bg-[#0A1E3B]"
-                  : "bg-white dark:bg-[#0A1E3B]"
+                  : isNotificationsRoute
+                    ? "bg-[#f4f7fb] dark:bg-[#070c14]"
+                    : "bg-white dark:bg-[#0A1E3B]"
       }`}
     >
       {/* Ambient Top Radiant Glow & Micro-Grid for standard Subpages — hidden for simulate & respond */}

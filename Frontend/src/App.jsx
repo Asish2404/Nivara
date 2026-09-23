@@ -19,6 +19,7 @@ import { ReportsView } from "./components/views/ReportsView";
 import { ActionsView } from "./components/views/ActionsView";
 import { ProfileView } from "./components/views/ProfileView";
 import { AdminDashboardView } from "./components/views/AdminDashboardView";
+import { NotificationsView } from "./components/views/NotificationsView";
 import AIUnleashedAuth from "./components/auth/AIUnleashedAuth";
 import { useKWIStore, isUserAdmin } from "./store/useKWIStore";
 import "./App.css";
@@ -103,13 +104,16 @@ function EarthScene({
 }
 
 function App() {
-  const { currentRoute, navigate, theme, initUser, currentUser } =
+  const { currentRoute, navigate, theme, initUser, currentUser, fetchDeviceLocation } =
     useKWIStore();
 
-  // On mount, refresh the logged-in user from the backend using the stored token.
+  // On mount, refresh the logged-in user and prompt device for location permission
   useEffect(() => {
     initUser();
-  }, [initUser]);
+    if (fetchDeviceLocation) {
+      fetchDeviceLocation().catch(() => {});
+    }
+  }, [initUser, fetchDeviceLocation]);
 
   // Route guard: When not signed in, user can only see the Home page ('/')
   // or auth pages ('/signup', '/login', '/signin', '/auth'). Any other page redirects to '/login'.
@@ -349,6 +353,14 @@ function App() {
       return (
         <SubpageLayout>
           <ActionsView />
+        </SubpageLayout>
+      );
+    }
+
+    if (currentRoute === "/notifications" || currentRoute === "/alerts") {
+      return (
+        <SubpageLayout>
+          <NotificationsView />
         </SubpageLayout>
       );
     }

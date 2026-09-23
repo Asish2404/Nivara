@@ -239,6 +239,40 @@ class AudioEngine {
     } catch (_) {}
   }
 
+  // 5b. Crisp modern alert notification chime (C6 -> G6)
+  playNotificationChime() {
+    if (this.isMuted) return
+    const ctx = this.getAudioContext()
+    if (!ctx) return
+
+    try {
+      const now = ctx.currentTime
+      const osc1 = ctx.createOscillator()
+      const osc2 = ctx.createOscillator()
+      const gain = ctx.createGain()
+
+      osc1.type = 'sine'
+      osc2.type = 'sine'
+
+      // Bright, pleasant modern notification chime (C6 -> G6)
+      osc1.frequency.setValueAtTime(1046.5, now) // C6
+      osc2.frequency.setValueAtTime(1567.98, now + 0.09) // G6
+
+      gain.gain.setValueAtTime(0.038, now)
+      gain.gain.linearRampToValueAtTime(0.045, now + 0.05)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38)
+
+      osc1.connect(gain)
+      osc2.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc1.start(now)
+      osc1.stop(now + 0.1)
+      osc2.start(now + 0.09)
+      osc2.stop(now + 0.38)
+    } catch (_) {}
+  }
+
   // 6. Subtle data-processing calculation shimmer (whisper-quiet, high-frequency granular shimmer)
   playDataShimmer() {
     if (this.isMuted) return
