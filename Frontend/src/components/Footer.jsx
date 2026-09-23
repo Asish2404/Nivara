@@ -209,7 +209,7 @@ export default function Footer() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-400 shadow-[0_0_6px_#22d3ee]" />
                   </span>
-                  <span className="text-[9px] sm:text-[9.5px] font-mono font-bold tracking-[0.2em] sm:tracking-[0.22em] text-cyan-400/90 uppercase leading-none group-hover:text-cyan-300 transition-colors drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]">
+                  <span className="text-[11px] sm:text-[12px] font-mono font-bold tracking-[0.18em] sm:tracking-[0.2em] text-cyan-300 uppercase leading-none group-hover:text-cyan-200 transition-colors drop-shadow-[0_0_5px_rgba(34,211,238,0.45)]">
                     Predict. Prepare. Prevent.
                   </span>
                 </div>
