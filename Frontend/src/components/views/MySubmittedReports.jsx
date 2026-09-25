@@ -1310,7 +1310,9 @@ function ReportDetailsModal({ report, onClose, onEnlarge }) {
             <div className="rounded-xl p-3 bg-slate-50 dark:bg-[#10313E] border border-slate-100 dark:border-[rgba(94,183,201,0.16)]">
               <div className="text-[10px] uppercase font-bold text-slate-400 dark:text-[#6D949D]">Water Depth</div>
               <div className="text-xs font-bold text-slate-800 dark:text-[#F2FBFD] mt-1">
-                {report.water_depth ? `${report.water_depth} cm` : "15–30 cm"}
+                {report.water_depth !== undefined && report.water_depth !== null && report.water_depth !== "" && Number(report.water_depth) > 0
+                  ? `${report.water_depth} cm`
+                  : (report.water_depth_display || "16-40cm")}
               </div>
             </div>
             <div className="rounded-xl p-3 bg-slate-50 dark:bg-[#10313E] border border-slate-100 dark:border-[rgba(94,183,201,0.16)] col-span-2 sm:col-span-1">

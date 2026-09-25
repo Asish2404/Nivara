@@ -38,7 +38,7 @@ export function MobileReportVerification() {
     {
       stage: 4,
       label: 'Water depth verified',
-      sub: `${reportDepth || '15–30 cm'} in roadway`,
+      sub: `${reportDepth || '16-40cm'} in roadway`,
     },
     {
       stage: 5,
@@ -56,7 +56,7 @@ export function MobileReportVerification() {
       x: reportCoords ? (reportCoords.lon - 88.3639) * 20 : 6.2,
       y: reportCoords ? (22.5726 - reportCoords.lat) * 20 : -2.0,
       timestamp: reportTimestamp || 'Just now',
-      waterDepth: reportDepth || '20 cm',
+      waterDepth: reportDepth || '28 cm',
       rainfall: '74 mm / 3 hr',
       verifiedReports: 1,
       affectedArea: '9,400 m²',
@@ -167,7 +167,7 @@ export function MobileReportVerification() {
                   {reportLocality || 'Salt Lake, Sector V'}
                 </span>
                 <span className="text-[9.5px] text-slate-600 block truncate">
-                  {reportDepth || '15–30 cm'} • {reportDescription || 'Waterlogging detected'}
+                  {reportDepth || '16-40cm'} • {reportDescription || 'Waterlogging detected'}
                 </span>
               </div>
             </div>

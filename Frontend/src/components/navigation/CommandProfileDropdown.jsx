@@ -10,7 +10,7 @@ import {
   ChevronDown,
   LayoutDashboard,
 } from "lucide-react";
-import { useKWIStore, isUserAdmin } from "../../store/useKWIStore";
+import { useKWIStore, isUserAdmin, isUserSupervisor } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
 import { ProfileModal } from "../modals/ProfileModal";
 
@@ -305,43 +305,45 @@ export function CommandProfileDropdown({ isDarkMode }) {
                   <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#00E5FF] group-hover:translate-x-0.5 transition-all duration-150" />
                 </button>
 
-                {/* 2. Notifications */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleMenuClick(() => {
-                      navigate("/notifications");
-                    })
-                  }
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${isDarkMode
-                    ? "hover:bg-[#10313E] text-[#B2D2D9]"
-                    : "hover:bg-blue-50/70 text-slate-800"
-                    }`}
-                >
-                  <div
-                    className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${isDarkMode
-                      ? "text-[#6D949D] group-hover:text-[#00E5FF]"
-                      : "text-slate-500 group-hover:text-[#0284c7]"
+                {/* 2. Notifications (Hidden for Supervisor) */}
+                {!isUserSupervisor(currentUser) && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleMenuClick(() => {
+                        navigate("/notifications");
+                      })
+                    }
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-colors duration-150 group ${isDarkMode
+                      ? "hover:bg-[#10313E] text-[#B2D2D9]"
+                      : "hover:bg-blue-50/70 text-slate-800"
                       }`}
                   >
-                    <Bell className="w-[17px] h-[17px]" strokeWidth={1.75} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-[#F2FBFD]">
-                      Notifications
+                    <div
+                      className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 ${isDarkMode
+                        ? "text-[#6D949D] group-hover:text-[#00E5FF]"
+                        : "text-slate-500 group-hover:text-[#0284c7]"
+                        }`}
+                    >
+                      <Bell className="w-[17px] h-[17px]" strokeWidth={1.75} />
                     </div>
-                    <div className="text-[11px] text-slate-500 dark:text-[#6D949D] truncate mt-0.5">
-                      Alerts and system updates
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13px] font-medium leading-tight text-slate-900 dark:text-[#F2FBFD]">
+                        Notifications
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-[#6D949D] truncate mt-0.5">
+                        Alerts and system updates
+                      </div>
                     </div>
-                  </div>
-                  {/* Real Dynamic Unread Badge */}
-                  {effectiveUnreadCount > 0 && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-[#0284c7] bg-blue-50 dark:bg-[#10313E] dark:text-[#00E5FF] border border-blue-200/80 dark:border-[rgba(0,229,255,0.35)]">
-                      {effectiveUnreadCount} NEW
-                    </span>
-                  )}
-                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#00E5FF] group-hover:translate-x-0.5 transition-all duration-150" />
-                </button>
+                    {/* Real Dynamic Unread Badge */}
+                    {effectiveUnreadCount > 0 && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-[#0284c7] bg-blue-50 dark:bg-[#10313E] dark:text-[#00E5FF] border border-blue-200/80 dark:border-[rgba(0,229,255,0.35)]">
+                        {effectiveUnreadCount} NEW
+                      </span>
+                    )}
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#00E5FF] group-hover:translate-x-0.5 transition-all duration-150" />
+                  </button>
+                )}
 
                 {/* 3. Settings */}
                 <button

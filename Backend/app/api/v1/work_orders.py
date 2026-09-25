@@ -142,7 +142,11 @@ async def update_work_order_status(
     db: AsyncSession = Depends(get_db),
 ):
     wo = await WorkOrderService.update_work_order_status(
-        db, work_id, status=payload.status
+        db,
+        work_id,
+        status=payload.status,
+        reason=payload.reason,
+        image_url=payload.image_url,
     )
     if not wo:
         raise HTTPException(

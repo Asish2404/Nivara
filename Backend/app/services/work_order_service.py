@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import List, Optional, Union
-from sqlalchemy import select, or_, and_
+from sqlalchemy import select, or_, and_, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.work_order import WorkOrder
 from ..models.incident_queue import IncidentQueue
 from ..models.historical_place import HistoricalPlace
+from ..models.team_head import TeamHead
 from ..models.report import Report
 from ..schemas.work_order import WorkOrderCreate, WorkOrderStatusUpdate
 from ..core.datetime_utils import get_current_time, ensure_kolkata_tz
@@ -93,6 +94,19 @@ class WorkOrderService:
         )
         existing = existing_res.scalars().first()
 
+        # Find the first unoccupied supervisor in team_head
+        sup_stmt = (
+            select(TeamHead)
+            .where(TeamHead.status == "not occupied")
+            .order_by(TeamHead.id.asc())
+        )
+        sup_res = await db.execute(sup_stmt)
+        unoccupied_sup = sup_res.scalars().first()
+        assigned_sup_name = ""
+        if unoccupied_sup:
+            assigned_sup_name = unoccupied_sup.name
+            unoccupied_sup.status = "occupied"
+
         if existing:
             # Update existing work order with latest intervention details and standardized IDs
             existing.work_id = clean_work_id
@@ -110,6 +124,14 @@ class WorkOrderService:
             existing.reports_number = reports_count
             existing.intervention_type = intervention_type
             existing.status = data.status or existing.status
+            if not existing.team_head_name and assigned_sup_name:
+                existing.team_head_name = assigned_sup_name
+            elif data.team_head_name:
+                existing.team_head_name = data.team_head_name
+            if data.admin_name:
+                existing.admin_name = data.admin_name
+            elif not existing.admin_name:
+                existing.admin_name = "Municipal Administrator"
             existing.updated_at = now
             target_wo = existing
         else:
@@ -129,6 +151,11 @@ class WorkOrderService:
                 reports_number=reports_count,
                 intervention_type=intervention_type,
                 status=data.status or "Dispatched",
+                admin_name=data.admin_name or "Municipal Administrator",
+                team_head_name=assigned_sup_name or data.team_head_name or "",
+                original_image=data.original_image or "",
+                image_url=data.image_url or "",
+                reason=data.reason or "",
                 created_at=now,
                 dispatched_at=now,
                 updated_at=now,
@@ -263,6 +290,8 @@ class WorkOrderService:
     async def sync_all_database_statuses(cls, db: AsyncSession) -> None:
         """One-pass reconciliation ensuring historical_place and active work_orders statuses
         are properly mirrored into incident_queue and reports tables.
+        Removes any work orders with status 'Resolved' from the work_orders table, ensuring
+        they reside strictly in historical_place.
         Internal reconciliation strictly disables notifications to avoid duplicate broadcasts.
         """
         now = get_current_time()
@@ -283,9 +312,55 @@ class WorkOrderService:
                 notify=False,
             )
 
-        # 2. Sync from active work_orders (e.g. In Progress, Dispatched)
+        # 2. Sync from work_orders (clean up any Resolved work orders from work_orders table)
         wo_res = await db.execute(select(WorkOrder))
         for wo in wo_res.scalars().all():
+            if (wo.status or "").strip().lower() == "resolved":
+                clean_inc = str(wo.incident_id or "").replace("#", "").strip()
+                work_order_id = wo.work_id or f"WO-{clean_inc}"
+                hp_res = await db.execute(
+                    select(HistoricalPlace).where(
+                        or_(
+                            HistoricalPlace.work_id == work_order_id,
+                            HistoricalPlace.incident_id == clean_inc,
+                        )
+                    )
+                )
+                if not hp_res.scalars().first():
+                    db.add(
+                        HistoricalPlace(
+                            incident_id=clean_inc,
+                            location=str(wo.location or ""),
+                            latitude=float(wo.latitude or 0.0),
+                            longitude=float(wo.longitude or 0.0),
+                            issue_type=str(wo.issue_type or "Waterlogging"),
+                            water_depth=float(wo.water_depth or 0.0),
+                            work_id=work_order_id,
+                            assigned_ulb_id=str(wo.assigned_ulb_id or ""),
+                            assigned_ulb_name=str(wo.assigned_ulb_name or ""),
+                            jurisdiction_type=str(wo.jurisdiction_type or ""),
+                            ward=str(wo.ward or ""),
+                            admin_name=str(wo.admin_name or ""),
+                            team_head_name=str(wo.team_head_name or ""),
+                            original_image=str(wo.original_image or ""),
+                            image_url=str(wo.image_url or ""),
+                            reason=str(wo.reason or "Resolved by Field Supervisor"),
+                            status="Resolved",
+                            created_at=wo.created_at or now,
+                            resolved_at=wo.resolved_at or now,
+                        )
+                    )
+                if wo.team_head_name:
+                    sup_q = await db.execute(
+                        select(TeamHead).where(TeamHead.name == wo.team_head_name)
+                    )
+                    assigned_sup = sup_q.scalars().first()
+                    if assigned_sup:
+                        assigned_sup.status = "not occupied"
+                # Remove resolved work order from work_orders table
+                await db.delete(wo)
+                continue
+
             await cls.sync_linked_incident_and_reports(
                 db=db,
                 incident_id=wo.incident_id,
@@ -303,9 +378,11 @@ class WorkOrderService:
 
     @classmethod
     async def get_all_work_orders(cls, db: AsyncSession) -> List[WorkOrder]:
-        """Fetch all work orders ordered by creation time descending."""
+        """Fetch all active work orders ordered by creation time descending (excludes resolved)."""
         result = await db.execute(
-            select(WorkOrder).order_by(WorkOrder.created_at.desc())
+            select(WorkOrder)
+            .where(func.lower(WorkOrder.status) != "resolved")
+            .order_by(WorkOrder.created_at.desc())
         )
         orders = list(result.scalars().all())
         for wo in orders:
@@ -345,15 +422,63 @@ class WorkOrderService:
             if wo.resolved_at:
                 wo.resolved_at = ensure_kolkata_tz(wo.resolved_at)
             wo.updated_at = ensure_kolkata_tz(wo.updated_at)
-        return wo
+            return wo
+
+        # Fallback to historical_place for resolved work orders so lookup still succeeds
+        hist_res = await db.execute(
+            select(HistoricalPlace).where(
+                or_(
+                    HistoricalPlace.work_id == clean_id,
+                    HistoricalPlace.work_id == f"WO-{clean_id}",
+                    HistoricalPlace.work_id == f"WO-{clean_inc}",
+                    HistoricalPlace.incident_id == clean_id,
+                    HistoricalPlace.incident_id == clean_inc,
+                    HistoricalPlace.incident_id == f"#{clean_inc}",
+                    HistoricalPlace.incident_id == clean_inc.replace("-", ""),
+                )
+            )
+        )
+        hp = hist_res.scalars().first()
+        if hp:
+            synthetic_wo = WorkOrder(
+                id=hp.id or 0,
+                work_id=hp.work_id or f"WO-{hp.incident_id}",
+                incident_id=hp.incident_id,
+                location=hp.location,
+                latitude=hp.latitude,
+                longitude=hp.longitude,
+                ward=hp.ward,
+                assigned_ulb_id=hp.assigned_ulb_id,
+                assigned_ulb_name=hp.assigned_ulb_name,
+                jurisdiction_type=hp.jurisdiction_type,
+                issue_type=hp.issue_type,
+                water_depth=hp.water_depth,
+                status=hp.status or "Resolved",
+                admin_name=hp.admin_name,
+                team_head_name=hp.team_head_name,
+                original_image=hp.original_image,
+                image_url=hp.image_url,
+                reason=hp.reason,
+                created_at=ensure_kolkata_tz(hp.created_at),
+                resolved_at=ensure_kolkata_tz(hp.resolved_at),
+                updated_at=ensure_kolkata_tz(hp.resolved_at),
+            )
+            return synthetic_wo
+
+        return None
 
     @classmethod
     async def update_work_order_status(
-        cls, db: AsyncSession, work_id: str, status: Optional[str] = None
-    ) -> Optional[Union[WorkOrder, dict]]:
+        cls,
+        db: AsyncSession,
+        work_id: str,
+        status: Optional[str] = None,
+        reason: Optional[str] = None,
+        image_url: Optional[str] = None,
+    ) -> Optional[WorkOrder]:
         """Updates work order lifecycle status (e.g. Dispatched -> In Progress -> Resolved).
-        When status becomes 'Resolved', the incident is removed from the work_orders table
-        and added to the historical_place table with all required column data.
+        When status becomes 'Resolved', details are recorded in both work_orders and historical_place tables,
+        and the assigned supervisor is freed back to 'not occupied' in team_head table.
         """
         wo = await cls.get_work_order_by_id(db, work_id)
         if not wo:
@@ -361,6 +486,10 @@ class WorkOrderService:
 
         now = get_current_time()
         norm_status = (status or "").strip()
+        if reason:
+            wo.reason = reason
+        if image_url:
+            wo.image_url = image_url
 
         if norm_status.lower() == "resolved":
             clean_inc = str(wo.incident_id or "").replace("#", "").strip()
@@ -379,28 +508,51 @@ class WorkOrderService:
             )
             linked_incidents = list(inc_res.scalars().all())
             inc_created_at = linked_incidents[0].created_at if (linked_incidents and linked_incidents[0].created_at) else (wo.created_at or now)
-            wo_resolved_at = wo.resolved_at or now
+            wo_resolved_at = now
 
-            # 1. Add to historical_place table with all required column data (created_at from incident_queue, resolved_at from work_orders)
-            hist_place = HistoricalPlace(
-                incident_id=clean_inc,
-                location=str(wo.location or ""),
-                latitude=float(wo.latitude or 0.0),
-                longitude=float(wo.longitude or 0.0),
-                issue_type=str(wo.issue_type or "Waterlogging"),
-                water_depth=float(wo.water_depth or 0.0),
-                work_id=work_order_id,
-                assigned_ulb_id=str(wo.assigned_ulb_id or ""),
-                assigned_ulb_name=str(wo.assigned_ulb_name or ""),
-                jurisdiction_type=str(wo.jurisdiction_type or ""),
-                ward=str(wo.ward or ""),
-                status="Resolved",
-                created_at=inc_created_at,
-                resolved_at=wo_resolved_at,
+            # 1. Add to historical_place table with all required column data (avoid duplicate)
+            hp_check = await db.execute(
+                select(HistoricalPlace).where(
+                    or_(
+                        HistoricalPlace.work_id == work_order_id,
+                        HistoricalPlace.incident_id == clean_inc,
+                    )
+                )
             )
-            db.add(hist_place)
+            if not hp_check.scalars().first():
+                hist_place = HistoricalPlace(
+                    incident_id=clean_inc,
+                    location=str(wo.location or ""),
+                    latitude=float(wo.latitude or 0.0),
+                    longitude=float(wo.longitude or 0.0),
+                    issue_type=str(wo.issue_type or "Waterlogging"),
+                    water_depth=float(wo.water_depth or 0.0),
+                    work_id=work_order_id,
+                    assigned_ulb_id=str(wo.assigned_ulb_id or ""),
+                    assigned_ulb_name=str(wo.assigned_ulb_name or ""),
+                    jurisdiction_type=str(wo.jurisdiction_type or ""),
+                    ward=str(wo.ward or ""),
+                    admin_name=str(wo.admin_name or ""),
+                    team_head_name=str(wo.team_head_name or ""),
+                    original_image=str(wo.original_image or ""),
+                    image_url=str(wo.image_url or ""),
+                    reason=str(wo.reason or "Resolved by Field Supervisor"),
+                    status="Resolved",
+                    created_at=inc_created_at,
+                    resolved_at=wo_resolved_at,
+                )
+                db.add(hist_place)
 
-            # 2. Update status of linked incident_queue and reports to 'Resolved'
+            # 2. Free assigned supervisor in team_head table (status = 'not occupied')
+            if wo.team_head_name:
+                sup_q = await db.execute(
+                    select(TeamHead).where(TeamHead.name == wo.team_head_name)
+                )
+                assigned_sup = sup_q.scalars().first()
+                if assigned_sup:
+                    assigned_sup.status = "not occupied"
+
+            # 3. Update status of linked incident_queue and reports to 'Resolved'
             await cls.sync_linked_incident_and_reports(
                 db=db,
                 incident_id=clean_inc,
@@ -413,36 +565,32 @@ class WorkOrderService:
                 now=now,
             )
 
-            # Snapshot data for response before removing from work_orders
-            resolved_dict = {
-                "id": wo.id,
-                "work_id": work_order_id,
-                "incident_id": clean_inc,
-                "location": wo.location,
-                "latitude": wo.latitude,
-                "longitude": wo.longitude,
-                "ward": wo.ward,
-                "assigned_ulb_id": wo.assigned_ulb_id,
-                "assigned_ulb_name": wo.assigned_ulb_name,
-                "jurisdiction_type": wo.jurisdiction_type,
-                "issue_type": wo.issue_type,
-                "risk_level": wo.risk_level,
-                "water_depth": wo.water_depth,
-                "reports_number": wo.reports_number,
-                "intervention_type": wo.intervention_type,
-                "status": "Resolved",
-                "created_at": ensure_kolkata_tz(wo.created_at),
-                "dispatched_at": ensure_kolkata_tz(wo.dispatched_at),
-                "started_at": ensure_kolkata_tz(wo.started_at or now),
-                "resolved_at": ensure_kolkata_tz(now),
-                "updated_at": ensure_kolkata_tz(now),
-            }
+            # 4. Remove work order from work_orders table
+            wo.status = "Resolved"
+            wo.resolved_at = wo_resolved_at
+            wo.updated_at = now
+            # Delete from work_orders table
+            if wo in db:
+                await db.delete(wo)
+            else:
+                await db.execute(
+                    delete(WorkOrder).where(
+                        or_(
+                            WorkOrder.work_id == wo.work_id,
+                            WorkOrder.work_id == work_order_id,
+                            WorkOrder.incident_id == clean_inc,
+                        )
+                    )
+                )
 
-            # 3. Remove incident from work_orders table
-            await db.delete(wo)
             await db.commit()
-
-            return resolved_dict
+            wo.created_at = ensure_kolkata_tz(wo.created_at)
+            wo.dispatched_at = ensure_kolkata_tz(wo.dispatched_at)
+            if wo.started_at:
+                wo.started_at = ensure_kolkata_tz(wo.started_at)
+            wo.resolved_at = ensure_kolkata_tz(wo.resolved_at)
+            wo.updated_at = ensure_kolkata_tz(wo.updated_at)
+            return wo
 
         # Otherwise update regular lifecycle status (e.g. In Progress)
         if norm_status:
@@ -468,12 +616,21 @@ class WorkOrderService:
 
         await db.commit()
         await db.refresh(wo)
+        wo.created_at = ensure_kolkata_tz(wo.created_at)
+        wo.dispatched_at = ensure_kolkata_tz(wo.dispatched_at)
+        if wo.started_at:
+            wo.started_at = ensure_kolkata_tz(wo.started_at)
+        if wo.resolved_at:
+            wo.resolved_at = ensure_kolkata_tz(wo.resolved_at)
+        wo.updated_at = ensure_kolkata_tz(wo.updated_at)
         return wo
 
     @classmethod
     async def get_dispatched_incident_ids(cls, db: AsyncSession) -> List[str]:
-        """Returns list of incident_ids that have active or completed work orders."""
-        result = await db.execute(select(WorkOrder.incident_id))
+        """Returns list of incident_ids that have active work orders (excludes resolved)."""
+        result = await db.execute(
+            select(WorkOrder.incident_id).where(func.lower(WorkOrder.status) != "resolved")
+        )
         ids = list(result.scalars().all())
         clean_ids = set()
         for i in ids:

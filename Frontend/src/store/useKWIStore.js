@@ -22,11 +22,25 @@ export const isPublicRoute = (path) => {
   );
 };
 
-// Helper to check if a user belongs to admin portal
+// Helper to check if a user is a supervisor
+export const isUserSupervisor = (user) => {
+  if (!user) return false;
+  if (user.portal === "supervisor") return true;
+  if (user.id && String(user.id).startsWith("SUP-")) return true;
+  if (user.badgeId && String(user.badgeId).startsWith("SUP-")) return true;
+  if (user.badge_id && String(user.badge_id).startsWith("SUP-")) return true;
+  const role = (user.role || "").toLowerCase();
+  return role.includes("supervisor") || role.includes("team_head");
+};
+
+// Helper to check if a user belongs to admin operational portal
 export const isUserAdmin = (user) => {
   if (!user) return false;
+  // Supervisors have their own dedicated supervisor portal/role (not admin)
+  if (isUserSupervisor(user)) return false;
+
   // Explicit citizen ID prefix or portal
-  if (user.id && String(user.id).startsWith("USR-")) return false;
+  if (user.id && String(user.id).startsWith("USR-") && !String(user.id).includes("SUP")) return false;
   if (user.portal === "user") return false;
 
   if (user.portal === "admin") return true;
@@ -47,6 +61,7 @@ export const isUserAdmin = (user) => {
 };
 
 // Role-based route permission checker:
+// - Supervisor: Home ('/'), Profile ('/profile'), Respond ('/action-center', '/respond'), Auth
 // - User: Home ('/'), Reports ('/reports', '/my-reports'), Profile ('/profile'), Auth ('/login', '/signup')
 // - Admin: Home ('/'), Live Map ('/live-city'), Simulate ('/simulate'), Respond ('/action-center'), Profile ('/profile'), Auth
 // - Unauthenticated: Home ('/'), Auth ('/signup', '/login')
@@ -55,6 +70,20 @@ export const isRouteAllowedForUser = (path, user) => {
 
   if (isPublicRoute(cleanPath)) return true;
   if (!user) return false;
+
+  // For supervisor: only homepage, profile and respond page are allowed
+  if (isUserSupervisor(user)) {
+    return (
+      cleanPath === "/" ||
+      cleanPath === "/profile" ||
+      cleanPath === "/my-profile" ||
+      cleanPath.startsWith("/profile/") ||
+      cleanPath === "/action-center" ||
+      cleanPath === "/respond" ||
+      cleanPath.startsWith("/action-center/") ||
+      cleanPath.startsWith("/respond/")
+    );
+  }
 
   const admin = isUserAdmin(user);
   const isReportRoute =
@@ -340,7 +369,7 @@ export const useKWIStore = create((set, get) => ({
       set({ postLoginRedirect: path });
       target = "/login";
     } else if (currentUser && !isRouteAllowedForUser(path, currentUser)) {
-      target = "/";
+      target = isUserSupervisor(currentUser) ? "/action-center" : "/";
     }
 
     if (typeof window !== "undefined") {
@@ -362,7 +391,7 @@ export const useKWIStore = create((set, get) => ({
   reportLocality: "Salt Lake, Sector V",
   reportCity: "Kolkata, West Bengal",
   reportCoords: { lat: 22.5735, lon: 88.4331, accuracy: 10 },
-  reportDepth: "15–30 cm",
+  reportDepth: "16-40cm",
   reportTimestamp: "Just now",
   isReportSubmitted: false,
   reportVerificationStage: 0, // 0 = idle, 1..5 = stages
@@ -491,13 +520,17 @@ export const useKWIStore = create((set, get) => ({
   fetchWorkOrders: async () => {
     try {
       const orders = await api.get('/work-orders');
-      if (Array.isArray(orders) && orders.length > 0) {
+      if (Array.isArray(orders)) {
         const ordersMap = {};
-        const setIds = new Set(get().dispatchedHotspotIds || []);
-        const simIds = new Set(get().simulatedIncidentIds || []);
+        const setIds = new Set();
+        const simIds = new Set();
         const outcomes = { ...(get().simulationOutcomes || {}) };
 
         orders.forEach((wo) => {
+          if (String(wo.status || '').toLowerCase() === 'resolved') {
+            return;
+          }
+
           const cleanRef = String(wo.incident_id || '').replace(/^#/, '').trim();
           const cleanWorkId = wo.work_id || `WO-${cleanRef}`;
           const rawTicketKey = cleanWorkId;
@@ -514,25 +547,40 @@ export const useKWIStore = create((set, get) => ({
 
           ordersMap[rawTicketKey] = {
             id: cleanWorkId,
+            work_id: cleanWorkId,
             ticketKey: rawTicketKey,
             incidentRef: `#${cleanRef}`,
             incidentId: cleanRef,
             location: wo.location,
+            ward: wo.ward || '',
             borough: wo.ward || wo.assigned_ulb_name || 'KMC Ward',
             priority: wo.risk_level || 'CRITICAL',
+            risk_level: wo.risk_level || 'CRITICAL',
             status: wo.status || 'Dispatched',
+            water_depth: wo.water_depth !== undefined && wo.water_depth !== null ? Number(wo.water_depth) : 0,
+            waterDepth: wo.water_depth !== undefined && wo.water_depth !== null ? `${wo.water_depth} cm depth` : '0 cm depth',
+            reports_number: wo.reports_number || 1,
+            issue_type: wo.issue_type || 'Waterlogging',
+            intervention_type: wo.intervention_type || '',
+            reason: wo.reason || '',
+            latitude: wo.latitude || 0,
+            longitude: wo.longitude || 0,
+            assigned_ulb_id: wo.assigned_ulb_id || '',
+            assigned_ulb_name: wo.assigned_ulb_name || '',
+            admin_name: wo.admin_name || '',
+            team_head_name: wo.team_head_name || '',
             stage: typeof wo.stage === 'number'
               ? wo.stage
               : (wo.status === 'Resolved' ? 3 : wo.status === 'In Progress' ? 2 : wo.status === 'Dispatched' ? 1 : 0),
             riskScore: `${wo.risk_level || 'HIGH'} / 100`,
-            expectedImpact: wo.expected_impact || '-14 cm depth',
+            expectedImpact: wo.expected_impact || (wo.water_depth ? `-${Math.round(wo.water_depth * 0.45)} cm depth` : '-14 cm depth'),
             assignedNode: wo.assigned_node || 'PS-07 Central Sump',
-            assignedCrew: wo.assigned_crew || 'Central Rapid Sluice Taskforce 01',
-            chief: wo.chief || 'Er. K. Bhattacharya',
+            assignedCrew: wo.team_head_name ? `Supervisor: ${wo.team_head_name}` : (wo.assigned_crew || 'Central Rapid Sluice Taskforce 01'),
+            chief: wo.team_head_name ? wo.team_head_name : (wo.chief || 'Er. K. Bhattacharya'),
             radio: wo.radio || 'CH-01-TAC',
             equipment: eqList,
             eta: wo.eta || '12 minutes',
-            trigger: wo.trigger_reason || 'Severe street inundation',
+            trigger: wo.intervention_type || wo.reason || wo.trigger_reason || (wo.water_depth ? `${wo.issue_type || 'Waterlogging'} (Depth: ${wo.water_depth} cm)` : 'Field intervention dispatched'),
             simulationOutcome: wo.parsed_simulation_outcome || null,
             createdAt: wo.created_at,
           };
@@ -551,12 +599,28 @@ export const useKWIStore = create((set, get) => ({
           }
         });
 
-        set((state) => ({
-          workOrders: { ...ordersMap, ...state.workOrders },
-          dispatchedHotspotIds: Array.from(setIds),
-          simulatedIncidentIds: Array.from(simIds),
-          simulationOutcomes: outcomes,
-        }));
+        set((state) => {
+          const filteredLocal = {};
+          Object.entries(state.workOrders || {}).forEach(([k, v]) => {
+            if (v && String(v.status || '').toLowerCase() !== 'resolved') {
+              filteredLocal[k] = v;
+            }
+          });
+          const merged = { ...filteredLocal, ...ordersMap };
+          let nextActiveId = state.activeWorkOrderTicketId;
+          if (nextActiveId && !merged[nextActiveId]) {
+            const keys = Object.keys(merged);
+            nextActiveId = keys.length > 0 ? keys[0] : null;
+          }
+
+          return {
+            workOrders: merged,
+            activeWorkOrderTicketId: nextActiveId,
+            dispatchedHotspotIds: Array.from(setIds),
+            simulatedIncidentIds: Array.from(simIds),
+            simulationOutcomes: outcomes,
+          };
+        });
       }
     } catch (err) {
       console.warn('[KWI] fetchWorkOrders notice:', err?.message || err);
@@ -677,8 +741,20 @@ export const useKWIStore = create((set, get) => ({
     }, 2400);
 
     const s = get();
-    const depthMatch = String(s.reportDepth || "").match(/(\d+(?:\.\d+)?)/);
-    const parsedDepth = depthMatch ? parseFloat(depthMatch[1]) : 15;
+    let parsedDepth = 28;
+    const depthStr = String(s.reportDepth || "").trim();
+    if (depthStr.includes("1-15") || depthStr.includes("1–15") || depthStr.toLowerCase().includes("ankle")) {
+      parsedDepth = 12;
+    } else if (depthStr.includes("16-40") || depthStr.includes("16–40") || depthStr.toLowerCase().includes("between")) {
+      parsedDepth = 28;
+    } else if (depthStr.includes("41-50") || depthStr.includes("41–50") || depthStr.toLowerCase().includes("knee")) {
+      parsedDepth = 45;
+    } else if (depthStr.includes("51-70") || depthStr.includes("51–70") || depthStr.toLowerCase().includes("thigh")) {
+      parsedDepth = 60;
+    } else {
+      const depthMatch = depthStr.match(/(\d+(?:\.\d+)?)/);
+      parsedDepth = depthMatch ? parseFloat(depthMatch[1]) : 28;
+    }
 
     // Instantly generate a local preview report so the new hotspot card immediately appears
     const localReport = {
@@ -950,17 +1026,18 @@ export const useKWIStore = create((set, get) => ({
       institution: cached.institution ?? "",
       department: be.department || cached.department || "",
       bio: be.bio ?? cached.bio ?? "",
-      avatarUrl: be.avatar_url ?? cached.avatarUrl ?? null,
       role:
-        be.role || cached.role || (be.portal === "admin" ? "Admin" : "User"),
+        be.role || cached.role || (be.portal === "admin" ? "Admin" : be.portal === "supervisor" ? "Supervisor" : "User"),
       badgeId: be.badgeId || be.badge_id || cached.badgeId || "",
       clearance: be.clearance || cached.clearance || "",
       createdAt: be.created_at || cached.createdAt || null,
       portal:
         be.portal ||
-        (be.badgeId || be.badge_id || String(be.id || "").startsWith("ADM-")
-          ? "admin"
-          : cached.portal || "user"),
+        (isUserSupervisor(be)
+          ? "supervisor"
+          : (be.badgeId || be.badge_id || String(be.id || "").startsWith("ADM-")
+            ? "admin"
+            : cached.portal || "user")),
       status: be.status || cached.status || "active",
     };
   },
@@ -1726,12 +1803,18 @@ export const useKWIStore = create((set, get) => ({
     const ticketKey = `WO-${cleanRef}`;
     const fullId = `WO-${cleanRef}`;
 
+    const waterDepthNum = newOrder.water_depth !== undefined && newOrder.water_depth !== null
+      ? Number(newOrder.water_depth)
+      : (newOrder.waterDepth ? parseFloat(String(newOrder.waterDepth).replace(/[^\d.]/g, '')) : 0.0);
+
     const finalizedOrder = {
       ...newOrder,
       id: fullId,
       ticketKey,
       incidentRef: `#${cleanRef}`,
       incidentId: cleanRef,
+      water_depth: waterDepthNum,
+      waterDepth: `${waterDepthNum} cm depth`,
       status: newOrder.status || 'Dispatched',
       stage: typeof newOrder.stage === 'number' ? newOrder.stage : 1, // Stage 1 = Dispatched (Step 2)
     };
@@ -1775,6 +1858,7 @@ export const useKWIStore = create((set, get) => ({
       }
     })
 
+    const adminName = get().currentUser?.name || 'Municipal Administrator';
     // 2. Persist to backend work_orders table asynchronously (non-blocking)
     api.post('/work-orders', {
       work_id: ticketKey,
@@ -1786,8 +1870,25 @@ export const useKWIStore = create((set, get) => ({
       ward: finalizedOrder.borough || '',
       issue_type: 'Waterlogging',
       risk_level: finalizedOrder.priority || 'CRITICAL',
+      water_depth: waterDepthNum,
       intervention_type: finalizedOrder.intervention_type || finalizedOrder.interventionType || '',
       status: finalizedOrder.status || 'Dispatched',
+      admin_name: adminName,
+    }).then((created) => {
+      if (created && created.team_head_name) {
+        set((state) => ({
+          workOrders: {
+            ...state.workOrders,
+            [ticketKey]: {
+              ...(state.workOrders[ticketKey] || {}),
+              team_head_name: created.team_head_name,
+              admin_name: created.admin_name || adminName,
+              assignedCrew: `Supervisor: ${created.team_head_name}`,
+              chief: created.team_head_name,
+            }
+          }
+        }));
+      }
     }).catch((err) => {
       console.warn('[KWI] Backend work order persistence notice:', err?.message || err)
     })
@@ -1797,7 +1898,14 @@ export const useKWIStore = create((set, get) => ({
     return ticketKey;
   },
 
-  advanceWorkOrderStatus: (ticketKey) => {
+  advanceWorkOrderStatus: (ticketKey, resolutionData = {}) => {
+    // Only assigned supervisors can advance status (In Progress, Resolved)
+    const currentUser = get().currentUser;
+    if (!isUserSupervisor(currentUser)) {
+      console.warn('[KWI] Unauthorized: Only supervisors can change work order status to In Progress or Resolved.');
+      return;
+    }
+
     const key = ticketKey || get().activeWorkOrderTicketId
     const existing = get().workOrders[key]
     if (!existing) return
@@ -1809,6 +1917,9 @@ export const useKWIStore = create((set, get) => ({
     const nextStage = Math.min(3, currentStage + 1)
     const STAGE_NAMES = ['Recommended', 'Dispatched', 'In Progress', 'Resolved']
     const nextStatus = STAGE_NAMES[nextStage]
+
+    const resolvedImageUrl = resolutionData?.image_url || existing.image_url || '';
+    const resolvedReason = resolutionData?.reason || existing.reason || 'Resolved by Field Supervisor';
 
     if (nextStatus === 'Resolved') {
       // Notify all users who reported this incident location that it is Resolved (Type 3)
@@ -1826,11 +1937,13 @@ export const useKWIStore = create((set, get) => ({
             ...existing,
             stage: nextStage,
             status: nextStatus,
+            image_url: resolvedImageUrl,
+            reason: resolvedReason,
           },
         },
         latestSimulationOutcome:
           state.latestSimulationOutcome?.ticketKey === key
-            ? { ...state.latestSimulationOutcome, stage: nextStage, status: nextStatus }
+            ? { ...state.latestSimulationOutcome, stage: nextStage, status: nextStatus, image_url: resolvedImageUrl, reason: resolvedReason }
             : state.latestSimulationOutcome,
       }))
 
@@ -1851,18 +1964,22 @@ export const useKWIStore = create((set, get) => ({
           }
         })
 
+        const targetId = existing.id || existing.work_id || key;
         // Async sync to backend after 3s resolved phase
-        api.patch(`/work-orders/${encodeURIComponent(key)}/status`, {
+        api.patch(`/work-orders/${encodeURIComponent(targetId)}/status`, {
           status: nextStatus,
           stage: nextStage,
+          reason: resolvedReason,
+          image_url: resolvedImageUrl,
         }).then(() => {
-          // Refresh incident queue and reports so resolved status is reflected across the app
+          // Refresh incident queue, reports, and work orders so resolved status is reflected across the app
           get().fetchAllReports().catch(() => { })
           get().fetchNotifications().catch(() => { })
+          get().fetchWorkOrders().catch(() => { })
         }).catch((err) => {
           console.warn('[KWI] Backend work order status update notice:', err?.message || err)
         })
-      }, 2000)
+      }, 3000)
     } else {
       if (nextStatus === 'In Progress') {
         // Notify all users who reported this incident location that response is In Progress (Type 2)
@@ -1888,8 +2005,9 @@ export const useKWIStore = create((set, get) => ({
             : state.latestSimulationOutcome,
       }))
 
+      const targetId = existing.id || existing.work_id || key;
       // Async sync to backend
-      api.patch(`/work-orders/${encodeURIComponent(key)}/status`, {
+      api.patch(`/work-orders/${encodeURIComponent(targetId)}/status`, {
         status: nextStatus,
         stage: nextStage,
       }).then(() => {

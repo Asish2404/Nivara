@@ -14,7 +14,7 @@ import {
   User,
   LayoutDashboard,
 } from "lucide-react";
-import { useKWIStore, isUserAdmin } from "../../store/useKWIStore";
+import { useKWIStore, isUserAdmin, isUserSupervisor } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
 import { CommandProfileDropdown } from "./CommandProfileDropdown";
 
@@ -67,16 +67,38 @@ export function KWINavbar() {
     }
   };
 
-  const isAdmin = isUserAdmin(currentUser);
+  const isSupervisor = isUserSupervisor(currentUser);
+  const isAdmin = !isSupervisor && isUserAdmin(currentUser);
 
   // Configure navigation items strictly according to authenticated role:
   // - User: Home, Field Report, My Reports
+  // - Supervisor: Home, Respond, Profile
   // - Admin: Dashboard, Home, Live Map, Simulate, Respond (+ Profile section on right)
   // - Not logged in: Home, Report, Live Map, Simulate, Respond (redirects unauthenticated clicks to sign in)
   let NAV_ITEMS = [];
 
   if (currentUser) {
-    if (isAdmin) {
+    if (isSupervisor) {
+      NAV_ITEMS = [
+        {
+          key: "HOME",
+          label: "Home",
+          icon: Home,
+          path: "/",
+          isActive: currentRoute === "/",
+        },
+        {
+          key: "RESPOND",
+          label: "Respond",
+          icon: ShieldCheck,
+          path: "/action-center",
+          isActive:
+            currentRoute === "/action-center" ||
+            currentRoute === "/respond" ||
+            currentRoute.startsWith("/action-center"),
+        },
+      ];
+    } else if (isAdmin) {
       NAV_ITEMS = [
         {
           key: "HOME",
@@ -274,8 +296,10 @@ export function KWINavbar() {
             {/* CENTER NAVIGATION (Spacious Glass Tabs)           */}
             {/* ================================================= */}
             <nav
-              className={`hidden lg:flex items-center ${
-                !isAdmin && currentUser
+              className={`hidden md:flex items-center ${
+                isSupervisor
+                  ? "gap-8 lg:gap-12 xl:gap-16 2xl:gap-20"
+                  : !isAdmin && currentUser
                   ? "gap-7 xl:gap-11 2xl:gap-14"
                   : "gap-3.5 xl:gap-5 2xl:gap-7"
               }`}
@@ -289,7 +313,9 @@ export function KWINavbar() {
                     type="button"
                     onClick={() => handleNavClick(item.path)}
                     className={`relative rounded-2xl flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${
-                      isUserLayout
+                      isSupervisor
+                        ? "px-6 py-2.5 min-w-[104px] sm:min-w-[116px] xl:min-w-[130px]"
+                        : isUserLayout
                         ? "px-5 py-2 xl:px-6 xl:py-2.5 min-w-[76px] xl:min-w-[88px]"
                         : "px-4 py-1.5 xl:px-4.5 xl:py-2 min-w-[68px] xl:min-w-[74px]"
                     } ${
@@ -314,7 +340,7 @@ export function KWINavbar() {
                       }`}
                     />
                     <span
-                      className={`text-[11.5px] xl:text-[12px] leading-none whitespace-nowrap transition-colors ${
+                      className={`text-[11.5px] xl:text-[12.5px] leading-none whitespace-nowrap transition-colors ${
                         isItemActive
                           ? isDarkMode
                             ? "font-semibold text-[#00E5FF]"

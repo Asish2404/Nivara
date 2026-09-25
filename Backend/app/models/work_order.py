@@ -30,6 +30,13 @@ class WorkOrder(Base):
     # Intervention type populated directly from selected intervention parameters
     intervention_type: Mapped[str] = mapped_column(String(255), default="")
     status: Mapped[str] = mapped_column(String(32), default="Dispatched")  # Dispatched, In Progress, Resolved
+    
+    # Operational personnel & media
+    admin_name: Mapped[str] = mapped_column(String(255), default="")
+    team_head_name: Mapped[str] = mapped_column(String(255), default="")
+    original_image: Mapped[str] = mapped_column(String(255), default="")
+    image_url: Mapped[str] = mapped_column(String(255), default="")
+    reason: Mapped[str] = mapped_column(String(255), default="")
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=get_current_time)

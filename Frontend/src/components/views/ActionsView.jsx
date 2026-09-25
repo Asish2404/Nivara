@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   CheckCircle2,
   ArrowRight,
+  ArrowLeft,
   Clock,
   MapPin,
   Truck,
@@ -12,13 +13,24 @@ import {
   Droplets,
   ExternalLink,
   ChevronRight,
+  ChevronLeft,
   FileText,
   MoreHorizontal,
   Info,
   Volume2,
   Radio,
+  Camera,
+  X,
+  Loader2,
+  UploadCloud,
+  Image as ImageIcon,
+  Sun,
+  MessageSquare,
+  Check,
+  Building2,
+  Users,
 } from "lucide-react";
-import { useKWIStore } from "../../store/useKWIStore";
+import { useKWIStore, isUserSupervisor } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
 
 const RADIO_LOGS = [
@@ -56,7 +68,10 @@ export function ActionsView() {
     setActiveWorkOrderTicketId,
     advanceWorkOrderStatus,
     latestSimulationOutcome,
+    currentUser,
   } = useKWIStore();
+
+  const isSupervisor = isUserSupervisor(currentUser);
 
   const allWorkOrders = useMemo(() => {
     return {
@@ -90,6 +105,21 @@ export function ActionsView() {
     return getTicketStage(activeTicket);
   });
 
+  // Photo resolution view state for supervisor
+  const [isResolvingWithPhoto, setIsResolvingWithPhoto] = useState(false);
+  const [resolutionPhoto, setResolutionPhoto] = useState(null);
+  const [resolutionPhotoName, setResolutionPhotoName] = useState(null);
+  const [resolutionRemarks, setResolutionRemarks] = useState("");
+  const [attemptedWithoutPhoto, setAttemptedWithoutPhoto] = useState(false);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [isCameraStarting, setIsCameraStarting] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const galleryInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+
   // Synchronize when activeTicket stage/status changes or ticket is switched
   useEffect(() => {
     if (activeTicket) {
@@ -108,6 +138,15 @@ export function ActionsView() {
     }
   }, [activeWorkOrderTicketId, allWorkOrders, selectedTicketId]);
 
+  // Clean up camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
   const STAGES = [
     { num: 1, name: "Recommended", desc: "Assessment & Hydraulic Triage" },
     { num: 2, name: "Dispatched", desc: "Field Crews En Route" },
@@ -115,9 +154,151 @@ export function ActionsView() {
     { num: 4, name: "Resolved", desc: "Incident Closure & Verification" },
   ];
 
+  const processResolutionPhoto = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result;
+      if (typeof dataUrl === "string") {
+        setResolutionPhoto(dataUrl);
+        setResolutionPhotoName(file.name);
+        setAttemptedWithoutPhoto(false);
+        audioEngine.playUiChirp(1150);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) {
+      processResolutionPhoto(file);
+    }
+  };
+
+  const handleGalleryUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processResolutionPhoto(file);
+    }
+    if (e.target) {
+      e.target.value = "";
+    }
+  };
+
+  const handleCameraUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processResolutionPhoto(file);
+    }
+    if (e.target) {
+      e.target.value = "";
+    }
+  };
+
+  const handleStartCamera = async () => {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      cameraInputRef.current?.click();
+      return;
+    }
+    setIsCameraOpen(true);
+    setIsCameraStarting(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        try {
+          await videoRef.current.play();
+        } catch {}
+      }
+      setIsCameraStarting(false);
+      audioEngine.playUiChirp(1200);
+    } catch (err) {
+      console.warn("Camera getUserMedia fallback to file input:", err);
+      handleStopCamera();
+      cameraInputRef.current?.click();
+    }
+  };
+
+  const handleStopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraOpen(false);
+    setIsCameraStarting(false);
+  };
+
+  const handleCaptureFromVideo = () => {
+    const video = videoRef.current;
+    if (!video || isCameraStarting) return;
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth || 1280;
+      canvas.height = video.videoHeight || 720;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+      setResolutionPhoto(dataUrl);
+      setResolutionPhotoName(`supervisor_proof_${Date.now()}.jpg`);
+      setAttemptedWithoutPhoto(false);
+      audioEngine.playUiChirp(1350);
+      handleStopCamera();
+    } catch (e) {
+      console.error("Capture error:", e);
+      handleStopCamera();
+    }
+  };
+
+  const handleConfirmResolution = () => {
+    if (!resolutionPhoto) {
+      setAttemptedWithoutPhoto(true);
+      audioEngine.playUiChirp(550);
+      return;
+    }
+    const targetKey = selectedTicketId || activeTicket.ticketKey || activeTicket.id;
+    audioEngine.playUiChirp(1400);
+    setIsResolvingWithPhoto(false);
+    setCurrentStage(3);
+    if (advanceWorkOrderStatus && targetKey) {
+      advanceWorkOrderStatus(targetKey, {
+        image_url: resolutionPhoto,
+        reason: resolutionRemarks.trim() || "Waterlogging cleared & verified with photo proof by supervisor",
+      });
+    }
+  };
+
   const handleAdvanceStage = () => {
+    if (!isSupervisor) return;
     if (!activeTicket) return;
     const targetKey = selectedTicketId || activeTicket.ticketKey || activeTicket.id;
+
+    // Moving from In Progress (stage 2) to Resolved (stage 3) opens the photo resolution screen
+    if (currentStage === 2) {
+      audioEngine.playUiChirp(1050);
+      setIsResolvingWithPhoto(true);
+      return;
+    }
+
     const next = currentStage < 3 ? currentStage + 1 : currentStage;
     audioEngine.playUiChirp(950 + next * 120);
     setCurrentStage(next);
@@ -139,6 +320,522 @@ export function ActionsView() {
     }
   };
 
+  // =========================================================================
+  // DEDICATED SUPERVISOR PHOTO RESOLUTION PAGE (Matching exact reference pic)
+  // =========================================================================
+  if (isResolvingWithPhoto && activeTicket) {
+    return (
+      <div className="relative w-full font-sans text-slate-900 dark:text-slate-100 pb-6 pt-2">
+        {/* Top Header: Back Link + Step Indicator */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+          {/* Left: Back Link & Page Title */}
+          <div>
+            <button
+              type="button"
+              onClick={() => {
+                audioEngine.playUiChirp(900);
+                setIsResolvingWithPhoto(false);
+                handleStopCamera();
+              }}
+              className="text-[13px] font-bold text-[#007dfc] hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1.5 cursor-pointer transition-colors group mb-3"
+            >
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+              <span>Back to Work Order</span>
+            </button>
+            <h1 className="text-2xl sm:text-[28px] font-extrabold text-[#0f172a] dark:text-white tracking-tight leading-tight">
+              Verify Resolution
+            </h1>
+            <p className="text-[13px] sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Add a clear photo showing that the waterlogging is cleared or mostly solved.
+            </p>
+          </div>
+
+          {/* Right: 2-Step Progress Indicator */}
+          <div className="flex items-center gap-2 self-start sm:self-center bg-white/90 dark:bg-[#071324] backdrop-blur-xs px-4 py-2.5 rounded-2xl border border-slate-200/80 dark:border-[#142d54] shadow-2xs">
+            {/* Step 1 */}
+            <div className="flex flex-col items-center">
+              <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-950/80 text-[#007dfc] font-bold text-xs flex items-center justify-center">
+                1
+              </div>
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1 text-center whitespace-nowrap">
+                Verify Details
+              </span>
+            </div>
+
+            {/* Connecting Bar */}
+            <div className="w-12 sm:w-16 h-0.5 bg-blue-200 dark:bg-blue-800 -mt-4 mx-1" />
+
+            {/* Step 2 */}
+            <div className="flex flex-col items-center">
+              <div className="w-7 h-7 rounded-full bg-[#007dfc] text-white font-bold text-xs flex items-center justify-center shadow-xs">
+                2
+              </div>
+              <span className="text-[11px] font-bold text-[#007dfc] mt-1 text-center whitespace-nowrap">
+                Add Photo & Resolve
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* 2-Column Responsive Workspace */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-4">
+          {/* =============================================================== */}
+          {/* LEFT COLUMN (7 Cols): Photo Upload & Guidelines                  */}
+          {/* =============================================================== */}
+          <div className="lg:col-span-7 space-y-4">
+            {/* Card 1: Add Verification Photo */}
+            <div className="bg-white dark:bg-[#071324] rounded-2xl border border-slate-200/90 dark:border-[#142d54] shadow-xs p-6 space-y-5">
+              {/* Header */}
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-[#e8f3fe] dark:bg-blue-950/60 text-[#007dfc] flex items-center justify-center shrink-0">
+                  <Camera className="w-5 h-5 text-[#007dfc]" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight">
+                    Add Verification Photo
+                  </h3>
+                  <p className="text-xs sm:text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    Upload a recent photo from the same location to confirm the issue is resolved.
+                  </p>
+                </div>
+              </div>
+
+              {/* Drag & Drop Area */}
+              {!resolutionPhoto ? (
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => {
+                    setAttemptedWithoutPhoto(false);
+                    audioEngine.playUiChirp(1000);
+                    galleryInputRef.current?.click();
+                  }}
+                  className={`border-2 border-dashed rounded-2xl p-8 sm:p-11 text-center flex flex-col items-center justify-center cursor-pointer transition-all ${
+                    isDragging
+                      ? "border-[#007dfc] bg-blue-50/70 scale-[1.01]"
+                      : attemptedWithoutPhoto
+                      ? "border-amber-400 bg-amber-50/40 ring-2 ring-amber-300/40"
+                      : "border-[#b8ddff] dark:border-[#193b6e] bg-[#f4f9ff] dark:bg-[#040c18] hover:bg-[#edf6ff] dark:hover:bg-[#061224]"
+                  }`}
+                >
+                  <div className="w-16 h-16 rounded-full bg-[#badefd] dark:bg-blue-900/60 flex items-center justify-center text-[#007dfc] mb-3 shadow-inner">
+                    <UploadCloud className="w-8 h-8 text-[#007dfc]" />
+                  </div>
+                  <span className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100">
+                    Drag & drop a photo here
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    or choose an option below
+                  </span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500 mt-3 font-medium">
+                    Supports JPG, PNG • Max size 10 MB
+                  </span>
+                </div>
+              ) : (
+                <div className="relative rounded-2xl overflow-hidden border-2 border-emerald-500/80 bg-slate-50 dark:bg-slate-900/70 shadow-sm p-3.5 flex flex-col sm:flex-row items-center gap-4">
+                  <div className="relative w-full sm:w-44 h-36 rounded-xl overflow-hidden bg-slate-200 shrink-0 border border-slate-200 dark:border-slate-800">
+                    <img
+                      src={resolutionPhoto}
+                      alt="Verification proof"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0 text-left space-y-2 py-1">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-xs font-bold">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Resolution Photo Attached</span>
+                    </div>
+                    <div className="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300 truncate">
+                      {resolutionPhotoName || "verification_photo.jpg"}
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      Photo captured from site. Verified ready for municipal closure.
+                    </p>
+                    <div className="flex items-center gap-3 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResolutionPhoto(null);
+                          setResolutionPhotoName(null);
+                          setAttemptedWithoutPhoto(false);
+                          audioEngine.playUiChirp(850);
+                        }}
+                        className="text-xs text-rose-600 hover:text-rose-700 dark:text-rose-400 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        <span>Remove photo</span>
+                      </button>
+                      <span className="text-slate-300 dark:text-slate-700">•</span>
+                      <button
+                        type="button"
+                        onClick={() => galleryInputRef.current?.click()}
+                        className="text-xs text-[#007dfc] hover:text-blue-700 font-semibold cursor-pointer transition-colors"
+                      >
+                        Replace
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Photo Validation Error Message */}
+              {attemptedWithoutPhoto && (
+                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 flex items-center gap-2 text-xs font-semibold animate-in fade-in">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>
+                    Photo required: Please take or upload a photo showing the waterlogging relief before confirming resolution.
+                  </span>
+                </div>
+              )}
+
+              {/* Take Photo & Gallery Action Buttons */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAttemptedWithoutPhoto(false);
+                    audioEngine.playUiChirp(1100);
+                    handleStartCamera();
+                  }}
+                  className="border border-slate-200/90 dark:border-[#142d54] bg-[#fbfdff] dark:bg-[#040c18] hover:bg-[#f0f7ff] dark:hover:bg-[#0a1c38] rounded-xl p-3.5 flex items-center gap-3.5 cursor-pointer shadow-xs transition-all active:scale-[0.99] text-left group"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-[#e8f3fe] dark:bg-blue-950/60 text-[#007dfc] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <Camera className="w-5 h-5 text-[#007dfc]" />
+                  </div>
+                  <div>
+                    <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white block">
+                      Take Photo
+                    </span>
+                    <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 block mt-0.5">
+                      Use your device camera
+                    </span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAttemptedWithoutPhoto(false);
+                    audioEngine.playUiChirp(1100);
+                    galleryInputRef.current?.click();
+                  }}
+                  className="border border-slate-200/90 dark:border-[#142d54] bg-[#fbfdff] dark:bg-[#040c18] hover:bg-[#f0f7ff] dark:hover:bg-[#0a1c38] rounded-xl p-3.5 flex items-center gap-3.5 cursor-pointer shadow-xs transition-all active:scale-[0.99] text-left group"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-[#e8f3fe] dark:bg-blue-950/60 text-[#007dfc] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <ImageIcon className="w-5 h-5 text-[#007dfc]" />
+                  </div>
+                  <div>
+                    <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white block">
+                      Gallery
+                    </span>
+                    <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 block mt-0.5">
+                      Choose from gallery
+                    </span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Card 2: Photo Guidelines */}
+            <div className="bg-[#f0f7ff] dark:bg-[#040c18] border border-[#d2e7ff] dark:border-[#142d54] rounded-2xl p-4 sm:p-5">
+              <div className="flex items-center gap-2">
+                <Info className="w-4 h-4 text-[#007dfc]" />
+                <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                  Photo Guidelines
+                </h4>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3.5 pt-1">
+                {/* 1. Clear and focused */}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-[#007dfc]">
+                    <Sun className="w-4 h-4 shrink-0 text-[#007dfc]" />
+                    <span className="text-[11.5px] font-bold text-slate-800 dark:text-slate-200 leading-tight">
+                      Clear and focused
+                    </span>
+                  </div>
+                  <span className="text-[10.5px] text-slate-500 dark:text-slate-400 block pl-5.5 leading-tight">
+                    No blurred images
+                  </span>
+                </div>
+
+                {/* 2. Show the same location */}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-[#007dfc]">
+                    <MapPin className="w-4 h-4 shrink-0 text-[#007dfc]" />
+                    <span className="text-[11.5px] font-bold text-slate-800 dark:text-slate-200 leading-tight">
+                      Show the same location
+                    </span>
+                  </div>
+                  <span className="text-[10.5px] text-slate-500 dark:text-slate-400 block pl-5.5 leading-tight">
+                    Capture from the same spot
+                  </span>
+                </div>
+
+                {/* 3. Show road/drain area */}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-[#007dfc]">
+                    <svg className="w-4 h-4 shrink-0 text-[#007dfc]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 19L9 5" />
+                      <path d="M20 19L15 5" />
+                      <path d="M12 7v2" />
+                      <path d="M12 13v2" />
+                      <path d="M12 19v2" />
+                    </svg>
+                    <span className="text-[11.5px] font-bold text-slate-800 dark:text-slate-200 leading-tight">
+                      Show road/drain area
+                    </span>
+                  </div>
+                  <span className="text-[10.5px] text-slate-500 dark:text-slate-400 block pl-5.5 leading-tight">
+                    Include surrounding view
+                  </span>
+                </div>
+
+                {/* 4. Recent photo */}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-[#007dfc]">
+                    <Clock className="w-4 h-4 shrink-0 text-[#007dfc]" />
+                    <span className="text-[11.5px] font-bold text-slate-800 dark:text-slate-200 leading-tight">
+                      Recent photo
+                    </span>
+                  </div>
+                  <span className="text-[10.5px] text-slate-500 dark:text-slate-400 block pl-5.5 leading-tight">
+                    Take a current photo
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* =============================================================== */}
+          {/* RIGHT COLUMN (5 Cols): Work Order Details & Remarks & Actions    */}
+          {/* =============================================================== */}
+          <div className="lg:col-span-5 space-y-4">
+            {/* Card 3: Work Order Details */}
+            <div className="bg-white dark:bg-[#071324] rounded-2xl border border-slate-200/90 dark:border-[#142d54] shadow-xs p-5 sm:p-6 space-y-4">
+              {/* Header */}
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/80 gap-2">
+                <div className="flex items-center gap-2.5">
+                  <FileText className="w-5 h-5 text-[#007dfc]" />
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight">
+                    Work Order Details
+                  </h3>
+                </div>
+
+                <div className="bg-[#eafaf1] dark:bg-emerald-950/60 text-[#12a150] dark:text-emerald-400 border border-[#bbf0cf] dark:border-emerald-800 text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 shrink-0">
+                  <span className="w-2 h-2 rounded-full bg-[#12a150]" />
+                  <span>Verification in Progress</span>
+                </div>
+              </div>
+
+              {/* Rows */}
+              <div className="space-y-3.5 text-xs">
+                {/* 1. Work Order ID */}
+                <div className="flex items-center">
+                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 w-32 shrink-0">
+                    <Building2 className="w-4 h-4 text-[#007dfc]" />
+                    <span className="font-medium">Work Order ID</span>
+                  </div>
+                  <span className="font-mono font-bold text-[#007dfc] text-sm sm:text-base">
+                    {activeTicket.id || activeTicket.work_id || "WO-BE-177"}
+                  </span>
+                </div>
+
+                {/* 2. Location */}
+                <div className="flex items-start">
+                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 w-32 shrink-0 pt-0.5">
+                    <MapPin className="w-4 h-4 text-[#007dfc]" />
+                    <span className="font-medium">Location</span>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
+                      <MapPin className="w-3.5 h-3.5 text-[#007dfc] shrink-0" />
+                      <span>{activeTicket.location || "Behala Chowrata, Ward 128"}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-400 dark:text-slate-500 pl-5 mt-0.5">
+                      {activeTicket.borough ? `${activeTicket.borough}, West Bengal` : "Kolkata, West Bengal"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Issue Type */}
+                <div className="flex items-center">
+                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 w-32 shrink-0">
+                    <Droplets className="w-4 h-4 text-[#007dfc]" />
+                    <span className="font-medium">Issue Type</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
+                    <Droplets className="w-3.5 h-3.5 text-[#007dfc] shrink-0" />
+                    <span>{activeTicket.issueType || "Waterlogging"}</span>
+                  </div>
+                </div>
+
+                {/* 4. Assigned To */}
+                <div className="flex items-center">
+                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 w-32 shrink-0">
+                    <Users className="w-4 h-4 text-[#007dfc]" />
+                    <span className="font-medium">Assigned To</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
+                    <Users className="w-3.5 h-3.5 text-[#007dfc] shrink-0" />
+                    <span>
+                      {activeTicket.team_head_name
+                        ? `Supervisor: ${activeTicket.team_head_name}`
+                        : (activeTicket.assignedCrew || activeTicket.assigned_crew || "Behala Drainage Team")}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 5. Current Status */}
+                <div className="flex items-center">
+                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 w-32 shrink-0">
+                    <MapPin className="w-4 h-4 text-[#007dfc]" />
+                    <span className="font-medium">Current Status</span>
+                  </div>
+                  <div className="bg-[#eafaf1] dark:bg-emerald-950/60 text-[#12a150] dark:text-emerald-400 border border-[#bbf0cf] dark:border-emerald-800 text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#12a150]" />
+                    <span>Verification in Progress</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: Resolution Remarks (Optional) */}
+            <div className="bg-white dark:bg-[#071324] rounded-2xl border border-slate-200/90 dark:border-[#142d54] shadow-xs p-5 sm:p-6 space-y-3">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-[#007dfc]" />
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight">
+                    Resolution Remarks (Optional)
+                  </h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    Add any remarks about the resolution work done.
+                  </p>
+                </div>
+              </div>
+
+              <textarea
+                value={resolutionRemarks}
+                onChange={(e) => setResolutionRemarks(e.target.value.slice(0, 500))}
+                rows={4}
+                placeholder="e.g. Water pumped out, drain grate cleared, road accessible now, etc."
+                className="w-full p-3 rounded-xl border border-slate-200 dark:border-[#142d54] bg-white dark:bg-[#040c18] text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#007dfc]/30 focus:border-[#007dfc] resize-none"
+              />
+              <div className="text-right text-[11px] text-slate-400 font-medium">
+                {resolutionRemarks.length} / 500
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  audioEngine.playUiChirp(900);
+                  setIsResolvingWithPhoto(false);
+                  handleStopCamera();
+                }}
+                className="flex-1 py-3 px-4 rounded-xl border border-slate-200 dark:border-[#142d54] bg-white dark:bg-[#040c18] hover:bg-slate-50 dark:hover:bg-[#0a1c38] text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all active:scale-[0.99]"
+              >
+                <X className="w-4 h-4 text-[#007dfc]" />
+                <span>Save as Draft</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmResolution}
+                className="flex-[1.5] py-3 px-4 rounded-xl bg-[#007dfc] hover:bg-[#006ee0] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_16px_rgba(0,125,252,0.35)] transition-all active:scale-[0.99]"
+              >
+                <Check className="w-4 h-4 text-white" />
+                <span>Confirm & Mark as Resolved</span>
+                <ArrowRight className="w-4 h-4 text-white" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Live Camera Stream Modal */}
+        {isCameraOpen && (
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center p-4">
+            <div className="relative w-full max-w-md bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-700">
+              <div className="p-3 bg-slate-950 flex items-center justify-between text-white">
+                <span className="text-xs font-bold">Field Camera Proof</span>
+                <button
+                  type="button"
+                  onClick={handleStopCamera}
+                  className="p-1 rounded-full text-slate-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="relative aspect-4/3 bg-black flex items-center justify-center overflow-hidden">
+                {isCameraStarting ? (
+                  <div className="flex flex-col items-center gap-2 text-white">
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
+                    <span className="text-xs">Initializing camera...</span>
+                  </div>
+                ) : (
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+              <div className="p-4 bg-slate-950 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleStopCamera();
+                    cameraInputRef.current?.click();
+                  }}
+                  className="text-xs text-slate-400 hover:text-white"
+                >
+                  Native Camera
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCaptureFromVideo}
+                  disabled={isCameraStarting}
+                  className="w-14 h-14 rounded-full bg-white border-4 border-blue-500 shadow-lg flex items-center justify-center text-slate-900 active:scale-95 transition-transform cursor-pointer"
+                >
+                  <Camera className="w-6 h-6 text-blue-600" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleStopCamera}
+                  className="text-xs text-slate-400 hover:text-white"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Hidden inputs for camera capture & gallery file picker */}
+        <input
+          ref={galleryInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleGalleryUpload}
+        />
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleCameraUpload}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full font-sans text-slate-100 pb-20 space-y-5">
       {/* ========================================================================= */}
@@ -152,13 +849,23 @@ export function ActionsView() {
 
             return (
               <div key={stage.name} className="flex items-center flex-1 min-w-0">
-                <button
-                  type="button"
+                <div
                   onClick={() => {
-                    audioEngine.playUiChirp(800 + idx * 100);
-                    setCurrentStage(idx);
+                    if (isSupervisor && idx === 3 && currentStage < 3) {
+                      audioEngine.playUiChirp(1050);
+                      setIsResolvingWithPhoto(true);
+                    }
                   }}
-                  className="flex items-center gap-3.5 text-left transition-all cursor-pointer group flex-1 min-w-0"
+                  className={`flex items-center gap-3.5 text-left flex-1 min-w-0 select-none ${
+                    isSupervisor && idx === 3 && currentStage < 3
+                      ? "cursor-pointer hover:opacity-90 transition-opacity"
+                      : ""
+                  }`}
+                  title={
+                    isSupervisor && idx === 3 && currentStage < 3
+                      ? "Click to open image verification and mark as resolved"
+                      : undefined
+                  }
                 >
                   {/* Step Number Circle */}
                   <div
@@ -185,7 +892,7 @@ export function ActionsView() {
                       {stage.desc}
                     </div>
                   </div>
-                </button>
+                </div>
 
                 {/* Connecting Arrow between steps */}
                 {idx < STAGES.length - 1 && (
@@ -215,9 +922,9 @@ export function ActionsView() {
       {/* ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* ======================================================================= */}
-        {/* LEFT: MAIN WORK ORDER CARD (8 Cols)                                     */}
+        {/* LEFT: MAIN WORK ORDER CARD (Full width if supervisor, else 8 Cols)       */}
         {/* ======================================================================= */}
-        <div className="lg:col-span-8 space-y-5">
+        <div className={`${isSupervisor ? "lg:col-span-12" : "lg:col-span-8"} space-y-5`}>
           {activeTicket ? (
             <div className="rounded-2xl bg-[#0b1322] border border-[#162338] shadow-2xl p-6 sm:p-7 space-y-5">
               {/* Top Row: Document Icon + ID + Badges */}
@@ -237,18 +944,30 @@ export function ActionsView() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {activeTicket.team_head_name && (
+                    <span className="text-[10.5px] font-bold px-3 py-0.5 rounded-full bg-[#112d42] text-[#00E5FF] border border-[#00E5FF]/40 uppercase tracking-wide">
+                      Supervisor: {activeTicket.team_head_name}
+                    </span>
+                  )}
+                  {activeTicket.admin_name && (
+                    <span className="hidden sm:inline-block text-[10.5px] font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                      Admin: {activeTicket.admin_name}
+                    </span>
+                  )}
                   <span className="text-[10.5px] font-bold px-3 py-0.5 rounded-full bg-[#2a131e] text-[#f43f5e] border border-[#50182c] uppercase tracking-wide">
                     {activeTicket.priority || "CRITICAL"} PRIORITY
                   </span>
                   <span className="text-[10.5px] font-semibold px-3 py-0.5 rounded-full bg-[#0e213b] text-[#38bdf8] border border-[#1d4ed8]">
                     {activeTicket.status || "Dispatched"}
                   </span>
-                  <button
-                    type="button"
-                    className="w-7 h-7 rounded-md border border-[#1d2f47] bg-[#142236] flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
-                  >
-                    <MoreHorizontal className="w-4 h-4" />
-                  </button>
+                  {isSupervisor && (
+                    <button
+                      type="button"
+                      className="w-7 h-7 rounded-md border border-[#1d2f47] bg-[#142236] flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
+                    >
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -431,28 +1150,35 @@ export function ActionsView() {
 
               {/* Bottom Full-Width Action Buttons */}
               <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
-                {currentStage < 3 ? (
-                  <button
-                    type="button"
-                    onClick={handleAdvanceStage}
-                    className="w-full sm:flex-1 py-3.5 px-6 rounded-xl font-bold text-sm text-white transition-all duration-150 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_24px_rgba(0,125,252,0.4)] hover:shadow-[0_0_32px_rgba(0,125,252,0.55)] bg-[#007dfc] hover:bg-[#006ee0]"
-                  >
-                    <span>
-                      Advance Status: Mark as {STAGES[currentStage + 1].name}
-                    </span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                ) : (
+                {isSupervisor ? (
+                  currentStage < 3 ? (
+                      <button
+                        type="button"
+                        onClick={handleAdvanceStage}
+                        className="w-full sm:flex-1 py-3.5 px-6 rounded-xl font-bold text-sm text-white transition-all duration-150 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_24px_rgba(0,125,252,0.4)] hover:shadow-[0_0_32px_rgba(0,125,252,0.55)] bg-[#007dfc] hover:bg-[#006ee0]"
+                      >
+                        <span>
+                          Advance Status: Mark as {STAGES[currentStage + 1].name}
+                        </span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                  ) : (
+                    <div className="w-full sm:flex-1 py-3.5 px-6 rounded-xl bg-[#0f2d24] text-[#34d399] border border-[#165b45] font-semibold text-sm text-center shadow-xs flex items-center justify-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-[#34d399]" />
+                      <span>Work Order Completed & Surface Relief Confirmed</span>
+                    </div>
+                  )
+                ) : currentStage >= 3 ? (
                   <div className="w-full sm:flex-1 py-3.5 px-6 rounded-xl bg-[#0f2d24] text-[#34d399] border border-[#165b45] font-semibold text-sm text-center shadow-xs flex items-center justify-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-[#34d399]" />
                     <span>Work Order Completed & Surface Relief Confirmed</span>
                   </div>
-                )}
+                ) : null}
 
                 <button
                   type="button"
                   onClick={handleViewIncidentOnMap}
-                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#162338] hover:bg-[#1c2c47] text-slate-200 border border-[#22354f] font-semibold text-sm transition-all active:scale-[0.99] cursor-pointer shadow-xs flex items-center justify-center gap-2 shrink-0"
+                  className={`py-3.5 px-6 rounded-xl bg-[#162338] hover:bg-[#1c2c47] text-slate-200 border border-[#22354f] font-semibold text-sm transition-all active:scale-[0.99] cursor-pointer shadow-xs flex items-center justify-center gap-2 shrink-0 ${!isSupervisor && currentStage < 3 ? "w-full" : "w-full sm:w-auto"}`}
                 >
                   <Layers className="w-4 h-4 text-slate-400" />
                   <span>Inspect on GIS Map</span>
@@ -468,26 +1194,32 @@ export function ActionsView() {
                 No Active Work Orders Dispatched
               </h3>
               <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-                Work orders are generated when field interventions are dispatched from the Simulate workspace. Run a hydraulic simulation to issue a work order.
+                {isSupervisor
+                  ? "Standing by for field intervention dispatches from Central Municipal Command."
+                  : "Work orders are generated when field interventions are dispatched from the Simulate workspace. Run a hydraulic simulation to issue a work order."}
               </p>
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => navigate("/simulate")}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#007dfc] hover:bg-blue-600 transition-colors cursor-pointer shadow-[0_0_15px_rgba(0,125,252,0.35)]"
-                >
-                  <span>Go to Simulate Workspace</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
+              {!isSupervisor && (
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/simulate")}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#007dfc] hover:bg-blue-600 transition-colors cursor-pointer shadow-[0_0_15px_rgba(0,125,252,0.35)]"
+                  >
+                    <span>Go to Simulate Workspace</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* ======================================================================= */}
-        {/* RIGHT: ACTIVE MUNICIPAL FLEET & WORK ORDER QUEUE (4 Cols) */}
+        {/* RIGHT: ACTIVE MUNICIPAL FLEET & WORK ORDER QUEUE (4 Cols)                 */}
+        {/* Hidden for supervisor as requested                                      */}
         {/* ======================================================================= */}
-        <div className="lg:col-span-4 space-y-5">
+        {!isSupervisor && (
+          <div className="lg:col-span-4 space-y-5">
           {/* Card 1: ACTIVE MUNICIPAL FLEET (Commented out)
           <div className="rounded-2xl bg-[#0b1322] border border-[#162338] shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#162338]">
@@ -671,7 +1403,8 @@ export function ActionsView() {
             </div>
           </div>
         </div>
-      </div>
+      )}
+    </div>
 
       {/* ========================================================================= */}
       {/* 4. BOTTOM SECTION: COMMS LOG + REAL-TIME UPDATES                         */}

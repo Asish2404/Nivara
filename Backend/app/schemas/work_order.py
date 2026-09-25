@@ -22,6 +22,11 @@ class WorkOrderCreate(BaseModel):
     reports_number: Optional[int] = 1
     intervention_type: Optional[str] = ""
     status: Optional[str] = "Dispatched"
+    admin_name: Optional[str] = ""
+    team_head_name: Optional[str] = ""
+    original_image: Optional[str] = ""
+    image_url: Optional[str] = ""
+    reason: Optional[str] = ""
 
     class Config:
         populate_by_name = True
@@ -29,6 +34,8 @@ class WorkOrderCreate(BaseModel):
 
 class WorkOrderStatusUpdate(BaseModel):
     status: Optional[str] = None
+    reason: Optional[str] = None
+    image_url: Optional[str] = None
 
 
 class WorkOrderResponse(BaseModel):
@@ -48,6 +55,11 @@ class WorkOrderResponse(BaseModel):
     reports_number: int = 1
     intervention_type: Optional[str] = ""
     status: str = "Dispatched"
+    admin_name: Optional[str] = ""
+    team_head_name: Optional[str] = ""
+    original_image: Optional[str] = ""
+    image_url: Optional[str] = ""
+    reason: Optional[str] = ""
     created_at: Optional[datetime] = None
     dispatched_at: Optional[datetime] = None
     started_at: Optional[datetime] = None

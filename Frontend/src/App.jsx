@@ -20,8 +20,9 @@ import { ActionsView } from "./components/views/ActionsView";
 import { ProfileView } from "./components/views/ProfileView";
 import { AdminDashboardView } from "./components/views/AdminDashboardView";
 import { NotificationsView } from "./components/views/NotificationsView";
+import { SupervisorRiskAreaMap } from "./components/supervisor/SupervisorRiskAreaMap";
 import AIUnleashedAuth from "./components/auth/AIUnleashedAuth";
-import { useKWIStore, isUserAdmin } from "./store/useKWIStore";
+import { useKWIStore, isUserAdmin, isUserSupervisor } from "./store/useKWIStore";
 import "./App.css";
 
 function ResponsiveEarthCamera() {
@@ -296,6 +297,42 @@ function App() {
     // If not signed in, they cannot view any protected pages
     if (!currentUser && currentRoute !== "/") {
       return <AIUnleashedAuth />;
+    }
+
+    // Supervisor role isolation: only Homepage ('/'), Profile ('/profile'), and Respond ('/action-center')
+    if (isUserSupervisor(currentUser)) {
+      if (currentRoute === "/") {
+        return (
+          <SubpageLayout>
+            <SupervisorRiskAreaMap />
+          </SubpageLayout>
+        );
+      }
+      if (currentRoute === "/profile" || currentRoute === "/my-profile") {
+        return (
+          <SubpageLayout>
+            <ProfileView />
+          </SubpageLayout>
+        );
+      }
+      if (
+        currentRoute === "/action-center" ||
+        currentRoute === "/respond" ||
+        currentRoute.startsWith("/action-center")
+      ) {
+        return (
+          <SubpageLayout>
+            <ActionsView />
+          </SubpageLayout>
+        );
+      }
+      if (currentRoute !== "/") {
+        return (
+          <SubpageLayout>
+            <ActionsView />
+          </SubpageLayout>
+        );
+      }
     }
 
     if (

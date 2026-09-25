@@ -572,7 +572,7 @@ export function SimulateView() {
       </div>
 
       {/* ── 1. Hero Section with Header Content & Target Selector ── */}
-      <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-7 pb-12 sm:pt-10 sm:pb-16 font-sans">
+      <div className={`relative ${isDropdownOpen ? "z-40" : "z-20"} max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-7 pb-12 sm:pt-10 sm:pb-16 font-sans`}>
         {/* Ambient Blue/Cyan Glow Sphere behind Header */}
         <div className="absolute -left-10 -top-8 w-80 h-44 bg-gradient-to-br from-blue-500/20 via-cyan-400/15 to-transparent dark:from-[#00E5FF]/20 dark:via-[#38BDF8]/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
@@ -596,7 +596,7 @@ export function SimulateView() {
           </div>
 
           {/* Target Hotspot & Incident Selector with scrollable dropdown */}
-          <div ref={dropdownRef} className="relative shrink-0 z-40 w-full sm:w-auto">
+          <div ref={dropdownRef} className="relative shrink-0 z-50 w-full sm:w-auto">
             <button
               type="button"
               id="hotspot-dropdown-trigger"
@@ -662,9 +662,11 @@ export function SimulateView() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6, scale: 0.98 }}
                   transition={{ duration: 0.16, ease: "easeOut" }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
                   data-lenis-prevent="true"
                   data-lenis-prevent-wheel="true"
-                  className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-[420px] md:w-[460px] max-w-[460px] bg-white dark:bg-[#131d31] border border-slate-200/90 dark:border-slate-700/80 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.14)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden backdrop-blur-xl"
+                  className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-[420px] md:w-[460px] max-w-[460px] bg-white dark:bg-[#131d31] border border-slate-200/90 dark:border-slate-700/80 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.18)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)] z-50 overflow-hidden backdrop-blur-xl"
                 >
                   {/* Header with count & scroll indicator */}
                   <div className="flex items-center justify-between px-3.5 py-2 bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-700/60 text-[11px] font-mono text-slate-500 dark:text-slate-400">
@@ -721,7 +723,11 @@ export function SimulateView() {
                           <button
                             key={inc.id}
                             type="button"
-                            onClick={() => handleSelectIncident(inc.id)}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectIncident(inc.id);
+                            }}
                             className={`w-full text-left px-3.5 py-2 transition-colors flex items-center justify-between gap-3 cursor-pointer select-none ${isSelected
                               ? "bg-blue-500/15 dark:bg-blue-600/20 text-blue-900 dark:text-blue-100"
                               : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-800 dark:text-slate-200"

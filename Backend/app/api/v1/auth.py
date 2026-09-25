@@ -11,6 +11,7 @@ from app.core.security import create_access_token, decode_access_token, verify_p
 from app.core.datetime_utils import get_current_time
 from app.models.user import User
 from app.models.admin import Admin
+from app.models.team_head import TeamHead
 from app.schemas.auth import (
     UserSignupRequest,
     UserLoginRequest,
@@ -29,11 +30,11 @@ from app.services.google_auth_service import GoogleAuthService
 router = APIRouter()
 
 
-# Dependency to get current authenticated user/admin from Bearer token
+# Dependency to get current authenticated user/admin/team_head from Bearer token
 async def get_current_user(
     authorization: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_db),
-) -> Union[User, Admin]:
+) -> Union[User, Admin, TeamHead]:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -48,7 +49,7 @@ async def get_current_user(
             detail="Invalid or expired access token.",
         )
 
-    user_id = payload["sub"]
+    user_id = str(payload["sub"])
 
     # 1. Search in users table
     res_user = await db.execute(select(User).where(User.id == user_id))
@@ -61,6 +62,17 @@ async def get_current_user(
     admin = res_admin.scalars().first()
     if admin:
         return admin
+
+    # 3. Search in team_head table (Supervisors)
+    try:
+        raw_id = user_id.replace("TH-", "")
+        if raw_id.isdigit():
+            res_th = await db.execute(select(TeamHead).where(TeamHead.id == int(raw_id)))
+            th = res_th.scalars().first()
+            if th:
+                return th
+    except Exception:
+        pass
 
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -272,20 +284,32 @@ async def signup(
 ):
     """Register a new account into 'users' or 'admin' table, and returns a signed JWT."""
     portal = (payload.portal or "user").lower().strip()
-    if AuthService.get_canonical_portal_category(portal) == "ADMIN":
+    canon_portal = AuthService.get_canonical_portal_category(portal)
+    if canon_portal in ["ADMIN", "SUPERVISOR"]:
         email_clean = payload.email.lower().strip()
         phone_clean = (payload.phone or "").strip() or None
         if not OtpService.consume_otp(otp=payload.otp, email=email_clean, phone=phone_clean, purpose="signup"):
+            portal_label = "Supervisor" if canon_portal == "SUPERVISOR" else "Admin"
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Admin registration requires verified 2-factor OTP. Please verify the code sent to your phone.",
+                detail=f"{portal_label} registration requires verified 2-factor OTP. Please verify the code sent to your phone.",
             )
 
     entity = await AuthService.register_user(db, payload)
-    entity_portal = "admin" if isinstance(entity, Admin) else "user"
+    entity_role = (getattr(entity, "role", "") or "").lower()
+    if isinstance(entity, TeamHead) or entity_role in ["team_head", "supervisor"]:
+        entity_portal = "supervisor"
+        role_claim = "Supervisor"
+    elif isinstance(entity, Admin):
+        entity_portal = "admin"
+        role_claim = entity.role
+    else:
+        entity_portal = "user"
+        role_claim = entity.role
+
     access_token = create_access_token(
-        subject=entity.id,
-        extra_claims={"email": entity.email, "role": entity.role, "portal": entity_portal},
+        subject=str(entity.id),
+        extra_claims={"email": entity.email, "role": role_claim, "portal": entity_portal},
     )
 
     # Trigger Welcome Email ONLY ONCE upon first successful account creation & verification
@@ -298,7 +322,7 @@ async def signup(
             EmailService.send_welcome_email(
                 to_email=entity.email,
                 user_name=entity.name,
-                role=entity.role,
+                role=role_claim,
             )
         )
 
@@ -319,8 +343,9 @@ async def login(
     payload: UserLoginRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    """Authenticate email & password with role portal validation. If portal is admin, requires OTP verification."""
+    """Authenticate email & password with role portal validation. If portal is admin or supervisor, requires OTP verification."""
     portal = (payload.portal or "user").lower().strip()
+    canon_portal = AuthService.get_canonical_portal_category(portal)
 
     # 1. Authenticate user credentials with strict role-based portal validation
     entity, auth_error = await AuthService.authenticate_user(
@@ -333,10 +358,10 @@ async def login(
             detail=auth_error,
         )
 
-    # 2. If OTP is required or provided (admin portal, or user with OTP), verify & consume OTP
-    if AuthService.get_canonical_portal_category(portal) == "ADMIN" or payload.otp:
+    # 2. If OTP is required or provided (admin/supervisor portal, or user with OTP), verify & consume OTP
+    if canon_portal in ["ADMIN", "SUPERVISOR"] or payload.otp:
         admin_email = getattr(entity, "email", payload.email)
-        admin_phone = getattr(entity, "phone", None) or payload.email
+        admin_phone = getattr(entity, "phone", getattr(entity, "ph_no", None)) or payload.email
         if not OtpService.consume_otp(
             otp=payload.otp,
             email=admin_email,
@@ -348,10 +373,20 @@ async def login(
                 detail="Security clearance requires verified 2-factor OTP. Please verify the code sent to your email or mobile.",
             )
 
-    entity_portal = "admin" if isinstance(entity, Admin) else "user"
+    entity_role = (getattr(entity, "role", "") or "").lower()
+    if isinstance(entity, TeamHead) or entity_role in ["team_head", "supervisor"]:
+        entity_portal = "supervisor"
+        role_claim = "Supervisor"
+    elif isinstance(entity, Admin):
+        entity_portal = "admin"
+        role_claim = entity.role
+    else:
+        entity_portal = "user"
+        role_claim = entity.role
+
     access_token = create_access_token(
-        subject=entity.id,
-        extra_claims={"email": entity.email, "role": entity.role, "portal": entity_portal},
+        subject=str(entity.id),
+        extra_claims={"email": entity.email, "role": role_claim, "portal": entity_portal},
     )
 
     from app.services.email_service import EmailService
@@ -501,7 +536,7 @@ async def google_login(
     summary="Logout user and set status to not active",
 )
 async def logout(
-    current_user: Union[User, Admin] = Depends(get_current_user),
+    current_user: Union[User, Admin, TeamHead] = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Marks user/admin status as 'not active' upon logout."""
@@ -514,7 +549,7 @@ async def logout(
     response_model=UserResponse,
     summary="Get profile of currently logged-in user or admin",
 )
-async def get_my_profile(current_user: Union[User, Admin] = Depends(get_current_user)):
+async def get_my_profile(current_user: Union[User, Admin, TeamHead] = Depends(get_current_user)):
     """Protected endpoint: Reads token from Authorization header and returns profile."""
     return AuthService.to_user_response(current_user)
 
@@ -526,7 +561,7 @@ async def get_my_profile(current_user: Union[User, Admin] = Depends(get_current_
 )
 async def update_my_profile(
     payload: UserUpdateRequest,
-    current_user: Union[User, Admin] = Depends(get_current_user),
+    current_user: Union[User, Admin, TeamHead] = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Update profile fields (name, department, phone, location)."""

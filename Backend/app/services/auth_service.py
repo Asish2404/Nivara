@@ -8,6 +8,7 @@ from fastapi import HTTPException, status
 
 from app.models.user import User
 from app.models.admin import Admin
+from app.models.team_head import TeamHead
 from app.schemas.auth import UserSignupRequest, UserResponse
 from app.core.security import hash_password, verify_password
 from app.core.datetime_utils import get_current_time, ensure_kolkata_tz
@@ -27,6 +28,19 @@ DEFAULT_PERSONAS = [
         "clearance": "Admin Clearance",
         "phone": "+91 98300 12345",
         "location": "Salt Lake, Kolkata",
+    },
+    {
+        "id": "USR-SUP-002",
+        "portal": "supervisor",
+        "email": "supervisor@kolkata-water.gov.in",
+        "password": "Supervisor@2026",
+        "name": "Rajesh Banerjee",
+        "role": "team_head",
+        "department": "KMC Field Operations & Ward Supervision",
+        "badge_id": "KMC-TH-0001",
+        "clearance": "Supervisor Clearance",
+        "phone": "+91 98302 98765",
+        "location": "Borough V, Kolkata",
     },
     {
         "id": "USR-CIT-003",
@@ -66,41 +80,88 @@ class AuthService:
         return "KW"
 
     @classmethod
-    def to_user_response(cls, entity: Union[User, Admin]) -> UserResponse:
-        """Convert a User or Admin DB model into a frontend-compatible UserResponse schema."""
+    def to_user_response(cls, entity: Union[User, Admin, TeamHead]) -> UserResponse:
+        """Convert a User, Admin, or TeamHead DB model into a frontend-compatible UserResponse schema."""
         initials = cls.get_initials(entity.name)
+        role_clean = (getattr(entity, "role", "") or "").lower()
+        is_team_head = isinstance(entity, TeamHead) or role_clean in ["team_head", "supervisor"]
         is_admin = isinstance(entity, Admin) or hasattr(entity, "badge_id")
+
+        if is_team_head:
+            portal_val = "supervisor"
+            avatar_val = "👷"
+            default_dept = "KMC Field Operations & Ward Supervision"
+            badge_id_val = getattr(entity, "badge_id", f"KMC-TH-{getattr(entity, 'id', 1):04d}")
+            phone_val = getattr(entity, "phone", getattr(entity, "ph_no", None))
+            clearance_val = getattr(entity, "clearance", "Supervisor Clearance")
+            status_val = entity.status or "not occupied"
+            role_val = "Supervisor"
+            entity_id = f"TH-{entity.id}"
+        elif is_admin:
+            portal_val = "admin"
+            avatar_val = "👨‍✈️"
+            default_dept = "KMC Water & Drainage Administration"
+            badge_id_val = getattr(entity, "badge_id", "")
+            phone_val = getattr(entity, "phone", None)
+            clearance_val = entity.clearance
+            status_val = entity.status or "not active"
+            role_val = entity.role
+            entity_id = str(entity.id)
+        else:
+            portal_val = "user"
+            avatar_val = "🌊"
+            default_dept = "Kolkata Citizen Water Watch"
+            badge_id_val = ""
+            phone_val = getattr(entity, "phone", None)
+            clearance_val = entity.clearance
+            status_val = entity.status or "not active"
+            role_val = entity.role
+            entity_id = str(entity.id)
+
         return UserResponse(
-            id=entity.id,
+            id=entity_id,
             email=entity.email,
             name=entity.name,
             full_name=entity.name,
-            role=entity.role,
-            department=getattr(entity, "department", "Kolkata Citizen Water Watch"),
-            badgeId=getattr(entity, "badge_id", ""),
-            badge_id=getattr(entity, "badge_id", ""),
-            clearance=entity.clearance,
-            avatar="👨‍✈️" if is_admin else "🌊",
+            role=role_val,
+            department=getattr(entity, "department", default_dept),
+            badgeId=badge_id_val,
+            badge_id=badge_id_val,
+            clearance=clearance_val,
+            avatar=avatar_val,
             initials=initials,
             wardAccess="All Boroughs (I - XVI)",
             ward_access="All Boroughs (I - XVI)",
             avatar_url=None,
-            phone=entity.phone,
-            location=entity.location,
+            phone=phone_val,
+            location=getattr(entity, "location", "Kolkata, West Bengal"),
             bio=None,
-            status=entity.status or "not active",
-            portal="admin" if is_admin else "user",
+            status=status_val,
+            portal=portal_val,
             created_at=ensure_kolkata_tz(entity.created_at),
         )
 
     @classmethod
     async def seed_default_users(cls, db: AsyncSession) -> None:
-        """Ensure the official demo personas exist in users and admin tables."""
+        """Ensure the official and supervisor demo personas exist in team_head, users, and admin tables."""
         for persona in DEFAULT_PERSONAS:
             email_clean = persona["email"].lower().strip()
             portal = persona.get("portal", "user")
 
-            if portal == "admin":
+            if portal == "supervisor":
+                res = await db.execute(select(TeamHead).where(TeamHead.email == email_clean))
+                if not res.scalars().first():
+                    db_th = TeamHead(
+                        name=persona["name"],
+                        email=email_clean,
+                        hash_password=hash_password(persona["password"]),
+                        ph_no=persona.get("phone", "+91 98302 98765"),
+                        role="team_head",
+                        status="not occupied",
+                        created_at=get_current_time(),
+                    )
+                    db.add(db_th)
+            elif portal == "admin":
                 res = await db.execute(select(Admin).where(Admin.email == email_clean))
                 if not res.scalars().first():
                     db_admin = Admin(
@@ -139,7 +200,7 @@ class AuthService:
 
     @classmethod
     async def register_user(cls, db: AsyncSession, data: UserSignupRequest) -> Union[User, Admin]:
-        """Register account into 'users' or 'admin' table based on selected portal ('user' or 'admin')."""
+        """Register account into 'users' or 'admin' table based on selected portal ('user', 'admin', 'supervisor')."""
         email_clean = data.email.lower().strip()
         portal = (data.portal or "user").lower().strip()
         phone = (data.phone or "").strip() or None
@@ -180,6 +241,44 @@ class AuthService:
             await db.refresh(new_admin)
             return new_admin
 
+        elif portal in ["supervisor"]:
+            # Check if supervisor email already exists in TeamHead, Admin, or User
+            res_th = await db.execute(select(TeamHead).where(TeamHead.email == email_clean))
+            if res_th.scalars().first():
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="A supervisor account with this email address already exists in team_head.",
+                )
+            res_adm = await db.execute(select(Admin).where(Admin.email == email_clean))
+            if res_adm.scalars().first():
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="An account with this email address already exists as an administrator.",
+                )
+            res_usr = await db.execute(select(User).where(User.email == email_clean))
+            if res_usr.scalars().first():
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="An account with this email address already exists as a citizen.",
+                )
+
+            name = (data.fullName or "").strip() or "Supervisor"
+            phone_val = phone or "+91 98302 98765"
+
+            new_team_head = TeamHead(
+                name=name,
+                email=email_clean,
+                hash_password=hash_password(data.password),
+                ph_no=phone_val,
+                role="team_head",
+                status="not occupied",
+                created_at=get_current_time(),
+            )
+            db.add(new_team_head)
+            await db.commit()
+            await db.refresh(new_team_head)
+            return new_team_head
+
         else:
             # Check if user email already exists
             result = await db.execute(select(User).where(User.email == email_clean))
@@ -214,10 +313,12 @@ class AuthService:
     @staticmethod
     def get_canonical_role_category(role_str: str) -> str:
         """
-        Normalizes a role string into one of two canonical categories:
-        'USER' or 'ADMIN'.
+        Normalizes a role string into one of three canonical categories:
+        'USER', 'ADMIN', or 'SUPERVISOR'.
         """
         r = (role_str or "").strip().lower().replace("-", " ").replace("_", " ")
+        if "supervisor" in r or "team_head" in r or "team head" in r or "head" in r:
+            return "SUPERVISOR"
         if any(k in r for k in ["admin", "super", "officer", "engineer", "directorate", "command"]):
             return "ADMIN"
         return "USER"
@@ -225,10 +326,12 @@ class AuthService:
     @staticmethod
     def get_canonical_portal_category(portal_str: str) -> str:
         """
-        Normalizes a portal string into one of two canonical categories:
-        'USER' or 'ADMIN'.
+        Normalizes a portal string into one of three canonical categories:
+        'USER', 'ADMIN', or 'SUPERVISOR'.
         """
         p = (portal_str or "user").strip().lower().replace("-", " ").replace("_", " ")
+        if "supervisor" in p:
+            return "SUPERVISOR"
         if any(k in p for k in ["admin", "super", "officer"]):
             return "ADMIN"
         return "USER"
@@ -237,35 +340,48 @@ class AuthService:
     def validate_role_for_portal(cls, account_role: str, requested_portal: str) -> tuple[bool, str]:
         """
         Validates that the account's registered role matches the requested login portal.
-        Only two portals exist: 'user' and 'admin'.
+        Supported portals: 'user', 'admin', 'supervisor'.
         Returns (is_valid, error_message).
         """
         canon_role = cls.get_canonical_role_category(account_role)
         canon_portal = cls.get_canonical_portal_category(requested_portal)
 
-        # If portal is user, only USER role is permitted
         if canon_portal == "USER":
             if canon_role == "USER":
                 return True, ""
-            return False, "This account is registered as an Administrator. Please use the Admin Login portal."
+            return False, f"This account is registered as a {account_role}. Please use the corresponding {account_role} Login portal."
 
-        # If portal is admin, only ADMIN role is permitted
         if canon_portal == "ADMIN":
             if canon_role == "ADMIN":
                 return True, ""
-            return False, "This account is registered as a User. Please use the User Login portal."
+            return False, f"This account is registered as a {account_role}. Please use the corresponding {account_role} Login portal."
+
+        if canon_portal == "SUPERVISOR":
+            if canon_role == "SUPERVISOR":
+                return True, ""
+            return False, f"This account is registered as a {account_role}. Please use the corresponding {account_role} Login portal."
 
         return True, ""
 
     @classmethod
     async def find_account_by_identifier(
         cls, db: AsyncSession, identifier: str
-    ) -> Optional[Union[User, Admin]]:
-        """Finds account across admin and users table by email or phone."""
+    ) -> Optional[Union[User, Admin, TeamHead]]:
+        """Finds account across team_head, admin, and users table by email or phone."""
         clean = (identifier or "").lower().strip()
         raw_digits = re.sub(r"\D", "", identifier or "")
 
-        # Check Admin table
+        # 1. Check TeamHead table (Supervisors)
+        th_conds = [TeamHead.email == clean]
+        if len(raw_digits) >= 7:
+            th_conds.append(TeamHead.ph_no == identifier.strip())
+            th_conds.append(TeamHead.ph_no.like(f"%{raw_digits[-10:]}"))
+        res_th = await db.execute(select(TeamHead).where(or_(*th_conds)))
+        th = res_th.scalars().first()
+        if th:
+            return th
+
+        # 2. Check Admin table
         admin_conds = [Admin.email == clean]
         if len(raw_digits) >= 7:
             admin_conds.append(Admin.phone == identifier.strip())
@@ -275,7 +391,7 @@ class AuthService:
         if adm:
             return adm
 
-        # Check Users table
+        # 3. Check Users table
         user_conds = [User.email == clean]
         if len(raw_digits) >= 7:
             user_conds.append(User.phone == identifier.strip())
@@ -287,7 +403,7 @@ class AuthService:
     @classmethod
     async def authenticate_user(
         cls, db: AsyncSession, email: str, password: str, portal: str = "user"
-    ) -> tuple[Optional[Union[User, Admin]], str]:
+    ) -> tuple[Optional[Union[User, Admin, TeamHead]], str]:
         """
         Authenticate user credentials against target table with strict role-based portal validation.
         Returns (entity, error_detail).
@@ -301,26 +417,37 @@ class AuthService:
         if not is_valid_role:
             return None, role_error
 
-        if not verify_password(password, entity.hashed_password):
+        pwd_hash = getattr(entity, "hash_password", getattr(entity, "hashed_password", ""))
+        if not verify_password(password, pwd_hash):
             return None, "Invalid email/phone or password."
 
-        # Successfully authenticated -> update status to 'active'
-        entity.status = "active"
-        await db.commit()
-        await db.refresh(entity)
+        # Successfully authenticated -> update status to 'active' if not constrained
+        if not isinstance(entity, TeamHead):
+            entity.status = "active"
+            await db.commit()
+            await db.refresh(entity)
         return entity, ""
 
     @classmethod
     async def logout_user(cls, db: AsyncSession, user_id: str) -> None:
         """Set user or admin status to 'not active' upon logout."""
-        res_user = await db.execute(select(User).where(User.id == user_id))
+        user_id_str = str(user_id)
+        if user_id_str.startswith("TH-") or user_id_str.isdigit():
+            raw_id = user_id_str.replace("TH-", "")
+            if raw_id.isdigit():
+                res_th = await db.execute(select(TeamHead).where(TeamHead.id == int(raw_id)))
+                th = res_th.scalars().first()
+                if th:
+                    return
+
+        res_user = await db.execute(select(User).where(User.id == user_id_str))
         user = res_user.scalars().first()
         if user:
             user.status = "not active"
             await db.commit()
             return
 
-        res_admin = await db.execute(select(Admin).where(Admin.id == user_id))
+        res_admin = await db.execute(select(Admin).where(Admin.id == user_id_str))
         admin = res_admin.scalars().first()
         if admin:
             admin.status = "not active"

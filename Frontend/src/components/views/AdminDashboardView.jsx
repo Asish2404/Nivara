@@ -793,6 +793,7 @@ export function AdminDashboardView() {
     // 1. Process items from `work_orders` table
     const rawOrders = Array.isArray(workOrders) ? workOrders : Object.values(workOrders || {});
     rawOrders.forEach((wo) => {
+      if (String(wo.status || "").toLowerCase() === "resolved") return;
       const id = wo.work_id || wo.id || (wo.incidentId || wo.incident_id ? `WO-${String(wo.incidentId || wo.incident_id).replace(/^#/, "")}` : null);
       if (!id || seenIds.has(id)) return;
       seenIds.add(id);

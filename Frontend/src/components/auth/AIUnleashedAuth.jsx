@@ -13,6 +13,7 @@ import {
   Loader2,
   Sparkles,
   User,
+  UserCheck,
   Crown,
   Droplets,
   BarChart3,
@@ -707,14 +708,18 @@ export default function AIUnleashedAuth() {
       return;
     }
 
-    // Admin validation
+    // Admin and Supervisor validation
     if (activeTab === "create") {
       if (!fullName.trim()) {
         setAuthError("Please enter your full name.");
         return;
       }
       if (!email.trim() || !email.includes("@")) {
-        setAuthError("Please enter your official email address.");
+        setAuthError(
+          selectedPortal === "supervisor"
+            ? "Please enter your supervisor email address."
+            : "Please enter your official email address.",
+        );
         return;
       }
       if (!password || password.length < 3) {
@@ -730,7 +735,9 @@ export default function AIUnleashedAuth() {
     } else {
       if (!email.trim() && !phoneNumber.trim()) {
         setAuthError(
-          "Please enter your official email or registered mobile number.",
+          selectedPortal === "supervisor"
+            ? "Please enter your supervisor email or registered mobile number."
+            : "Please enter your official email or registered mobile number.",
         );
         return;
       }
@@ -820,7 +827,11 @@ export default function AIUnleashedAuth() {
         .split(" ")
         .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
         .join(" ") ||
-      (selectedPortal === "admin" ? "Admin" : "User");
+      (selectedPortal === "admin"
+        ? "Admin"
+        : selectedPortal === "supervisor"
+          ? "Supervisor"
+          : "User");
 
     try {
       // Single OTP verification & authentication step (No duplicate calls)
@@ -861,7 +872,9 @@ export default function AIUnleashedAuth() {
         setSuccessMessage(
           selectedPortal === "admin"
             ? "Administrative clearance verified and account created! Please sign in with your credentials."
-            : "Account created successfully! Please sign in with your credentials.",
+            : selectedPortal === "supervisor"
+              ? "Supervisor clearance verified and account created! Please sign in with your credentials."
+              : "Account created successfully! Please sign in with your credentials.",
         );
       }
     } catch (err) {
@@ -882,30 +895,59 @@ export default function AIUnleashedAuth() {
           setSuccessMessage(
             selectedPortal === "admin"
               ? "Administrative clearance verified (offline simulation)! Please sign in with your credentials."
-              : "Account created successfully (offline simulation)! Please sign in with your credentials.",
+              : selectedPortal === "supervisor"
+                ? "Supervisor clearance verified (offline simulation)! Please sign in with your credentials."
+                : "Account created successfully (offline simulation)! Please sign in with your credentials.",
           );
           return;
         }
 
         const mockResult = {
-          access_token: "offline-admin-token-" + Date.now(),
+          access_token: "offline-token-" + Date.now(),
           user: {
-            id: selectedPortal === "admin" ? "ADM-LOCAL-01" : "USR-LOCAL-01",
+            id:
+              selectedPortal === "admin"
+                ? "ADM-LOCAL-01"
+                : selectedPortal === "supervisor"
+                  ? "SUP-LOCAL-01"
+                  : "USR-LOCAL-01",
             name:
               derivedName ||
-              (selectedPortal === "admin" ? "Administrator" : "User"),
+              (selectedPortal === "admin"
+                ? "Administrator"
+                : selectedPortal === "supervisor"
+                  ? "Field Supervisor"
+                  : "User"),
             email:
               email ||
               (selectedPortal === "admin"
                 ? "admin@kolkata-water.gov.in"
-                : "user@kolkata-water.gov.in"),
-            phone: phoneNumber.trim() || "+91 98300 12345",
-            role: selectedPortal === "admin" ? "Admin" : "User",
-            badgeId: selectedPortal === "admin" ? "KWI-ADMIN-01" : "",
+                : selectedPortal === "supervisor"
+                  ? "supervisor@kolkata-water.gov.in"
+                  : "user@kolkata-water.gov.in"),
+            phone:
+              phoneNumber.trim() ||
+              (selectedPortal === "supervisor"
+                ? "+91 98302 98765"
+                : "+91 98300 12345"),
+            role:
+              selectedPortal === "admin"
+                ? "Admin"
+                : selectedPortal === "supervisor"
+                  ? "Supervisor"
+                  : "User",
+            badgeId:
+              selectedPortal === "admin"
+                ? "KWI-ADMIN-01"
+                : selectedPortal === "supervisor"
+                  ? "KWI-SUP-01"
+                  : "",
             department:
               selectedPortal === "admin"
                 ? "KMC Water & Drainage Administration"
-                : "Citizen Water Watch",
+                : selectedPortal === "supervisor"
+                  ? "KMC Field Operations & Ward Supervision"
+                  : "Citizen Water Watch",
             portal: selectedPortal,
             status: "active",
           },
@@ -1100,8 +1142,10 @@ export default function AIUnleashedAuth() {
                       </span>
                       <span className="text-[9.5px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/35 text-amber-300">
                         {selectedPortal === "admin"
-                          ? "OFFICIAL LOGIN"
-                          : "CITIZEN LOGIN"}
+                          ? (activeTab === "create" ? "OFFICIAL SIGNUP" : "OFFICIAL LOGIN")
+                          : selectedPortal === "supervisor"
+                            ? (activeTab === "create" ? "SUPERVISOR SIGNUP" : "SUPERVISOR LOGIN")
+                            : (activeTab === "create" ? "CITIZEN SIGNUP" : "CITIZEN LOGIN")}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-1.5">
@@ -1149,7 +1193,9 @@ export default function AIUnleashedAuth() {
                       <span className="text-[11px] font-semibold tracking-wider uppercase text-cyan-400/90 bg-cyan-950/60 border border-cyan-500/20 px-2.5 py-0.5 rounded-full">
                         {selectedPortal === "admin"
                           ? "Admin Clearance"
-                          : "User Verification"}
+                          : selectedPortal === "supervisor"
+                            ? "Supervisor Clearance"
+                            : "User Verification"}
                       </span>
                     </div>
 
@@ -1400,15 +1446,15 @@ export default function AIUnleashedAuth() {
                     </div>
 
                     {/* PORTAL TIER Row */}
-                    <div className="flex items-center justify-between mb-3 px-0.5">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.14em]">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 mb-3 px-0.5">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.14em] shrink-0">
                         PORTAL TIER
                       </span>
-                      <div className="bg-[#050c18]/90 dark:bg-[#0B2430] border border-white/10 dark:border-[rgba(94,183,201,0.16)] rounded-full p-0.5 flex gap-1">
+                      <div className="bg-[#050c18]/90 dark:bg-[#0B2430] border border-white/10 dark:border-[rgba(94,183,201,0.16)] rounded-full p-0.5 flex gap-1 items-center overflow-x-auto no-scrollbar">
                         <button
                           type="button"
                           onClick={() => handlePortalSelect("user")}
-                          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${selectedPortal === "user"
+                          className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer shrink-0 ${selectedPortal === "user"
                               ? "bg-white text-slate-950 shadow-sm"
                               : "text-slate-400 hover:text-white"
                             }`}
@@ -1419,13 +1465,24 @@ export default function AIUnleashedAuth() {
                         <button
                           type="button"
                           onClick={() => handlePortalSelect("admin")}
-                          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${selectedPortal === "admin"
+                          className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer shrink-0 ${selectedPortal === "admin"
                               ? "bg-white text-slate-950 shadow-sm"
                               : "text-slate-400 hover:text-white"
                             }`}
                         >
                           <Shield className="w-3 h-3" />
                           <span>Official</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handlePortalSelect("supervisor")}
+                          className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer shrink-0 ${selectedPortal === "supervisor"
+                              ? "bg-white text-slate-950 shadow-sm"
+                              : "text-slate-400 hover:text-white"
+                            }`}
+                        >
+                          <UserCheck className="w-3 h-3" />
+                          <span>Supervisor</span>
                         </button>
                       </div>
                     </div>
@@ -1526,7 +1583,9 @@ export default function AIUnleashedAuth() {
                                 placeholder={
                                   selectedPortal === "admin"
                                     ? "Administrator"
-                                    : "Sourav Roy"
+                                    : selectedPortal === "supervisor"
+                                      ? "Field Supervisor"
+                                      : "Sourav Roy"
                                 }
                                 required={activeTab === "create"}
                                 className="w-full bg-transparent border-none text-white text-[13.5px] placeholder-slate-500 outline-none"
@@ -1536,11 +1595,15 @@ export default function AIUnleashedAuth() {
                         )}
                       </AnimatePresence>
 
-                      {/* Official Email or Badge ID */}
+                      {/* Official or Supervisor Email or Badge ID */}
                       <div>
                         <label className="block text-[10.5px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                          {selectedPortal === "admin" && activeTab === "signin"
-                            ? "OFFICIAL EMAIL OR BADGE ID"
+                          {activeTab === "signin"
+                            ? selectedPortal === "admin"
+                              ? "OFFICIAL EMAIL OR BADGE ID"
+                              : selectedPortal === "supervisor"
+                                ? "SUPERVISOR EMAIL OR ID"
+                                : "EMAIL ADDRESS"
                             : "EMAIL ADDRESS"}
                         </label>
                         <div className="relative rounded-xl bg-black/40 dark:bg-[#10313E] border border-white/10 dark:border-[rgba(94,183,201,0.16)] focus-within:border-cyan-400/70 focus-within:bg-black/60 dark:focus-within:bg-[#163F4E] transition-all flex items-center px-3.5 py-2.5 gap-2.5">
@@ -1555,7 +1618,9 @@ export default function AIUnleashedAuth() {
                             placeholder={
                               selectedPortal === "admin"
                                 ? "admin@kolkata-water.gov.in"
-                                : "citizen@gmail.com"
+                                : selectedPortal === "supervisor"
+                                  ? "supervisor@kolkata-water.gov.in"
+                                  : "citizen@gmail.com"
                             }
                             required
                             className="w-full bg-transparent border-none text-white text-[13.5px] placeholder-slate-500 outline-none"
@@ -1705,13 +1770,15 @@ export default function AIUnleashedAuth() {
                             <span>
                               {selectedPortal === "admin"
                                 ? "Verifying Municipal Clearance..."
-                                : "Connecting..."}
+                                : selectedPortal === "supervisor"
+                                  ? "Verifying Supervisor Clearance..."
+                                  : "Connecting..."}
                             </span>
                           </div>
                         ) : (
                           <>
                             <span>
-                              {selectedPortal === "admin"
+                              {selectedPortal === "admin" || selectedPortal === "supervisor"
                                 ? "CONTINUE WITH 2FA CLEARANCE"
                                 : activeTab === "signin"
                                   ? "SIGN IN TO NIVARA"

@@ -255,7 +255,7 @@ export function CitizenReportingSection() {
   const locality = reportLocality || "Salt Lake, Sector V";
   const city = reportCity || "Kolkata, West Bengal";
   const coords = reportCoords || { lat: 22.5735, lon: 88.4331, accuracy: 3 };
-  const depth = reportDepth || "15–30 cm";
+  const depth = reportDepth || "16-40cm";
   const localityCode = (
     locality.replace(/[^a-zA-Z]/g, "").slice(0, 2) || "SV"
   ).toUpperCase();
@@ -266,11 +266,13 @@ export function CitizenReportingSection() {
     .padStart(2, "0")}`;
 
   const depthTag =
-    depth === "0–15 cm"
+    depth.includes("1-15") || depth.includes("1–15") || depth === "0–15 cm"
       ? "12 cm ± 1.5 cm"
-      : depth === "30+ cm"
-        ? "38 cm ± 2.5 cm"
-        : "28 cm ± 2.0 cm";
+      : depth.includes("51-70") || depth.includes("51–70")
+        ? "60 cm ± 3.0 cm"
+        : depth.includes("41-50") || depth.includes("41–50")
+          ? "45 cm ± 2.5 cm"
+          : "28 cm ± 2.0 cm";
 
   // Build notifications array using user's real submitted report details
   const NOTIFICATIONS = useMemo(
@@ -473,8 +475,14 @@ export function CitizenReportingSection() {
       nearestPump: sluiceStation,
       probableCause:
         reportDescription || "Rainfall exceeding local drainage capacity.",
-      severity: depth === "30+ cm" ? "CRITICAL" : "HIGH",
-      severityColor: depth === "30+ cm" ? "#e11d48" : "#d64545",
+      severity:
+        depth.includes("51-70") || depth.includes("41-50") || depth === "30+ cm"
+          ? "CRITICAL"
+          : "HIGH",
+      severityColor:
+        depth.includes("51-70") || depth.includes("41-50") || depth === "30+ cm"
+          ? "#e11d48"
+          : "#d64545",
       status: "Needs Intervention",
       workOrderId: `WO-${Date.now().toString().slice(-8)}`,
     });
@@ -660,30 +668,37 @@ export function CitizenReportingSection() {
             {
               label: "Risk Level",
               value:
-                depth === "30+ cm"
+                depth.includes("51-70") || depth.includes("41-50") || depth === "30+ cm"
                   ? "CRITICAL"
-                  : depth === "0–15 cm"
+                  : depth.includes("1-15") || depth === "0–15 cm"
                     ? "MODERATE"
                     : "HIGH",
               icon: AlertTriangle,
-              color: depth === "30+ cm" ? "text-red-400" : "text-amber-400",
+              color:
+                depth.includes("51-70") || depth.includes("41-50") || depth === "30+ cm"
+                  ? "text-red-400"
+                  : "text-amber-400",
             },
             {
               label: "Pedestrian Safety",
               value:
-                depth === "0–15 cm" ? "Caution advised" : "Unsafe for walking",
+                depth.includes("1-15") || depth === "0–15 cm"
+                  ? "Caution advised"
+                  : "Unsafe for walking",
               icon: ShieldCheck,
               color: "text-orange-400",
             },
             {
               label: "Vehicle Advisory",
               value:
-                depth === "30+ cm" ? "No entry" : "Low-ground vehicles at risk",
+                depth.includes("51-70") || depth.includes("41-50") || depth === "30+ cm"
+                  ? "No entry"
+                  : "Low-ground vehicles at risk",
               icon: Activity,
               color: "text-red-400",
             },
           ],
-          alertMessage: `Water depth at ${locality} has been estimated at ${depthTag} using multi-source verification (citizen report + satellite + sensor fusion). ${depth === "30+ cm" ? "This exceeds the critical threshold of 30cm. Emergency response teams have been notified." : "This exceeds the alert threshold of 15cm. The area has been flagged for priority drainage assistance."}`,
+          alertMessage: `Water depth at ${locality} has been estimated at ${depthTag} using multi-source verification (citizen report + satellite + sensor fusion). ${depth.includes("51-70") || depth.includes("41-50") || depth === "30+ cm" ? "This exceeds the critical threshold of 40cm. Emergency response teams have been notified." : "This exceeds the alert threshold of 15cm. The area has been flagged for priority drainage assistance."}`,
           actionText: "Return to Notifications",
         },
         6: {
@@ -746,9 +761,15 @@ export function CitizenReportingSection() {
             },
             {
               label: "Priority Level",
-              value: depth === "30+ cm" ? "P1 — CRITICAL" : "P2 — HIGH",
+              value:
+                depth.includes("51-70") || depth.includes("41-50") || depth === "30+ cm"
+                  ? "P1 — CRITICAL"
+                  : "P2 — HIGH",
               icon: AlertTriangle,
-              color: depth === "30+ cm" ? "text-red-400" : "text-amber-400",
+              color:
+                depth.includes("51-70") || depth.includes("41-50") || depth === "30+ cm"
+                  ? "text-red-400"
+                  : "text-amber-400",
             },
           ],
           alertMessage: `✅ All 7 verification checks have passed. Your validated report has been dispatched to the ${locality} drainage operations unit and pump station ${sluiceStation}. Municipal field crew has been mobilized with an estimated response time of 18 minutes. Thank you for helping keep Kolkata safe!`,

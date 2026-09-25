@@ -621,9 +621,10 @@ export function MobileReportForm({ onBackToStep1 }) {
 
   // Water Depth Options
   const DEPTH_CARDS = [
-    { depth: '0–15 cm', label: 'Ankle level' },
-    { depth: '15–30 cm', label: 'Knee level' },
-    { depth: '30+ cm', label: 'Thigh level or above' },
+    { depth: '1-15cm', label: 'Ankle level' },
+    { depth: '16-40cm', label: 'Between level' },
+    { depth: '41-50cm', label: 'Knee level' },
+    { depth: '51-70cm', label: 'Thigh level' },
   ]
 
   return (
