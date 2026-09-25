@@ -29,11 +29,41 @@ export function KWINavbar() {
     setTheme,
   } = useKWIStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const topBarRef = useRef(null);
+  const [topBarHeight, setTopBarHeight] = useState(0);
   const [systemPref, setSystemPref] = useState(
     () =>
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches,
   );
+
+  // Measure top bar row height to dynamically align layout compensation spacer
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const measure = () => {
+      if (topBarRef.current) {
+        const height = topBarRef.current.getBoundingClientRect().height;
+        if (height > 0) {
+          setTopBarHeight(height);
+        }
+      }
+    };
+
+    measure();
+    window.addEventListener("resize", measure);
+
+    let ro;
+    if (typeof ResizeObserver !== "undefined" && topBarRef.current) {
+      ro = new ResizeObserver(() => measure());
+      ro.observe(topBarRef.current);
+    }
+
+    return () => {
+      window.removeEventListener("resize", measure);
+      if (ro) ro.disconnect();
+    };
+  }, [currentRoute, currentUser]);
 
   // Keep OS preference in sync so 'system' themes follow hardware live
   useEffect(() => {
@@ -206,36 +236,37 @@ export function KWINavbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full pt-2 sm:pt-3.5 pb-1.5 sm:pb-2 px-2.5 sm:px-6 pointer-events-none select-none transition-all">
-      {/* ===================================================== */}
-      {/* SEAMLESS LIQUID GLASS NAVBAR CONTAINER                */}
-      {/* ===================================================== */}
-      <div className="relative pointer-events-auto max-w-[1380px] mx-auto rounded-[24px] sm:rounded-[30px] group/nav shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_14px_45px_rgba(0,0,0,0.35)]">
+    <>
+      <header className="fixed top-0 left-0 right-0 z-50 w-full pt-2 sm:pt-3.5 pb-1.5 sm:pb-2 px-2.5 sm:px-6 pointer-events-none select-none transition-all">
         {/* ===================================================== */}
-        {/* LIQUID GLASS MAIN CAPSULE CONTAINER                   */}
+        {/* SEAMLESS LIQUID GLASS NAVBAR CONTAINER                */}
         {/* ===================================================== */}
-        <div
-          className={`relative rounded-[24px] sm:rounded-[30px] px-3 sm:px-6 py-2 sm:py-2.5 backdrop-blur-3xl backdrop-saturate-[180%] transition-all duration-300 ${
-            isDarkMode
-              ? "border border-[rgba(94,183,201,0.18)] text-[#F2FBFD]"
-              : "border border-white/80 text-slate-900"
-          }`}
-          style={{
-            background: isDarkMode
-              ? "linear-gradient(135deg, rgba(6, 32, 66, 0.94) 0%, rgba(4, 20, 44, 0.90) 45%, rgba(10, 42, 82, 0.94) 100%)"
-              : "linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.65) 45%, rgba(255, 255, 255, 0.82) 100%)",
-            boxShadow: isDarkMode
-              ? "inset 0 1px 1.5px rgba(255, 255, 255, 0.15), inset 0 -1px 2px rgba(0, 0, 0, 0.8), 0 20px 50px rgba(4, 20, 44, 0.75)"
-              : "inset 0 1.5px 2px rgba(255, 255, 255, 0.9), inset 0 -1px 2px rgba(0, 0, 0, 0.04), 0 20px 50px rgba(0, 180, 255, 0.08)",
-          }}
-        >
-          {/* Internal Refractive Glass Caustic Sheen */}
+        <div className="relative pointer-events-auto max-w-[1380px] mx-auto rounded-[24px] sm:rounded-[30px] group/nav shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_14px_45px_rgba(0,0,0,0.35)]">
+          {/* ===================================================== */}
+          {/* LIQUID GLASS MAIN CAPSULE CONTAINER                   */}
+          {/* ===================================================== */}
           <div
-            className="absolute inset-0 rounded-[24px] sm:rounded-[30px] bg-gradient-to-tr from-white/[0.12] via-transparent to-white/[0.22] pointer-events-none"
-            aria-hidden="true"
-          />
+            className={`relative rounded-[24px] sm:rounded-[30px] px-3 sm:px-6 py-2 sm:py-2.5 backdrop-blur-3xl backdrop-saturate-[180%] transition-all duration-300 ${
+              isDarkMode
+                ? "border border-[rgba(94,183,201,0.18)] text-[#F2FBFD]"
+                : "border border-white/80 text-slate-900"
+            }`}
+            style={{
+              background: isDarkMode
+                ? "linear-gradient(135deg, rgba(6, 32, 66, 0.94) 0%, rgba(4, 20, 44, 0.90) 45%, rgba(10, 42, 82, 0.94) 100%)"
+                : "linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.65) 45%, rgba(255, 255, 255, 0.82) 100%)",
+              boxShadow: isDarkMode
+                ? "inset 0 1px 1.5px rgba(255, 255, 255, 0.15), inset 0 -1px 2px rgba(0, 0, 0, 0.8), 0 20px 50px rgba(4, 20, 44, 0.75)"
+                : "inset 0 1.5px 2px rgba(255, 255, 255, 0.9), inset 0 -1px 2px rgba(0, 0, 0, 0.04), 0 20px 50px rgba(0, 180, 255, 0.08)",
+            }}
+          >
+            {/* Internal Refractive Glass Caustic Sheen */}
+            <div
+              className="absolute inset-0 rounded-[24px] sm:rounded-[30px] bg-gradient-to-tr from-white/[0.12] via-transparent to-white/[0.22] pointer-events-none"
+              aria-hidden="true"
+            />
 
-          <div className="relative flex items-center justify-between gap-2 sm:gap-4 z-10">
+            <div ref={topBarRef} className="relative flex items-center justify-between gap-2 sm:gap-4 z-10">
             {/* ================================================= */}
             {/* BRAND IDENTITY (Preserving exact existing logo)  */}
             {/* ================================================= */}
@@ -714,7 +745,23 @@ export function KWINavbar() {
           </AnimatePresence>
         </div>
       </div>
-    </header>
+      </header>
+
+      {/* ===================================================== */}
+      {/* VIEWPORT FIXED NAVBAR LAYOUT COMPENSATION SPACER      */}
+      {/* ===================================================== */}
+      <div
+        className="w-full pt-2 sm:pt-3.5 pb-1.5 sm:pb-2 px-2.5 sm:px-6 pointer-events-none select-none invisible"
+        aria-hidden="true"
+      >
+        <div className="max-w-[1380px] mx-auto py-2 sm:py-2.5 px-3 sm:px-6 border border-transparent">
+          <div
+            className="h-[43px] sm:h-[48.5px]"
+            style={topBarHeight ? { height: `${topBarHeight}px` } : undefined}
+          />
+        </div>
+      </div>
+    </>
   );
 }
 
