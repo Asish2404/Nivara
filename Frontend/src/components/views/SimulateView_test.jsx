@@ -711,55 +711,42 @@ export function SimulateView() {
                         const badgeClass = SEVERITY_BADGE_STYLE[inc.severity] || SEVERITY_BADGE_STYLE.MONITORING;
 
                         return (
-                          <motion.button
+                          <button
                             key={inc.id}
                             type="button"
                             onClick={() => handleSelectIncident(inc.id)}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            whileHover={{ scale: 1.008 }}
-                            transition={{
-                              duration: 0.28,
-                              ease: [0.16, 1, 0.3, 1],
-                            }}
-                            className={`hotspot-option relative w-full text-left px-3.5 py-2 flex items-center justify-between gap-3 cursor-pointer select-none ${isSelected
-                              ? "hotspot-option-selected"
-                              : "hover:bg-white/[0.04]"
+                            className={`w-full text-left px-3.5 py-2 transition-colors flex items-center justify-between gap-3 cursor-pointer select-none ${isSelected
+                              ? "bg-blue-500/15 dark:bg-blue-600/20 text-blue-900 dark:text-blue-100"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-800 dark:text-slate-200"
                               }`}
                             style={{ minHeight: "68px", height: "68px" }}
                           >
-                            <div className="min-w-0 flex-1 relative z-10">
+                            <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 mb-0.5">
-                                <span className="font-mono text-xs font-bold text-sky-400">
+                                <span className="font-mono text-xs font-bold text-sky-600 dark:text-sky-400">
                                   {inc.id}
                                 </span>
-
-                                <span
-                                  className={`text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded border ${badgeClass}`}
-                                >
+                                <span className={`text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded border ${badgeClass}`}>
                                   {inc.severity || "MONITORING"}
                                 </span>
-
-                                <span className="text-[11px] font-mono text-slate-400">
+                                <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                                   {depthDisplay}
                                 </span>
                               </div>
-
-                              <div className="text-[12.5px] font-semibold text-white truncate">
+                              <div className="text-[12.5px] font-semibold text-slate-900 dark:text-slate-100 truncate">
                                 {cleanLoc}
                               </div>
-
-                              <div className="text-[10.5px] text-slate-400 mt-0.5">
+                              <div className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
                                 {reports} verified {reports === 1 ? "report" : "reports"}
                               </div>
                             </div>
 
                             {isSelected && (
-                              <div className="relative z-10 w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(59,130,246,0.65)]">
+                              <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                                 <Check className="w-3 h-3 stroke-[3]" />
                               </div>
                             )}
-                          </motion.button>
+                          </button>
                         );
                       })
                     )}

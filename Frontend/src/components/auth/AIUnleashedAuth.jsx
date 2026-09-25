@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Mail,
@@ -269,8 +269,56 @@ export default function AIUnleashedAuth() {
   const [otpCountdown, setOtpCountdown] = useState(0);
   const [isGeneratingOtp, setIsGeneratingOtp] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
+  const [otpMergeOffsets, setOtpMergeOffsets] = useState([]);
+
   const otpInputRefs = useRef([]);
   const nativeOtpInputRef = useRef(null);
+  const otpMergeContainerRef = useRef(null);
+  const otpMergeSlotRefs = useRef([]);
+
+  // ==========================================================
+  // OTP FINAL MERGE POSITION CALCULATION
+  // ==========================================================
+
+  useLayoutEffect(() => {
+    if (!isOtpStep) return;
+
+    const calculateMergeOffsets = () => {
+      const container = otpMergeContainerRef.current;
+      if (!container) return;
+
+      const containerRect = container.getBoundingClientRect();
+      if (!containerRect.width) return;
+      const containerCenterX =
+        containerRect.left + containerRect.width / 2;
+
+      const offsets = [];
+      for (let i = 0; i < 6; i++) {
+        const slot = otpMergeSlotRefs.current[i];
+        if (!slot) return;
+
+        const rect = slot.getBoundingClientRect();
+        const slotCenterX = rect.left + rect.width / 2;
+
+        offsets.push(containerCenterX - slotCenterX);
+      }
+
+      if (offsets.length === 6) {
+        setOtpMergeOffsets(offsets);
+      }
+    };
+
+    calculateMergeOffsets();
+    const frame = requestAnimationFrame(calculateMergeOffsets);
+
+    window.addEventListener("resize", calculateMergeOffsets);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", calculateMergeOffsets);
+    };
+  }, [isOtpStep, isOtpVerified]);
 
   // Google SSO state and container ref
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -430,6 +478,7 @@ export default function AIUnleashedAuth() {
     setSuccessMessage("");
     setAuthError("");
     setPhoneError("");
+    setIsOtpVerified(false);
     setIsOtpStep(false);
     setOtpDigits(["", "", "", "", "", ""]);
     setOtpCountdown(0);
@@ -442,6 +491,7 @@ export default function AIUnleashedAuth() {
     setAuthError("");
     setPhoneError("");
     setSuccessMessage("");
+    setIsOtpVerified(false);
     setIsOtpStep(false);
   };
 
@@ -756,6 +806,7 @@ export default function AIUnleashedAuth() {
 
       const target = res?.phone || phoneNumber.trim() || email.trim();
       setOtpTargetPhone(target);
+      setIsOtpVerified(false);
       setIsOtpStep(true);
       setOtpCountdown(60);
       setOtpDigits(["", "", "", "", "", ""]);
@@ -774,6 +825,7 @@ export default function AIUnleashedAuth() {
       if (isNetworkIssue) {
         const target = phoneNumber.trim() || email.trim() || "+91 6289143592";
         setOtpTargetPhone(target);
+        setIsOtpVerified(false);
         setIsOtpStep(true);
         setOtpCountdown(60);
         setOtpDigits(["", "", "", "", "", ""]);
@@ -833,14 +885,22 @@ export default function AIUnleashedAuth() {
         });
 
         if (audioEngine) audioEngine.playStationLock();
+
         loginUser(result);
+
         const signedInName = result?.user?.name || derivedName;
         setSuccessMessage(`Welcome back, ${signedInName}`);
-        const redirectPath = useKWIStore.getState().postLoginRedirect || "/";
+
+        // Trigger the final OTP merge/check animation
+        setIsOtpVerified(true);
+
+        const redirectPath =
+          useKWIStore.getState().postLoginRedirect || "/";
+
         setTimeout(() => {
           navigate(redirectPath);
           useKWIStore.getState().setPostLoginRedirect(null);
-        }, 650);
+        }, 2200);
       } else {
         await api.post("/auth/signup", {
           email: email.trim(),
@@ -852,17 +912,24 @@ export default function AIUnleashedAuth() {
         });
 
         if (audioEngine) audioEngine.playStationLock();
-        // Redirect to sign in section after account creation
-        setIsOtpStep(false);
-        setActiveTab("signin");
-        setPassword("");
-        setPhoneError("");
-        setOtpDigits(["", "", "", "", "", ""]);
+
+        // Trigger the final OTP merge/check animation
+        setIsOtpVerified(true);
+
         setSuccessMessage(
           selectedPortal === "admin"
             ? "Administrative clearance verified and account created! Please sign in with your credentials."
             : "Account created successfully! Please sign in with your credentials.",
         );
+
+        // Wait for the animation to finish before returning to sign in
+        setTimeout(() => {
+          setIsOtpStep(false);
+          setActiveTab("signin");
+          setPassword("");
+          setPhoneError("");
+          setOtpDigits(["", "", "", "", "", ""]);
+        }, 2200);
       }
     } catch (err) {
       const isNetworkIssue =
@@ -873,17 +940,25 @@ export default function AIUnleashedAuth() {
       if (isNetworkIssue) {
         if (activeTab === "create") {
           if (audioEngine) audioEngine.playStationLock();
-          // Redirect to sign in section after account creation (offline simulation)
-          setIsOtpStep(false);
-          setActiveTab("signin");
-          setPassword("");
-          setPhoneError("");
-          setOtpDigits(["", "", "", "", "", ""]);
+
+          // Trigger the final OTP merge/check animation
+          setIsOtpVerified(true);
+
           setSuccessMessage(
             selectedPortal === "admin"
               ? "Administrative clearance verified (offline simulation)! Please sign in with your credentials."
               : "Account created successfully (offline simulation)! Please sign in with your credentials.",
           );
+
+          // Return to sign in only after animation completes
+          setTimeout(() => {
+            setIsOtpStep(false);
+            setActiveTab("signin");
+            setPassword("");
+            setPhoneError("");
+            setOtpDigits(["", "", "", "", "", ""]);
+          }, 2200);
+
           return;
         }
 
@@ -911,15 +986,22 @@ export default function AIUnleashedAuth() {
           },
         };
         if (audioEngine) audioEngine.playStationLock();
+
         loginUser(mockResult);
+
         setSuccessMessage(
           activeTab === "signin"
             ? `Welcome back, ${mockResult.user.name}`
             : `Account verified! Welcome, ${mockResult.user.name}`,
         );
+
+        // Trigger the final OTP merge/check animation
+        setIsOtpVerified(true);
+
         setTimeout(() => {
           navigate("/");
-        }, 650);
+        }, 2200);
+
         return;
       }
 
@@ -957,6 +1039,7 @@ export default function AIUnleashedAuth() {
     }
     setPhoneError("");
     setAuthError("");
+    setIsOtpVerified(false);
     setIsOtpStep(false);
     setOtpDigits(["", "", "", "", "", ""]);
     if (audioEngine) audioEngine.playUiChirp(1040);
@@ -1136,6 +1219,7 @@ export default function AIUnleashedAuth() {
                       <button
                         type="button"
                         onClick={() => {
+                          setIsOtpVerified(false);
                           setIsOtpStep(false);
                           setAuthError("");
                           setSuccessMessage("");
@@ -1176,6 +1260,7 @@ export default function AIUnleashedAuth() {
                           <button
                             type="button"
                             onClick={() => {
+                              setIsOtpVerified(false);
                               setIsOtpStep(false);
                               setAuthError("");
                             }}
@@ -1227,57 +1312,248 @@ export default function AIUnleashedAuth() {
                           autoFocus
                         />
 
-                        {/* 6 Squircle Visual Slots with Neon Focused Outline from Pinterest */}
-                        <div className="flex justify-center items-center gap-1.5 min-[380px]:gap-2.5 sm:gap-3 select-none">
-                          {otpDigits.map((digit, idx) => {
-                            const firstEmptyIdx = otpDigits.findIndex(
-                              (d) => d === "",
-                            );
-                            const isFilled = Boolean(digit);
-                            const isFocused =
-                              !isFilled &&
-                              ((firstEmptyIdx === -1 && idx === 5) ||
-                                firstEmptyIdx === idx);
+                        {/* OTP Visual Slots + Final Verification Merge Animation */}
+                        <div
+                          ref={otpMergeContainerRef}
+                          className="relative flex justify-center items-center min-h-[64px] select-none"
+                        >
+                          {/* Six OTP boxes (remain mounted during verification merge) */}
+                          <motion.div
+                            className={`flex justify-center items-center gap-1.5 min-[380px]:gap-2.5 sm:gap-3 ${isOtpVerified ? "pointer-events-none" : ""
+                              }`}
+                            animate={{
+                              filter:
+                                otpDigits.join("").length === 6 && !isOtpVerified
+                                  ? "drop-shadow(0 0 12px rgba(0,240,255,0.55)) drop-shadow(0 0 28px rgba(0,180,255,0.28))"
+                                  : "drop-shadow(0 0 0px rgba(0,240,255,0))",
+                            }}
+                            transition={{ duration: 0.25 }}
+                          >
+                            {otpDigits.map((digit, idx) => {
+                              const firstEmptyIdx = otpDigits.findIndex(
+                                (d) => d === "",
+                              );
 
-                            return (
+                              const isFilled = Boolean(digit);
+
+                              const isFocused =
+                                !isFilled &&
+                                ((firstEmptyIdx === -1 && idx === 5) ||
+                                  firstEmptyIdx === idx);
+
+                              const targetOffset =
+                                otpMergeOffsets[idx] ??
+                                (otpMergeSlotRefs.current[idx] &&
+                                  otpMergeContainerRef.current
+                                  ? (otpMergeContainerRef.current.getBoundingClientRect()
+                                    .left +
+                                    otpMergeContainerRef.current.getBoundingClientRect()
+                                      .width /
+                                    2) -
+                                  (otpMergeSlotRefs.current[
+                                    idx
+                                  ].getBoundingClientRect().left +
+                                    otpMergeSlotRefs.current[
+                                      idx
+                                    ].getBoundingClientRect().width /
+                                    2)
+                                  : 0);
+
+                              return (
+                                <motion.div
+                                  key={idx}
+                                  ref={(el) =>
+                                    (otpMergeSlotRefs.current[idx] = el)
+                                  }
+                                  whileHover={
+                                    !isOtpVerified ? { scale: 1.02 } : undefined
+                                  }
+                                  whileTap={
+                                    !isOtpVerified ? { scale: 0.98 } : undefined
+                                  }
+                                  animate={
+                                    isOtpVerified
+                                      ? {
+                                        x: targetOffset,
+                                        rotate: (idx - 2.5) * 0.8,
+                                        scale: [1, 1, 0.9],
+                                        opacity: [1, 1, 0],
+                                      }
+                                      : {
+                                        x: 0,
+                                        rotate: 0,
+                                        scale: 1,
+                                        opacity: 1,
+                                      }
+                                  }
+                                  transition={
+                                    isOtpVerified
+                                      ? {
+                                        x: {
+                                          duration: 0.58,
+                                          ease: [0.16, 1, 0.3, 1],
+                                        },
+                                        rotate: {
+                                          duration: 0.58,
+                                          ease: [0.16, 1, 0.3, 1],
+                                        },
+                                        scale: {
+                                          times: [0, 0.72, 1],
+                                          duration: 0.65,
+                                          ease: "easeOut",
+                                        },
+                                        opacity: {
+                                          times: [0, 0.72, 1],
+                                          duration: 0.62,
+                                          ease: "easeOut",
+                                        },
+                                      }
+                                      : { duration: 0.2 }
+                                  }
+                                  className={`w-9 h-12 min-[380px]:w-11 min-[380px]:h-14 sm:w-13 sm:h-16 flex items-center justify-center text-xl min-[380px]:text-2xl sm:text-3xl font-mono font-bold rounded-xl sm:rounded-2xl transition-all duration-200 ${isOtpVerified
+                                      ? "bg-[#10313E] border-2 border-cyan-300/80 shadow-[0_0_18px_rgba(0,240,255,0.55),inset_0_0_18px_rgba(0,240,255,0.12)] text-white"
+                                      : isFilled
+                                        ? "bg-[#151a24] dark:bg-[#10313E] border-2 border-white/25 dark:border-cyan-400/40 text-white shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
+                                        : isFocused
+                                          ? "bg-[#121826] dark:bg-[#163F4E] border-2 border-[#00f0ff] shadow-[0_0_22px_rgba(0,240,255,0.45)] ring-2 ring-cyan-400/25"
+                                          : "bg-[#0d121c]/80 dark:bg-[#0B2430] border-2 border-white/10 dark:border-[rgba(94,183,201,0.16)] text-transparent"
+                                    }`}
+                                >
+                                  {isFilled ? (
+                                    <motion.span
+                                      key={`digit-${digit}-${idx}`}
+                                      initial={{ scale: 0.5, opacity: 0 }}
+                                      animate={
+                                        isOtpVerified
+                                          ? {
+                                            opacity: 0,
+                                            scale: 0.55,
+                                          }
+                                          : { scale: 1, opacity: 1 }
+                                      }
+                                      transition={
+                                        isOtpVerified
+                                          ? {
+                                            duration: 0.28,
+                                            ease: "easeOut",
+                                          }
+                                          : {
+                                            type: "spring",
+                                            stiffness: 500,
+                                            damping: 25,
+                                          }
+                                      }
+                                    >
+                                      {digit}
+                                    </motion.span>
+                                  ) : isFocused ? (
+                                    <motion.span
+                                      animate={{ opacity: [1, 0, 1] }}
+                                      transition={{
+                                        repeat: Infinity,
+                                        duration: 0.8,
+                                      }}
+                                      className="w-0.5 h-6 bg-cyan-400 rounded-full"
+                                    />
+                                  ) : null}
+                                </motion.div>
+                              );
+                            })}
+                          </motion.div>
+
+                          {/* FINAL OTP UNIFIED CENTRAL BOX + CHECKMARK + SUCCESS TEXT */}
+                          <AnimatePresence>
+                            {isOtpVerified && (
                               <motion.div
-                                key={idx}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                className={`w-9 h-12 min-[380px]:w-11 min-[380px]:h-14 sm:w-13 sm:h-16 flex items-center justify-center text-xl min-[380px]:text-2xl sm:text-3xl font-mono font-bold rounded-xl sm:rounded-2xl transition-all duration-200 ${
-                                  isFilled
-                                    ? "bg-[#151a24] dark:bg-[#10313E] border-2 border-white/25 dark:border-cyan-400/40 text-white shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
-                                    : isFocused
-                                      ? "bg-[#121826] dark:bg-[#163F4E] border-2 border-[#00f0ff] shadow-[0_0_22px_rgba(0,240,255,0.45)] ring-2 ring-cyan-400/25"
-                                      : "bg-[#0d121c]/80 dark:bg-[#0B2430] border-2 border-white/10 dark:border-[rgba(94,183,201,0.16)] text-transparent"
-                                }`}
+                                key="otp-verified-final-layer"
+                                className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-20"
+                                initial={{ opacity: 1 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
                               >
-                                {isFilled ? (
-                                  <motion.span
-                                    key={`digit-${digit}-${idx}`}
-                                    initial={{ scale: 0.5, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
+                                {/* Single unified central rounded square */}
+                                <motion.div
+                                  initial={{
+                                    opacity: 0,
+                                    scale: 0.55,
+                                    rotate: -6,
+                                  }}
+                                  animate={{
+                                    opacity: 1,
+                                    scale: [0.55, 1.05, 1],
+                                    rotate: 0,
+                                  }}
+                                  transition={{
+                                    delay: 0.52,
+                                    duration: 0.36,
+                                    times: [0, 0.65, 1],
+                                    ease: [0.16, 1, 0.3, 1],
+                                  }}
+                                  className="relative w-14 h-14 min-[380px]:w-16 min-[380px]:h-16 sm:w-[68px] sm:h-[68px] rounded-2xl bg-[#10313E] border-2 border-cyan-300 shadow-[0_0_24px_rgba(0,240,255,0.7),0_0_50px_rgba(0,180,255,0.32),inset_0_0_20px_rgba(0,240,255,0.16)] flex items-center justify-center"
+                                >
+                                  {/* Subtle inner ambient glow */}
+                                  <motion.div
+                                    initial={{ opacity: 0, scale: 0.6 }}
+                                    animate={{ opacity: 1, scale: 1 }}
                                     transition={{
-                                      type: "spring",
-                                      stiffness: 500,
-                                      damping: 25,
+                                      delay: 0.6,
+                                      duration: 0.28,
+                                      ease: "easeOut",
                                     }}
-                                  >
-                                    {digit}
-                                  </motion.span>
-                                ) : isFocused ? (
-                                  <motion.span
-                                    animate={{ opacity: [1, 0, 1] }}
-                                    transition={{
-                                      repeat: Infinity,
-                                      duration: 0.8,
-                                    }}
-                                    className="w-0.5 h-6 bg-cyan-400 rounded-full"
+                                    className="absolute inset-1.5 rounded-xl bg-cyan-400/10"
                                   />
-                                ) : null}
+
+                                  {/* SVG Checkmark drawing inside the single box */}
+                                  <svg
+                                    viewBox="0 0 48 48"
+                                    className="relative z-10 w-8 h-8 min-[380px]:w-9 min-[380px]:h-9 sm:w-10 sm:h-10 text-cyan-300 drop-shadow-[0_0_8px_rgba(0,240,255,0.7)]"
+                                    fill="none"
+                                  >
+                                    <motion.path
+                                      d="M12 25.5 L20.5 34 L36.5 15.5"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      initial={{
+                                        pathLength: 0,
+                                        opacity: 0,
+                                      }}
+                                      animate={{
+                                        pathLength: 1,
+                                        opacity: 1,
+                                      }}
+                                      transition={{
+                                        delay: 0.88,
+                                        duration: 0.42,
+                                        ease: [0.16, 1, 0.3, 1],
+                                      }}
+                                    />
+                                  </svg>
+                                </motion.div>
+
+                                {/* Verified successfully text */}
+                                <motion.div
+                                  initial={{
+                                    opacity: 0,
+                                    y: 8,
+                                  }}
+                                  animate={{
+                                    opacity: 1,
+                                    y: 0,
+                                  }}
+                                  transition={{
+                                    delay: 1.3,
+                                    duration: 0.35,
+                                    ease: [0.16, 1, 0.3, 1],
+                                  }}
+                                  className="absolute top-[calc(100%+12px)] whitespace-nowrap text-[10px] sm:text-[8px] font-mono font-bold tracking-[0.18em] uppercase text-cyan-300 drop-shadow-[0_0_8px_rgba(0,240,255,0.55)]"
+                                >
+                                  Verified successfully
+                                </motion.div>
                               </motion.div>
-                            );
-                          })}
+                            )}
+                          </AnimatePresence>
                         </div>
                       </motion.div>
 
@@ -1381,8 +1657,8 @@ export default function AIUnleashedAuth() {
                         type="button"
                         onClick={() => handleTabChange("signin")}
                         className={`flex-1 text-center py-1.5 text-xs font-bold rounded-full transition-all duration-200 cursor-pointer ${activeTab === "signin"
-                            ? "bg-white text-slate-950 shadow-sm"
-                            : "text-slate-400 hover:text-white"
+                          ? "bg-white text-slate-950 shadow-sm"
+                          : "text-slate-400 hover:text-white"
                           }`}
                       >
                         Sign In
@@ -1391,8 +1667,8 @@ export default function AIUnleashedAuth() {
                         type="button"
                         onClick={() => handleTabChange("create")}
                         className={`flex-1 text-center py-1.5 text-xs font-bold rounded-full transition-all duration-200 cursor-pointer ${activeTab === "create"
-                            ? "bg-white text-slate-950 shadow-sm"
-                            : "text-slate-400 hover:text-white"
+                          ? "bg-white text-slate-950 shadow-sm"
+                          : "text-slate-400 hover:text-white"
                           }`}
                       >
                         Create Account
@@ -1409,8 +1685,8 @@ export default function AIUnleashedAuth() {
                           type="button"
                           onClick={() => handlePortalSelect("user")}
                           className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${selectedPortal === "user"
-                              ? "bg-white text-slate-950 shadow-sm"
-                              : "text-slate-400 hover:text-white"
+                            ? "bg-white text-slate-950 shadow-sm"
+                            : "text-slate-400 hover:text-white"
                             }`}
                         >
                           <User className="w-3 h-3" />
@@ -1420,8 +1696,8 @@ export default function AIUnleashedAuth() {
                           type="button"
                           onClick={() => handlePortalSelect("admin")}
                           className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${selectedPortal === "admin"
-                              ? "bg-white text-slate-950 shadow-sm"
-                              : "text-slate-400 hover:text-white"
+                            ? "bg-white text-slate-950 shadow-sm"
+                            : "text-slate-400 hover:text-white"
                             }`}
                         >
                           <Shield className="w-3 h-3" />
