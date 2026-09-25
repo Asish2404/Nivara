@@ -44,10 +44,11 @@ async def create_work_order(
     summary="List all work orders in reverse chronological order (alias)",
 )
 async def list_work_orders(
+    supervisor: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """Fetch all work orders from `work_orders` table."""
-    orders = await WorkOrderService.get_all_work_orders(db)
+    """Fetch all work orders from `work_orders` table, optionally filtered by supervisor."""
+    orders = await WorkOrderService.get_all_work_orders(db, supervisor_name=supervisor)
     return [WorkOrderResponse.model_validate(wo) for wo in orders]
 
 

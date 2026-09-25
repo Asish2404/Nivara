@@ -40,8 +40,8 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 # 5. Startup table initializer with safe schema migration for SQLite
 async def init_db() -> None:
-    # Import models so Base.metadata knows about users, admin, reports, waterlogging predictions, incident_queue, work_orders, historical_place, and notifications
-    from app.models import User, Admin, Report, WaterloggingPrediction, IncidentQueue, WorkOrder, HistoricalPlace, Notification  # noqa: F401
+    # Import models so Base.metadata knows about users, admin, reports, waterlogging predictions, incident_queue, work_orders, historical_place, notifications, and team_head
+    from app.models import User, Admin, Report, WaterloggingPrediction, IncidentQueue, WorkOrder, HistoricalPlace, Notification, TeamHead  # noqa: F401
     from app.services.incident_service import IncidentQueueService
 
     async with engine.begin() as conn:
@@ -224,6 +224,11 @@ async def init_db() -> None:
                             water_depth FLOAT DEFAULT 0.0,
                             reports_number INTEGER DEFAULT 1,
                             intervention_type VARCHAR(255) DEFAULT '',
+                            admin_name VARCHAR(255) DEFAULT '',
+                            team_head_name VARCHAR(255) DEFAULT '',
+                            original_image VARCHAR(255) DEFAULT '',
+                            image_url VARCHAR(255) DEFAULT '',
+                            reason VARCHAR(255) DEFAULT '',
                             status VARCHAR(32) DEFAULT 'Dispatched',
                             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                             dispatched_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -233,19 +238,27 @@ async def init_db() -> None:
                         )
                     """))
                     # Copy over data from existing table
-                    connection.execute(text("""
+                    admin_expr = "COALESCE(admin_name, '')" if "admin_name" in existing_wo_cols else "''"
+                    th_expr = "COALESCE(team_head_name, '')" if "team_head_name" in existing_wo_cols else "''"
+                    orig_img_expr = "COALESCE(original_image, '')" if "original_image" in existing_wo_cols else "''"
+                    img_expr = "COALESCE(image_url, '')" if "image_url" in existing_wo_cols else "''"
+                    reason_expr = "COALESCE(reason, '')" if "reason" in existing_wo_cols else "''"
+
+                    connection.execute(text(f"""
                         INSERT OR IGNORE INTO work_orders_clean (
                             id, work_id, incident_id, location, latitude, longitude,
                             ward, assigned_ulb_id, assigned_ulb_name, jurisdiction_type,
                             issue_type, risk_level, water_depth, reports_number,
-                            intervention_type, status, created_at, dispatched_at,
+                            intervention_type, admin_name, team_head_name, original_image,
+                            image_url, reason, status, created_at, dispatched_at,
                             started_at, resolved_at, updated_at
                         )
                         SELECT 
                             id, work_id, incident_id, location, latitude, longitude,
                             ward, assigned_ulb_id, assigned_ulb_name, jurisdiction_type,
                             issue_type, risk_level, water_depth, reports_number,
-                            intervention_type, status, created_at, dispatched_at,
+                            intervention_type, {admin_expr}, {th_expr}, {orig_img_expr},
+                            {img_expr}, {reason_expr}, status, created_at, dispatched_at,
                             started_at, resolved_at, updated_at
                         FROM work_orders
                     """))
@@ -255,6 +268,11 @@ async def init_db() -> None:
                     # Add any missing standard columns if not present
                     missing_wo_columns = {
                         "intervention_type": "VARCHAR(255) DEFAULT ''",
+                        "admin_name": "VARCHAR(255) DEFAULT ''",
+                        "team_head_name": "VARCHAR(255) DEFAULT ''",
+                        "original_image": "VARCHAR(255) DEFAULT ''",
+                        "image_url": "VARCHAR(255) DEFAULT ''",
+                        "reason": "VARCHAR(255) DEFAULT ''",
                         "status": "VARCHAR(32) DEFAULT 'Dispatched'",
                         "dispatched_at": "DATETIME DEFAULT CURRENT_TIMESTAMP",
                         "started_at": "DATETIME",
@@ -267,10 +285,45 @@ async def init_db() -> None:
 
             if "historical_place" in table_names:
                 existing_hp_cols = {col["name"] for col in inspector.get_columns("historical_place")}
-                if "created_at" not in existing_hp_cols:
-                    connection.execute(text("ALTER TABLE historical_place ADD COLUMN created_at DATETIME"))
-                if "resolved_at" not in existing_hp_cols:
-                    connection.execute(text("ALTER TABLE historical_place ADD COLUMN resolved_at DATETIME"))
+                missing_hp_columns = {
+                    "incident_id": "VARCHAR(64) DEFAULT ''",
+                    "location": "VARCHAR(255) DEFAULT ''",
+                    "latitude": "FLOAT DEFAULT 0.0",
+                    "longitude": "FLOAT DEFAULT 0.0",
+                    "issue_type": "VARCHAR(128) DEFAULT 'Waterlogging'",
+                    "water_depth": "FLOAT DEFAULT 0.0",
+                    "work_id": "VARCHAR(64) DEFAULT ''",
+                    "assigned_ulb_id": "VARCHAR(64) DEFAULT ''",
+                    "assigned_ulb_name": "VARCHAR(128) DEFAULT ''",
+                    "jurisdiction_type": "VARCHAR(64) DEFAULT ''",
+                    "ward": "VARCHAR(64) DEFAULT ''",
+                    "admin_name": "VARCHAR(255) DEFAULT ''",
+                    "team_head_name": "VARCHAR(255) DEFAULT ''",
+                    "original_image": "VARCHAR(255) DEFAULT ''",
+                    "image_url": "VARCHAR(255) DEFAULT ''",
+                    "reason": "VARCHAR(255) DEFAULT ''",
+                    "status": "VARCHAR(32) DEFAULT 'Resolved'",
+                    "created_at": "DATETIME",
+                    "resolved_at": "DATETIME",
+                }
+                for col_name, col_type in missing_hp_columns.items():
+                    if col_name not in existing_hp_cols:
+                        connection.execute(text(f"ALTER TABLE historical_place ADD COLUMN {col_name} {col_type}"))
+
+            if "team_head" in table_names:
+                existing_th_cols = {col["name"] for col in inspector.get_columns("team_head")}
+                missing_th_columns = {
+                    "name": "VARCHAR(128) NOT NULL DEFAULT ''",
+                    "email": "VARCHAR(128) NOT NULL DEFAULT ''",
+                    "hash_password": "VARCHAR(255) NOT NULL DEFAULT ''",
+                    "ph_no": "VARCHAR(32) NOT NULL DEFAULT ''",
+                    "role": "VARCHAR(64) DEFAULT 'team_head'",
+                    "created_at": "DATETIME DEFAULT CURRENT_TIMESTAMP",
+                    "status": "VARCHAR(32) DEFAULT 'not occupied'",
+                }
+                for col_name, col_type in missing_th_columns.items():
+                    if col_name not in existing_th_cols:
+                        connection.execute(text(f"ALTER TABLE team_head ADD COLUMN {col_name} {col_type}"))
 
             if "notifications" in table_names:
                 existing_notif_cols = {col["name"] for col in inspector.get_columns("notifications")}
@@ -302,4 +355,3 @@ async def init_db() -> None:
     except Exception as e:
         # Non-fatal if table is newly initializing
         pass
-

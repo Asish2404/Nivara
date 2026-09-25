@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.notification import Notification
 from ..models.report import Report
 from ..models.user import User
+from ..models.admin import Admin
 from ..models.waterlogging import WaterloggingPrediction
 from ..core.datetime_utils import get_current_time, ensure_kolkata_tz
 from .incident_service import is_same_place, calculate_distance_km
@@ -51,6 +52,52 @@ class NotificationService:
         return notif
 
     @classmethod
+    async def cleanup_expired_user_notifications(
+        cls, db: AsyncSession, user_id: Optional[str] = None
+    ) -> int:
+        """Automatically delete notifications older than 7 days strictly for citizen users.
+        Municipal admin alerts, broadcasts, and admin notifications are NEVER deleted.
+        """
+        now = get_current_time()
+        # In SQLite, datetimes are stored without timezone info. Use naive datetime to avoid offset-naive vs offset-aware comparison errors.
+        cutoff_dt = (now - timedelta(days=7)).replace(tzinfo=None)
+        time_condition = Notification.created_at < cutoff_dt
+
+        try:
+            # Gather all admin identifiers to guarantee they are never touched
+            admin_stmt = select(Admin.id)
+            admin_res = await db.execute(admin_stmt)
+            admin_ids = set(admin_res.scalars().all())
+        except Exception:
+            admin_ids = set()
+        admin_ids.update(["ADMIN_BROADCAST", "SYSTEM"])
+
+        if user_id:
+            uid_str = str(user_id).strip()
+            # If target is an admin, abort cleanup immediately - admin notifications are never purged after 7 days
+            if uid_str in admin_ids or uid_str.startswith("ADM-"):
+                return 0
+            del_stmt = delete(Notification).where(
+                Notification.user_id == uid_str,
+                time_condition,
+            ).execution_options(synchronize_session=False)
+        else:
+            # System-wide citizen cleanup: target only regular citizen notifications older than 7 days
+            conditions = [
+                time_condition,
+                ~Notification.user_id.in_(admin_ids),
+                ~Notification.user_id.startswith("ADM-"),
+            ]
+            del_stmt = delete(Notification).where(and_(*conditions)).execution_options(synchronize_session=False)
+
+        result = await db.execute(del_stmt)
+        await db.commit()
+        deleted_count = result.rowcount or 0
+        if deleted_count > 0:
+            print(f"[KWI] Cleaned up {deleted_count} expired (> 7 days) notifications for regular user(s).")
+        return deleted_count
+
+    @classmethod
     async def get_user_notifications(
         cls,
         db: AsyncSession,
@@ -62,7 +109,7 @@ class NotificationService:
     ) -> List[Notification]:
         """Fetch all notifications for the given user (newest first)."""
         if is_admin:
-            # Admins see their notifications and municipal system alerts
+            # Admins see their notifications and municipal system alerts - NEVER pruned by 7-day rule
             stmt = select(Notification).where(
                 or_(
                     Notification.user_id == str(user_id),
@@ -71,6 +118,12 @@ class NotificationService:
                 )
             ).order_by(Notification.created_at.desc())
         else:
+            # Automatically delete all notifications older than 7 days strictly for citizen users
+            try:
+                await cls.cleanup_expired_user_notifications(db, user_id=str(user_id))
+            except Exception as c_err:
+                print(f"[KWI] cleanup_expired_user_notifications notice: {c_err}")
+
             # Synchronize 24-hour flood & weather forecast for citizen user's CURRENT device location
             try:
                 await cls.sync_user_location_forecasts(
@@ -144,20 +197,25 @@ class NotificationService:
 
     @classmethod
     async def delete_notification(
-        cls, db: AsyncSession, user_id: str, notification_id: str
+        cls, db: AsyncSession, user_id: str, notification_id: str, is_admin: bool = False
     ) -> bool:
-        """Delete a single notification owned by the user."""
+        """Delete a single notification owned by the user or any alert if admin."""
         clean_id = str(notification_id).strip()
-        stmt = select(Notification).where(
-            or_(
-                Notification.notification_id == clean_id,
-                Notification.id == (int(clean_id) if clean_id.isdigit() else -1),
-            ),
-            or_(
-                Notification.user_id == str(user_id),
-                Notification.user_id == "ADMIN_BROADCAST",
-            ),
+        id_cond = or_(
+            Notification.notification_id == clean_id,
+            Notification.id == (int(clean_id) if clean_id.isdigit() else -1),
         )
+        if is_admin:
+            stmt = select(Notification).where(id_cond)
+        else:
+            stmt = select(Notification).where(
+                id_cond,
+                or_(
+                    Notification.user_id == str(user_id),
+                    Notification.user_id == "ADMIN_BROADCAST",
+                    Notification.user_id == "SYSTEM",
+                ),
+            )
         result = await db.execute(stmt)
         notif = result.scalars().first()
         if not notif:
@@ -462,7 +520,7 @@ class NotificationService:
         ward_label = f"Ward {pred_ward}" if pred_ward and "ward" not in pred_ward.lower() else pred_ward
 
         primary_loc = target_loc.split(",")[0].strip()
-        title = f"24h Flood Forecast: {primary_loc}"
+        title = f"24h Weather Forecast: {primary_loc}"
         ward_clause = f" ({ward_label})" if ward_label else ""
         message = (
             f"24-Hour Hydrological Forecast for your current location ({target_loc}{ward_clause}): "

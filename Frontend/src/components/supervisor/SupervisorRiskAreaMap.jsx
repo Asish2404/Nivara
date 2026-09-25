@@ -259,14 +259,12 @@ export function SupervisorRiskAreaMap() {
         if (woCrew && woCrew.includes(supName)) return true;
       }
 
-      // Default demo supervisor fallback ("Supervisor" / "supervisor@kolkata-water.gov.in")
-      if (supEmail.includes("supervisor") || supName.includes("supervisor")) {
+      // Default demo supervisor fallback only if no supervisor name is attached to the ticket
+      if (!woTeamHead && (supEmail === "supervisor@kolkata-water.gov.in" || supName === "supervisor")) {
         return true;
       }
 
-      if (!woTeamHead && woCrew.includes("supervisor")) {
-        return true;
-      }
+      return false;
 
       return false;
     });

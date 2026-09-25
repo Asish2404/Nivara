@@ -124,6 +124,9 @@ export function SimulateView() {
     resetDispatchedHotspots,
   } = useKWIStore();
 
+  const [supervisorError, setSupervisorError] = useState("");
+  const [isSubmittingWorkOrder, setIsSubmittingWorkOrder] = useState(false);
+
   // Load municipal reports and active incident queue on mount + poll periodically
   useEffect(() => {
     fetchAllReports?.().catch(() => { });
@@ -168,6 +171,11 @@ export function SimulateView() {
   // Active Hotspot Selection (defaults to highest priority available hotspot)
   const [selectedIncidentId, setSelectedIncidentId] = useState("");
   const hasUserManuallySelectedRef = useRef(false);
+
+  // Clear supervisor error when selecting a different incident
+  useEffect(() => {
+    setSupervisorError("");
+  }, [selectedIncidentId]);
 
   // Custom 5-item scrollable dropdown state & outside click handler
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -394,8 +402,10 @@ export function SimulateView() {
     setSimState("CURRENT");
   };
 
-  const handleCreateWorkOrder = () => {
-    if (isQueueEmpty) return;
+  const handleCreateWorkOrder = async () => {
+    if (isQueueEmpty || isSubmittingWorkOrder) return;
+    setSupervisorError("");
+    setIsSubmittingWorkOrder(true);
     audioEngine.playUiChirp(1300);
     hasUserManuallySelectedRef.current = false;
 
@@ -492,23 +502,31 @@ export function SimulateView() {
       simulatedDrainTime: `${drainMins} mins`,
     };
 
-    // 5. Keep active incident selected in store and mark as simulated
-    if (activeIncident) {
-      setSelectedIncident?.(activeIncident);
-      if (activeIncident.id) {
-        setActiveSimulationIncidentId?.(activeIncident.id);
-        markIncidentSimulated?.(activeIncident.id, outcomeData);
-      }
-    }
+    // 5. Attempt work order creation with backend supervisor validation
+    try {
+      await createWorkOrder(
+        {
+          ...orderPayload,
+          simulationOutcome: outcomeData,
+        },
+        { redirectTo: "/respond" }
+      );
 
-    // 6. Push work order to store with simulation outcome and redirect to respond page
-    createWorkOrder(
-      {
-        ...orderPayload,
-        simulationOutcome: outcomeData,
-      },
-      { redirectTo: "/respond" }
-    );
+      // 6. Keep active incident selected in store and mark as simulated on success
+      if (activeIncident) {
+        setSelectedIncident?.(activeIncident);
+        if (activeIncident.id) {
+          setActiveSimulationIncidentId?.(activeIncident.id);
+          markIncidentSimulated?.(activeIncident.id, outcomeData);
+        }
+      }
+    } catch (err) {
+      if (audioEngine?.playUiChirp) audioEngine.playUiChirp(400);
+      const errMsg = err?.message || "No supervisor is currently available.";
+      setSupervisorError(errMsg);
+    } finally {
+      setIsSubmittingWorkOrder(false);
+    }
   };
 
   const stagger = {
@@ -537,6 +555,34 @@ export function SimulateView() {
      *   - Shows panoramic Kolkata Golden Sunset with Heritage Dome, Yellow Taxis & Vintage Tram edge-to-edge
      */
     <div className="w-full min-h-screen bg-[#f3f7fb] dark:bg-[#0A1E3B] text-slate-900 dark:text-[#F0F9FA] transition-colors duration-300 pb-16 font-sans relative overflow-hidden">
+      {/* Floating Supervisor Unavailable Alert Toast */}
+      <AnimatePresence>
+        {supervisorError && (
+          <motion.div
+            initial={{ opacity: 0, y: -24, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -24, scale: 0.95 }}
+            transition={{ duration: 0.25 }}
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-50 max-w-lg w-[92%] sm:w-auto flex items-center gap-3.5 px-5 py-3.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-rose-300 dark:border-rose-800 shadow-[0_12px_36px_rgba(225,29,72,0.25)] text-rose-800 dark:text-rose-300 text-sm font-semibold"
+          >
+            <div className="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-950/70 border border-rose-300 dark:border-rose-800 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+            </div>
+            <div className="flex-1 pr-2">
+              <div className="text-[11px] font-bold text-rose-500 uppercase tracking-wider">Supervisor Assignment Blocked</div>
+              <div className="text-[13px] font-semibold text-rose-900 dark:text-rose-200 mt-0.5">{supervisorError}</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSupervisorError("")}
+              className="w-7 h-7 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950 flex items-center justify-center text-rose-500 text-sm transition-colors cursor-pointer"
+              title="Dismiss"
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         {/* Light Theme Golden Sunset Tram Photography */}
         <img
@@ -1432,20 +1478,38 @@ export function SimulateView() {
                   <div className="text-[12px] text-slate-500 mt-0.5 font-normal">
                     {simulationResult.dispatchSummary}
                   </div>
+                  {supervisorError && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="flex items-center gap-2 mt-2 px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold"
+                    >
+                      <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                      <span>{supervisorError}</span>
+                    </motion.div>
+                  )}
                 </div>
               </div>
 
               <button
                 type="button"
+                disabled={isSubmittingWorkOrder}
                 onClick={handleCreateWorkOrder}
-                className="relative overflow-hidden px-5 py-2.5 rounded-xl font-medium text-[13px] text-white shrink-0 cursor-pointer transition-all active:scale-[0.98] group shadow-[0_2px_12px_rgba(5,150,105,0.25)] hover:shadow-[0_4px_16px_rgba(5,150,105,0.35)]"
+                className="relative overflow-hidden px-5 py-2.5 rounded-xl font-medium text-[13px] text-white shrink-0 cursor-pointer transition-all active:scale-[0.98] group shadow-[0_2px_12px_rgba(5,150,105,0.25)] hover:shadow-[0_4px_16px_rgba(5,150,105,0.35)] disabled:opacity-75 disabled:cursor-not-allowed"
                 style={{
                   background:
                     "linear-gradient(135deg, #059669 0%, #0d9488 100%)",
                 }}
               >
                 <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-white/10" />
-                Create Work Order →
+                {isSubmittingWorkOrder ? (
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Checking Supervisor...
+                  </span>
+                ) : (
+                  "Create Work Order →"
+                )}
               </button>
             </motion.div>
           )}

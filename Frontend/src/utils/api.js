@@ -104,6 +104,7 @@ export const api = {
   post: (path, body, token) => request(path, { method: "POST", body, token }),
   postForm: (path, formData, token) => postForm(path, formData, token),
   patch: (path, body, token) => request(path, { method: "PATCH", body, token }),
+  delete: (path, token) => request(path, { method: "DELETE", token }),
   resolveAssetUrl: resolveApiAssetUrl,
 };
 

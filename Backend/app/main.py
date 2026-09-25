@@ -56,6 +56,14 @@ async def run_periodic_prediction_scheduler():
             await asyncio.sleep(wait_seconds)
             logger.info("Firing calendar-anchored auto prediction cycle (02:00 / 10:00 / 18:00 IST)...")
             await WaterloggingService.run_auto_prediction_cycle()
+
+            # Automatic periodic cleanup of expired user notifications (> 7 days old)
+            try:
+                from app.services.notification_service import NotificationService
+                async with async_session() as db:
+                    await NotificationService.cleanup_expired_user_notifications(db)
+            except Exception as clean_err:
+                logger.warning("Periodic notification cleanup notice: %s", clean_err)
         except asyncio.CancelledError:
             break
         except Exception as exc:
@@ -67,6 +75,14 @@ async def run_periodic_prediction_scheduler():
 async def lifespan(app: FastAPI):
     # Startup: Create tables and execute safe migrations
     await init_db()
+
+    # Automatically purge expired citizen notifications (> 7 days old) on startup
+    try:
+        from app.services.notification_service import NotificationService
+        async with async_session() as db:
+            await NotificationService.cleanup_expired_user_notifications(db)
+    except Exception as exc:
+        logger.warning("Startup expired notification cleanup notice: %s", exc)
 
     # Reconcile status synchronization across historical_place, work_orders, incident_queue, and reports
     try:

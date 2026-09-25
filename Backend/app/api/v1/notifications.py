@@ -101,8 +101,13 @@ async def delete_notification(
     db: AsyncSession = Depends(get_db),
 ):
     """Deletes a single notification owned by current user."""
+    is_admin = (
+        getattr(current_user, "portal", "") == "admin"
+        or "admin" in (getattr(current_user, "role", "") or "").lower()
+        or "officer" in (getattr(current_user, "role", "") or "").lower()
+    )
     success = await NotificationService.delete_notification(
-        db, str(current_user.id), notification_id
+        db, str(current_user.id), notification_id, is_admin=is_admin
     )
     if not success:
         raise HTTPException(
@@ -110,3 +115,30 @@ async def delete_notification(
             detail="Notification not found or access denied.",
         )
     return {"success": True, "notification_id": notification_id}
+
+
+@router.post(
+    "/notifications/cleanup-expired",
+    summary="Purge notifications older than 7 days strictly for citizen users",
+)
+async def cleanup_expired_notifications(
+    current_user: User = Depends(get_current_user_or_default),
+    db: AsyncSession = Depends(get_db),
+):
+    """Purges notifications older than 7 days strictly for citizen users.
+    Admins are never pruned by this rule.
+    """
+    is_admin = (
+        getattr(current_user, "portal", "") == "admin"
+        or "admin" in (getattr(current_user, "role", "") or "").lower()
+        or "officer" in (getattr(current_user, "role", "") or "").lower()
+    )
+    if is_admin:
+        # Admins can trigger system-wide citizen cleanup
+        deleted = await NotificationService.cleanup_expired_user_notifications(db, user_id=None)
+    else:
+        # Regular user triggers their own expired cleanup
+        deleted = await NotificationService.cleanup_expired_user_notifications(db, user_id=str(current_user.id))
+
+    return {"success": True, "deleted_count": deleted}
+

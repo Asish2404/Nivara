@@ -73,17 +73,56 @@ export function ActionsView() {
 
   const isSupervisor = isUserSupervisor(currentUser);
 
+  // When logged in as a supervisor, only show work orders generated for this specific supervisor
   const allWorkOrders = useMemo(() => {
-    return {
+    const raw = {
       ...(latestSimulationOutcome && latestSimulationOutcome.ticketKey
         ? { [latestSimulationOutcome.ticketKey]: latestSimulationOutcome }
         : {}),
       ...(workOrders || {}),
     };
-  }, [workOrders, latestSimulationOutcome]);
+
+    if (!isSupervisor) {
+      return raw;
+    }
+
+    const supName = (currentUser?.name || currentUser?.full_name || "").trim().toLowerCase();
+    const supEmail = (currentUser?.email || "").trim().toLowerCase();
+
+    const filtered = {};
+    for (const [key, wo] of Object.entries(raw)) {
+      if (!wo) continue;
+      const woTeamHead = (wo.team_head_name || "").trim().toLowerCase();
+      const woChief = (wo.chief || "").trim().toLowerCase();
+      const woCrew = (wo.assignedCrew || wo.assigned_crew || "").trim().toLowerCase();
+      const woEmail = (wo.team_head_email || "").trim().toLowerCase();
+
+      // Check if this work order was generated specifically for the logged-in supervisor
+      const isDirectNameMatch = supName && (
+        (woTeamHead && (woTeamHead === supName || woTeamHead.includes(supName) || supName.includes(woTeamHead))) ||
+        (woChief && (woChief === supName || woChief.includes(supName) || supName.includes(woChief))) ||
+        (woCrew && woCrew.includes(supName))
+      );
+
+      const isEmailMatch = supEmail && woEmail && woEmail === supEmail;
+
+      // Demo fallback only if work order has no specific supervisor assigned
+      const isDemoSupervisorMatch = !woTeamHead && !woChief && (
+        supEmail === "supervisor@kolkata-water.gov.in" || supName === "supervisor"
+      );
+
+      if (isDirectNameMatch || isEmailMatch || isDemoSupervisorMatch) {
+        filtered[key] = wo;
+      }
+    }
+    return filtered;
+  }, [workOrders, latestSimulationOutcome, isSupervisor, currentUser]);
 
   const [selectedTicketId, setSelectedTicketId] = useState(() => {
-    return activeWorkOrderTicketId || Object.keys(allWorkOrders)[0] || null;
+    if (activeWorkOrderTicketId && allWorkOrders[activeWorkOrderTicketId]) {
+      return activeWorkOrderTicketId;
+    }
+    return Object.keys(allWorkOrders)[0] || null;
   });
 
   const activeTicket =
@@ -942,6 +981,29 @@ export function ActionsView() {
                     </span>
                   </div>
                 </div>
+
+                {isSupervisor && Object.keys(allWorkOrders).length > 1 && (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-mono text-slate-400 mr-1 uppercase">Your Assignments:</span>
+                    {Object.entries(allWorkOrders).map(([tId]) => (
+                      <button
+                        key={tId}
+                        type="button"
+                        onClick={() => {
+                          setSelectedTicketId(tId);
+                          setActiveWorkOrderTicketId?.(tId);
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
+                          selectedTicketId === tId
+                            ? "bg-[#007dfc] text-white shadow-xs"
+                            : "bg-[#142236] text-slate-400 hover:text-white border border-[#1d2f47]"
+                        }`}
+                      >
+                        {tId}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 <div className="flex items-center gap-2">
                   {activeTicket.team_head_name && (

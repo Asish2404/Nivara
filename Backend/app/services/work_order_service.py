@@ -97,15 +97,22 @@ class WorkOrderService:
         # Find the first unoccupied supervisor in team_head
         sup_stmt = (
             select(TeamHead)
-            .where(TeamHead.status == "not occupied")
+            .where(func.lower(func.trim(TeamHead.status)) == "not occupied")
             .order_by(TeamHead.id.asc())
         )
         sup_res = await db.execute(sup_stmt)
         unoccupied_sup = sup_res.scalars().first()
-        assigned_sup_name = ""
-        if unoccupied_sup:
-            assigned_sup_name = unoccupied_sup.name
-            unoccupied_sup.status = "occupied"
+
+        # If all supervisors in team_head are occupied, reject creation
+        if not unoccupied_sup:
+            from fastapi import HTTPException, status
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No supervisor is currently available.",
+            )
+
+        assigned_sup_name = unoccupied_sup.name
+        unoccupied_sup.status = "occupied"
 
         if existing:
             # Update existing work order with latest intervention details and standardized IDs
@@ -377,13 +384,14 @@ class WorkOrderService:
         await db.commit()
 
     @classmethod
-    async def get_all_work_orders(cls, db: AsyncSession) -> List[WorkOrder]:
+    async def get_all_work_orders(cls, db: AsyncSession, supervisor_name: Optional[str] = None) -> List[WorkOrder]:
         """Fetch all active work orders ordered by creation time descending (excludes resolved)."""
-        result = await db.execute(
-            select(WorkOrder)
-            .where(func.lower(WorkOrder.status) != "resolved")
-            .order_by(WorkOrder.created_at.desc())
-        )
+        stmt = select(WorkOrder).where(func.lower(WorkOrder.status) != "resolved")
+        if supervisor_name:
+            clean_sup = supervisor_name.strip().lower()
+            stmt = stmt.where(func.lower(WorkOrder.team_head_name).contains(clean_sup))
+        stmt = stmt.order_by(WorkOrder.created_at.desc())
+        result = await db.execute(stmt)
         orders = list(result.scalars().all())
         for wo in orders:
             wo.created_at = ensure_kolkata_tz(wo.created_at)

@@ -218,7 +218,7 @@ export const isLocationMatch = (loc1, loc2) => {
 // 3. Incident Status Resolved (for reported location)
 export const INITIAL_USER_NOTIFICATIONS = [];
 
-// Municipal Admin Broadcast Notifications
+// Municipal Admin Broadcast Notifications (Across 4 Core Categories: urgent, pumps, reports, resolved)
 export const INITIAL_ADMIN_NOTIFICATIONS = [
   {
     id: "NOTIF-KMC-001",
@@ -249,20 +249,6 @@ export const INITIAL_ADMIN_NOTIFICATIONS = [
     recipientType: "admin",
   },
   {
-    id: "NOTIF-KMC-003",
-    category: "system",
-    severity: "info",
-    title: "River Telemetry Mesh: Hooghly Tide Surge Model Synchronized",
-    message: "Acoustic ultrasonic sensors across Bagjola Canal and Hooghly lock gates successfully calibrated. Tidal crest predicted at 3.65m at 14:30 IST. Automated sluice sequence primed.",
-    location: "River Telemetry Grid • Hooghly & Bagjola",
-    ward: "Telemetry Grid",
-    timestamp: "4h ago",
-    isRead: true,
-    metrics: { label: "Tidal Crest", value: "3.65 m", status: "Rising" },
-    action: { label: "Run Flood Simulation", route: "/simulate" },
-    recipientType: "admin",
-  },
-  {
     id: "NOTIF-KMC-004",
     category: "pumps",
     severity: "high",
@@ -274,6 +260,34 @@ export const INITIAL_ADMIN_NOTIFICATIONS = [
     isRead: true,
     metrics: { label: "Gate Closure", value: "14:30 IST", status: "Scheduled" },
     action: { label: "Inspect Drainage Action", route: "/action-center" },
+    recipientType: "admin",
+  },
+  {
+    id: "NOTIF-KMC-005",
+    category: "reports",
+    severity: "high",
+    title: "Hotspot Cluster: Multi-Citizen Reports at College More",
+    message: "5+ independent citizen reports logged within 30 minutes at College More crossing. Unassigned high-risk incident flagged for emergency crew dispatch.",
+    location: "Ward 32 • College More, Sector V",
+    ward: "Ward 32",
+    timestamp: "1h ago",
+    isRead: false,
+    metrics: { label: "Report Cluster", value: "5 Reports", status: "Hotspot" },
+    action: { label: "Review Incident Queue", route: "/action-center" },
+    recipientType: "admin",
+  },
+  {
+    id: "NOTIF-KMC-006",
+    category: "resolved",
+    severity: "resolved",
+    title: "Operations Complete: Park Street De-watering Resolved",
+    message: "Field response crews and high-discharge auxiliary units have finished de-watering. Stormwater drains confirmed clear and roadway reopened to regular traffic flow.",
+    location: "Ward 63 • Park Street Crossing",
+    ward: "Ward 63",
+    timestamp: "3h ago",
+    isRead: true,
+    metrics: { label: "Operations", value: "Complete", status: "Cleared" },
+    action: { label: "Inspect Completed Action", route: "/action-center" },
     recipientType: "admin",
   },
 ];
@@ -311,7 +325,7 @@ export const mapBackendNotification = (n) => {
     metrics = { label: "24h Rain Risk", value: "Forecast", status: "Active" };
     action = { label: "View Location Reports", route: "/my-reports" };
   } else {
-    category = n.category || (n.type === "urgent" ? "urgent" : n.type === "pumps" ? "pumps" : "system");
+    category = n.category && n.category !== "system" ? n.category : (n.type === "urgent" ? "urgent" : n.type === "pumps" ? "pumps" : n.type === "resolved" ? "resolved" : "reports");
     severity = n.severity || (category === "urgent" ? "critical" : "high");
     metrics = n.metrics || null;
     action = n.action || { label: "View on GIS Map", route: "/live-city" };
@@ -1326,17 +1340,30 @@ export const useKWIStore = create((set, get) => ({
           merged = [...mapped, ...extraAdmin];
         }
 
-        // Strict deduplication & single current-location forecast enforcement:
+        // Strict deduplication, single forecast & 7-day citizen expiration enforcement:
         const seenIds = new Set();
         const seenEvents = new Set();
         let seenForecast = false;
         const deduped = [];
+        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
         for (const n of merged) {
           const idKey = n.id || n.notification_id;
           const locKey = String(n.location || n.relatedLocation || "").toLowerCase().trim();
           const eventKey = n.type === "report_submitted" && n.reportId ? `${n.type}|${n.reportId}` : `${n.type || ""}|${locKey}`;
 
           if (seenIds.has(idKey)) continue;
+
+          // For regular citizens only: prune any notifications older than 7 days (admins keep full history)
+          if (!isAdmin) {
+            const rawDate = n.created_at || n.createdAt;
+            if (rawDate) {
+              const parsedTime = new Date(rawDate).getTime();
+              if (!isNaN(parsedTime) && parsedTime < sevenDaysAgo) {
+                continue;
+              }
+            }
+          }
 
           // For regular citizens, only allow ONE current-location forecast notification:
           if (!isAdmin && n.type === "location_forecast") {
@@ -1393,17 +1420,30 @@ export const useKWIStore = create((set, get) => ({
     api.patch("/notifications/mark-all-read", {}, token).catch(() => { });
   },
 
-  deleteNotification: (id) => {
+  deleteNotification: async (id) => {
     const token = typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
+    const cleanId = String(id || "").trim();
+    if (!cleanId) return;
+
     set((state) => {
-      const updated = state.notifications.filter((n) => n.id !== id && n.notification_id !== id);
+      const updated = state.notifications.filter(
+        (n) =>
+          String(n.id) !== cleanId &&
+          String(n.notification_id) !== cleanId &&
+          String(n.dbId) !== cleanId
+      );
       return {
         notifications: updated,
         unreadNotificationsCount: updated.filter((n) => !n.isRead).length,
       };
     });
+
     // Async persist to backend database
-    api.delete(`/notifications/${encodeURIComponent(id)}`, token).catch(() => { });
+    try {
+      await api.delete(`/notifications/${encodeURIComponent(cleanId)}`, token);
+    } catch (err) {
+      console.warn("[KWI] deleteNotification backend notice:", err?.message || err);
+    }
   },
 
   clearAllNotifications: () => {
@@ -1413,7 +1453,7 @@ export const useKWIStore = create((set, get) => ({
     });
   },
 
-  clearReadNotifications: () => {
+  clearReadNotifications: async () => {
     const token = typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
     set((state) => {
       const updated = state.notifications.filter((n) => !n.isRead);
@@ -1422,8 +1462,13 @@ export const useKWIStore = create((set, get) => ({
         unreadNotificationsCount: updated.filter((n) => !n.isRead).length,
       };
     });
+
     // Async persist to backend database
-    api.delete("/notifications/clear-read", token).catch(() => { });
+    try {
+      await api.delete("/notifications/clear-read", token);
+    } catch (err) {
+      console.warn("[KWI] clearReadNotifications backend notice:", err?.message || err);
+    }
   },
 
   // 1. Report Submitted Successfully Notification
@@ -1797,7 +1842,7 @@ export const useKWIStore = create((set, get) => ({
     }));
   },
 
-  createWorkOrder: (newOrder, options = {}) => {
+  createWorkOrder: async (newOrder, options = {}) => {
     const rawRef = newOrder.incidentId || newOrder.incidentRef || 'IN-101';
     const cleanRef = String(rawRef).replace(/^#/, '').trim();
     const ticketKey = `WO-${cleanRef}`;
@@ -1819,30 +1864,63 @@ export const useKWIStore = create((set, get) => ({
       stage: typeof newOrder.stage === 'number' ? newOrder.stage : 1, // Stage 1 = Dispatched (Step 2)
     };
 
-    // 1. Instantly update local store for zero UI lag
+    const adminName = get().currentUser?.name || 'Municipal Administrator';
+
+    // 1. Persist to backend first to check supervisor availability in team_head table
+    let created = null;
+    try {
+      created = await api.post('/work-orders', {
+        work_id: ticketKey,
+        incident_id: cleanRef,
+        incident_ref: finalizedOrder.incidentRef,
+        location: finalizedOrder.location || '',
+        latitude: finalizedOrder.lat ? parseFloat(String(finalizedOrder.lat).replace(/[^\d.]/g, '')) : 0.0,
+        longitude: finalizedOrder.lng ? parseFloat(String(finalizedOrder.lng).replace(/[^\d.]/g, '')) : 0.0,
+        ward: finalizedOrder.borough || '',
+        issue_type: 'Waterlogging',
+        risk_level: finalizedOrder.priority || 'CRITICAL',
+        water_depth: waterDepthNum,
+        intervention_type: finalizedOrder.intervention_type || finalizedOrder.interventionType || '',
+        status: finalizedOrder.status || 'Dispatched',
+        admin_name: adminName,
+      });
+    } catch (err) {
+      console.warn('[KWI] Backend work order creation notice:', err?.message || err);
+      throw err;
+    }
+
+    const assignedSup = created?.team_head_name || '';
+
+    // 2. Only update local store once supervisor assignment is confirmed by backend
     set((state) => {
-      const setIds = new Set([...state.dispatchedHotspotIds])
-      const simIds = new Set([...(state.simulatedIncidentIds || [])])
+      const setIds = new Set([...state.dispatchedHotspotIds]);
+      const simIds = new Set([...(state.simulatedIncidentIds || [])]);
       if (newOrder.incidentId) {
-        setIds.add(newOrder.incidentId)
-        setIds.add(String(newOrder.incidentId).replace(/^#/, ''))
-        setIds.add(`#${String(newOrder.incidentId).replace(/^#/, '')}`)
-        simIds.add(newOrder.incidentId)
-        simIds.add(String(newOrder.incidentId).replace(/^#/, ''))
-        simIds.add(`#${String(newOrder.incidentId).replace(/^#/, '')}`)
+        setIds.add(newOrder.incidentId);
+        setIds.add(String(newOrder.incidentId).replace(/^#/, ''));
+        setIds.add(`#${String(newOrder.incidentId).replace(/^#/, '')}`);
+        simIds.add(newOrder.incidentId);
+        simIds.add(String(newOrder.incidentId).replace(/^#/, ''));
+        simIds.add(`#${String(newOrder.incidentId).replace(/^#/, '')}`);
       }
       if (newOrder.incidentRef) {
-        setIds.add(newOrder.incidentRef)
-        setIds.add(String(newOrder.incidentRef).replace(/^#/, ''))
-        setIds.add(`#${String(newOrder.incidentRef).replace(/^#/, '')}`)
-        simIds.add(newOrder.incidentRef)
-        simIds.add(String(newOrder.incidentRef).replace(/^#/, ''))
-        simIds.add(`#${String(newOrder.incidentRef).replace(/^#/, '')}`)
+        setIds.add(newOrder.incidentRef);
+        setIds.add(String(newOrder.incidentRef).replace(/^#/, ''));
+        setIds.add(`#${String(newOrder.incidentRef).replace(/^#/, '')}`);
+        simIds.add(newOrder.incidentRef);
+        simIds.add(String(newOrder.incidentRef).replace(/^#/, ''));
+        simIds.add(`#${String(newOrder.incidentRef).replace(/^#/, '')}`);
       }
 
       return {
         workOrders: {
-          [ticketKey]: finalizedOrder,
+          [ticketKey]: {
+            ...finalizedOrder,
+            team_head_name: assignedSup,
+            admin_name: created?.admin_name || adminName,
+            assignedCrew: assignedSup ? `Supervisor: ${assignedSup}` : finalizedOrder.assignedCrew,
+            chief: assignedSup || finalizedOrder.chief,
+          },
           ...state.workOrders,
         },
         activeWorkOrderTicketId: ticketKey,
@@ -1855,43 +1933,8 @@ export const useKWIStore = create((set, get) => ({
           [cleanRef]: newOrder.simulationOutcome,
           [`#${cleanRef}`]: newOrder.simulationOutcome,
         },
-      }
-    })
-
-    const adminName = get().currentUser?.name || 'Municipal Administrator';
-    // 2. Persist to backend work_orders table asynchronously (non-blocking)
-    api.post('/work-orders', {
-      work_id: ticketKey,
-      incident_id: cleanRef,
-      incident_ref: finalizedOrder.incidentRef,
-      location: finalizedOrder.location || '',
-      latitude: finalizedOrder.lat ? parseFloat(String(finalizedOrder.lat).replace(/[^\d.]/g, '')) : 0.0,
-      longitude: finalizedOrder.lng ? parseFloat(String(finalizedOrder.lng).replace(/[^\d.]/g, '')) : 0.0,
-      ward: finalizedOrder.borough || '',
-      issue_type: 'Waterlogging',
-      risk_level: finalizedOrder.priority || 'CRITICAL',
-      water_depth: waterDepthNum,
-      intervention_type: finalizedOrder.intervention_type || finalizedOrder.interventionType || '',
-      status: finalizedOrder.status || 'Dispatched',
-      admin_name: adminName,
-    }).then((created) => {
-      if (created && created.team_head_name) {
-        set((state) => ({
-          workOrders: {
-            ...state.workOrders,
-            [ticketKey]: {
-              ...(state.workOrders[ticketKey] || {}),
-              team_head_name: created.team_head_name,
-              admin_name: created.admin_name || adminName,
-              assignedCrew: `Supervisor: ${created.team_head_name}`,
-              chief: created.team_head_name,
-            }
-          }
-        }));
-      }
-    }).catch((err) => {
-      console.warn('[KWI] Backend work order persistence notice:', err?.message || err)
-    })
+      };
+    });
 
     const targetRoute = options.redirectTo || '/respond';
     get().navigate(targetRoute);
@@ -1909,6 +1952,20 @@ export const useKWIStore = create((set, get) => ({
     const key = ticketKey || get().activeWorkOrderTicketId
     const existing = get().workOrders[key]
     if (!existing) return
+
+    // Ensure the supervisor only advances work orders assigned to them
+    const supName = (currentUser?.name || currentUser?.full_name || "").trim().toLowerCase();
+    const existingSup = (existing.team_head_name || existing.chief || "").trim().toLowerCase();
+    const existingCrew = (existing.assignedCrew || existing.assigned_crew || "").trim().toLowerCase();
+    const isOwner =
+      !existingSup ||
+      (supName && (existingSup === supName || existingSup.includes(supName) || supName.includes(existingSup))) ||
+      (supName && existingCrew.includes(supName));
+
+    if (!isOwner) {
+      console.warn('[KWI] Unauthorized: You can only advance work orders assigned to you.');
+      return;
+    }
 
     const currentStage = typeof existing.stage === 'number'
       ? existing.stage

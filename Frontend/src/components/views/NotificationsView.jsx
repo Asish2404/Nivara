@@ -6,7 +6,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   ShieldCheck,
-  Cpu,
   Waves,
   FileText,
   Layers,
@@ -107,15 +106,6 @@ const ADMIN_CATEGORY_CONFIG = {
     glowClass: "from-emerald-500/10 to-transparent",
     dotClass: "bg-emerald-500",
   },
-  system: {
-    label: "System & Telemetry",
-    icon: Cpu,
-    accentColor: "#8b5cf6",
-    borderClass: "border-l-purple-500 hover:border-purple-400",
-    badgeClass: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30",
-    glowClass: "from-purple-500/10 to-transparent",
-    dotClass: "bg-purple-500",
-  },
 };
 
 export function NotificationsView() {
@@ -154,7 +144,10 @@ export function NotificationsView() {
   // 3. Incident status changed to resolved (for reported location)
   // 4. Location weather & flood forecast
   const userVisibleNotifications = useMemo(() => {
-    if (isAdmin) return notifications;
+    if (isAdmin) {
+      // Municipal Admins receive alerts across 4 categories (urgent, pumps, reports, resolved). Exclude system telemetry.
+      return notifications.filter((n) => n.category !== "system" && n.type !== "system");
+    }
     return notifications.filter(
       (n) =>
         n.type === "report_submitted" ||
@@ -184,23 +177,22 @@ export function NotificationsView() {
     };
   }, [userVisibleNotifications]);
 
-  // Tab counts for admins
+  // Tab counts for admins across the 4 active categories
   const adminCounts = useMemo(() => {
     return {
-      all: notifications.length,
-      urgent: notifications.filter(
+      all: userVisibleNotifications.length,
+      urgent: userVisibleNotifications.filter(
         (n) => n.category === "urgent" || n.severity === "critical"
       ).length,
-      pumps: notifications.filter((n) => n.category === "pumps").length,
-      reports: notifications.filter(
+      pumps: userVisibleNotifications.filter((n) => n.category === "pumps").length,
+      reports: userVisibleNotifications.filter(
         (n) => n.category === "reports" || n.type === "report_submitted"
       ).length,
-      resolved: notifications.filter(
+      resolved: userVisibleNotifications.filter(
         (n) => n.category === "resolved" || n.type === "incident_resolved"
       ).length,
-      system: notifications.filter((n) => n.category === "system").length,
     };
-  }, [notifications]);
+  }, [userVisibleNotifications]);
 
   // Filtered notifications list
   const filteredNotifications = useMemo(() => {
@@ -230,9 +222,6 @@ export function NotificationsView() {
           return false;
         }
         if (activeTab === "resolved" && notif.category !== "resolved" && notif.type !== "incident_resolved") {
-          return false;
-        }
-        if (activeTab === "system" && notif.category !== "system") {
           return false;
         }
       }
@@ -291,10 +280,14 @@ export function NotificationsView() {
     markNotificationAsRead(id);
   };
 
-  const handleDelete = (id, e) => {
-    e.stopPropagation();
+  const handleDelete = (notifItem, e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
     audioEngine?.playUiChirp(680);
-    deleteNotification(id);
+    const targetId =
+      typeof notifItem === "object" && notifItem !== null
+        ? notifItem.notification_id || notifItem.id || notifItem.dbId
+        : notifItem;
+    deleteNotification(targetId);
   };
 
   const handleActionClick = (route, e) => {
@@ -340,6 +333,19 @@ export function NotificationsView() {
                 ? "City-wide municipal emergency broadcasts, pumping station turbines, IoT telemetry calibration, and citizen report dispatch."
                 : "Live tracking for your submitted reports & location forecasts: instant submission acknowledgments, field response dispatches, incident resolutions, and 24h weather flood forecasts."}
             </p>
+
+            {/* Retention Policy Pill */}
+            {!isAdmin ? (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 w-fit">
+                <Clock className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Auto-cleared after 7 days to keep your notifications feed fresh & relevant</span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20 w-fit">
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                <span>Municipal Permanent Retention Archive (Admin Records)</span>
+              </div>
+            )}
           </div>
 
           {/* Quick Metrics Cards */}
@@ -351,6 +357,26 @@ export function NotificationsView() {
               </div>
               <div className="text-2xl font-extrabold text-white mt-0.5">
                 {userVisibleNotifications.length}
+              </div>
+            </div>
+
+            {/* Auto Retention Policy Card */}
+            <div className="flex-1 sm:flex-initial px-4 py-3 rounded-xl bg-slate-800/80 border border-slate-700/60 backdrop-blur-md min-w-[125px] text-center">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                Retention
+              </div>
+              <div className="text-sm sm:text-base font-bold text-white mt-1 flex items-center justify-center gap-1.5">
+                {isAdmin ? (
+                  <>
+                    <ShieldCheck className="w-4 h-4 text-amber-400" />
+                    <span>Permanent</span>
+                  </>
+                ) : (
+                  <>
+                    <Clock className="w-4 h-4 text-cyan-400" />
+                    <span>7 Days Auto</span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -808,7 +834,7 @@ export function NotificationsView() {
                         {/* Delete Alert Button */}
                         <button
                           type="button"
-                          onClick={(e) => handleDelete(notif.id, e)}
+                          onClick={(e) => handleDelete(notif, e)}
                           title="Delete notification"
                           className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-900 cursor-pointer transition-colors"
                         >
