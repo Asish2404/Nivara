@@ -407,19 +407,6 @@ export function LiveCityPage() {
             <span className="text-slate-300">WGS84 // EPSG:4326</span>
           </div>
 
-          {/* Bottom-Right Hooghly River Telemetry Pill */}
-          <div className="absolute bottom-4 right-4 z-10 hidden sm:flex items-center gap-3 px-3.5 py-2 rounded-xl bg-slate-900/85 backdrop-blur-md border border-cyan-500/25 text-white font-mono text-[10px] shadow-lg">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-blue-400" />
-              <span className="font-bold text-slate-200">Hooghly River (Live)</span>
-            </div>
-            <span className="text-slate-600 dark:text-[#6D949D]">|</span>
-            <div className="flex items-center gap-1.5 text-cyan-300">
-              <Waves className="w-3 h-3 text-cyan-400 animate-pulse" />
-              <span>Tide +3.42 m (High)</span>
-            </div>
-          </div>
-
           {/* Authentic Realistic Satellite & Street Map */}
           <KolkataGisMap traceWaterFlow={traceWaterFlow} />
 

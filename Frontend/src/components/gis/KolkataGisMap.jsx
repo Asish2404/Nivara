@@ -17,7 +17,7 @@ import {
   kmToGeoCoord,
   KOLKATA_CENTER_GEO,
 } from "./kolkataCartographicData";
-import { useKWIStore, isUserAdmin } from "../../store/useKWIStore";
+import { useKWIStore, isUserAdmin, isUserSupervisor } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
 import {
   Layers,
@@ -32,6 +32,7 @@ import {
   Droplets,
   Activity,
   CheckCircle2,
+  Check,
   ArrowRight,
   X,
   Play,
@@ -113,6 +114,8 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
   const [simulateState, setSimulateState] = useState(null); // null | 'BEFORE' | 'AFTER'
   const [activeSeverityFilter, setActiveSeverityFilter] = useState("ALL"); // "ALL" | "CRITICAL" | "HIGH" | "MODERATE" | "LOW"
   const [isLegendExpanded, setIsLegendExpanded] = useState(true);
+  const [showReported, setShowReported] = useState(true);
+  const [showPredicted, setShowPredicted] = useState(true);
 
   const handleFilterSelect = useCallback((filterKey) => {
     audioEngine.playUiChirp(1150);
@@ -121,7 +124,8 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
 
   // Internal layer toggles
   const store = useKWIStore();
-  const isAdmin = isUserAdmin(store.currentUser);
+  const isSupervisor = isUserSupervisor ? isUserSupervisor(store.currentUser) : false;
+  const isAdmin = !isSupervisor && isUserAdmin(store.currentUser);
   const [layerVisibility, setLayerVisibility] = useState({
     canals: true,
     drainage: true,
@@ -609,20 +613,90 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
 
       // 1. ACTIVE WATERLOGGING PREDICTIONS & INCIDENTS
       if (activeLayers.incidents) {
-        const liveIncidentsList = store.incidents && store.incidents.length > 0 ? store.incidents : [];
-        const hasPredictions = store.waterloggingPredictions && store.waterloggingPredictions.length > 0;
+        // Filter live incidents: exclude Resolved reports, and exclude reports older than 2 days (48h)
+        const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+        const nowMs = Date.now();
+
+        const rawLiveList = store.incidents && store.incidents.length > 0 ? store.incidents : [];
+        const activeLiveIncidents = rawLiveList.filter((inc) => {
+          // Vanish resolved reports from the map
+          const status = String(inc.status || "").toLowerCase().trim();
+          if (status === "resolved") return false;
+
+          // Remove reports submitted more than 2 days (48h) ago
+          const dateVal =
+            inc.createdAt ||
+            inc.created_at ||
+            inc.submitted_at ||
+            inc.firstSubmittedAt ||
+            inc.updated_at ||
+            inc.last_reported_at;
+          if (dateVal) {
+            const timeMs =
+              typeof dateVal === "number"
+                ? dateVal
+                : new Date(dateVal).getTime();
+            if (!isNaN(timeMs) && nowMs - timeMs > TWO_DAYS_MS) {
+              return false;
+            }
+          }
+          return true;
+        });
+
+        const rawPredList =
+          store.waterloggingPredictions && store.waterloggingPredictions.length > 0
+            ? store.waterloggingPredictions
+            : [];
 
         let allIncidents = [];
-        if (liveIncidentsList.length > 0) {
-          const liveLocs = new Set(liveIncidentsList.map(i => (i.location || '').toLowerCase().trim()));
-          const extraPredictions = hasPredictions
-            ? store.waterloggingPredictions.filter(p => !liveLocs.has((p.locality || '').toLowerCase().trim()))
-            : [];
-          allIncidents = [...liveIncidentsList, ...extraPredictions];
-        } else if (hasPredictions) {
-          allIncidents = store.waterloggingPredictions;
+        if (!isAdmin) {
+          // Non-admin (Citizen or Supervisor) sees the standard combined view
+          if (activeLiveIncidents.length > 0) {
+            const liveLocs = new Set(activeLiveIncidents.map((i) => (i.location || "").toLowerCase().trim()));
+            const extraPredictions = rawPredList.filter(
+              (p) => !liveLocs.has((p.locality || "").toLowerCase().trim())
+            );
+            allIncidents = [...activeLiveIncidents, ...extraPredictions];
+          } else {
+            allIncidents = rawPredList;
+          }
         } else {
-          allIncidents = [];
+          // Admin User Toggle Logic:
+          if (showReported && !showPredicted) {
+            // 1. Only locations reported by citizens
+            allIncidents = [...activeLiveIncidents];
+          } else if (!showReported && showPredicted) {
+            // 2. Only locations with predicted waterlogging
+            allIncidents = [...rawPredList];
+          } else if (showReported && showPredicted) {
+            // 3. Both reported and predicted locations (with deduplication)
+            if (activeLiveIncidents.length > 0) {
+              const liveLocs = new Set(activeLiveIncidents.map((i) => (i.location || "").toLowerCase().trim()));
+              const extraPredictions = rawPredList.filter(
+                (p) => !liveLocs.has((p.locality || "").toLowerCase().trim())
+              );
+              allIncidents = [...activeLiveIncidents, ...extraPredictions];
+            } else {
+              allIncidents = rawPredList;
+            }
+          } else {
+            // 4. Both unselected:
+            // Predicted locations are shown, PLUS ONLY live reported locations having risk level CRITICAL
+            const criticalLiveIncidents = activeLiveIncidents.filter((inc) => {
+              const sev = String(inc.severity || inc.risk_level || "").toUpperCase();
+              return (
+                sev === "CRITICAL" ||
+                (inc.verifiedReports && inc.verifiedReports >= 5) ||
+                (inc.report_count && inc.report_count >= 5) ||
+                (inc.verifiedReports >= 3 && (inc.waterLevelCm || 0) >= 25)
+              );
+            });
+            const critLocs = new Set(criticalLiveIncidents.map((i) => (i.location || "").toLowerCase().trim()));
+            const extraPredictions = rawPredList.filter(
+              (p) => !critLocs.has((p.locality || "").toLowerCase().trim())
+            );
+            allIncidents = [...criticalLiveIncidents, ...extraPredictions];
+          }
         }
 
         const incidentsToRender = allIncidents.filter((inc) => {
@@ -858,7 +932,19 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
         }
       }
     },
-    [activeLayers.incidents, activeLayers.pumps, activeLayers.landmarks, activeLayers.drainage, is3DMode, store.waterloggingPredictions, activeSeverityFilter]
+    [
+      activeLayers.incidents,
+      activeLayers.pumps,
+      activeLayers.landmarks,
+      activeLayers.drainage,
+      is3DMode,
+      store.waterloggingPredictions,
+      store.incidents,
+      activeSeverityFilter,
+      showReported,
+      showPredicted,
+      isAdmin,
+    ]
   );
 
   // -------------------------------------------------------------
@@ -1601,17 +1687,75 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={() => setShowLayerMenu(!showLayerMenu)}
-          className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl backdrop-blur-md border shadow-xl text-[11px] sm:text-xs font-semibold transition-all cursor-pointer ${showLayerMenu
-            ? "bg-cyan-500 text-slate-950 border-cyan-400"
-            : "bg-slate-900/90 text-slate-200 border-white/15 hover:bg-slate-800"
-            }`}
-        >
-          <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span className="hidden sm:inline">Overlays & </span><span>Layers</span>
-        </button>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {isAdmin && (
+            <>
+              {/* Reported Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  audioEngine.playUiChirp(showReported ? 780 : 1080);
+                  setShowReported((prev) => !prev);
+                }}
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl backdrop-blur-md border shadow-xl text-[11px] sm:text-xs font-semibold transition-all cursor-pointer ${
+                  showReported
+                    ? "bg-rose-500/20 text-rose-300 border-rose-400/60 shadow-[0_0_12px_rgba(244,63,94,0.25)]"
+                    : "bg-slate-900/90 text-slate-400 border-white/15 hover:bg-slate-800 hover:text-slate-200"
+                }`}
+                title="Toggle live citizen reported locations on the map"
+              >
+                <span
+                  className={`w-3.5 h-3.5 rounded-sm flex items-center justify-center border transition-colors ${
+                    showReported
+                      ? "bg-rose-500 border-rose-400 text-white"
+                      : "border-slate-500 bg-slate-800/80"
+                  }`}
+                >
+                  {showReported && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                </span>
+                <span>Reported</span>
+              </button>
+
+              {/* Predicted Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  audioEngine.playUiChirp(showPredicted ? 780 : 1080);
+                  setShowPredicted((prev) => !prev);
+                }}
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl backdrop-blur-md border shadow-xl text-[11px] sm:text-xs font-semibold transition-all cursor-pointer ${
+                  showPredicted
+                    ? "bg-cyan-500/20 text-cyan-300 border-cyan-400/60 shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+                    : "bg-slate-900/90 text-slate-400 border-white/15 hover:bg-slate-800 hover:text-slate-200"
+                }`}
+                title="Toggle AI predicted waterlogging locations on the map"
+              >
+                <span
+                  className={`w-3.5 h-3.5 rounded-sm flex items-center justify-center border transition-colors ${
+                    showPredicted
+                      ? "bg-cyan-500 border-cyan-400 text-slate-950"
+                      : "border-slate-500 bg-slate-800/80"
+                  }`}
+                >
+                  {showPredicted && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                </span>
+                <span>Predicted</span>
+              </button>
+            </>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setShowLayerMenu(!showLayerMenu)}
+            className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl backdrop-blur-md border shadow-xl text-[11px] sm:text-xs font-semibold transition-all cursor-pointer ${showLayerMenu
+              ? "bg-cyan-500 text-slate-950 border-cyan-400"
+              : "bg-slate-900/90 text-slate-200 border-white/15 hover:bg-slate-800"
+              }`}
+          >
+            <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Overlays & </span><span>Layers</span>
+          </button>
+        </div>
       </div>
 
       {/* ------------------------------------------------------------- */}
