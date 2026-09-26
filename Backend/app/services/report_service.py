@@ -220,6 +220,13 @@ class ReportService:
         except Exception as notif_err:
             print(f"[KWI] Report submission notification DB error: {notif_err}")
 
+        # Check if new report forms or escalates a multi-report hotspot cluster and alert municipal admins
+        try:
+            from .notification_service import NotificationService
+            await NotificationService.check_and_notify_admin_report_cluster(db, report)
+        except Exception as cluster_err:
+            print(f"[KWI] Admin cluster notification error: {cluster_err}")
+
         report.submitted_at = ensure_kolkata_tz(report.submitted_at)
         report.updated_at = ensure_kolkata_tz(report.updated_at)
         return report

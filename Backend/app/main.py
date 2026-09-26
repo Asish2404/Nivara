@@ -92,6 +92,14 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.warning("Startup database status reconciliation notice: %s", exc)
 
+    # Synchronize municipal operational telemetry across the 4 active categories for admins
+    try:
+        from app.services.notification_service import NotificationService
+        async with async_session() as db:
+            await NotificationService.sync_admin_operational_notifications(db)
+    except Exception as exc:
+        logger.warning("Startup admin operational notifications sync notice: %s", exc)
+
     # Start calendar-anchored background prediction scheduler (02:00, 10:00, 18:00)
     scheduler_task = asyncio.create_task(run_periodic_prediction_scheduler())
     yield

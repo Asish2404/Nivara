@@ -218,79 +218,8 @@ export const isLocationMatch = (loc1, loc2) => {
 // 3. Incident Status Resolved (for reported location)
 export const INITIAL_USER_NOTIFICATIONS = [];
 
-// Municipal Admin Broadcast Notifications (Across 4 Core Categories: urgent, pumps, reports, resolved)
-export const INITIAL_ADMIN_NOTIFICATIONS = [
-  {
-    id: "NOTIF-KMC-001",
-    category: "urgent",
-    severity: "critical",
-    title: "IMD Red Alert: Flash Flood Warning in Ultadanga & Sector V",
-    message: "Convective cloudburst cell detected (74 mm/3hr recorded). Waterlogging depth exceeding 18 inches along College More and Ultadanga Underpass. Hooghly tidal lock (3.42m) active; traffic diversions deployed.",
-    location: "Ward 32 • Sector V & Ultadanga Underpass",
-    ward: "Ward 32",
-    timestamp: "12m ago",
-    isRead: false,
-    metrics: { label: "Water Depth", value: "+18 in", status: "Critical" },
-    action: { label: "View on GIS Map", route: "/live-city" },
-    recipientType: "admin",
-  },
-  {
-    id: "NOTIF-KMC-002",
-    category: "pumps",
-    severity: "high",
-    title: "Palmer Bazar PS-07: Turbines at Maximum Capacity",
-    message: "Main axial flow turbine running at 100% capacity (85 cusecs). Godwin auxiliary high-discharge diesel pumps dispatched to prevent canal overflow along Entally and Sealdah South basin.",
-    location: "Ward 55 • Palmer Bazar Pumping Station",
-    ward: "Ward 55",
-    timestamp: "38m ago",
-    isRead: false,
-    metrics: { label: "Discharge", value: "85 cusecs", status: "Peak" },
-    action: { label: "Inspect Drainage Action", route: "/action-center" },
-    recipientType: "admin",
-  },
-  {
-    id: "NOTIF-KMC-004",
-    category: "pumps",
-    severity: "high",
-    title: "Circular Canal Sluice Gate #3 Schedule Advisory",
-    message: "Automated lock-gate sequence scheduled for closure during peak tide to prevent river water reverse-flow into Beleghata, Maniktala, and Rajabazar low-lying wards.",
-    location: "Ward 29 • Circular Canal Outfall",
-    ward: "Ward 29",
-    timestamp: "5h ago",
-    isRead: true,
-    metrics: { label: "Gate Closure", value: "14:30 IST", status: "Scheduled" },
-    action: { label: "Inspect Drainage Action", route: "/action-center" },
-    recipientType: "admin",
-  },
-  {
-    id: "NOTIF-KMC-005",
-    category: "reports",
-    severity: "high",
-    title: "Hotspot Cluster: Multi-Citizen Reports at College More",
-    message: "5+ independent citizen reports logged within 30 minutes at College More crossing. Unassigned high-risk incident flagged for emergency crew dispatch.",
-    location: "Ward 32 • College More, Sector V",
-    ward: "Ward 32",
-    timestamp: "1h ago",
-    isRead: false,
-    metrics: { label: "Report Cluster", value: "5 Reports", status: "Hotspot" },
-    action: { label: "Review Incident Queue", route: "/action-center" },
-    recipientType: "admin",
-  },
-  {
-    id: "NOTIF-KMC-006",
-    category: "resolved",
-    severity: "resolved",
-    title: "Operations Complete: Park Street De-watering Resolved",
-    message: "Field response crews and high-discharge auxiliary units have finished de-watering. Stormwater drains confirmed clear and roadway reopened to regular traffic flow.",
-    location: "Ward 63 • Park Street Crossing",
-    ward: "Ward 63",
-    timestamp: "3h ago",
-    isRead: true,
-    metrics: { label: "Operations", value: "Complete", status: "Cleared" },
-    action: { label: "Inspect Completed Action", route: "/action-center" },
-    recipientType: "admin",
-  },
-];
+// Municipal Admin Broadcast Notifications (Dynamically synchronized with Backend SQLite Database across 4 Categories)
+export const INITIAL_ADMIN_NOTIFICATIONS = [];
 
 export const INITIAL_NOTIFICATIONS = [
   ...INITIAL_USER_NOTIFICATIONS,
@@ -303,32 +232,50 @@ export const mapBackendNotification = (n) => {
   let severity = "medium";
   let metrics = null;
   let action = null;
+  const isAdminBroadcast = n.user_id === "ADMIN_BROADCAST" || n.recipientType === "admin";
 
-  if (n.type === "report_submitted") {
+  if (n.type === "report_submitted" && !isAdminBroadcast) {
     category = "reports";
     severity = "medium";
     metrics = { label: "Report Status", value: "Submitted", status: "Registered" };
     action = { label: "View My Reports", route: "/my-reports" };
-  } else if (n.type === "incident_in_progress") {
+  } else if (n.type === "incident_in_progress" && !isAdminBroadcast) {
     category = "pumps";
     severity = "high";
     metrics = { label: "Incident Status", value: "In Progress", status: "Team on Site" };
     action = { label: "Track Live Status", route: "/my-reports" };
-  } else if (n.type === "incident_resolved") {
+  } else if (n.type === "incident_resolved" && !isAdminBroadcast) {
     category = "resolved";
     severity = "resolved";
     metrics = { label: "Incident Status", value: "Resolved", status: "Cleared" };
     action = { label: "View My Reports", route: "/my-reports" };
-  } else if (n.type === "location_forecast") {
+  } else if (n.type === "location_forecast" && !isAdminBroadcast) {
     category = "system";
     severity = "medium";
     metrics = { label: "24h Rain Risk", value: "Forecast", status: "Active" };
     action = { label: "View Location Reports", route: "/my-reports" };
   } else {
-    category = n.category && n.category !== "system" ? n.category : (n.type === "urgent" ? "urgent" : n.type === "pumps" ? "pumps" : n.type === "resolved" ? "resolved" : "reports");
-    severity = n.severity || (category === "urgent" ? "critical" : "high");
+    // Admin operational telemetry across 4 active categories: urgent, pumps, reports, resolved
+    category = n.category && n.category !== "system" ? n.category : (
+      n.type === "urgent" ? "urgent" :
+      n.type === "pumps" ? "pumps" :
+      (n.type === "resolved" || n.type === "incident_resolved") ? "resolved" : "reports"
+    );
+    severity = n.severity || (category === "urgent" ? "critical" : category === "resolved" ? "resolved" : "high");
     metrics = n.metrics || null;
-    action = n.action || { label: "View on GIS Map", route: "/live-city" };
+    if (!action) {
+      if (category === "urgent") {
+        action = { label: "View on GIS Map", route: "/live-city" };
+      } else if (category === "pumps") {
+        action = { label: "Inspect Drainage Action", route: "/action-center" };
+      } else if (category === "reports") {
+        action = { label: "Review Incident Queue", route: "/action-center" };
+      } else if (category === "resolved") {
+        action = { label: "Inspect Completed Action", route: "/action-center" };
+      } else {
+        action = { label: "Review Incident Queue", route: "/action-center" };
+      }
+    }
   }
 
   return {
@@ -349,7 +296,7 @@ export const mapBackendNotification = (n) => {
     action,
     reportId: n.report_id,
     workId: n.work_id,
-    recipientType: n.type?.startsWith("incident_") || n.type === "report_submitted" || n.type === "location_forecast" ? "user" : "admin",
+    recipientType: isAdminBroadcast ? "admin" : (n.type?.startsWith("incident_") || n.type === "report_submitted" || n.type === "location_forecast" ? "user" : "admin"),
     relatedLocation: n.location,
   };
 };
@@ -1334,11 +1281,6 @@ export const useKWIStore = create((set, get) => ({
         const { currentUser } = get();
         const isAdmin = isUserAdmin(currentUser);
         let merged = mapped;
-        if (isAdmin) {
-          const dbIds = new Set(mapped.map((n) => n.id));
-          const extraAdmin = INITIAL_ADMIN_NOTIFICATIONS.filter((an) => !dbIds.has(an.id));
-          merged = [...mapped, ...extraAdmin];
-        }
 
         // Strict deduplication, single forecast & 7-day citizen expiration enforcement:
         const seenIds = new Set();
@@ -1350,9 +1292,22 @@ export const useKWIStore = create((set, get) => ({
         for (const n of merged) {
           const idKey = n.id || n.notification_id;
           const locKey = String(n.location || n.relatedLocation || "").toLowerCase().trim();
-          const eventKey = n.type === "report_submitted" && n.reportId ? `${n.type}|${n.reportId}` : `${n.type || ""}|${locKey}`;
+          const titleKey = String(n.title || "").toLowerCase().trim();
+          
+          // Form a robust event key for deduplication across all roles
+          let eventKey = "";
+          if (n.reportId) {
+            eventKey = `${n.type || ""}|report:${n.reportId}`;
+          } else if (n.workId) {
+            eventKey = `${n.type || ""}|work:${n.workId}`;
+          } else if (titleKey) {
+            eventKey = `${n.type || ""}|${titleKey}|${locKey}`;
+          } else {
+            eventKey = `${n.type || ""}|${locKey}`;
+          }
 
           if (seenIds.has(idKey)) continue;
+          if (eventKey && seenEvents.has(eventKey)) continue;
 
           // For regular citizens only: prune any notifications older than 7 days (admins keep full history)
           if (!isAdmin) {
@@ -1371,10 +1326,8 @@ export const useKWIStore = create((set, get) => ({
             seenForecast = true;
           }
 
-          if (n.recipientType === "user" && eventKey && seenEvents.has(eventKey)) continue;
-
           seenIds.add(idKey);
-          if (n.recipientType === "user" && eventKey) {
+          if (eventKey) {
             seenEvents.add(eventKey);
           }
           deduped.push(n);
