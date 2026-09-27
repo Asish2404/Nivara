@@ -78,6 +78,47 @@ class WorkOrderResponse(BaseModel):
         dt = ensure_kolkata_tz(self.dispatched_at)
         return dt.strftime("%b %d, %Y at %I:%M %p") if dt else ""
 
+    @computed_field
+    @property
+    def water_level(self) -> str:
+        depth = float(self.water_depth or 0.0)
+        if depth <= 0:
+            return "clear"
+        elif depth <= 15:
+            return "ankle"
+        elif depth <= 40:
+            return "between"
+        elif depth <= 50:
+            return "knee"
+        else:
+            return "thigh"
+
     class Config:
         from_attributes = True
         populate_by_name = True
+
+
+class SupervisorVerificationResponse(BaseModel):
+    work_order_id: str
+    verification_result: str  # "accepted", "warning", "rejected"
+    final_status: str        # "resolved", "incomplete", "rejected"
+    prediction: str          # "clear", "ankle", "between", "knee", "thigh", "uncertain"
+    expected_level: str
+    confidence: float
+    probabilities: dict = {}
+    gps_status: str          # "matched", "mismatch", "invalid"
+    timestamp_status: str    # "valid", "invalid"
+    distance_meters: Optional[float] = None
+    reason: Optional[str] = None
+    requires_reason: bool = False
+    steps: Optional[dict] = None
+
+
+class ResolveVerifiedRequest(BaseModel):
+    image_url: Optional[str] = None
+    reason: Optional[str] = "Waterlogging cleared & verified via Supervisor Verification Gate"
+
+
+class ResolveWarningRequest(BaseModel):
+    reason: str
+    image_url: Optional[str] = None

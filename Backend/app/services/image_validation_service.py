@@ -21,35 +21,68 @@ FINE_TUNED_MODEL_PATH = os.path.join(MODEL_DIR, "mobilenet_v3_drainage.pth")
 # Pretrained ImageNet Class Sets for General Out-of-Distribution Non-Drainage
 # ---------------------------------------------------------------------------
 
-# Apparel, Wearables, Accessories & Facial/Person features
+# Apparel, Wearables, Accessories, Masks, & Facial/Person features
 APPAREL_PERSON_CLASSES = {
+    400,  # academic gown
+    411,  # apron
+    423,  # barber chair
+    424,  # barbershop
     433,  # bathing cap
+    439,  # bearskin
+    445,  # bikini
     451,  # bolo tie
+    452,  # bonnet
     457,  # bow tie, bow-tie, bowtie
+    459,  # brassiere, bra
+    465,  # bulletproof vest
+    501,  # cloak
     514,  # cowboy boot
     515,  # cowboy hat
     551,  # face powder
     568,  # fur coat
+    570,  # gasmask, respirator
+    578,  # gown
+    584,  # hair slide
+    585,  # hair spray
+    601,  # hoopskirt
     608,  # jean, blue jean, denim
     610,  # jersey, T-shirt, tee shirt
+    614,  # kimono
     617,  # lab coat, laboratory coat
+    629,  # lipstick, lip rouge
     639,  # maillot, tank suit
+    643,  # mask (surgical, face mask, costume)
+    652,  # military uniform
+    655,  # miniskirt
+    667,  # mortarboard
     678,  # neck brace
     679,  # necklace
+    689,  # overskirt
+    691,  # oxygen mask
     697,  # pajama, pyjama, pj's
+    735,  # poncho
     770,  # running shoe
     774,  # sandal
+    775,  # sarong
     788,  # shoe shop
     793,  # shower cap
+    796,  # ski mask
+    801,  # snorkel
     806,  # sock
+    808,  # sombrero
+    824,  # stole
     834,  # suit, suit of clothes
     836,  # sunglass
     837,  # sunglasses, dark glasses, shades
     841,  # sweatshirt
     842,  # swimming trunks
     869,  # trench coat
+    887,  # vestment
     903,  # wig
     906,  # Windsor tie
+    981,  # ballplayer, baseball player
+    982,  # groom, bridegroom
+    983,  # scuba diver
 }
 
 # Digital displays, screens, documents, slides, computer equipment

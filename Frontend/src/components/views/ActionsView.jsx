@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { useKWIStore, isUserSupervisor } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
+import { SupervisorVerificationGate } from "../supervisor/SupervisorVerificationGate";
 
 const RADIO_LOGS = [
   {
@@ -363,6 +364,35 @@ export function ActionsView() {
   // DEDICATED SUPERVISOR PHOTO RESOLUTION PAGE (Matching exact reference pic)
   // =========================================================================
   if (isResolvingWithPhoto && activeTicket) {
+    return (
+      <SupervisorVerificationGate
+        workOrder={activeTicket}
+        onResolved={(updatedWo) => {
+          setIsResolvingWithPhoto(false);
+          setCurrentStage(3);
+          const targetKey = selectedTicketId || activeTicket.ticketKey || activeTicket.id;
+          if (advanceWorkOrderStatus && targetKey) {
+            advanceWorkOrderStatus(targetKey, {
+              image_url: updatedWo?.image_url,
+              reason: updatedWo?.reason,
+            });
+          }
+        }}
+        onIncomplete={(updatedWo) => {
+          setIsResolvingWithPhoto(false);
+          if (activeTicket) {
+            activeTicket.status = "Incomplete";
+          }
+        }}
+        onCancel={() => {
+          setIsResolvingWithPhoto(false);
+          handleStopCamera();
+        }}
+      />
+    );
+  }
+
+  if (false && isResolvingWithPhoto && activeTicket) {
     return (
       <div className="relative w-full font-sans text-slate-900 dark:text-slate-100 pb-6 pt-2">
         {/* Top Header: Back Link + Step Indicator */}

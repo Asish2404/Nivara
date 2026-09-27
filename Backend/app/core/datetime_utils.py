@@ -1,5 +1,5 @@
 from datetime import datetime, timezone, timedelta
-from typing import Optional
+from typing import Optional, Union
 import zoneinfo
 
 
@@ -21,18 +21,30 @@ def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def ensure_kolkata_tz(dt: Optional[datetime]) -> Optional[datetime]:
-    """Ensure a datetime has the Asia/Kolkata timezone attached.
+def ensure_kolkata_tz(dt: Optional[Union[datetime, str]]) -> Optional[datetime]:
+    """Ensure a datetime (or ISO/date string) has the Asia/Kolkata timezone attached.
 
     If naive, attaches Kolkata timezone directly (since SQLite stores local time).
     If already aware, converts to Kolkata timezone.
     """
     if dt is None:
         return None
+    if isinstance(dt, str):
+        try:
+            dt = datetime.fromisoformat(dt.replace("Z", "+00:00"))
+        except Exception:
+            try:
+                dt = datetime.strptime(dt, "%Y-%m-%d %H:%M:%S.%f")
+            except Exception:
+                try:
+                    dt = datetime.strptime(dt, "%Y-%m-%d %H:%M:%S")
+                except Exception:
+                    return None
     tz = get_kolkata_tz()
     if dt.tzinfo is None:
         return dt.replace(tzinfo=tz)
     return dt.astimezone(tz)
+
 
 
 def format_12hr_time(dt: Optional[datetime]) -> str:

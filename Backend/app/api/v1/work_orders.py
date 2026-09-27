@@ -1,9 +1,16 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, Form, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.schemas.work_order import WorkOrderCreate, WorkOrderResponse, WorkOrderStatusUpdate
+from app.schemas.work_order import (
+    WorkOrderCreate,
+    WorkOrderResponse,
+    WorkOrderStatusUpdate,
+    SupervisorVerificationResponse,
+    ResolveVerifiedRequest,
+    ResolveWarningRequest,
+)
 from app.services.work_order_service import WorkOrderService
 
 router = APIRouter()
@@ -142,6 +149,13 @@ async def update_work_order_status(
     payload: WorkOrderStatusUpdate,
     db: AsyncSession = Depends(get_db),
 ):
+    # Rule 1 & Rule 15: Disallow direct change to Resolved without verification gate
+    if payload.status and payload.status.strip().lower() == "resolved":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Work order cannot be directly updated to Resolved. Complete supervisor verification gate is required.",
+        )
+
     wo = await WorkOrderService.update_work_order_status(
         db,
         work_id,
@@ -155,3 +169,122 @@ async def update_work_order_status(
             detail=f"Work order '{work_id}' not found.",
         )
     return WorkOrderResponse.model_validate(wo)
+
+
+@router.post(
+    "/work-orders/{work_id}/verify",
+    response_model=SupervisorVerificationResponse,
+    summary="Run complete 6-stage supervisor verification pipeline on work order resolution photo",
+)
+@router.post(
+    "/work_orders/{work_id}/verify",
+    response_model=SupervisorVerificationResponse,
+    summary="Run complete 6-stage supervisor verification pipeline on work order resolution photo (alias)",
+)
+async def verify_work_order_completion(
+    work_id: str,
+    image: UploadFile = File(...),
+    client_lat: Optional[float] = Form(None),
+    client_lon: Optional[float] = Form(None),
+    client_timestamp: Optional[str] = Form(None),
+    gps_tolerance_meters: Optional[float] = Form(None),
+    db: AsyncSession = Depends(get_db),
+):
+    """Executes the complete verification gate:
+    1. Image validation & relevance
+    2. EXIF / OCR GPS & Timestamp extraction
+    3. GPS verification (<= tolerance)
+    4. Timestamp verification (> work_orders.created_at)
+    5. MobileNetV2 surface / depth analysis
+    6. Water level comparison (ACCEPTED, WARNING, REJECTED)
+    DOES NOT modify database.
+    """
+    wo = await WorkOrderService.get_work_order_by_id(db, work_id)
+    if not wo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Work order '{work_id}' not found.",
+        )
+
+    from app.services.supervisor_verification_service import SupervisorVerificationService
+    image_bytes = await image.read()
+    verification = SupervisorVerificationService.verify_work_order_completion(
+        work_order=wo,
+        image_input=image_bytes,
+        client_lat=client_lat,
+        client_lon=client_lon,
+        client_timestamp=client_timestamp,
+        gps_tolerance_meters=gps_tolerance_meters,
+    )
+    return SupervisorVerificationResponse(**verification)
+
+
+@router.post(
+    "/work-orders/{work_id}/resolve-verified",
+    response_model=WorkOrderResponse,
+    summary="Confirm resolution after verification gate has passed with ACCEPTED",
+)
+@router.post(
+    "/work_orders/{work_id}/resolve-verified",
+    response_model=WorkOrderResponse,
+    summary="Confirm resolution after verification gate has passed with ACCEPTED (alias)",
+)
+async def resolve_verified_work_order(
+    work_id: str,
+    payload: ResolveVerifiedRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Updates work order to RESOLVED ONLY AFTER verification succeeds."""
+    wo = await WorkOrderService.update_work_order_status(
+        db,
+        work_id,
+        status="Resolved",
+        reason=payload.reason or "Waterlogging cleared & verified via Supervisor Verification Gate",
+        image_url=payload.image_url,
+    )
+    if not wo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Work order '{work_id}' not found.",
+        )
+    return WorkOrderResponse.model_validate(wo)
+
+
+@router.post(
+    "/work-orders/{work_id}/resolve-warning",
+    response_model=WorkOrderResponse,
+    summary="Submit mandatory supervisor reason when verification warning is triggered (sets status to Incomplete)",
+)
+@router.post(
+    "/work_orders/{work_id}/resolve-warning",
+    response_model=WorkOrderResponse,
+    summary="Submit mandatory supervisor reason when verification warning is triggered (alias)",
+)
+async def submit_warning_incomplete(
+    work_id: str,
+    payload: ResolveWarningRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """When detected level >= work-order level, supervisor enters required reason and status becomes Incomplete.
+    NEVER sets work order to RESOLVED.
+    """
+    if not payload.reason or not payload.reason.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mandatory reason must be provided to submit verification warning.",
+        )
+
+    wo = await WorkOrderService.update_work_order_status(
+        db,
+        work_id,
+        status="Incomplete",
+        reason=f"[VERIFICATION WARNING] {payload.reason.strip()}",
+        image_url=payload.image_url,
+    )
+    if not wo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Work order '{work_id}' not found.",
+        )
+    return WorkOrderResponse.model_validate(wo)
+

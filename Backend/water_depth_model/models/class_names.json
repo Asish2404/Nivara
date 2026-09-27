@@ -1,0 +1,26 @@
+{
+  "classes": [
+    "clear",
+    "ankle",
+    "between",
+    "knee",
+    "thigh",
+    "uncertain"
+  ],
+  "class_to_idx": {
+    "clear": 0,
+    "ankle": 1,
+    "between": 2,
+    "knee": 3,
+    "thigh": 4,
+    "uncertain": 5
+  },
+  "idx_to_class": {
+    "0": "clear",
+    "1": "ankle",
+    "2": "between",
+    "3": "knee",
+    "4": "thigh",
+    "5": "uncertain"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "train": {
+    "clear": 848,
+    "ankle": 494,
+    "between": 781,
+    "knee": 311,
+    "thigh": 210,
+    "uncertain": 280
+  },
+  "validation": {
+    "clear": 181,
+    "ankle": 105,
+    "between": 167,
+    "knee": 66,
+    "thigh": 45,
+    "uncertain": 60
+  },
+  "test": {
+    "clear": 183,
+    "ankle": 107,
+    "between": 168,
+    "knee": 68,
+    "thigh": 45,
+    "uncertain": 60
+  }
+}
