@@ -1,7 +1,9 @@
+import { motion } from "framer-motion";
 import { KWINavbar } from "../navigation/KWINavbar";
 import { AskKolkataDrawer } from "../navigation/AskKolkataDrawer";
 import Footer from "../Footer";
 import { useKWIStore } from "../../store/useKWIStore";
+import { TRANSITION_EASE, DURATION } from "../../utils/motionVariants";
 
 export function SubpageLayout({ children }) {
   const { currentRoute } = useKWIStore();
@@ -32,9 +34,9 @@ export function SubpageLayout({ children }) {
             : isReportsRoute
               ? "bg-[#f4f7fb] dark:bg-[#0A1E3B]"
               : isSimulateRoute
-                ? "bg-[#f3f7fb] dark:bg-[#070c14]"
+                ? "bg-[#f3f7fb] dark:bg-[#0A1E3B]"
                 : isRespondRoute
-                  ? "bg-white dark:bg-[#0A1E3B]"
+                  ? "bg-[#f3f7fb] dark:bg-[#0A1E3B]"
                   : isNotificationsRoute
                     ? "bg-[#f4f7fb] dark:bg-[#070c14]"
                     : isHomeRoute
@@ -66,7 +68,15 @@ export function SubpageLayout({ children }) {
                   : "max-w-[1280px] pt-8 pb-16 px-4 sm:px-6 lg:px-8"
         }`}
       >
-        {children}
+        <motion.div
+          key={currentRoute}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.25, ease: TRANSITION_EASE }}
+          className="w-full h-full"
+        >
+          {children}
+        </motion.div>
       </main>
 
       <Footer />

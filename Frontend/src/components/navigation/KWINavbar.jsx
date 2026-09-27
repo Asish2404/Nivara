@@ -13,6 +13,8 @@ import {
   X,
   User,
   LayoutDashboard,
+  BrainCircuit,
+  MessageSquare,
 } from "lucide-react";
 import { useKWIStore, isUserAdmin, isUserSupervisor } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
@@ -545,18 +547,55 @@ export function KWINavbar() {
                 )}
               </button>
 
-              {/* Glowing Ask Kolkata Gradient Button */}
-              <button
+              {/* ─── Ask Kolkata — Premium AI Entry Button ─── */}
+              <motion.button
                 type="button"
                 onClick={() => {
                   audioEngine.playUiChirp(880);
                   toggleAskKolkata();
                 }}
-                className="hidden sm:flex items-center gap-2 px-4.5 py-2.5 rounded-2xl text-xs font-semibold text-white bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 hover:from-blue-600 hover:to-cyan-400 transition-all cursor-pointer shadow-[0_4px_16px_rgba(0,112,243,0.35)] active:scale-[0.98] border border-blue-400/25 whitespace-nowrap"
+                whileHover={{ scale: 1.04, y: -1 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 420, damping: 26 }}
+                aria-label="Open Ask Kolkata AI assistant"
+                className={`hidden sm:flex items-center gap-2 px-4 py-2 rounded-full text-[11.5px] font-semibold whitespace-nowrap cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 transition-shadow ${
+                  isDarkMode
+                    ? "text-white border border-cyan-400/35 shadow-[0_0_18px_rgba(0,229,255,0.18),inset_0_1px_1px_rgba(255,255,255,0.12)] hover:shadow-[0_0_28px_rgba(0,229,255,0.32),inset_0_1px_1px_rgba(255,255,255,0.14)]"
+                    : "text-white border border-blue-400/30 shadow-[0_4px_18px_rgba(0,112,243,0.32),inset_0_1px_1px_rgba(255,255,255,0.3)] hover:shadow-[0_6px_24px_rgba(0,112,243,0.45),inset_0_1px_1px_rgba(255,255,255,0.35)]"
+                }`}
+                style={{
+                  background: isDarkMode
+                    ? "linear-gradient(130deg, rgba(6,24,52,0.92) 0%, rgba(6,32,70,0.88) 40%, rgba(4,20,52,0.94) 100%)"
+                    : "linear-gradient(130deg, #1d4fd8 0%, #0ea5e9 55%, #06b6d4 100%)",
+                }}
               >
-                <Sparkles className="w-3.5 h-3.5 text-white" />
-                <span>Ask Kolkata</span>
-              </button>
+                {/* Animated icon */}
+                <span
+                  className={`flex items-center justify-center w-5 h-5 rounded-full ${
+                    isDarkMode
+                      ? "bg-cyan-400/15 text-cyan-300"
+                      : "bg-white/20 text-white"
+                  }`}
+                >
+                  <BrainCircuit className="w-3 h-3" />
+                </span>
+
+                <span className={isDarkMode ? "text-[#e2f6ff]" : "text-white"}>Ask Kolkata</span>
+
+                {/* Subtle live indicator dot */}
+                <span className="relative flex h-1.5 w-1.5">
+                  <span
+                    className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                      isDarkMode ? "bg-cyan-400" : "bg-white"
+                    }`}
+                  />
+                  <span
+                    className={`relative inline-flex rounded-full h-1.5 w-1.5 ${
+                      isDarkMode ? "bg-cyan-300" : "bg-white"
+                    }`}
+                  />
+                </span>
+              </motion.button>
 
               {/* Mobile Menu Toggle Button with Glassmorphism & Micro-Interaction */}
               <button
@@ -649,18 +688,35 @@ export function KWINavbar() {
                       isDarkMode ? "border-white/10" : "border-slate-200/80"
                     }`}
                   >
-                    <button
+                    <motion.button
                       type="button"
                       onClick={() => {
                         setMobileMenuOpen(false);
                         audioEngine.playUiChirp(880);
                         toggleAskKolkata();
                       }}
-                      className="flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 flex items-center justify-center gap-1.5 shadow-[0_4px_16px_rgba(0,112,243,0.3)] active:scale-[0.98] transition-transform cursor-pointer border border-cyan-400/25"
+                      whileTap={{ scale: 0.96 }}
+                      aria-label="Open Ask Kolkata AI assistant"
+                      className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                        isDarkMode
+                          ? "text-white border-cyan-400/30 shadow-[0_0_14px_rgba(0,229,255,0.16)]"
+                          : "text-white border-blue-400/30 shadow-[0_4px_14px_rgba(0,112,243,0.32)]"
+                      }`}
+                      style={{
+                        background: isDarkMode
+                          ? "linear-gradient(130deg, rgba(6,24,52,0.96) 0%, rgba(6,32,70,0.92) 100%)"
+                          : "linear-gradient(130deg, #1d4fd8 0%, #0ea5e9 55%, #06b6d4 100%)",
+                      }}
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-white" />
-                      <span>Ask Kolkata</span>
-                    </button>
+                      <span
+                        className={`flex items-center justify-center w-5 h-5 rounded-full ${
+                          isDarkMode ? "bg-cyan-400/15 text-cyan-300" : "bg-white/20 text-white"
+                        }`}
+                      >
+                        <BrainCircuit className="w-3 h-3" />
+                      </span>
+                      <span className={isDarkMode ? "text-[#e2f6ff]" : "text-white"}>Ask Kolkata</span>
+                    </motion.button>
 
                     <button
                       type="button"

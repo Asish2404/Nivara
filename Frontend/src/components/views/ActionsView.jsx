@@ -33,6 +33,9 @@ import {
 import { useKWIStore, isUserSupervisor } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
 import { SupervisorVerificationGate } from "../supervisor/SupervisorVerificationGate";
+import { motion, AnimatePresence } from "framer-motion";
+import { KWITelemetryLoader } from "../ui/KWITelemetryLoader";
+import { TRANSITION_EASE, DURATION } from "../../utils/motionVariants";
 
 const RADIO_LOGS = [
   {
@@ -840,10 +843,13 @@ export function ActionsView() {
               </div>
               <div className="relative aspect-4/3 bg-black flex items-center justify-center overflow-hidden">
                 {isCameraStarting ? (
-                  <div className="flex flex-col items-center gap-2 text-white">
-                    <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
-                    <span className="text-xs">Initializing camera...</span>
-                  </div>
+                  <KWITelemetryLoader
+                    inline={true}
+                    badge="OPTICAL-LINK"
+                    title="INITIALIZING FIELD CAMERA"
+                    subtitle="CONNECTING NATIVE OPTICAL STREAM"
+                    showTelemetry={false}
+                  />
                 ) : (
                   <video
                     ref={videoRef}

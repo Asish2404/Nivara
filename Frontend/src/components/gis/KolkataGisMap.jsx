@@ -19,6 +19,9 @@ import {
 } from "./kolkataCartographicData";
 import { useKWIStore, isUserAdmin, isUserSupervisor } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
+import { motion, AnimatePresence } from "framer-motion";
+import { KWITelemetryLoader } from "../ui/KWITelemetryLoader";
+import { TRANSITION_EASE } from "../../utils/motionVariants";
 import {
   Layers,
   Compass,
@@ -116,6 +119,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
   const [isLegendExpanded, setIsLegendExpanded] = useState(true);
   const [showReported, setShowReported] = useState(true);
   const [showPredicted, setShowPredicted] = useState(true);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   const handleFilterSelect = useCallback((filterKey) => {
     audioEngine.playUiChirp(1150);
@@ -822,11 +826,11 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
           el.setAttribute("title", `${ps.name} - ${ps.status}`);
           el.innerHTML = `
             <div style="background: ${isCap ? "#dc2626" : "#0284c7"
-            }; color: white; width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; border: 1.5px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.45); font-family: monospace;">
+            }; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; border: 1.5px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.45); font-family: monospace;">
               PS
             </div>
             <div style="background: rgba(15,23,42,0.88); color: ${isCap ? "#fca5a5" : "#7dd3fc"
-            }; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); font-family: monospace; white-space: nowrap; ${isMobileScreen ? 'display: none;' : ''}">
+            }; font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 9999px; border: 1px solid rgba(255,255,255,0.2); font-family: monospace; white-space: nowrap; ${isMobileScreen ? 'display: none;' : ''}">
               ${ps.id}: ${ps.capacity}
             </div>
           `;
@@ -977,7 +981,13 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
     map.on("load", () => {
       syncMapOverlays(map);
       syncMarkers(map);
+      setMapLoaded(true);
     });
+
+    // Fallback timer ensures loading screen resolves smoothly even in offline/stub environments
+    const fallbackTimer = setTimeout(() => {
+      setMapLoaded(true);
+    }, 1200);
 
     mapInstanceRef.current = map;
     if (typeof window !== "undefined") {
@@ -985,6 +995,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
     }
 
     return () => {
+      clearTimeout(fallbackTimer);
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
       if (typeof window !== "undefined") {
@@ -1386,6 +1397,27 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
         }}
       />
 
+      {/* Telemetry Page Loading Animation: Standardized with Home and Dashboard */}
+      <AnimatePresence>
+        {!mapLoaded && (
+          <motion.div
+            key="kolkata-map-loader"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: TRANSITION_EASE }}
+            className="absolute inset-0 z-40 flex items-center justify-center bg-slate-950/85 backdrop-blur-md pointer-events-none"
+          >
+            <KWITelemetryLoader
+              title="LIVE MUNICIPAL TELEMETRY"
+              subtitle="SYNCHRONIZING SENSORS // 41 HOOGHLY SLUICE GATES LINKED"
+              badge="KWI-GIS-COMMAND"
+              inline={false}
+              showTelemetry={true}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ------------------------------------------------------------- */}
       {/* Top Left: Enterprise GIS Municipal Telemetry Badge */}
       {/* ------------------------------------------------------------- */}
@@ -1414,14 +1446,14 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* Top Right: Map Styles & WebGL Camera Control Ribbon */}
+      {/* Top Right: Map Styles & WebGL Camera Control Ribbon (Circular UI) */}
       {/* ------------------------------------------------------------- */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2 pointer-events-auto">
-        {/* 3D Tilt Toggle */}
+        {/* 3D Tilt Toggle (Circular) */}
         <button
           type="button"
           onClick={handleToggle3D}
-          className={`p-2 rounded-xl backdrop-blur-md border transition-all cursor-pointer shadow-lg text-xs font-mono font-bold flex items-center gap-1 ${is3DMode
+          className={`p-2 rounded-full backdrop-blur-md border transition-all cursor-pointer shadow-lg text-xs font-mono font-bold flex items-center justify-center gap-1 ${is3DMode
             ? "bg-cyan-500/20 text-cyan-300 border-cyan-400/40"
             : "bg-slate-900/90 text-slate-300 border-white/15 hover:bg-slate-800"
             }`}
@@ -1431,22 +1463,22 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
           <span className="hidden sm:inline">{is3DMode ? "3D" : "2D"}</span>
         </button>
 
-        {/* Reset Kolkata View */}
+        {/* Reset Kolkata View (Circular) */}
         <button
           type="button"
           onClick={handleResetKolkata}
-          className="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white backdrop-blur-md border border-white/15 transition-all cursor-pointer shadow-lg"
+          className="p-2 rounded-full bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white backdrop-blur-md border border-white/15 transition-all cursor-pointer shadow-lg"
           title="Reset Camera to Central Kolkata"
         >
           <RotateCcw className="w-4 h-4" />
         </button>
 
-        {/* Zoom Controls */}
-        <div className="flex items-center rounded-xl bg-slate-900/90 backdrop-blur-md border border-white/15 p-0.5 shadow-lg">
+        {/* Zoom Controls (Circular Geometry) */}
+        <div className="flex items-center rounded-full bg-slate-900/90 backdrop-blur-md border border-white/15 p-0.5 shadow-lg">
           <button
             type="button"
             onClick={handleZoomIn}
-            className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg cursor-pointer"
+            className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-full cursor-pointer"
             title="Zoom In"
           >
             <Plus className="w-4 h-4" />
@@ -1455,18 +1487,18 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
           <button
             type="button"
             onClick={handleZoomOut}
-            className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg cursor-pointer"
+            className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-full cursor-pointer"
             title="Zoom Out"
           >
             <Minus className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Fullscreen Toggle */}
+        {/* Fullscreen Toggle (Circular) */}
         <button
           type="button"
           onClick={toggleFullscreen}
-          className="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white backdrop-blur-md border border-white/15 transition-all cursor-pointer shadow-lg"
+          className="p-2 rounded-full bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white backdrop-blur-md border border-white/15 transition-all cursor-pointer shadow-lg"
           title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Map"}
         >
           {isFullscreen ? (
@@ -1632,7 +1664,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
 
               <label className="flex items-center justify-between cursor-pointer hover:text-white py-0.5">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-amber-500/50 border border-amber-400" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500/50 border border-amber-400" />
                   Risk Zones
                 </span>
                 <input
@@ -1645,7 +1677,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
 
               <label className="flex items-center justify-between cursor-pointer hover:text-white py-0.5">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-xs bg-sky-600 text-[8px] flex items-center justify-center font-mono font-bold text-white">
+                  <span className="w-2.5 h-2.5 rounded-full bg-sky-600 text-[8px] flex items-center justify-center font-mono font-bold text-white">
                     PS
                   </span>
                   Pump Stations
@@ -1660,7 +1692,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
 
               <label className="flex items-center justify-between cursor-pointer hover:text-white py-0.5">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-rose-500/40 border border-dashed border-rose-400" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500/40 border border-dashed border-rose-400" />
                   AI Spread Horizon
                 </span>
                 <input
@@ -1866,7 +1898,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                   Conduit
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-xs bg-sky-500" />
+                  <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-sky-500" />
                   Pump
                 </span>
                 <span className="flex items-center gap-1">

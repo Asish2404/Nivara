@@ -1418,28 +1418,28 @@ export function AdminDashboardView() {
                 </div>
               </div>
 
-              {/* Floating Map Zoom & Locate Controls (Right Side) */}
+              {/* Floating Map Zoom & Locate Controls (Circular Geometry) */}
               <div className="absolute right-3 bottom-3 flex flex-col gap-1.5">
                 <button
                   onClick={() => setMapZoom(1)}
                   title="Recenter Map"
-                  className="p-2 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 shadow-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="p-2 rounded-full bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 shadow-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer flex items-center justify-center"
                 >
                   <Navigation className="w-4 h-4 text-slate-600 dark:text-slate-300" />
                 </button>
 
-                <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-md flex flex-col overflow-hidden">
+                <div className="bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 shadow-md flex flex-col overflow-hidden">
                   <button
                     onClick={() => setMapZoom((prev) => Math.min(prev + 0.2, 1.8))}
                     title="Zoom In"
-                    className="p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer border-b border-slate-100 dark:border-slate-800"
+                    className="p-2 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer border-b border-slate-100 dark:border-slate-800 flex items-center justify-center"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => setMapZoom((prev) => Math.max(prev - 0.2, 0.8))}
                     title="Zoom Out"
-                    className="p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    className="p-2 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer flex items-center justify-center"
                   >
                     <Minus className="w-3.5 h-3.5" />
                   </button>

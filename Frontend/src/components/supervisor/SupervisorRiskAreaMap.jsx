@@ -1126,18 +1126,18 @@ export function SupervisorRiskAreaMap() {
               type="button"
               onClick={handleResetView}
               title="Reset View"
-              className="w-8 h-8 rounded-xl bg-white/95 dark:bg-[#071324]/95 hover:bg-slate-100 dark:hover:bg-[#0a1c38] border border-slate-200/90 dark:border-[#142d54] text-slate-700 dark:text-slate-200 flex items-center justify-center shadow-xs transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full bg-white/95 dark:bg-[#071324]/95 hover:bg-slate-100 dark:hover:bg-[#0a1c38] border border-slate-200/90 dark:border-[#142d54] text-slate-700 dark:text-slate-200 flex items-center justify-center shadow-xs transition-colors cursor-pointer"
             >
               <Navigation className="w-4 h-4 fill-slate-700 dark:fill-slate-200 text-slate-700 dark:text-slate-200 -rotate-45" />
             </button>
 
-            {/* Zoom In */}
-            <div className="flex flex-col rounded-xl bg-white/95 dark:bg-[#071324]/95 border border-slate-200/90 dark:border-[#142d54] shadow-xs overflow-hidden">
+            {/* Zoom In & Out (Circular Geometry) */}
+            <div className="flex flex-col rounded-full bg-white/95 dark:bg-[#071324]/95 border border-slate-200/90 dark:border-[#142d54] shadow-xs overflow-hidden">
               <button
                 type="button"
                 onClick={handleZoomIn}
                 title="Zoom In"
-                className="w-8 h-8 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#0a1c38] transition-colors border-b border-slate-100 dark:border-[#102444] cursor-pointer"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#0a1c38] transition-colors border-b border-slate-100 dark:border-[#102444] cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -1145,7 +1145,7 @@ export function SupervisorRiskAreaMap() {
                 type="button"
                 onClick={handleZoomOut}
                 title="Zoom Out"
-                className="w-8 h-8 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#0a1c38] transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#0a1c38] transition-colors cursor-pointer"
               >
                 <Minus className="w-4 h-4" />
               </button>

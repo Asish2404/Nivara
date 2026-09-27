@@ -21,7 +21,7 @@ import { AskKolkataDrawer } from "../navigation/AskKolkataDrawer";
 import { BorderBeam } from "../ui/BorderBeam";
 import { AnimatedNumber } from "../ui/AnimatedNumber";
 import { audioEngine } from "../../utils/audioEngine";
-import { slideInRight } from "../../utils/motionVariants";
+import { slideInRight, TRANSITION_EASE, DURATION } from "../../utils/motionVariants";
 import { LiveIncidentIntelligenceSection } from "../landing/LiveIncidentIntelligenceSection";
 import Footer from "../Footer";
 
@@ -102,7 +102,12 @@ export function LiveCityPage() {
       <AskKolkataDrawer />
 
       {/* 3. Main Operational Workspace */}
-      <main className="flex-1 max-w-[1360px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-8 flex flex-col gap-6 sm:gap-8">
+      <motion.main
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: DURATION.standard, ease: TRANSITION_EASE }}
+        className="flex-1 max-w-[1360px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-8 flex flex-col gap-6 sm:gap-8"
+      >
         {/* ========================================================================= */}
         {/* SECTION 1: COMPACT LIVE MAP HEADER                                        */}
         {/* ========================================================================= */}
@@ -346,15 +351,15 @@ export function LiveCityPage() {
             </button>
           </div>
 
-          {/* Viewport Zoom & Reset Controls */}
-          <div className="flex items-center gap-1 pl-2">
+          {/* Viewport Zoom & Reset Controls (Polished Circular Geometry) */}
+          <div className="flex items-center gap-1.5 pl-2">
             <button
               type="button"
               onClick={() => {
                 audioEngine.playUiChirp(1100);
                 triggerZoomIn();
               }}
-              className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-[#10313E] hover:bg-slate-200 dark:hover:bg-[#163F4E] border border-slate-200 dark:border-[rgba(94,183,201,0.16)] text-slate-700 dark:text-[#F2FBFD] flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
+              className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#10313E] hover:bg-slate-200 dark:hover:bg-[#163F4E] border border-slate-200 dark:border-[rgba(94,183,201,0.16)] text-slate-700 dark:text-[#F2FBFD] flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
               title="Zoom In"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -365,7 +370,7 @@ export function LiveCityPage() {
                 audioEngine.playUiChirp(820);
                 triggerZoomOut();
               }}
-              className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-[#10313E] hover:bg-slate-200 dark:hover:bg-[#163F4E] border border-slate-200 dark:border-[rgba(94,183,201,0.16)] text-slate-700 dark:text-[#F2FBFD] flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
+              className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#10313E] hover:bg-slate-200 dark:hover:bg-[#163F4E] border border-slate-200 dark:border-[rgba(94,183,201,0.16)] text-slate-700 dark:text-[#F2FBFD] flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
               title="Zoom Out"
             >
               <Minus className="w-3.5 h-3.5" />
@@ -376,7 +381,7 @@ export function LiveCityPage() {
                 audioEngine.playUiChirp(900);
                 triggerResetCamera();
               }}
-              className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-[#10313E] hover:bg-slate-200 dark:hover:bg-[#163F4E] border border-slate-200 dark:border-[rgba(94,183,201,0.16)] text-slate-700 dark:text-[#F2FBFD] flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
+              className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#10313E] hover:bg-slate-200 dark:hover:bg-[#163F4E] border border-slate-200 dark:border-[rgba(94,183,201,0.16)] text-slate-700 dark:text-[#F2FBFD] flex items-center justify-center text-xs shadow-2xs cursor-pointer transition-colors"
               title="Reset View"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -611,7 +616,7 @@ export function LiveCityPage() {
         {/* SECTION 5: LIVE INCIDENT INTELLIGENCE (Compact Real-time Incident Feed)    */}
         {/* ========================================================================= */}
         <LiveIncidentIntelligenceSection />
-      </main>
+      </motion.main>
 
       {/* ========================================================================= */}
       {/* SECTION: FOOTER                                                           */}

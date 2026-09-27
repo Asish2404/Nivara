@@ -30,6 +30,8 @@ import {
 } from "../../utils/incidentAggregator";
 import { audioEngine } from "../../utils/audioEngine";
 import { calculateHydraulicSimulation } from "../../utils/hydraulicEngine";
+import { KWITelemetryLoader } from "../ui/KWITelemetryLoader";
+import { TRANSITION_EASE, DURATION } from "../../utils/motionVariants";
 
 const SEVERITY_BADGE_STYLE = {
   CRITICAL: "text-rose-700 bg-rose-50 border-rose-200 dark:text-rose-400 dark:bg-rose-950/40 dark:border-rose-800/60",
@@ -1281,18 +1283,15 @@ export function SimulateView() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="flex flex-col items-center gap-2.5 py-3"
+                    className="w-full py-2"
                   >
-                    <div className="relative w-14 h-14 flex items-center justify-center">
-                      <div className="absolute inset-0 rounded-full border-2 border-blue-200 dark:border-cyan-500/40 animate-ping opacity-30" />
-                      <Loader2 className="w-8 h-8 text-blue-600 dark:text-cyan-400 animate-spin" />
-                    </div>
-                    <div className="text-[13px] font-semibold text-blue-700 dark:text-cyan-300">
-                      Solving Hydraulic PDE Grid…
-                    </div>
-                    <div className="text-[11.5px] text-slate-500 dark:text-slate-400 font-normal">
-                      Running transient flow solver for {activeIncident.id}
-                    </div>
+                    <KWITelemetryLoader
+                      inline={true}
+                      badge="KWI-PDE-SOLVER"
+                      title="SOLVING HYDRAULIC PDE GRID"
+                      subtitle={`Transient flow solver running for ${activeIncident?.id || "hotspot"}`}
+                      showTelemetry={false}
+                    />
                   </motion.div>
                 ) : simState === "RESULT" ? (
                   <motion.div
