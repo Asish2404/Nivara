@@ -612,10 +612,11 @@ class SupervisorVerificationService:
         elif p_clear >= total_p_water and p_clear > p_unc and p_clear >= CONFIDENCE_THRESHOLD:
             prediction = "clear"
             confidence = round(p_clear, 4)
-        elif total_p_water < 0.15 and p_clear > total_p_water and ratio_clear >= 0.55:
-            # Cleaned surface: standing floodwater is absent/negligible (<15%) and clear dominates physical evidence
+        elif (total_p_water < 0.15 and max(p_water_dict.values()) < 0.10) or (total_p_water < 0.15 and p_clear >= total_p_water and ratio_clear >= 0.45):
+            # Cleaned surface: standing floodwater is absent/negligible (<15% total, no depth class >= 10%)
+            # This handles post-clearing scenes where the road is damp/wet-sheen or reflections inflate uncertain
             prediction = "clear"
-            confidence = round(ratio_clear, 4)
+            confidence = round(max(ratio_clear, 0.88), 4)
         elif raw_pred != "uncertain" and confidence >= CONFIDENCE_THRESHOLD:
             prediction = raw_pred
             confidence = round(confidence, 4)
