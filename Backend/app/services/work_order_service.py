@@ -293,6 +293,18 @@ class WorkOrderService:
             except Exception as notif_err:
                 print(f"[KWI] Status change notification DB warning: {notif_err}")
 
+        # Trigger 4: For municipal admins, broadcast an "Operations Complete" notification when an incident is resolved
+        if notify and target_status.lower() in ["resolved", "completed"]:
+            try:
+                from .notification_service import NotificationService
+                await NotificationService.notify_admin_operations_complete(
+                    db=db,
+                    location=wo_loc,
+                    work_id=work_id,
+                )
+            except Exception as admin_notif_err:
+                print(f"[KWI] Admin operations complete notification DB warning: {admin_notif_err}")
+
     @classmethod
     async def sync_all_database_statuses(cls, db: AsyncSession) -> None:
         """One-pass reconciliation ensuring historical_place and active work_orders statuses

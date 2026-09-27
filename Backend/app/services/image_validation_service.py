@@ -129,6 +129,25 @@ INDOOR_FURNITURE_CLASSES = {
     900,  # water jug
 }
 
+# Outdoor water, flooded surfaces, and aquatic street-level indicators in ImageNet
+OUTDOOR_WATER_CLASSES = {
+    403,  # aircraft carrier (water context)
+    408,  # amphibian (vehicle traversing water)
+    449,  # boathouse
+    460,  # breakwater
+    472,  # canoe
+    525,  # dam
+    536,  # dock
+    562,  # fountain
+    612,  # jinrikisha (rickshaw commonly wading through waterlogged Asian streets)
+    693,  # paddle
+    694,  # paddlewheel
+    718,  # pier
+    974,  # geyser
+    975,  # lakeside
+    978,  # seashore
+}
+
 
 class MobileNetClassifier:
     """Singleton holder for pre-loaded MobileNetV3 inference engines.
@@ -241,10 +260,10 @@ class ImageValidationService:
         top_dominant = max([c[0] for c in colors]) / (120 * 120) if colors else 0.0
 
         is_obvious_screenshot = (
-            near_white_ratio >= 0.22
-            or near_dark_ratio >= 0.40
-            or flat_ratio >= 0.28
-            or (top_dominant >= 0.35 and (near_white_ratio > 0.08 or near_dark_ratio > 0.12))
+            (near_white_ratio >= 0.30 and flat_ratio >= 0.12)
+            or (near_dark_ratio >= 0.55 and flat_ratio >= 0.15)
+            or flat_ratio >= 0.30
+            or (top_dominant >= 0.45 and flat_ratio >= 0.15)
         )
 
         if is_obvious_screenshot:
@@ -273,66 +292,71 @@ class ImageValidationService:
         p_food = float(sum(base_probs[idx].item() for idx in FOOD_CLASSES))
         p_pet = float(sum(base_probs[idx].item() for idx in PET_CLASSES))
         p_indoor = float(sum(base_probs[idx].item() for idx in INDOOR_FURNITURE_CLASSES))
+        p_water = float(sum(base_probs[idx].item() for idx in OUTDOOR_WATER_CLASSES))
 
         top_prob_val, top_id_val = torch.topk(base_probs, 1)
         top_id = int(top_id_val.item())
+        top_prob = float(top_prob_val.item())
         top_category = classifier.weights.meta["categories"][top_id]
         elapsed_ms = round((time.perf_counter() - t_start) * 1000, 1)
 
         # 2a. Reject Selfies, Portraits, Apparel & Persons
-        if p_person_apparel >= 0.15 or top_id in APPAREL_PERSON_CLASSES:
+        # (Exclude if outdoor water cues are present, e.g. citizen wading through water)
+        if (top_id in APPAREL_PERSON_CLASSES and top_prob >= 0.25 and p_water < 0.10) or (p_person_apparel >= 0.35 and p_water < 0.08):
             confidence = max(0.92, round(p_person_apparel if p_person_apparel > 0.5 else 0.94, 2))
             return {
                 "is_drainage": False,
                 "confidence": confidence,
                 "category": "person_or_selfie",
                 "message": "This image appears to be a selfie or photo of a person. Please upload a clear photo of the street or drainage problem.",
-                "reason": f"MobileNetV3 detected person / apparel features ({top_category} - {top_prob_val.item():.1%}).",
+                "reason": f"MobileNetV3 detected person / apparel features ({top_category} - {top_prob:.1%}).",
                 "inference_time_ms": elapsed_ms,
             }
 
         # 2b. Reject Digital Screenshots, Menus, Documents
-        if p_screenshot_doc >= 0.15 or top_id in SCREENSHOT_DOC_CLASSES:
+        if (top_id in SCREENSHOT_DOC_CLASSES and top_prob >= 0.25 and p_water < 0.10) or (p_screenshot_doc >= 0.35 and p_water < 0.08):
             confidence = max(0.92, round(p_screenshot_doc if p_screenshot_doc > 0.5 else 0.96, 2))
             return {
                 "is_drainage": False,
                 "confidence": confidence,
                 "category": "screenshot_or_document",
                 "message": "This image appears to be a digital screenshot, slide, or document. Please upload a clear photo of an actual street drainage or waterlogging issue.",
-                "reason": f"MobileNetV3 detected digital content ({top_category}).",
+                "reason": f"MobileNetV3 detected digital content ({top_category} - {top_prob:.1%}).",
                 "inference_time_ms": elapsed_ms,
             }
 
         # 2c. Reject Food & Meals
-        if p_food >= 0.15 or top_id in FOOD_CLASSES:
+        if (top_id in FOOD_CLASSES and top_prob >= 0.20) or (p_food >= 0.35 and p_water < 0.10):
             return {
                 "is_drainage": False,
                 "confidence": 0.95,
                 "category": "food_or_meal",
                 "message": "This image appears to show food or a meal. Please upload a photo of the drainage issue.",
-                "reason": f"MobileNetV3 detected food items ({top_category}).",
+                "reason": f"MobileNetV3 detected food items ({top_category} - {top_prob:.1%}).",
                 "inference_time_ms": elapsed_ms,
             }
 
         # 2d. Reject Pets & Animals
-        if p_pet >= 0.15 or top_id in PET_CLASSES:
+        # Note: PET_CLASSES contains 125 dog/cat breeds whose random background probabilities sum to ~0.20 on noisy water ripples.
+        # Require actual animal top-1 prediction or dominant pet probability >= 0.35 with low water cues.
+        if (top_id in PET_CLASSES and top_prob >= 0.20) or (p_pet >= 0.35 and p_water < 0.10):
             return {
                 "is_drainage": False,
                 "confidence": 0.95,
                 "category": "pet_or_animal",
                 "message": "This image appears to show a domestic pet or animal. Please upload a photo of the drainage issue.",
-                "reason": f"MobileNetV3 detected animal/pet ({top_category}).",
+                "reason": f"MobileNetV3 detected animal/pet ({top_category} - {top_prob:.1%}).",
                 "inference_time_ms": elapsed_ms,
             }
 
         # 2e. Reject Indoor Household Furniture / Appliances
-        if p_indoor >= 0.20 or top_id in INDOOR_FURNITURE_CLASSES:
+        if (top_id in INDOOR_FURNITURE_CLASSES and top_prob >= 0.25 and p_water < 0.10) or (p_indoor >= 0.35 and p_water < 0.10):
             return {
                 "is_drainage": False,
                 "confidence": 0.92,
                 "category": "indoor_object",
                 "message": "This image appears to be an indoor room or household object. Please upload an outdoor street drainage photo.",
-                "reason": f"MobileNetV3 detected indoor appliance/furniture ({top_category}).",
+                "reason": f"MobileNetV3 detected indoor appliance/furniture ({top_category} - {top_prob:.1%}).",
                 "inference_time_ms": elapsed_ms,
             }
 
@@ -353,13 +377,22 @@ class ImageValidationService:
             drainage_prob = float(ft_probs[drainage_idx].item())
             elapsed_ms = round((time.perf_counter() - t_start) * 1000, 1)
 
-            if drainage_prob >= 0.55:
+            # Accept if:
+            # 1. Fine-tuned model confidence >= 45% (standard flood scene)
+            # 2. Or urban flood with vehicles: fine-tuned >= 15% + base water cues >= 8% (e.g., flooded road with buses, cars, scooters)
+            is_valid_drainage = (
+                drainage_prob >= 0.45
+                or (drainage_prob >= 0.15 and p_water >= 0.08)
+            )
+
+            if is_valid_drainage:
+                effective_conf = max(drainage_prob, min(0.98, round(drainage_prob * 0.6 + p_water * 1.5, 2)))
                 return {
                     "is_drainage": True,
-                    "confidence": round(drainage_prob, 2),
+                    "confidence": round(effective_conf, 2),
                     "category": "drainage",
                     "message": "Valid drainage/waterlogging photo verified.",
-                    "reason": f"Fine-tuned MobileNetV3 identified drainage pattern with {drainage_prob:.1%} confidence.",
+                    "reason": f"MobileNet verified waterlogging/drainage pattern (drainage: {drainage_prob:.1%}, water cues: {p_water:.1%}).",
                     "inference_time_ms": elapsed_ms,
                 }
             else:
@@ -368,7 +401,7 @@ class ImageValidationService:
                     "confidence": round(1.0 - drainage_prob, 2),
                     "category": "not_drainage",
                     "message": "This image does not appear to show active waterlogging or drainage choke. Please upload a clear photo of the drainage issue.",
-                    "reason": f"Fine-tuned MobileNetV3 classified as dry street/normal environment ({1.0 - drainage_prob:.1%}).",
+                    "reason": f"Fine-tuned MobileNetV3 classified as dry street/normal environment ({1.0 - drainage_prob:.1%}, water cues: {p_water:.1%}).",
                     "inference_time_ms": elapsed_ms,
                 }
 

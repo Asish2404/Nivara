@@ -554,7 +554,7 @@ export function SimulateView() {
      * SimulateView content area:
      *   - Shows panoramic Kolkata Golden Sunset with Heritage Dome, Yellow Taxis & Vintage Tram edge-to-edge
      */
-    <div className="w-full min-h-screen bg-[#f3f7fb] dark:bg-[#0A1E3B] text-slate-900 dark:text-[#F0F9FA] transition-colors duration-300 pb-16 font-sans relative overflow-hidden">
+    <div className="w-full min-h-screen bg-[#f3f7fb] dark:bg-[#0A1E3B] text-slate-900 dark:text-[#F0F9FA] transition-colors duration-300 pb-16 font-sans relative overflow-x-clip">
       {/* Floating Supervisor Unavailable Alert Toast */}
       <AnimatePresence>
         {supervisorError && (
@@ -583,7 +583,7 @@ export function SimulateView() {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      <div className="absolute -top-28 sm:-top-32 lg:-top-36 inset-x-0 bottom-0 z-0 overflow-hidden pointer-events-none">
         {/* Light Theme Golden Sunset Tram Photography */}
         <img
           src="/images/sky3.png"
@@ -607,15 +607,27 @@ export function SimulateView() {
         {/* LIGHT ATMOSPHERIC LAYER */}
         <div className="absolute inset-0 bg-white/10 dark:hidden" />
 
-        {/* Subtle dark atmospheric layer */}
-        <div className="absolute inset-0 bg-[#06152B]/45" />
+        {/* Subtle dark atmospheric layer — restricted strictly to dark mode */}
+        <div className="absolute inset-0 bg-[#06152B]/45 hidden dark:block" />
 
-        {/* LIGHT FOOTER BLEND */}
-        <div className="absolute inset-x-0 bottom-0 h-[280px] bg-gradient-to-t from-[#F3F7FB] via-[#F3F7FB]/75 to-transparent dark:hidden" />
+        {/* LIGHT FOOTER BLEND — Long, soft atmospheric transition into Footer */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-[380px] sm:h-[480px] pointer-events-none dark:hidden"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.12) 45%, rgba(255, 255, 255, 0.30) 65%, rgba(255, 255, 255, 0.60) 82%, rgba(255, 255, 255, 0.88) 94%, #ffffff 100%)",
+          }}
+        />
 
-        {/* Smooth Dark blend into fixed footer */}
-        <div className="absolute inset-x-0 bottom-0 h-[280px] bg-gradient-to-t from-[#0A1E3B] via-[#0A1E3B]/75 to-transparent" />
+        {/* Smooth Dark blend into fixed footer — restricted strictly to dark mode */}
+        <div className="absolute inset-x-0 bottom-0 h-[280px] bg-gradient-to-t from-[#0A1E3B] via-[#0A1E3B]/75 to-transparent hidden dark:block" />
       </div>
+
+      {/* Light Theme Subpixel Seam Bridge across SimulateView / Footer boundary */}
+      <div
+        className="absolute inset-x-0 -bottom-1 h-2 pointer-events-none bg-white dark:hidden z-10"
+        aria-hidden="true"
+      />
 
       {/* ── 1. Hero Section with Header Content & Target Selector ── */}
       <div className={`relative ${isDropdownOpen ? "z-40" : "z-20"} max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-7 pb-12 sm:pt-10 sm:pb-16 font-sans`}>

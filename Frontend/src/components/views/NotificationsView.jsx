@@ -121,8 +121,6 @@ export function NotificationsView() {
     markAllNotificationsAsRead,
     deleteNotification,
     clearReadNotifications,
-    addReportSubmittedNotification,
-    notifyIncidentStatusChange,
     navigate,
   } = useKWIStore();
 
@@ -145,8 +143,17 @@ export function NotificationsView() {
   // 4. Location weather & flood forecast
   const userVisibleNotifications = useMemo(() => {
     if (isAdmin) {
-      // Municipal Admins receive alerts across 4 categories (urgent, pumps, reports, resolved). Exclude system telemetry.
-      return notifications.filter((n) => n.category !== "system" && n.type !== "system");
+      // Municipal Admins strictly receive alerts across the 4 active categories: urgent, pumps, reports, resolved
+      return notifications.filter((n) => {
+        const cat = n.category || n.type;
+        return (
+          cat === "urgent" ||
+          cat === "pumps" ||
+          cat === "reports" ||
+          cat === "resolved" ||
+          cat === "incident_resolved"
+        );
+      });
     }
     return notifications.filter(
       (n) =>
@@ -179,18 +186,18 @@ export function NotificationsView() {
 
   // Tab counts for admins across the 4 active categories
   const adminCounts = useMemo(() => {
+    const isCat = (n, cat) => {
+      if (cat === "resolved") {
+        return n.category === "resolved" || n.type === "incident_resolved" || n.type === "resolved";
+      }
+      return n.category === cat || n.type === cat;
+    };
     return {
       all: userVisibleNotifications.length,
-      urgent: userVisibleNotifications.filter(
-        (n) => n.category === "urgent" || n.severity === "critical"
-      ).length,
-      pumps: userVisibleNotifications.filter((n) => n.category === "pumps").length,
-      reports: userVisibleNotifications.filter(
-        (n) => n.category === "reports" || n.type === "report_submitted"
-      ).length,
-      resolved: userVisibleNotifications.filter(
-        (n) => n.category === "resolved" || n.type === "incident_resolved"
-      ).length,
+      urgent: userVisibleNotifications.filter((n) => isCat(n, "urgent")).length,
+      pumps: userVisibleNotifications.filter((n) => isCat(n, "pumps")).length,
+      reports: userVisibleNotifications.filter((n) => isCat(n, "reports")).length,
+      resolved: userVisibleNotifications.filter((n) => isCat(n, "resolved")).length,
     };
   }, [userVisibleNotifications]);
 
@@ -212,16 +219,22 @@ export function NotificationsView() {
           return false;
         }
       } else {
-        if (activeTab === "urgent" && notif.category !== "urgent" && notif.severity !== "critical") {
+        const isCat = (n, cat) => {
+          if (cat === "resolved") {
+            return n.category === "resolved" || n.type === "incident_resolved" || n.type === "resolved";
+          }
+          return n.category === cat || n.type === cat;
+        };
+        if (activeTab === "urgent" && !isCat(notif, "urgent")) {
           return false;
         }
-        if (activeTab === "pumps" && notif.category !== "pumps") {
+        if (activeTab === "pumps" && !isCat(notif, "pumps")) {
           return false;
         }
-        if (activeTab === "reports" && notif.category !== "reports" && notif.type !== "report_submitted") {
+        if (activeTab === "reports" && !isCat(notif, "reports")) {
           return false;
         }
-        if (activeTab === "resolved" && notif.category !== "resolved" && notif.type !== "incident_resolved") {
+        if (activeTab === "resolved" && !isCat(notif, "resolved")) {
           return false;
         }
       }
@@ -330,7 +343,7 @@ export function NotificationsView() {
 
             <p className="text-sm sm:text-base text-slate-300 max-w-2xl font-normal leading-relaxed">
               {isAdmin
-                ? "City-wide municipal emergency broadcasts, pumping station turbines, IoT telemetry calibration, and citizen report dispatch."
+                ? "City-wide municipal emergency broadcasts, high-discharge pumping stations, citizen report clusters, and completed operations."
                 : "Live tracking for your submitted reports & location forecasts: instant submission acknowledgments, field response dispatches, incident resolutions, and 24h weather flood forecasts."}
             </p>
 
@@ -706,11 +719,14 @@ export function NotificationsView() {
         <AnimatePresence mode="popLayout">
           {filteredNotifications.length > 0 ? (
             filteredNotifications.map((notif) => {
-              // Resolve card configuration
-              const config =
-                USER_TYPE_CONFIG[notif.type] ||
-                ADMIN_CATEGORY_CONFIG[notif.category] ||
-                USER_TYPE_CONFIG.report_submitted;
+              // Resolve card configuration: Admin categories for municipal admins, user lifecycle for citizens
+              const adminCategoryKey =
+                notif.category === "resolved" || notif.type === "incident_resolved"
+                  ? "resolved"
+                  : notif.category || notif.type;
+              const config = isAdmin
+                ? ADMIN_CATEGORY_CONFIG[adminCategoryKey] || ADMIN_CATEGORY_CONFIG.reports
+                : USER_TYPE_CONFIG[notif.type] || USER_TYPE_CONFIG.report_submitted;
               const Icon = config.icon;
 
               return (
