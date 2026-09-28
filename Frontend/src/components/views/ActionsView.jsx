@@ -268,7 +268,7 @@ export function ActionsView() {
         videoRef.current.srcObject = stream;
         try {
           await videoRef.current.play();
-        } catch {}
+        } catch { }
       }
       setIsCameraStarting(false);
       audioEngine.playUiChirp(1200);
@@ -483,13 +483,12 @@ export function ActionsView() {
                     audioEngine.playUiChirp(1000);
                     galleryInputRef.current?.click();
                   }}
-                  className={`border-2 border-dashed rounded-2xl p-8 sm:p-11 text-center flex flex-col items-center justify-center cursor-pointer transition-all ${
-                    isDragging
+                  className={`border-2 border-dashed rounded-2xl p-8 sm:p-11 text-center flex flex-col items-center justify-center cursor-pointer transition-all ${isDragging
                       ? "border-[#007dfc] bg-blue-50/70 scale-[1.01]"
                       : attemptedWithoutPhoto
-                      ? "border-amber-400 bg-amber-50/40 ring-2 ring-amber-300/40"
-                      : "border-[#b8ddff] dark:border-[#193b6e] bg-[#f4f9ff] dark:bg-[#040c18] hover:bg-[#edf6ff] dark:hover:bg-[#061224]"
-                  }`}
+                        ? "border-amber-400 bg-amber-50/40 ring-2 ring-amber-300/40"
+                        : "border-[#b8ddff] dark:border-[#193b6e] bg-[#f4f9ff] dark:bg-[#040c18] hover:bg-[#edf6ff] dark:hover:bg-[#061224]"
+                    }`}
                 >
                   <div className="w-16 h-16 rounded-full bg-[#badefd] dark:bg-blue-900/60 flex items-center justify-center text-[#007dfc] mb-3 shadow-inner">
                     <UploadCloud className="w-8 h-8 text-[#007dfc]" />
@@ -931,11 +930,10 @@ export function ActionsView() {
                       setIsResolvingWithPhoto(true);
                     }
                   }}
-                  className={`flex items-center gap-3.5 text-left flex-1 min-w-0 select-none ${
-                    isSupervisor && idx === 3 && currentStage < 3
+                  className={`flex items-center gap-3.5 text-left flex-1 min-w-0 select-none ${isSupervisor && idx === 3 && currentStage < 3
                       ? "cursor-pointer hover:opacity-90 transition-opacity"
                       : ""
-                  }`}
+                    }`}
                   title={
                     isSupervisor && idx === 3 && currentStage < 3
                       ? "Click to open image verification and mark as resolved"
@@ -1029,11 +1027,10 @@ export function ActionsView() {
                           setSelectedTicketId(tId);
                           setActiveWorkOrderTicketId?.(tId);
                         }}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
-                          selectedTicketId === tId
+                        className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${selectedTicketId === tId
                             ? "bg-[#007dfc] text-white shadow-xs"
                             : "bg-[#142236] text-slate-400 hover:text-white border border-[#1d2f47]"
-                        }`}
+                          }`}
                       >
                         {tId}
                       </button>
@@ -1092,7 +1089,13 @@ export function ActionsView() {
                     </div>
 
                     <div className="text-xs font-mono text-slate-400 mt-1">
-                      {activeTicket.lat}, {activeTicket.lng} | {activeTicket.borough}
+                      {(activeTicket.latitude || activeTicket.lat) && (activeTicket.longitude || activeTicket.lng) ? (
+                        <span>
+                          {activeTicket.latitude || activeTicket.lat}, {activeTicket.longitude || activeTicket.lng}
+                          {activeTicket.borough ? " | " : ""}
+                        </span>
+                      ) : null}
+                      <span>{activeTicket.borough}</span>
                     </div>
                   </div>
                 </div>
@@ -1250,16 +1253,16 @@ export function ActionsView() {
               <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
                 {isSupervisor ? (
                   currentStage < 3 ? (
-                      <button
-                        type="button"
-                        onClick={handleAdvanceStage}
-                        className="w-full sm:flex-1 py-3.5 px-6 rounded-xl font-bold text-sm text-white transition-all duration-150 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_24px_rgba(0,125,252,0.4)] hover:shadow-[0_0_32px_rgba(0,125,252,0.55)] bg-[#007dfc] hover:bg-[#006ee0]"
-                      >
-                        <span>
-                          Advance Status: Mark as {STAGES[currentStage + 1].name}
-                        </span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
+                    <button
+                      type="button"
+                      onClick={handleAdvanceStage}
+                      className="w-full sm:flex-1 py-3.5 px-6 rounded-xl font-bold text-sm text-white transition-all duration-150 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_24px_rgba(0,125,252,0.4)] hover:shadow-[0_0_32px_rgba(0,125,252,0.55)] bg-[#007dfc] hover:bg-[#006ee0]"
+                    >
+                      <span>
+                        Advance Status: Mark as {STAGES[currentStage + 1].name}
+                      </span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
                   ) : (
                     <div className="w-full sm:flex-1 py-3.5 px-6 rounded-xl bg-[#0f2d24] text-[#34d399] border border-[#165b45] font-semibold text-sm text-center shadow-xs flex items-center justify-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-[#34d399]" />
@@ -1318,7 +1321,7 @@ export function ActionsView() {
         {/* ======================================================================= */}
         {!isSupervisor && (
           <div className="lg:col-span-4 space-y-5">
-          {/* Card 1: ACTIVE MUNICIPAL FLEET (Commented out)
+            {/* Card 1: ACTIVE MUNICIPAL FLEET (Commented out)
           <div className="rounded-2xl bg-[#0b1322] border border-[#162338] shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#162338]">
               <h3 className="text-sm font-bold text-white">
@@ -1418,91 +1421,91 @@ export function ActionsView() {
           </div>
           */}
 
-          {/* Card 2: WORK ORDER QUEUE */}
-          <div className="rounded-2xl bg-[#0b1322] border border-[#162338] shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#162338]">
-              <h3 className="text-sm font-bold text-white">
-                Work Order Queue ({Object.keys(allWorkOrders).length})
-              </h3>
-              <button
-                type="button"
-                onClick={() => navigate("/my-reports")}
-                className="text-xs font-semibold text-[#00d0f5] hover:text-cyan-300 flex items-center gap-0.5 cursor-pointer"
-              >
-                <span>Select to review</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            {/* Card 2: WORK ORDER QUEUE */}
+            <div className="rounded-2xl bg-[#0b1322] border border-[#162338] shadow-2xl p-6 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#162338]">
+                <h3 className="text-sm font-bold text-white">
+                  Work Order Queue ({Object.keys(allWorkOrders).length})
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => navigate("/my-reports")}
+                  className="text-xs font-semibold text-[#00d0f5] hover:text-cyan-300 flex items-center gap-0.5 cursor-pointer"
+                >
+                  <span>Select to review</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
-            <div className="space-y-3">
-              {Object.keys(allWorkOrders).length === 0 ? (
-                <div className="p-6 text-center text-xs text-slate-500 space-y-2">
-                  <p className="font-semibold text-slate-400">Queue is empty</p>
-                  <p className="text-[11px] text-slate-500 leading-relaxed">
-                    Dispatched work orders from simulations will queue here.
-                  </p>
-                </div>
-              ) : (
-                Object.entries(allWorkOrders).map(([ticketKey, order]) => {
-                  const isSelected = selectedTicketId === ticketKey;
-                  const isCritical = (order.priority || "").toUpperCase() === "CRITICAL";
+              <div className="space-y-3">
+                {Object.keys(allWorkOrders).length === 0 ? (
+                  <div className="p-6 text-center text-xs text-slate-500 space-y-2">
+                    <p className="font-semibold text-slate-400">Queue is empty</p>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Dispatched work orders from simulations will queue here.
+                    </p>
+                  </div>
+                ) : (
+                  Object.entries(allWorkOrders).map(([ticketKey, order]) => {
+                    const isSelected = selectedTicketId === ticketKey;
+                    const isCritical = (order.priority || "").toUpperCase() === "CRITICAL";
 
-                  return (
-                    <div
-                      key={ticketKey}
-                      onClick={() => handleSelectTicket(ticketKey)}
-                      className={`p-3.5 rounded-xl cursor-pointer transition-all duration-150 border ${isSelected
-                        ? "border-[#007dfc] bg-[#0e213b] shadow-[0_0_16px_rgba(0,125,252,0.25)] ring-1 ring-[#007dfc]/50"
-                        : "border-[#162338] bg-[#0e192a] hover:border-[#223552]"
-                        }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`w-2.5 h-2.5 rounded-full ${isCritical ? "bg-rose-500" : "bg-amber-500"
-                              }`}
-                          />
-                          <span className="font-mono text-xs font-bold text-white">
-                            {order.id}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-1.5">
-                          {isSelected && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#007dfc] text-white">
-                              CURRENTLY VIEWING
+                    return (
+                      <div
+                        key={ticketKey}
+                        onClick={() => handleSelectTicket(ticketKey)}
+                        className={`p-3.5 rounded-xl cursor-pointer transition-all duration-150 border ${isSelected
+                          ? "border-[#007dfc] bg-[#0e213b] shadow-[0_0_16px_rgba(0,125,252,0.25)] ring-1 ring-[#007dfc]/50"
+                          : "border-[#162338] bg-[#0e192a] hover:border-[#223552]"
+                          }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`w-2.5 h-2.5 rounded-full ${isCritical ? "bg-rose-500" : "bg-amber-500"
+                                }`}
+                            />
+                            <span className="font-mono text-xs font-bold text-white">
+                              {order.id}
                             </span>
-                          )}
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded ${isCritical
-                              ? "bg-[#2d1421] text-[#f43f5e] border border-[#52182d]"
-                              : "bg-[#2d2212] text-amber-400 border border-[#523e18]"
-                              }`}
-                          >
-                            {order.priority} &gt;
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            {isSelected && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#007dfc] text-white">
+                                CURRENTLY VIEWING
+                              </span>
+                            )}
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded ${isCritical
+                                ? "bg-[#2d1421] text-[#f43f5e] border border-[#52182d]"
+                                : "bg-[#2d2212] text-amber-400 border border-[#523e18]"
+                                }`}
+                            >
+                              {order.priority} &gt;
+                            </span>
+                            <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+                          </div>
+                        </div>
+
+                        <h4 className="text-xs font-bold text-white line-clamp-1 mb-1 pl-4.5">
+                          {order.location}
+                        </h4>
+
+                        <div className="flex items-center justify-between text-[11px] text-slate-400 pl-4.5">
+                          <span className="truncate">{order.assignedCrew}</span>
+                          <span className="font-medium text-slate-300 shrink-0">
+                            {order.eta} ETA
                           </span>
-                          <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
                         </div>
                       </div>
-
-                      <h4 className="text-xs font-bold text-white line-clamp-1 mb-1 pl-4.5">
-                        {order.location}
-                      </h4>
-
-                      <div className="flex items-center justify-between text-[11px] text-slate-400 pl-4.5">
-                        <span className="truncate">{order.assignedCrew}</span>
-                        <span className="font-medium text-slate-300 shrink-0">
-                          {order.eta} ETA
-                        </span>
-                      </div>
-                    </div>
-                  );
-                }))}
+                    );
+                  }))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
 
       {/* ========================================================================= */}
       {/* 4. BOTTOM SECTION: COMMS LOG + REAL-TIME UPDATES                         */}

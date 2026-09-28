@@ -1,97 +1,94 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import * as maplibregl from "maplibre-gl";
 import {
   MapPin,
   Navigation,
   Plus,
   Minus,
-  AlertTriangle,
   CheckCircle2,
   Clock,
   ShieldCheck,
   ArrowRight,
   Crosshair,
   Droplets,
-  CloudRain,
-  Radio,
-  ExternalLink,
   X,
 } from "lucide-react";
 import { useKWIStore, isUserSupervisor } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
 
-// Canonical Kolkata Landmark Coordinates on SVG viewBox 0 0 800 500
+// Canonical Kolkata Landmark Coordinates
 const LANDMARK_LOCATIONS = {
   howrah: {
     id: "howrah",
     name: "Howrah",
     label: "Howrah",
-    x: 250,
-    y: 205,
+    lng: 88.3300,
+    lat: 22.5850,
     defaultRisk: "MEDIUM",
   },
   north_kolkata: {
     id: "north_kolkata",
     name: "North Kolkata",
     label: "North Kolkata",
-    x: 410,
-    y: 165,
+    lng: 88.3700,
+    lat: 22.6000,
     defaultRisk: "HIGH",
   },
   lake_town: {
     id: "lake_town",
     name: "Lake Town",
     label: "Lake Town",
-    x: 545,
-    y: 165,
+    lng: 88.4050,
+    lat: 22.6050,
     defaultRisk: "MEDIUM",
   },
   kolkata_center: {
     id: "kolkata_center",
     name: "Kolkata",
     label: "Kolkata",
-    x: 430,
-    y: 205,
+    lng: 88.3512,
+    lat: 22.5697,
     isMajorLabel: true,
   },
   central: {
     id: "central",
     name: "Central",
     label: "Central",
-    x: 470,
-    y: 235,
+    lng: 88.3650,
+    lat: 22.5680,
     defaultRisk: "CRITICAL",
   },
   salt_lake: {
     id: "salt_lake",
-    name: "Salt Lake",
-    label: "Salt Lake",
+    name: "Milan Nagar, Bidhannagar",
+    label: "Milan Nagar",
     sublabel: "Bidhannagar",
-    x: 560,
-    y: 215,
+    lng: 88.4280,
+    lat: 22.5730,
     defaultRisk: "CRITICAL",
   },
   tangra: {
     id: "tangra",
     name: "Tangra",
     label: "Tangra",
-    x: 525,
-    y: 280,
+    lng: 88.3900,
+    lat: 22.5500,
     defaultRisk: "MEDIUM",
   },
   park_street: {
     id: "park_street",
     name: "Park Street",
     label: "Park Street",
-    x: 410,
-    y: 280,
+    lng: 88.3520,
+    lat: 22.5530,
     defaultRisk: "CRITICAL",
   },
   new_alipore: {
     id: "new_alipore",
     name: "New Alipore",
     label: "New Alipore",
-    x: 325,
-    y: 330,
+    lng: 88.3280,
+    lat: 22.5100,
     defaultRisk: "MEDIUM",
   },
   behala: {
@@ -99,24 +96,24 @@ const LANDMARK_LOCATIONS = {
     name: "Behala",
     label: "Behala",
     sublabel: "Ward 128",
-    x: 275,
-    y: 350,
+    lng: 88.3150,
+    lat: 22.4900,
     defaultRisk: "LOW",
   },
   tollygunge: {
     id: "tollygunge",
     name: "Tollygunge",
     label: "Tollygunge",
-    x: 390,
-    y: 360,
+    lng: 88.3470,
+    lat: 22.4980,
     defaultRisk: "LOW",
   },
   jadavpur: {
     id: "jadavpur",
     name: "Jadavpur",
     label: "Jadavpur",
-    x: 490,
-    y: 375,
+    lng: 88.3710,
+    lat: 22.4990,
     defaultRisk: "LOW",
   },
 };
@@ -127,7 +124,7 @@ const RISK_COLORS = {
     name: "Critical",
     dot: "#f43f5e",
     ring: "#f43f5e",
-    halo: "rgba(244, 63, 94, 0.28)",
+    halo: "rgba(244, 63, 94, 0.45)",
     bg: "bg-[#f43f5e]",
     border: "border-rose-400",
   },
@@ -135,7 +132,7 @@ const RISK_COLORS = {
     name: "High",
     dot: "#f97316",
     ring: "#f97316",
-    halo: "rgba(249, 115, 22, 0.28)",
+    halo: "rgba(249, 115, 22, 0.45)",
     bg: "bg-[#f97316]",
     border: "border-orange-400",
   },
@@ -143,7 +140,7 @@ const RISK_COLORS = {
     name: "Medium",
     dot: "#eab308",
     ring: "#eab308",
-    halo: "rgba(234, 179, 8, 0.28)",
+    halo: "rgba(234, 179, 8, 0.45)",
     bg: "bg-[#eab308]",
     border: "border-amber-400",
   },
@@ -151,21 +148,100 @@ const RISK_COLORS = {
     name: "Low",
     dot: "#10b981",
     ring: "#10b981",
-    halo: "rgba(16, 185, 129, 0.28)",
+    halo: "rgba(16, 185, 129, 0.45)",
     bg: "bg-[#10b981]",
     border: "border-emerald-400",
   },
 };
 
-// Helper to map reported work order location string to SVG landmark coordinates
+// Professional GIS Basemap Styles for Kolkata
+const MAP_STYLES = {
+  satellite: {
+    id: "satellite",
+    name: "Satellite",
+    spec: {
+      version: 8,
+      sources: {
+        "esri-satellite": {
+          type: "raster",
+          tiles: [
+            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          ],
+          tileSize: 256,
+          attribution: "© Esri, Maxar",
+          maxzoom: 19,
+        },
+      },
+      layers: [
+        {
+          id: "satellite-layer",
+          type: "raster",
+          source: "esri-satellite",
+          minzoom: 0,
+          maxzoom: 19,
+        },
+      ],
+    },
+  },
+};
+
+// Generate GeoJSON polygon circle around a coordinate in meters
+function createGeoJsonCircle(center, radiusInMeters, points = 64) {
+  const [lng, lat] = center;
+  const coords = [];
+  const distanceX = radiusInMeters / (111320 * Math.cos((lat * Math.PI) / 180));
+  const distanceY = radiusInMeters / 110540;
+  for (let i = 0; i < points; i++) {
+    const theta = (i / points) * (2 * Math.PI);
+    const x = distanceX * Math.cos(theta);
+    const y = distanceY * Math.sin(theta);
+    coords.push([lng + x, lat + y]);
+  }
+  coords.push(coords[0]);
+  return {
+    type: "Feature",
+    geometry: {
+      type: "Polygon",
+      coordinates: [coords],
+    },
+  };
+}
+
+// Distance between two lat/lng coordinates in meters
+function getDistanceMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Helper to map reported work order location string to landmark coordinates
 const findLandmarkForWorkOrder = (wo) => {
-  if (!wo) return LANDMARK_LOCATIONS.behala;
+  if (!wo) return LANDMARK_LOCATIONS.salt_lake;
   const raw = `${wo.location || ""} ${wo.borough || ""} ${wo.ward || ""} ${wo.assigned_ulb_name || ""}`.toLowerCase();
 
-  if (raw.includes("salt lake") || raw.includes("bidhannagar") || raw.includes("milan nagar") || raw.includes("sector v") || raw.includes("saltlake")) {
+  if (
+    raw.includes("salt lake") ||
+    raw.includes("bidhannagar") ||
+    raw.includes("milan nagar") ||
+    raw.includes("sector v") ||
+    raw.includes("saltlake")
+  ) {
     return LANDMARK_LOCATIONS.salt_lake;
   }
-  if (raw.includes("behala") || raw.includes("chowrasta") || raw.includes("ward 128") || raw.includes("borough xiv")) {
+  if (
+    raw.includes("behala") ||
+    raw.includes("chowrasta") ||
+    raw.includes("ward 128") ||
+    raw.includes("borough xiv")
+  ) {
     return LANDMARK_LOCATIONS.behala;
   }
   if (raw.includes("park street") || raw.includes("camac") || raw.includes("mullick")) {
@@ -180,36 +256,60 @@ const findLandmarkForWorkOrder = (wo) => {
   if (raw.includes("tangra") || raw.includes("topsia") || raw.includes("dhapa")) {
     return LANDMARK_LOCATIONS.tangra;
   }
-  if (raw.includes("lake town") || raw.includes("laketown") || raw.includes("dum dum") || raw.includes("bangur") || raw.includes("vip road")) {
+  if (
+    raw.includes("lake town") ||
+    raw.includes("laketown") ||
+    raw.includes("dum dum") ||
+    raw.includes("bangur") ||
+    raw.includes("vip road")
+  ) {
     return LANDMARK_LOCATIONS.lake_town;
   }
-  if (raw.includes("north") || raw.includes("shyambazar") || raw.includes("hatibagan") || raw.includes("sovabazar")) {
+  if (
+    raw.includes("north") ||
+    raw.includes("shyambazar") ||
+    raw.includes("hatibagan") ||
+    raw.includes("sovabazar")
+  ) {
     return LANDMARK_LOCATIONS.north_kolkata;
   }
-  if (raw.includes("tollygunge") || raw.includes("kudghat") || raw.includes("ranikuthi") || raw.includes("golf green")) {
+  if (
+    raw.includes("tollygunge") ||
+    raw.includes("kudghat") ||
+    raw.includes("ranikuthi") ||
+    raw.includes("golf green")
+  ) {
     return LANDMARK_LOCATIONS.tollygunge;
   }
   if (raw.includes("jadavpur") || raw.includes("santoshpur") || raw.includes("garia")) {
     return LANDMARK_LOCATIONS.jadavpur;
   }
-  if (raw.includes("central") || raw.includes("esplanade") || raw.includes("chandni") || raw.includes("sealdah") || raw.includes("college street")) {
+  if (
+    raw.includes("central") ||
+    raw.includes("esplanade") ||
+    raw.includes("chandni") ||
+    raw.includes("sealdah") ||
+    raw.includes("college street")
+  ) {
     return LANDMARK_LOCATIONS.central;
   }
 
   for (const loc of Object.values(LANDMARK_LOCATIONS)) {
-    if (raw.includes(loc.name.toLowerCase()) || (loc.sublabel && raw.includes(loc.sublabel.toLowerCase()))) {
+    if (
+      raw.includes(loc.name.toLowerCase()) ||
+      (loc.sublabel && raw.includes(loc.sublabel.toLowerCase()))
+    ) {
       return loc;
     }
   }
 
-  return LANDMARK_LOCATIONS.behala;
+  return LANDMARK_LOCATIONS.salt_lake;
 };
 
 export function SupervisorRiskAreaMap() {
   const {
     currentUser,
     workOrders,
-    historicalPlaces,
     allReports,
     fetchWorkOrders,
     fetchAllReports,
@@ -222,20 +322,21 @@ export function SupervisorRiskAreaMap() {
     fetchAllReports?.().catch(() => {});
   }, [fetchWorkOrders, fetchAllReports]);
 
-  // Zoom & Pan interactive state
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  // Active Map Mode State
+  const [activeStyleKey, setActiveStyleKey] = useState("satellite"); // Default: Satellite
   const [selectedIncident, setSelectedIncident] = useState(null);
+
+  const mapContainerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const markersRef = useRef([]);
 
   // Find the active work order stored in the work_orders table assigned ONLY to this occupied supervisor
   const activeWorkOrder = useMemo(() => {
-    // Only show to supervisors
     if (!isUserSupervisor(currentUser)) return null;
 
     const all = Object.values(workOrders || {});
     if (all.length === 0) return null;
 
-    // Filter only active (non-resolved, non-closed) work orders from work_orders table
     const activeOrders = all.filter((wo) => {
       const st = String(wo.status || "").toLowerCase().trim();
       return st !== "resolved" && st !== "closed" && st !== "completed";
@@ -243,28 +344,42 @@ export function SupervisorRiskAreaMap() {
 
     if (activeOrders.length === 0) return null;
 
-    const supName = (currentUser?.name || currentUser?.fullName || currentUser?.username || "").trim().toLowerCase();
+    const supName = (
+      currentUser?.name ||
+      currentUser?.fullName ||
+      currentUser?.username ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
     const supEmail = (currentUser?.email || "").trim().toLowerCase();
 
-    // Match only the occupied supervisor assigned to this work order
     const myOrder = activeOrders.find((wo) => {
       const woTeamHead = (wo.team_head_name || "").trim().toLowerCase();
       const woCrew = (wo.assignedCrew || "").trim().toLowerCase();
       const woChief = (wo.chief || "").trim().toLowerCase();
 
-      // Check if supervisor's name matches team_head_name, chief, or assignedCrew
       if (supName) {
-        if (woTeamHead && (woTeamHead.includes(supName) || supName.includes(woTeamHead))) return true;
-        if (woChief && (woChief.includes(supName) || supName.includes(woChief))) return true;
+        if (
+          woTeamHead &&
+          (woTeamHead.includes(supName) || supName.includes(woTeamHead))
+        )
+          return true;
+        if (
+          woChief &&
+          (woChief.includes(supName) || supName.includes(woChief))
+        )
+          return true;
         if (woCrew && woCrew.includes(supName)) return true;
       }
 
-      // Default demo supervisor fallback only if no supervisor name is attached to the ticket
-      if (!woTeamHead && (supEmail === "supervisor@kolkata-water.gov.in" || supName === "supervisor")) {
+      if (
+        !woTeamHead &&
+        (supEmail === "supervisor@kolkata-water.gov.in" ||
+          supName === "supervisor")
+      ) {
         return true;
       }
-
-      return false;
 
       return false;
     });
@@ -276,11 +391,32 @@ export function SupervisorRiskAreaMap() {
 
   // Determine assigned landmark location from the reported work order
   const assignedArea = useMemo(() => {
-    if (!activeWorkOrder) return LANDMARK_LOCATIONS.behala;
+    if (!activeWorkOrder) return LANDMARK_LOCATIONS.salt_lake;
     return findLandmarkForWorkOrder(activeWorkOrder);
   }, [activeWorkOrder]);
 
-  const assignedAreaKey = assignedArea.id;
+  // Center geographic coordinates for the sector
+  const centerCoords = useMemo(() => {
+    if (
+      activeWorkOrder?.latitude &&
+      activeWorkOrder?.longitude &&
+      !isNaN(Number(activeWorkOrder.latitude)) &&
+      !isNaN(Number(activeWorkOrder.longitude)) &&
+      Number(activeWorkOrder.latitude) !== 0
+    ) {
+      return [Number(activeWorkOrder.longitude), Number(activeWorkOrder.latitude)];
+    }
+    if (
+      activeWorkOrder?.lat &&
+      activeWorkOrder?.lng &&
+      !isNaN(Number(activeWorkOrder.lat)) &&
+      !isNaN(Number(activeWorkOrder.lng)) &&
+      Number(activeWorkOrder.lat) !== 0
+    ) {
+      return [Number(activeWorkOrder.lng), Number(activeWorkOrder.lat)];
+    }
+    return [assignedArea.lng || 88.4280, assignedArea.lat || 22.5730];
+  }, [activeWorkOrder, assignedArea]);
 
   // Clear selected incident if it gets resolved
   useEffect(() => {
@@ -292,36 +428,42 @@ export function SupervisorRiskAreaMap() {
   // Risk level for the assigned area dot:
   const assignedRiskLevel = useMemo(() => {
     if (activeWorkOrder) {
-      const p = String(activeWorkOrder.priority || activeWorkOrder.risk_level || "").toUpperCase();
+      const p = String(
+        activeWorkOrder.priority || activeWorkOrder.risk_level || ""
+      ).toUpperCase();
       if (p.includes("CRIT")) return "CRITICAL";
       if (p.includes("HIGH")) return "HIGH";
       if (p.includes("MED") || p.includes("MOD")) return "MEDIUM";
       if (p.includes("LOW")) return "LOW";
     }
-    return assignedArea.defaultRisk || "LOW";
+    return assignedArea.defaultRisk || "CRITICAL";
   }, [activeWorkOrder, assignedArea]);
 
-  // Radius of the dotted circle in SVG units
-  const CIRCLE_RADIUS = 76;
+  const CIRCLE_RADIUS_METERS = 500; // 500m radius
 
   // Incident object for the assigned central place dot (null if no active incident)
   const assignedCenterIncident = useMemo(() => {
     if (!hasActiveIncident || !activeWorkOrder) return null;
 
-    // Directly use database fields from work_orders table
     const dbLocation = activeWorkOrder.location || `${assignedArea.name}, Kolkata`;
-    const dbWard = activeWorkOrder.ward || activeWorkOrder.borough || (assignedArea.sublabel ? `Ward / ${assignedArea.sublabel}` : "Operational Zone");
+    const dbWard =
+      activeWorkOrder.ward ||
+      activeWorkOrder.borough ||
+      (assignedArea.sublabel
+        ? `Ward / ${assignedArea.sublabel}`
+        : "Operational Zone");
     const dbStatus = activeWorkOrder.status || "Dispatched";
 
-    // Accurate water level directly from work_orders table
     let dbWaterDepth = "0 cm depth";
-    if (activeWorkOrder.water_depth !== undefined && activeWorkOrder.water_depth !== null) {
+    if (
+      activeWorkOrder.water_depth !== undefined &&
+      activeWorkOrder.water_depth !== null
+    ) {
       dbWaterDepth = `${activeWorkOrder.water_depth} cm depth`;
     } else if (activeWorkOrder.waterDepth) {
       dbWaterDepth = activeWorkOrder.waterDepth;
     }
 
-    // Accurate intervention details directly from work_orders table
     const dbDetails =
       activeWorkOrder.intervention_type ||
       activeWorkOrder.reason ||
@@ -330,33 +472,38 @@ export function SupervisorRiskAreaMap() {
 
     return {
       id: activeWorkOrder.id || activeWorkOrder.work_id || "WO-ACTIVE",
-      incidentRef: activeWorkOrder.incidentRef || `#${activeWorkOrder.incident_id || activeWorkOrder.id || ""}`,
+      incidentRef:
+        activeWorkOrder.incidentRef ||
+        `#${activeWorkOrder.incident_id || activeWorkOrder.id || ""}`,
       name: dbLocation,
       ward: dbWard,
       location: dbLocation,
-      areaKey: assignedAreaKey,
-      x: assignedArea.x,
-      y: assignedArea.y,
+      lng: centerCoords[0],
+      lat: centerCoords[1],
       riskLevel: assignedRiskLevel,
       status: dbStatus,
       waterDepth: dbWaterDepth,
       details: dbDetails,
       isAssignedCenter: true,
-      ticketKey: activeWorkOrder.ticketKey || activeWorkOrder.id || activeWorkOrder.work_id,
+      ticketKey:
+        activeWorkOrder.ticketKey ||
+        activeWorkOrder.id ||
+        activeWorkOrder.work_id,
     };
-  }, [assignedArea, assignedAreaKey, activeWorkOrder, hasActiveIncident, assignedRiskLevel]);
+  }, [
+    assignedArea,
+    activeWorkOrder,
+    hasActiveIncident,
+    assignedRiskLevel,
+    centerCoords,
+  ]);
 
-  // Filter reports:
-  // 1. Only other distinct real reports for DIFFERENT places inside the circle (distance <= CIRCLE_RADIUS)
-  // 2. The supervisor's assigned location is already shown by the central dot (no duplicate)
-  // 3. Resolved or closed reports are excluded
-  // 4. Reports outside the circle are STRICTLY EXCLUDED
+  // Filter reports inside the 1900m circle:
   const visibleReports = useMemo(() => {
-    // If no active work order is assigned to the supervisor, keep map clear
     if (!hasActiveIncident) return [];
 
-    const cx = assignedArea.x;
-    const cy = assignedArea.y;
+    const centerLng = centerCoords[0];
+    const centerLat = centerCoords[1];
 
     if (!Array.isArray(allReports)) return [];
 
@@ -368,20 +515,29 @@ export function SupervisorRiskAreaMap() {
     const assignedLocNorm = norm(activeWorkOrder?.location || assignedArea.name);
     const assignedAreaName = assignedArea.name.toLowerCase();
     const assignedSublabel = (assignedArea.sublabel || "").toLowerCase();
-    const assignedTicketRef = (activeWorkOrder?.incidentRef || "").replace(/^#/, "").toLowerCase();
-    const assignedWorkId = (activeWorkOrder?.work_id || activeWorkOrder?.id || "").toLowerCase();
+    const assignedTicketRef = (activeWorkOrder?.incidentRef || "")
+      .replace(/^#/, "")
+      .toLowerCase();
+    const assignedWorkId = (
+      activeWorkOrder?.work_id ||
+      activeWorkOrder?.id ||
+      ""
+    ).toLowerCase();
 
     return allReports
       .filter((r) => {
-        // Exclude resolved, closed, or completed reports
         const rStatus = String(r.status || "").toLowerCase();
-        if (rStatus === "resolved" || rStatus === "closed" || rStatus === "completed") {
+        if (
+          rStatus === "resolved" ||
+          rStatus === "closed" ||
+          rStatus === "completed"
+        ) {
           return false;
         }
 
         const rLocNorm = norm(r.location);
 
-        // 1. Skip if this report is for the same location as the supervisor's assigned center
+        // Skip if same location as assigned center
         if (
           rLocNorm &&
           assignedLocNorm &&
@@ -392,39 +548,58 @@ export function SupervisorRiskAreaMap() {
           return false;
         }
 
-        // 2. Skip if reference or IDs match
         const rRef = (r.report_id || "").toLowerCase();
-        if (assignedTicketRef && (rRef === assignedTicketRef || rRef.includes(assignedTicketRef))) {
+        if (
+          assignedTicketRef &&
+          (rRef === assignedTicketRef || rRef.includes(assignedTicketRef))
+        ) {
           return false;
         }
-        if (assignedWorkId && (assignedWorkId.includes(rRef) || rRef.includes(assignedWorkId))) {
+        if (
+          assignedWorkId &&
+          (assignedWorkId.includes(rRef) || rRef.includes(assignedWorkId))
+        ) {
           return false;
         }
 
-        // 3. Only match if this is another distinct place within the supervisor's assigned sector / ward
         const loc = (r.location || r.ward || "").toLowerCase();
         return (
           loc.includes(assignedAreaName) ||
-          (assignedSublabel && loc.includes(assignedSublabel))
+          (assignedSublabel && loc.includes(assignedSublabel)) ||
+          r.latitude
         );
       })
       .map((r, idx) => {
-        const angle = (idx + 1) * 1.8;
-        const radiusOffset = 30 + ((idx * 15) % 35);
-        const rx = Math.round(cx + Math.cos(angle) * radiusOffset);
-        const ry = Math.round(cy + Math.sin(angle) * radiusOffset);
+        let rLng, rLat;
+        const rawLat = Number(r.latitude || r.lat);
+        const rawLng = Number(r.longitude || r.lng);
 
-        if (Math.hypot(rx - cx, ry - cy) > CIRCLE_RADIUS) return null;
+        if (!isNaN(rawLat) && !isNaN(rawLng) && rawLat !== 0 && rawLng !== 0) {
+          if (getDistanceMeters(centerLat, centerLng, rawLat, rawLng) > CIRCLE_RADIUS_METERS) {
+            return null;
+          }
+          rLat = rawLat;
+          rLng = rawLng;
+        } else {
+          // Disperse realistically within the 1.9km radius circle
+          const angle = (idx + 1) * 1.85;
+          const radiusRatio = 0.25 + ((idx * 0.17) % 0.65);
+          const radiusMeters = CIRCLE_RADIUS_METERS * radiusRatio;
+          const dx = radiusMeters / (111320 * Math.cos((centerLat * Math.PI) / 180));
+          const dy = radiusMeters / 110540;
+          rLng = centerLng + dx * Math.cos(angle);
+          rLat = centerLat + dy * Math.sin(angle);
+        }
 
         const depth = Number(r.water_depth || 0);
         const riskLevel =
           depth > 30
             ? "CRITICAL"
             : depth > 20
-            ? "HIGH"
-            : depth > 10
-            ? "MEDIUM"
-            : "LOW";
+              ? "HIGH"
+              : depth > 10
+                ? "MEDIUM"
+                : "LOW";
 
         return {
           id: `db-rep-${r.id || r.report_id}`,
@@ -432,38 +607,269 @@ export function SupervisorRiskAreaMap() {
           name: r.location || `${assignedArea.name} Citizen Report`,
           ward: r.ward ? `Ward ${r.ward}` : assignedArea.sublabel || "Field Sector",
           location: r.location || `${assignedArea.name}, Kolkata`,
-          areaKey: assignedAreaKey,
-          x: rx,
-          y: ry,
+          lng: rLng,
+          lat: rLat,
           riskLevel,
           status: r.status || "Under Review",
           waterDepth: r.water_depth ? `${r.water_depth} cm depth` : "15 cm depth",
           rainfall: "50 mm / 3 hr",
-          details: r.description || "Live citizen ground report registered in municipal database.",
+          details:
+            r.description ||
+            "Live citizen ground report registered in municipal database.",
           ticketKey: `WO-${r.report_id || r.id}`,
         };
       })
       .filter(Boolean);
-  }, [assignedArea, assignedAreaKey, allReports, activeWorkOrder, hasActiveIncident, CIRCLE_RADIUS]);
+  }, [
+    assignedArea,
+    allReports,
+    activeWorkOrder,
+    hasActiveIncident,
+    centerCoords,
+    CIRCLE_RADIUS_METERS,
+  ]);
 
   // Handler for dot clicks
-  const handleSelectIncident = (incident) => {
+  const handleSelectIncident = useCallback((incident) => {
     audioEngine?.playUiChirp(1200);
-    setSelectedIncident((prev) => (prev?.id === incident.id ? null : incident));
-  };
+    setSelectedIncident((prev) => (prev?.id === incident?.id ? null : incident));
+  }, []);
 
-  // Zoom handlers
+  // -------------------------------------------------------------
+  // MapLibre Synchronization: Circle Layer & Markers
+  // -------------------------------------------------------------
+  const syncMapElements = useCallback(
+    (map) => {
+      if (!map || !map.isStyleLoaded()) return;
+
+      // 1. Clear old markers
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
+
+      if (!hasActiveIncident) return;
+
+      // 2. Add / Update 1.9km GeoJSON Circle
+      const circleData = createGeoJsonCircle(centerCoords, CIRCLE_RADIUS_METERS);
+
+      if (!map.getSource("assigned-circle-source")) {
+        map.addSource("assigned-circle-source", {
+          type: "geojson",
+          data: circleData,
+        });
+
+        // Circle soft blue translucent fill
+        map.addLayer({
+          id: "assigned-circle-fill",
+          type: "fill",
+          source: "assigned-circle-source",
+          paint: {
+            "fill-color": "#007dfc",
+            "fill-opacity": 0.22,
+          },
+        });
+
+        // Circle perimeter dashed border
+        map.addLayer({
+          id: "assigned-circle-line",
+          type: "line",
+          source: "assigned-circle-source",
+          paint: {
+            "line-color": "#38bdf8",
+            "line-width": 2.5,
+            "line-dasharray": [3.5, 3],
+            "line-opacity": 0.95,
+          },
+        });
+      } else {
+        map.getSource("assigned-circle-source").setData(circleData);
+      }
+
+      // 3. Add "500m Radius" Floating Badge at Northern Circle Peak
+      const topBadgeCoord = [
+        centerCoords[0],
+        centerCoords[1] + CIRCLE_RADIUS_METERS / 110540,
+      ];
+      const badgeEl = document.createElement("div");
+      badgeEl.className = "select-none pointer-events-none";
+      badgeEl.innerHTML = `
+        <div style="background-color: #007dfc; color: #ffffff; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 9999px; box-shadow: 0 4px 14px rgba(0,0,0,0.5); border: 1.5px solid rgba(255,255,255,0.4); font-family: ui-sans-serif, system-ui, sans-serif; white-space: nowrap;">
+          500m Radius
+        </div>
+      `;
+      const badgeMarker = new maplibregl.Marker({
+        element: badgeEl,
+        anchor: "center",
+      })
+        .setLngLat(topBadgeCoord)
+        .addTo(map);
+      markersRef.current.push(badgeMarker);
+
+      // 4. Central Assigned Location Teardrop Pin
+      if (assignedCenterIncident) {
+        const centerEl = document.createElement("div");
+        centerEl.className =
+          "cursor-pointer group flex flex-col items-center select-none";
+        centerEl.style.transformOrigin = "bottom center";
+        centerEl.innerHTML = `
+          <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+            <span style="position: absolute; width: 38px; height: 38px; border-radius: 9999px; background-color: rgba(0, 125, 252, 0.45); animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; pointer-events: none;"></span>
+            <svg width="36" height="44" viewBox="0 0 34 42" fill="none" style="filter: drop-shadow(0 4px 12px rgba(0,125,252,0.7));">
+              <path d="M17 0C7.61 0 0 7.61 0 17C0 29.75 17 42 17 42C17 42 34 29.75 34 17C34 7.61 26.39 0 17 0Z" fill="#007dfc" />
+              <circle cx="17" cy="17" r="7" fill="#ffffff" />
+            </svg>
+          </div>
+          <div style="margin-top: 4px; text-align: center; font-weight: 800; font-size: 12px; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.95), 0 0 3px #000000; line-height: 1.15; font-family: ui-sans-serif, system-ui, sans-serif; white-space: nowrap;">
+            <div>${assignedCenterIncident.name}</div>
+            <div style="font-size: 10px; font-weight: 600; color: #cbd5e1;">${assignedCenterIncident.ward}</div>
+          </div>
+        `;
+
+        centerEl.addEventListener("click", (e) => {
+          e.stopPropagation();
+          handleSelectIncident(assignedCenterIncident);
+        });
+
+        const centerMarker = new maplibregl.Marker({
+          element: centerEl,
+          anchor: "bottom",
+        })
+          .setLngLat(centerCoords)
+          .addTo(map);
+        markersRef.current.push(centerMarker);
+      }
+
+      // 5. Incident Pins (inside the circle)
+      visibleReports.forEach((rep) => {
+        const colors = RISK_COLORS[rep.riskLevel] || RISK_COLORS.LOW;
+        const isSelected = selectedIncident?.id === rep.id;
+        const repCoords = [rep.lng, rep.lat];
+
+        const el = document.createElement("div");
+        el.className =
+          "cursor-pointer group flex flex-col items-center transition-transform hover:scale-125 select-none";
+        el.style.transformOrigin = "bottom center";
+        el.innerHTML = `
+          <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+            <span style="position: absolute; width: 30px; height: 30px; border-radius: 9999px; background-color: ${colors.halo}; animation: ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite; pointer-events: none;"></span>
+            <svg width="30" height="38" viewBox="0 0 34 42" fill="none" style="filter: drop-shadow(0 3px 8px ${colors.halo});">
+              <path d="M17 0C7.61 0 0 7.61 0 17C0 29.75 17 42 17 42C17 42 34 29.75 34 17C34 7.61 26.39 0 17 0Z" fill="${colors.dot}" />
+              <circle cx="17" cy="17" r="6" fill="#ffffff" />
+            </svg>
+            ${
+              isSelected
+                ? `
+              <span style="position: absolute; inset: -4px; border-radius: 9999px; border: 2.5px dashed #007dfc; animation: spin 8s linear infinite;"></span>
+            `
+                : ""
+            }
+          </div>
+        `;
+
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          handleSelectIncident(rep);
+        });
+
+        const marker = new maplibregl.Marker({
+          element: el,
+          anchor: "bottom",
+        })
+          .setLngLat(repCoords)
+          .addTo(map);
+        markersRef.current.push(marker);
+      });
+    },
+    [
+      centerCoords,
+      hasActiveIncident,
+      assignedCenterIncident,
+      visibleReports,
+      selectedIncident,
+      handleSelectIncident,
+      CIRCLE_RADIUS_METERS,
+    ]
+  );
+
+  // -------------------------------------------------------------
+  // Map Initialization
+  // -------------------------------------------------------------
+  useEffect(() => {
+    const container = mapContainerRef.current;
+    if (!container) return;
+
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
+    }
+
+    const currentPreset = MAP_STYLES[activeStyleKey] || MAP_STYLES.satellite;
+
+    const map = new maplibregl.Map({
+      container,
+      style: currentPreset.spec,
+      center: centerCoords,
+      zoom: 14.8,
+      minZoom: 10,
+      maxZoom: 18.5,
+      pitch: 0,
+      bearing: 0,
+      attributionControl: false,
+    });
+
+    map.on("load", () => {
+      syncMapElements(map);
+    });
+
+    mapInstanceRef.current = map;
+
+    return () => {
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []); // Run once on mount
+
+
+
+  // Synchronize Map Elements when dependencies update
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+    syncMapElements(map);
+  }, [syncMapElements]);
+
+  // Recenter map when assigned center changes
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    map.flyTo({
+      center: centerCoords,
+      zoom: 14.8,
+      duration: 1200,
+    });
+  }, [centerCoords]);
+
+  // Controls Handlers
   const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(prev + 0.25, 2.2));
+    mapInstanceRef.current?.zoomIn();
   };
 
   const handleZoomOut = () => {
-    setZoomLevel((prev) => Math.max(prev - 0.25, 0.75));
+    mapInstanceRef.current?.zoomOut();
   };
 
   const handleResetView = () => {
-    setZoomLevel(1);
-    setPanOffset({ x: 0, y: 0 });
+    audioEngine?.playUiChirp(950);
+    mapInstanceRef.current?.flyTo({
+      center: centerCoords,
+      zoom: 14.8,
+      pitch: 0,
+      bearing: 0,
+      duration: 1000,
+    });
     setSelectedIncident(null);
   };
 
@@ -472,8 +878,7 @@ export function SupervisorRiskAreaMap() {
       {/* Outer Card Container */}
       <div className="w-full bg-white dark:bg-[#071324] rounded-3xl border border-slate-200/90 dark:border-[#142d54] shadow-sm overflow-hidden p-4 sm:p-6 lg:p-8 transition-colors">
         {/* Top Header Bar */}
-        <div className="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-[#102444]">
-          {/* Left: Map Pin Icon + Title + Subtitle */}
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#102444]">
           <div className="flex items-start sm:items-center gap-3.5">
             <div className="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/70 dark:border-blue-900/50 flex items-center justify-center shrink-0 shadow-2xs">
               <MapPin className="w-5 h-5 text-[#007dfc]" />
@@ -489,629 +894,76 @@ export function SupervisorRiskAreaMap() {
           </div>
         </div>
 
-        {/* Assigned Sector Banner Indicator */}
-        <div className="mt-4 mb-2 flex items-center justify-between flex-wrap gap-2 text-xs">
-          {hasActiveIncident ? (
-            <>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/40 text-blue-700 dark:text-blue-300">
-                <span className="w-2 h-2 rounded-full bg-[#007dfc] animate-pulse" />
-                <span className="font-semibold">
-                  Assigned Field Sector:{" "}
-                  <strong className="font-bold underline decoration-blue-400">
-                    {activeWorkOrder?.location || assignedArea.name} ({activeWorkOrder?.ward || assignedArea.sublabel || "Operational Zone"})
-                  </strong>
-                </span>
-                <span className="text-blue-500/70">|</span>
-                <span className="text-slate-500 dark:text-slate-400">
-                  Sector Perimeter: <strong>{CIRCLE_RADIUS * 25}m Radius</strong>
-                </span>
-              </div>
-
-              <div className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                Click any dot inside the circle to inspect incident details in a box
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                <span className="font-semibold">
-                  No active work order assigned to supervisor
-                </span>
-                <span className="text-slate-300 dark:text-slate-700">|</span>
-                <span className="text-slate-500 dark:text-slate-400 font-medium">
-                  Field Operations Standby
-                </span>
-              </div>
-
-              <div className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                Live Kolkata Base Map • All Sectors Clear
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Main Map Canvas Container */}
+        {/* Main Map Container */}
         <div
           onClick={() => setSelectedIncident(null)}
-          className="relative w-full aspect-16/10 min-h-[460px] max-h-[640px] bg-[#f0f6fa] dark:bg-[#050d1a] rounded-2xl border border-slate-200/80 dark:border-[#102444] overflow-hidden select-none mt-3"
+          className="relative w-full aspect-16/10 min-h-[500px] max-h-[700px] bg-[#0c1628] rounded-2xl border border-slate-200/80 dark:border-[#102444] overflow-hidden select-none mt-4 shadow-lg"
         >
-          {/* Zoom/Pan Scaled Layer */}
+          {/* MapLibre WebGL Canvas Mount */}
           <div
-            className="w-full h-full transition-transform duration-300 ease-out relative"
-            style={{
-              transform: `scale(${zoomLevel}) translate(${panOffset.x}px, ${panOffset.y}px)`,
-              transformOrigin: "center center",
-            }}
-          >
-            <svg
-              viewBox="0 0 800 500"
-              className="w-full h-full"
-              style={{ overflow: "visible" }}
-            >
-              <defs>
-                {/* Radial Glow Filters for Risk Levels */}
-                <radialGradient id="glowCritical" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.55" />
-                  <stop offset="60%" stopColor="#f43f5e" stopOpacity="0.20" />
-                  <stop offset="100%" stopColor="#f43f5e" stopOpacity="0" />
-                </radialGradient>
+            ref={mapContainerRef}
+            className="w-full h-full cursor-grab active:cursor-grabbing"
+          />
 
-                <radialGradient id="glowHigh" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#f97316" stopOpacity="0.55" />
-                  <stop offset="60%" stopColor="#f97316" stopOpacity="0.20" />
-                  <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
-                </radialGradient>
-
-                <radialGradient id="glowMedium" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#eab308" stopOpacity="0.55" />
-                  <stop offset="60%" stopColor="#eab308" stopOpacity="0.20" />
-                  <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
-                </radialGradient>
-
-                <radialGradient id="glowLow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.55" />
-                  <stop offset="60%" stopColor="#10b981" stopOpacity="0.20" />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-                </radialGradient>
-
-                {/* Supervisor Area Soft Blue Glow */}
-                <radialGradient id="assignedAreaFill" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#007dfc" stopOpacity="0.10" />
-                  <stop offset="85%" stopColor="#007dfc" stopOpacity="0.04" />
-                  <stop offset="100%" stopColor="#007dfc" stopOpacity="0.01" />
-                </radialGradient>
-              </defs>
-
-              {/* 1. Base Subtle Street Network & Cartographic Grid Lines */}
-              <g
-                stroke="#dce7f0"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                className="dark:stroke-[#10233b] pointer-events-none"
-              >
-                {/* North-South Primary Meridian */}
-                <line x1="380" y1="60" x2="380" y2="450" />
-                {/* Secondary North-South Corridor (EM Bypass line) */}
-                <line x1="520" y1="100" x2="520" y2="440" />
-                {/* East-West Equator (Central Axis) */}
-                <line x1="170" y1="235" x2="630" y2="235" />
-                {/* Northern Diagonal: Howrah towards Salt Lake / Lake Town */}
-                <line x1="260" y1="160" x2="620" y2="195" />
-                {/* Southern Diagonal: Central towards Behala / New Alipore */}
-                <line x1="470" y1="235" x2="210" y2="380" />
-                {/* Southern Diagonal: Central towards Jadavpur */}
-                <line x1="470" y1="235" x2="640" y2="390" />
-              </g>
-
-              {/* 2. Hooghly River Flow on the West (Left) */}
-              <g className="pointer-events-none">
-                {/* Outer Riverbed */}
-                <path
-                  d="M 180 -10 C 175 70, 235 130, 210 200 C 185 270, 220 350, 160 510 L 125 510 C 185 350, 150 270, 175 200 C 200 130, 140 70, 145 -10 Z"
-                  fill="#d4e9fc"
-                  className="dark:fill-[#0c2a4d]"
-                />
-                {/* River Flow Line */}
-                <path
-                  d="M 163 -10 C 158 70, 218 130, 193 200 C 168 270, 203 350, 143 510"
-                  fill="none"
-                  stroke="#bdddfc"
-                  strokeWidth="2.5"
-                  className="dark:stroke-[#164070]"
-                />
-              </g>
-
-              {/* 3. East Kolkata Wetlands on the East (Right) */}
-              <path
-                d="M 640 180 C 730 220, 770 300, 720 380 C 670 430, 620 390, 610 320 C 600 250, 610 200, 640 180 Z"
-                fill="#e1effc"
-                className="dark:fill-[#09223e] pointer-events-none"
-              />
-
-              {/* 4. Geographic Landmark Labels (Subdued Cartography Context) */}
-              <g className="text-slate-400 dark:text-slate-500 font-bold select-none pointer-events-none">
-                <text
-                  x={LANDMARK_LOCATIONS.howrah.x}
-                  y={LANDMARK_LOCATIONS.howrah.y - 12}
-                  textAnchor="middle"
-                  className="text-[13px] fill-slate-400 dark:fill-slate-500 font-semibold"
-                >
-                  Howrah
-                </text>
-
-                <text
-                  x={LANDMARK_LOCATIONS.north_kolkata.x}
-                  y={LANDMARK_LOCATIONS.north_kolkata.y - 12}
-                  textAnchor="middle"
-                  className="text-[13px] fill-slate-400 dark:fill-slate-500 font-semibold"
-                >
-                  North Kolkata
-                </text>
-
-                <text
-                  x={LANDMARK_LOCATIONS.lake_town.x}
-                  y={LANDMARK_LOCATIONS.lake_town.y - 12}
-                  textAnchor="middle"
-                  className="text-[13px] fill-slate-400 dark:fill-slate-500 font-semibold"
-                >
-                  Lake Town
-                </text>
-
-                <text
-                  x={LANDMARK_LOCATIONS.kolkata_center.x}
-                  y={LANDMARK_LOCATIONS.kolkata_center.y}
-                  textAnchor="middle"
-                  className="text-[18px] fill-slate-500 dark:fill-slate-300 font-extrabold tracking-tight"
-                >
-                  Kolkata
-                </text>
-
-                <text
-                  x={LANDMARK_LOCATIONS.central.x}
-                  y={LANDMARK_LOCATIONS.central.y - 12}
-                  textAnchor="middle"
-                  className="text-[13px] fill-slate-400 dark:fill-slate-500 font-semibold"
-                >
-                  Central
-                </text>
-
-                <text
-                  x={LANDMARK_LOCATIONS.salt_lake.x}
-                  y={LANDMARK_LOCATIONS.salt_lake.y - 16}
-                  textAnchor="middle"
-                  className="text-[14px] fill-slate-500 dark:fill-slate-400 font-bold"
-                >
-                  Salt Lake
-                </text>
-                <text
-                  x={LANDMARK_LOCATIONS.salt_lake.x}
-                  y={LANDMARK_LOCATIONS.salt_lake.y - 4}
-                  textAnchor="middle"
-                  className="text-[11px] fill-slate-400 dark:fill-slate-600 font-medium"
-                >
-                  Bidhannagar
-                </text>
-
-                <text
-                  x={LANDMARK_LOCATIONS.tangra.x}
-                  y={LANDMARK_LOCATIONS.tangra.y - 12}
-                  textAnchor="middle"
-                  className="text-[13px] fill-slate-400 dark:fill-slate-500 font-semibold"
-                >
-                  Tangra
-                </text>
-
-                <text
-                  x={LANDMARK_LOCATIONS.park_street.x}
-                  y={LANDMARK_LOCATIONS.park_street.y - 12}
-                  textAnchor="middle"
-                  className="text-[13px] fill-slate-400 dark:fill-slate-500 font-semibold"
-                >
-                  Park Street
-                </text>
-
-                <text
-                  x={LANDMARK_LOCATIONS.new_alipore.x}
-                  y={LANDMARK_LOCATIONS.new_alipore.y - 12}
-                  textAnchor="middle"
-                  className="text-[13px] fill-slate-400 dark:fill-slate-500 font-semibold"
-                >
-                  New Alipore
-                </text>
-
-                <text
-                  x={LANDMARK_LOCATIONS.behala.x}
-                  y={LANDMARK_LOCATIONS.behala.y - 12}
-                  textAnchor="middle"
-                  className="text-[13px] fill-slate-500 dark:fill-slate-300 font-bold"
-                >
-                  Behala
-                </text>
-
-                <text
-                  x={LANDMARK_LOCATIONS.tollygunge.x}
-                  y={LANDMARK_LOCATIONS.tollygunge.y - 12}
-                  textAnchor="middle"
-                  className="text-[13px] fill-slate-400 dark:fill-slate-500 font-semibold"
-                >
-                  Tollygunge
-                </text>
-
-                <text
-                  x={LANDMARK_LOCATIONS.jadavpur.x}
-                  y={LANDMARK_LOCATIONS.jadavpur.y - 12}
-                  textAnchor="middle"
-                  className="text-[13px] fill-slate-400 dark:fill-slate-500 font-semibold"
-                >
-                  Jadavpur
-                </text>
-              </g>
-
-              {/* ========================================================= */}
-              {/* 5. SUPERVISOR ASSIGNED AREA: DOTTED CIRCLE (Only when active work order exists) */}
-              {hasActiveIncident && (
-                <g className="pointer-events-none">
-                  {/* Soft ambient tint within assigned radius */}
-                  <circle
-                    cx={assignedArea.x}
-                    cy={assignedArea.y}
-                    r={CIRCLE_RADIUS}
-                    fill="url(#assignedAreaFill)"
-                  />
-
-                  {/* Subtle animated outer radar pulse */}
-                  <circle
-                    cx={assignedArea.x}
-                    cy={assignedArea.y}
-                    r={CIRCLE_RADIUS}
-                    fill="none"
-                    stroke="#007dfc"
-                    strokeWidth="1"
-                    strokeOpacity="0.3"
-                    className="animate-ping"
-                    style={{ transformOrigin: `${assignedArea.x}px ${assignedArea.y}px` }}
-                  />
-
-                  {/* The Primary Dotted Boundary Circle */}
-                  <circle
-                    cx={assignedArea.x}
-                    cy={assignedArea.y}
-                    r={CIRCLE_RADIUS}
-                    fill="none"
-                    stroke="#007dfc"
-                    strokeWidth="2.2"
-                    strokeDasharray="6 6"
-                    strokeLinecap="round"
-                    className="transition-colors duration-300"
-                  />
-
-                  {/* Small Sector Badge on the circle top */}
-                  <rect
-                    x={assignedArea.x - 48}
-                    y={assignedArea.y - CIRCLE_RADIUS - 12}
-                    width="96"
-                    height="18"
-                    rx="9"
-                    fill="#007dfc"
-                    className="shadow-sm transition-colors duration-300"
-                  />
-                  <text
-                    x={assignedArea.x}
-                    y={assignedArea.y - CIRCLE_RADIUS}
-                    textAnchor="middle"
-                    className="text-[9.5px] fill-white font-extrabold tracking-wide uppercase"
-                  >
-                    Assigned Zone
-                  </text>
-                </g>
-              )}
-
-              {/* ========================================================= */}
-              {/* 6. INCIDENT RISK DOTS (STRICTLY INSIDE THE DOTTED CIRCLE)  */}
-              {/* Places outside the circle are NEVER shown to supervisor  */}
-              {/* ========================================================= */}
-
-              {/* (A) Supervisor Assigned Central Location Dot (Only when incident is active) */}
-              {hasActiveIncident && assignedCenterIncident && (() => {
-                const isSelected = selectedIncident?.id === assignedCenterIncident.id;
-                return (
-                  <g
-                    key="assigned-center-dot"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSelectIncident(assignedCenterIncident);
-                    }}
-                    className="cursor-pointer group"
-                  >
-                    {/* Generous Invisible Hit Target for Effortless Clicking */}
-                    <circle
-                      cx={assignedArea.x}
-                      cy={assignedArea.y}
-                      r="32"
-                      fill="transparent"
-                      style={{ pointerEvents: "all", cursor: "pointer" }}
-                    />
-
-                    {/* Outer Radiant Glow Halo */}
-                    <circle
-                      cx={assignedArea.x}
-                      cy={assignedArea.y}
-                      r="24"
-                      fill={
-                        assignedRiskLevel === "CRITICAL"
-                          ? "url(#glowCritical)"
-                          : assignedRiskLevel === "HIGH"
-                          ? "url(#glowHigh)"
-                          : assignedRiskLevel === "MEDIUM"
-                          ? "url(#glowMedium)"
-                          : "url(#glowLow)"
-                      }
-                      className="transition-transform group-hover:scale-125"
-                      style={{ pointerEvents: "none" }}
-                    />
-
-                    {/* Active Selection Ring */}
-                    {isSelected && (
-                      <circle
-                        cx={assignedArea.x}
-                        cy={assignedArea.y}
-                        r="14"
-                        fill="none"
-                        stroke="#007dfc"
-                        strokeWidth="2.5"
-                        strokeDasharray="4 3"
-                        className="animate-spin"
-                        style={{
-                          transformOrigin: `${assignedArea.x}px ${assignedArea.y}px`,
-                          pointerEvents: "none",
-                        }}
-                      />
-                    )}
-
-                    {/* Middle Ring */}
-                    <circle
-                      cx={assignedArea.x}
-                      cy={assignedArea.y}
-                      r="7.5"
-                      fill="none"
-                      stroke={RISK_COLORS[assignedRiskLevel].dot}
-                      strokeWidth="2"
-                      className="transition-transform group-hover:scale-115"
-                      style={{ pointerEvents: "none" }}
-                    />
-
-                    {/* Inner Solid Center Dot */}
-                    <circle
-                      cx={assignedArea.x}
-                      cy={assignedArea.y}
-                      r="3.4"
-                      fill={RISK_COLORS[assignedRiskLevel].dot}
-                      style={{ pointerEvents: "none" }}
-                    />
-                  </g>
-                );
-              })()}
-
-              {/* (B) Any other verified reports located INSIDE the dotted circle */}
-              {visibleReports
-                .filter(
-                  (rep) =>
-                    // Skip the assigned center duplicate to avoid double dot
-                    Math.hypot(rep.x - assignedArea.x, rep.y - assignedArea.y) > 8
-                )
-                .map((rep) => {
-                  const colors = RISK_COLORS[rep.riskLevel] || RISK_COLORS.LOW;
-                  const isSelected = selectedIncident?.id === rep.id;
-                  return (
-                    <g
-                      key={rep.id}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSelectIncident(rep);
-                      }}
-                      className="cursor-pointer group"
-                    >
-                      {/* Generous Invisible Hit Target */}
-                      <circle
-                        cx={rep.x}
-                        cy={rep.y}
-                        r="30"
-                        fill="transparent"
-                        style={{ pointerEvents: "all", cursor: "pointer" }}
-                      />
-
-                      {/* Outer Radiant Glow Halo */}
-                      <circle
-                        cx={rep.x}
-                        cy={rep.y}
-                        r="20"
-                        fill={
-                          rep.riskLevel === "CRITICAL"
-                            ? "url(#glowCritical)"
-                            : rep.riskLevel === "HIGH"
-                            ? "url(#glowHigh)"
-                            : rep.riskLevel === "MEDIUM"
-                            ? "url(#glowMedium)"
-                            : "url(#glowLow)"
-                        }
-                        className="transition-transform group-hover:scale-125"
-                        style={{ pointerEvents: "none" }}
-                      />
-
-                      {/* Active Selection Ring */}
-                      {isSelected && (
-                        <circle
-                          cx={rep.x}
-                          cy={rep.y}
-                          r="13"
-                          fill="none"
-                          stroke="#007dfc"
-                          strokeWidth="2.5"
-                          strokeDasharray="4 3"
-                          className="animate-spin"
-                          style={{
-                            transformOrigin: `${rep.x}px ${rep.y}px`,
-                            pointerEvents: "none",
-                          }}
-                        />
-                      )}
-
-                      {/* Middle Ring */}
-                      <circle
-                        cx={rep.x}
-                        cy={rep.y}
-                        r="6.5"
-                        fill="none"
-                        stroke={colors.dot}
-                        strokeWidth="1.8"
-                        className="transition-transform group-hover:scale-115"
-                        style={{ pointerEvents: "none" }}
-                      />
-
-                      {/* Inner Solid Center Dot */}
-                      <circle
-                        cx={rep.x}
-                        cy={rep.y}
-                        r="3"
-                        fill={colors.dot}
-                        style={{ pointerEvents: "none" }}
-                      />
-                    </g>
-                  );
-                })}
-            </svg>
-
-            {/* ========================================================= */}
-            {/* 7. ANCHORED INCIDENT DETAILS BOX (Appears on dot click)   */}
-            {/* ========================================================= */}
-            {selectedIncident && (
-              <div
-                style={{
-                  left: `${(selectedIncident.x / 800) * 100}%`,
-                  top: `${(selectedIncident.y / 500) * 100}%`,
-                  transform:
-                    selectedIncident.y > 200
-                      ? "translate(-50%, -100%) translateY(-26px)"
-                      : "translate(-50%, 0%) translateY(26px)",
-                }}
-                onClick={(e) => e.stopPropagation()}
-                className="absolute z-40 w-72 sm:w-84 max-w-[90vw] bg-white/98 dark:bg-[#071324]/98 backdrop-blur-md rounded-2xl border border-slate-200/90 dark:border-[#1e3a66] shadow-[0_12px_40px_rgba(0,0,0,0.18)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.6)] p-4 animate-in fade-in zoom-in-95 pointer-events-auto transition-all"
-              >
-                {/* Pointer Arrow pointing directly to the dot */}
-                {selectedIncident.y > 200 ? (
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-[#071324] rotate-45 border-r border-b border-slate-200/90 dark:border-[#1e3a66]" />
-                ) : (
-                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-[#071324] rotate-45 border-l border-t border-slate-200/90 dark:border-[#1e3a66]" />
-                )}
-
-                {/* Box Header: Risk Level Badge + Incident ID + Close Button */}
-                <div className="flex items-center justify-between gap-2 relative z-10 pb-2.5 border-b border-slate-100 dark:border-[#102444]">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-extrabold text-white uppercase shadow-2xs ${
-                        RISK_COLORS[selectedIncident.riskLevel]?.bg || "bg-emerald-600"
-                      }`}
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                      <span>{selectedIncident.riskLevel} Risk</span>
-                    </span>
-                    <span className="text-[11.5px] font-bold text-slate-500 dark:text-slate-400">
-                      {selectedIncident.incidentRef || selectedIncident.id}
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      audioEngine?.playUiChirp(850);
-                      setSelectedIncident(null);
-                    }}
-                    className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300 flex items-center justify-center text-xs transition-colors cursor-pointer"
-                    title="Close"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                {/* Incident Title & Ward */}
-                <div className="mt-2.5 relative z-10">
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">
-                    {selectedIncident.name}
-                  </h4>
-                  <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-[#007dfc] shrink-0" />
-                    <span>{selectedIncident.ward || selectedIncident.location}</span>
-                  </p>
-                </div>
-
-                {/* Key Metrics: Water Depth & Status */}
-                <div className="grid grid-cols-2 gap-2 mt-3 relative z-10">
-                  <div className="bg-[#f0f7ff] dark:bg-[#0a1c36] border border-[#d2e7ff] dark:border-[#163660] rounded-xl p-2.5">
-                    <div className="flex items-center gap-1 text-[#007dfc] dark:text-blue-400">
-                      <Droplets className="w-3.5 h-3.5" />
-                      <span className="text-[10px] uppercase font-bold tracking-wider">
-                        Water Level
-                      </span>
-                    </div>
-                    <span className="text-xs font-extrabold text-slate-900 dark:text-white block mt-0.5">
-                      {selectedIncident.waterDepth}
-                    </span>
-                  </div>
-
-                  <div className="bg-[#f0f7ff] dark:bg-[#0a1c36] border border-[#d2e7ff] dark:border-[#163660] rounded-xl p-2.5">
-                    <div className="flex items-center gap-1 text-[#007dfc] dark:text-blue-400">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span className="text-[10px] uppercase font-bold tracking-wider">
-                        Status
-                      </span>
-                    </div>
-                    <span className="text-xs font-extrabold text-slate-900 dark:text-white block mt-0.5 truncate">
-                      {selectedIncident.status || "Dispatched"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Narrative Telemetry Note */}
-                {selectedIncident.details && (
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-2.5 pt-2 border-t border-slate-100 dark:border-[#102444] leading-relaxed relative z-10">
-                    {selectedIncident.details}
-                  </p>
-                )}
-
-                {/* Action Button: Open Work Order in Respond Center */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    audioEngine?.playUiChirp(1300);
-                    if (setActiveWorkOrderTicketId && selectedIncident.ticketKey) {
-                      setActiveWorkOrderTicketId(selectedIncident.ticketKey);
-                    }
-                    navigate("/action-center");
-                  }}
-                  className="w-full mt-3 py-2.5 px-3 rounded-xl bg-[#007dfc] hover:bg-[#006ee0] text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_14px_rgba(0,125,252,0.3)] transition-all active:scale-[0.99] relative z-10"
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Open Work Order In Respond</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+          {/* ========================================================================= */}
+          {/* FLOATING TOP SECTOR & STYLE HEADER BAR (Matching Screenshot)              */}
+          {/* ========================================================================= */}
+          <div className="absolute top-3 sm:top-4 inset-x-3 sm:inset-x-4 z-20 flex items-center justify-between gap-2 pointer-events-none flex-wrap">
+            {/* Left: Sector & Perimeter Indicator */}
+            {hasActiveIncident ? (
+              <div className="pointer-events-auto flex items-center gap-2 sm:gap-2.5 px-3.5 sm:px-4 py-2 rounded-full bg-[#0a1628]/85 backdrop-blur-md border border-white/10 text-white text-xs sm:text-[13px] shadow-xl">
+                <MapPin className="w-4 h-4 text-[#007dfc] shrink-0" />
+                <span className="font-semibold text-slate-200">
+                  Assigned Field Sector:{" "}
+                  <strong className="text-sky-400 font-bold underline cursor-pointer">
+                    {activeWorkOrder?.location || assignedArea.name} (
+                    {activeWorkOrder?.ward || assignedArea.sublabel || "Field Sector"}
+                    )
+                  </strong>
+                </span>
+                <span className="text-white/30 hidden sm:inline">|</span>
+                <span className="font-semibold text-slate-300 hidden sm:inline">
+                  Sector Perimeter:{" "}
+                  <strong className="text-sky-400 font-bold">500m Radius</strong>
+                </span>
+              </div>
+            ) : (
+              <div className="pointer-events-auto flex items-center gap-2 px-3.5 py-2 rounded-full bg-[#0a1628]/85 backdrop-blur-md border border-white/10 text-white text-xs shadow-xl">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span className="font-semibold text-slate-200">
+                  No active work order assigned to supervisor • Standby
+                </span>
               </div>
             )}
+
+            {/* Right: Recenter Target Button */}
+            <div className="pointer-events-auto flex items-center gap-2">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleResetView();
+                }}
+                title="Recenter Assigned Sector"
+                className="w-8 h-8 rounded-full bg-[#0a1628]/85 backdrop-blur-md border border-white/10 text-slate-200 hover:text-white hover:bg-[#007dfc] flex items-center justify-center transition-colors shadow-xl cursor-pointer"
+              >
+                <Crosshair className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Bottom-Left Floating "Risk Level" Legend (Matching Screenshot) */}
-          <div className="absolute bottom-4 left-4 z-20 bg-white/95 dark:bg-[#071324]/95 backdrop-blur-md rounded-2xl border border-slate-200/90 dark:border-[#142d54] p-3.5 shadow-md">
-            <h4 className="text-[11px] font-bold text-slate-700 dark:text-slate-200 mb-2">
-              Risk Level
-            </h4>
+          {/* ========================================================================= */}
+          {/* FLOATING BOTTOM-LEFT RISK LEVEL LEGEND (Matching Screenshot)              */}
+          {/* ========================================================================= */}
+          <div className="absolute bottom-4 left-4 z-20 bg-[#0a1628]/90 backdrop-blur-md rounded-2xl border border-white/10 p-3 shadow-xl pointer-events-auto select-none">
             <div className="space-y-1.5">
               {Object.entries(RISK_COLORS).map(([key, item]) => (
                 <div key={key} className="flex items-center gap-2.5">
                   <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    className="w-3 h-3 rounded-full shrink-0 shadow-xs"
                     style={{ backgroundColor: item.dot }}
                   />
-                  <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                  <span className="text-xs font-medium text-slate-200">
                     {item.name}
                   </span>
                 </div>
@@ -1119,38 +971,161 @@ export function SupervisorRiskAreaMap() {
             </div>
           </div>
 
-          {/* Bottom-Right Floating Map Controls (Matching Screenshot) */}
-          <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
-            {/* Locate / Compass Reset */}
+          {/* ========================================================================= */}
+          {/* FLOATING BOTTOM-RIGHT CONTROLS + SCALE BAR (Matching Screenshot)          */}
+          {/* ========================================================================= */}
+          <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-2.5 pointer-events-auto select-none">
+            {/* Compass / Orientation Reset */}
             <button
               type="button"
               onClick={handleResetView}
-              title="Reset View"
-              className="w-8 h-8 rounded-full bg-white/95 dark:bg-[#071324]/95 hover:bg-slate-100 dark:hover:bg-[#0a1c38] border border-slate-200/90 dark:border-[#142d54] text-slate-700 dark:text-slate-200 flex items-center justify-center shadow-xs transition-colors cursor-pointer"
+              title="Reset Orientation"
+              className="w-8 h-8 rounded-full bg-[#0a1628]/90 backdrop-blur-md border border-white/10 text-white flex items-center justify-center shadow-lg hover:bg-slate-800 transition-colors cursor-pointer"
             >
-              <Navigation className="w-4 h-4 fill-slate-700 dark:fill-slate-200 text-slate-700 dark:text-slate-200 -rotate-45" />
+              <Navigation className="w-4 h-4 fill-white text-white -rotate-45" />
             </button>
 
-            {/* Zoom In & Out (Circular Geometry) */}
-            <div className="flex flex-col rounded-full bg-white/95 dark:bg-[#071324]/95 border border-slate-200/90 dark:border-[#142d54] shadow-xs overflow-hidden">
+            {/* Zoom In & Zoom Out Controls */}
+            <div className="flex flex-col rounded-full bg-[#0a1628]/90 backdrop-blur-md border border-white/10 shadow-lg overflow-hidden">
               <button
                 type="button"
-                onClick={handleZoomIn}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleZoomIn();
+                }}
                 title="Zoom In"
-                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#0a1c38] transition-colors border-b border-slate-100 dark:border-[#102444] cursor-pointer"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white hover:bg-slate-800 transition-colors border-b border-white/10 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
               </button>
               <button
                 type="button"
-                onClick={handleZoomOut}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleZoomOut();
+                }}
                 title="Zoom Out"
-                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#0a1c38] transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <Minus className="w-4 h-4" />
               </button>
             </div>
+
+            {/* Map Scale Bar (Matching Screenshot) */}
+            <div className="flex items-center gap-2 text-[9.5px] font-mono text-slate-300 bg-[#0a1628]/80 backdrop-blur-sm px-2.5 py-1 rounded-md border border-white/10">
+              <span>0</span>
+              <div className="w-10 h-0.5 bg-slate-300 relative">
+                <span className="absolute left-0 -top-1 w-0.5 h-2 bg-slate-300" />
+                <span className="absolute right-0 -top-1 w-0.5 h-2 bg-slate-300" />
+              </div>
+              <span>500 m</span>
+              <div className="w-10 h-0.5 bg-slate-300 relative">
+                <span className="absolute right-0 -top-1 w-0.5 h-2 bg-slate-300" />
+              </div>
+              <span>1 km</span>
+            </div>
           </div>
+
+          {/* ========================================================================= */}
+          {/* FLOATING INCIDENT DETAILS POPUP (Appears on Marker Click)                 */}
+          {/* ========================================================================= */}
+          {selectedIncident && (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="absolute z-40 top-18 left-1/2 -translate-x-1/2 w-80 sm:w-92 max-w-[92vw] bg-[#0a1628]/95 backdrop-blur-xl rounded-2xl border border-white/15 shadow-[0_16px_50px_rgba(0,0,0,0.7)] p-4 text-white animate-in fade-in zoom-in-95 pointer-events-auto"
+            >
+              {/* Header: Risk Level Badge + Incident ID + Close Button */}
+              <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-extrabold text-white uppercase shadow-2xs ${
+                      RISK_COLORS[selectedIncident.riskLevel]?.bg || "bg-rose-600"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    <span>{selectedIncident.riskLevel} Risk</span>
+                  </span>
+                  <span className="text-[11.5px] font-bold text-slate-300 font-mono">
+                    {selectedIncident.incidentRef || selectedIncident.id}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    audioEngine?.playUiChirp(850);
+                    setSelectedIncident(null);
+                  }}
+                  className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 flex items-center justify-center text-xs transition-colors cursor-pointer"
+                  title="Close"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Title & Ward */}
+              <div className="mt-2.5">
+                <h4 className="text-sm font-bold text-white leading-tight">
+                  {selectedIncident.name}
+                </h4>
+                <p className="text-[11.5px] text-slate-400 mt-1 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-[#007dfc] shrink-0" />
+                  <span>{selectedIncident.ward || selectedIncident.location}</span>
+                </p>
+              </div>
+
+              {/* Metrics: Water Depth & Status */}
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                <div className="bg-white/5 border border-white/10 rounded-xl p-2.5">
+                  <div className="flex items-center gap-1 text-cyan-400">
+                    <Droplets className="w-3.5 h-3.5" />
+                    <span className="text-[10px] uppercase font-bold tracking-wider">
+                      Water Level
+                    </span>
+                  </div>
+                  <span className="text-xs font-extrabold text-white block mt-0.5">
+                    {selectedIncident.waterDepth}
+                  </span>
+                </div>
+
+                <div className="bg-white/5 border border-white/10 rounded-xl p-2.5">
+                  <div className="flex items-center gap-1 text-cyan-400">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span className="text-[10px] uppercase font-bold tracking-wider">
+                      Status
+                    </span>
+                  </div>
+                  <span className="text-xs font-extrabold text-white block mt-0.5 truncate">
+                    {selectedIncident.status || "Dispatched"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Narrative Telemetry Note */}
+              {selectedIncident.details && (
+                <p className="text-[11px] text-slate-300 mt-2.5 pt-2 border-t border-white/10 leading-relaxed">
+                  {selectedIncident.details}
+                </p>
+              )}
+
+              {/* Action Button: Open Work Order in Respond Center */}
+              <button
+                type="button"
+                onClick={() => {
+                  audioEngine?.playUiChirp(1300);
+                  if (setActiveWorkOrderTicketId && selectedIncident.ticketKey) {
+                    setActiveWorkOrderTicketId(selectedIncident.ticketKey);
+                  }
+                  navigate("/action-center");
+                }}
+                className="w-full mt-3 py-2.5 px-3 rounded-xl bg-[#007dfc] hover:bg-[#006ee0] text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_14px_rgba(0,125,252,0.4)] transition-all active:scale-[0.99]"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Open Work Order In Respond</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

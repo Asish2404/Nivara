@@ -19,9 +19,6 @@ import {
 } from "./kolkataCartographicData";
 import { useKWIStore, isUserAdmin, isUserSupervisor } from "../../store/useKWIStore";
 import { audioEngine } from "../../utils/audioEngine";
-import { motion, AnimatePresence } from "framer-motion";
-import { KWITelemetryLoader } from "../ui/KWITelemetryLoader";
-import { TRANSITION_EASE } from "../../utils/motionVariants";
 import {
   Layers,
   Compass,
@@ -119,7 +116,6 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
   const [isLegendExpanded, setIsLegendExpanded] = useState(true);
   const [showReported, setShowReported] = useState(true);
   const [showPredicted, setShowPredicted] = useState(true);
-  const [mapLoaded, setMapLoaded] = useState(false);
 
   const handleFilterSelect = useCallback((filterKey) => {
     audioEngine.playUiChirp(1150);
@@ -826,11 +822,11 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
           el.setAttribute("title", `${ps.name} - ${ps.status}`);
           el.innerHTML = `
             <div style="background: ${isCap ? "#dc2626" : "#0284c7"
-            }; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; border: 1.5px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.45); font-family: monospace;">
+            }; color: white; width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; border: 1.5px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.45); font-family: monospace;">
               PS
             </div>
             <div style="background: rgba(15,23,42,0.88); color: ${isCap ? "#fca5a5" : "#7dd3fc"
-            }; font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 9999px; border: 1px solid rgba(255,255,255,0.2); font-family: monospace; white-space: nowrap; ${isMobileScreen ? 'display: none;' : ''}">
+            }; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); font-family: monospace; white-space: nowrap; ${isMobileScreen ? 'display: none;' : ''}">
               ${ps.id}: ${ps.capacity}
             </div>
           `;
@@ -981,13 +977,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
     map.on("load", () => {
       syncMapOverlays(map);
       syncMarkers(map);
-      setMapLoaded(true);
     });
-
-    // Fallback timer ensures loading screen resolves smoothly even in offline/stub environments
-    const fallbackTimer = setTimeout(() => {
-      setMapLoaded(true);
-    }, 1200);
 
     mapInstanceRef.current = map;
     if (typeof window !== "undefined") {
@@ -995,7 +985,6 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
     }
 
     return () => {
-      clearTimeout(fallbackTimer);
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
       if (typeof window !== "undefined") {
@@ -1397,27 +1386,6 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
         }}
       />
 
-      {/* Telemetry Page Loading Animation: Standardized with Home and Dashboard */}
-      <AnimatePresence>
-        {!mapLoaded && (
-          <motion.div
-            key="kolkata-map-loader"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.35, ease: TRANSITION_EASE }}
-            className="absolute inset-0 z-40 flex items-center justify-center bg-slate-950/85 backdrop-blur-md pointer-events-none"
-          >
-            <KWITelemetryLoader
-              title="LIVE MUNICIPAL TELEMETRY"
-              subtitle="SYNCHRONIZING SENSORS // 41 HOOGHLY SLUICE GATES LINKED"
-              badge="KWI-GIS-COMMAND"
-              inline={false}
-              showTelemetry={true}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* ------------------------------------------------------------- */}
       {/* Top Left: Enterprise GIS Municipal Telemetry Badge */}
       {/* ------------------------------------------------------------- */}
@@ -1446,14 +1414,14 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* Top Right: Map Styles & WebGL Camera Control Ribbon (Circular UI) */}
+      {/* Top Right: Map Styles & WebGL Camera Control Ribbon */}
       {/* ------------------------------------------------------------- */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2 pointer-events-auto">
-        {/* 3D Tilt Toggle (Circular) */}
+        {/* 3D Tilt Toggle */}
         <button
           type="button"
           onClick={handleToggle3D}
-          className={`p-2 rounded-full backdrop-blur-md border transition-all cursor-pointer shadow-lg text-xs font-mono font-bold flex items-center justify-center gap-1 ${is3DMode
+          className={`p-2 rounded-xl backdrop-blur-md border transition-all cursor-pointer shadow-lg text-xs font-mono font-bold flex items-center gap-1 ${is3DMode
             ? "bg-cyan-500/20 text-cyan-300 border-cyan-400/40"
             : "bg-slate-900/90 text-slate-300 border-white/15 hover:bg-slate-800"
             }`}
@@ -1463,22 +1431,22 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
           <span className="hidden sm:inline">{is3DMode ? "3D" : "2D"}</span>
         </button>
 
-        {/* Reset Kolkata View (Circular) */}
+        {/* Reset Kolkata View */}
         <button
           type="button"
           onClick={handleResetKolkata}
-          className="p-2 rounded-full bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white backdrop-blur-md border border-white/15 transition-all cursor-pointer shadow-lg"
+          className="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white backdrop-blur-md border border-white/15 transition-all cursor-pointer shadow-lg"
           title="Reset Camera to Central Kolkata"
         >
           <RotateCcw className="w-4 h-4" />
         </button>
 
-        {/* Zoom Controls (Circular Geometry) */}
-        <div className="flex items-center rounded-full bg-slate-900/90 backdrop-blur-md border border-white/15 p-0.5 shadow-lg">
+        {/* Zoom Controls */}
+        <div className="flex items-center rounded-xl bg-slate-900/90 backdrop-blur-md border border-white/15 p-0.5 shadow-lg">
           <button
             type="button"
             onClick={handleZoomIn}
-            className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-full cursor-pointer"
+            className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg cursor-pointer"
             title="Zoom In"
           >
             <Plus className="w-4 h-4" />
@@ -1487,18 +1455,18 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
           <button
             type="button"
             onClick={handleZoomOut}
-            className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-full cursor-pointer"
+            className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg cursor-pointer"
             title="Zoom Out"
           >
             <Minus className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Fullscreen Toggle (Circular) */}
+        {/* Fullscreen Toggle */}
         <button
           type="button"
           onClick={toggleFullscreen}
-          className="p-2 rounded-full bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white backdrop-blur-md border border-white/15 transition-all cursor-pointer shadow-lg"
+          className="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white backdrop-blur-md border border-white/15 transition-all cursor-pointer shadow-lg"
           title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Map"}
         >
           {isFullscreen ? (
@@ -1531,11 +1499,10 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                       setTimelineStep(mins);
                       audioEngine.playUiChirp(800 + mins * 10);
                     }}
-                    className={`px-1.5 sm:px-2.5 py-1 rounded-lg font-mono text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
-                      active
+                    className={`px-1.5 sm:px-2.5 py-1 rounded-lg font-mono text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${active
                         ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_12px_rgba(6,182,212,0.5)] border border-cyan-300/40"
                         : "text-slate-400 hover:text-white hover:bg-white/10"
-                    }`}
+                      }`}
                   >
                     {mins === 0 ? "NOW" : `+${mins}m`}
                   </button>
@@ -1581,13 +1548,12 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                 id="kwi-run-prediction-btn"
                 onClick={handleRunPrediction}
                 disabled={store.isRefreshingPredictions}
-                className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-2xl font-mono text-xs font-bold transition-all cursor-pointer shadow-2xl backdrop-blur-xl border ${
-                  store.isRefreshingPredictions
+                className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-2xl font-mono text-xs font-bold transition-all cursor-pointer shadow-2xl backdrop-blur-xl border ${store.isRefreshingPredictions
                     ? "bg-slate-800 text-cyan-300 border-cyan-500/40 opacity-80 cursor-wait"
                     : cooldownRemaining && cooldownRemaining > 0
-                    ? "bg-slate-900/95 hover:bg-slate-800/95 text-amber-400 border-amber-500/40 hover:border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.2)] active:scale-95"
-                    : "bg-gradient-to-r from-cyan-500 via-blue-600 to-teal-500 hover:from-cyan-400 hover:to-blue-500 text-white border-cyan-300/50 shadow-[0_0_16px_rgba(6,182,212,0.4)] active:scale-95"
-                }`}
+                      ? "bg-slate-900/95 hover:bg-slate-800/95 text-amber-400 border-amber-500/40 hover:border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.2)] active:scale-95"
+                      : "bg-gradient-to-r from-cyan-500 via-blue-600 to-teal-500 hover:from-cyan-400 hover:to-blue-500 text-white border-cyan-300/50 shadow-[0_0_16px_rgba(6,182,212,0.4)] active:scale-95"
+                  }`}
                 title={
                   cooldownRemaining && cooldownRemaining > 0
                     ? `Cooldown Active (${formatCountdown(cooldownRemaining)}) - Click for status`
@@ -1664,7 +1630,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
 
               <label className="flex items-center justify-between cursor-pointer hover:text-white py-0.5">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500/50 border border-amber-400" />
+                  <span className="w-2.5 h-2.5 rounded-sm bg-amber-500/50 border border-amber-400" />
                   Risk Zones
                 </span>
                 <input
@@ -1677,7 +1643,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
 
               <label className="flex items-center justify-between cursor-pointer hover:text-white py-0.5">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-sky-600 text-[8px] flex items-center justify-center font-mono font-bold text-white">
+                  <span className="w-2.5 h-2.5 rounded-xs bg-sky-600 text-[8px] flex items-center justify-center font-mono font-bold text-white">
                     PS
                   </span>
                   Pump Stations
@@ -1692,7 +1658,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
 
               <label className="flex items-center justify-between cursor-pointer hover:text-white py-0.5">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500/40 border border-dashed border-rose-400" />
+                  <span className="w-2.5 h-2.5 rounded-sm bg-rose-500/40 border border-dashed border-rose-400" />
                   AI Spread Horizon
                 </span>
                 <input
@@ -1729,19 +1695,17 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                   audioEngine.playUiChirp(showReported ? 780 : 1080);
                   setShowReported((prev) => !prev);
                 }}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl backdrop-blur-md border shadow-xl text-[11px] sm:text-xs font-semibold transition-all cursor-pointer ${
-                  showReported
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl backdrop-blur-md border shadow-xl text-[11px] sm:text-xs font-semibold transition-all cursor-pointer ${showReported
                     ? "bg-rose-500/20 text-rose-300 border-rose-400/60 shadow-[0_0_12px_rgba(244,63,94,0.25)]"
                     : "bg-slate-900/90 text-slate-400 border-white/15 hover:bg-slate-800 hover:text-slate-200"
-                }`}
+                  }`}
                 title="Toggle live citizen reported locations on the map"
               >
                 <span
-                  className={`w-3.5 h-3.5 rounded-sm flex items-center justify-center border transition-colors ${
-                    showReported
+                  className={`w-3.5 h-3.5 rounded-sm flex items-center justify-center border transition-colors ${showReported
                       ? "bg-rose-500 border-rose-400 text-white"
                       : "border-slate-500 bg-slate-800/80"
-                  }`}
+                    }`}
                 >
                   {showReported && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                 </span>
@@ -1755,19 +1719,17 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                   audioEngine.playUiChirp(showPredicted ? 780 : 1080);
                   setShowPredicted((prev) => !prev);
                 }}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl backdrop-blur-md border shadow-xl text-[11px] sm:text-xs font-semibold transition-all cursor-pointer ${
-                  showPredicted
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl backdrop-blur-md border shadow-xl text-[11px] sm:text-xs font-semibold transition-all cursor-pointer ${showPredicted
                     ? "bg-cyan-500/20 text-cyan-300 border-cyan-400/60 shadow-[0_0_12px_rgba(6,182,212,0.25)]"
                     : "bg-slate-900/90 text-slate-400 border-white/15 hover:bg-slate-800 hover:text-slate-200"
-                }`}
+                  }`}
                 title="Toggle AI predicted waterlogging locations on the map"
               >
                 <span
-                  className={`w-3.5 h-3.5 rounded-sm flex items-center justify-center border transition-colors ${
-                    showPredicted
+                  className={`w-3.5 h-3.5 rounded-sm flex items-center justify-center border transition-colors ${showPredicted
                       ? "bg-cyan-500 border-cyan-400 text-slate-950"
                       : "border-slate-500 bg-slate-800/80"
-                  }`}
+                    }`}
                 >
                   {showPredicted && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                 </span>
@@ -1800,20 +1762,18 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
               type="button"
               onClick={() => handleFilterSelect("ALL")}
               title="Show all points (Reset filter)"
-              className={`flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider font-mono transition-all cursor-pointer ${
-                activeSeverityFilter === "ALL"
+              className={`flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider font-mono transition-all cursor-pointer ${activeSeverityFilter === "ALL"
                   ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]"
                   : "text-slate-400 hover:text-slate-200"
-              }`}
+                }`}
             >
               <span className="hidden min-[380px]:inline">Hydrological Legend</span>
               <span className="min-[380px]:hidden">Legend</span>
               <span
-                className={`text-[8.5px] sm:text-[9px] px-1.5 py-0.5 rounded font-sans font-semibold transition-all ${
-                  activeSeverityFilter === "ALL"
+                className={`text-[8.5px] sm:text-[9px] px-1.5 py-0.5 rounded font-sans font-semibold transition-all ${activeSeverityFilter === "ALL"
                     ? "bg-cyan-500/25 text-cyan-300 border border-cyan-400/40"
                     : "bg-slate-800 text-slate-400 hover:text-slate-200 border border-white/5"
-                }`}
+                  }`}
               >
                 ALL
               </span>
@@ -1835,11 +1795,10 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                   type="button"
                   onClick={() => handleFilterSelect("LOW")}
                   title="Filter: Low severity points only (Green)"
-                  className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[9.5px] sm:text-[10.5px] transition-all cursor-pointer ${
-                    activeSeverityFilter === "LOW"
+                  className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[9.5px] sm:text-[10.5px] transition-all cursor-pointer ${activeSeverityFilter === "LOW"
                       ? "bg-emerald-500/25 text-emerald-300 border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.3)] font-semibold"
                       : "hover:bg-slate-800/80 text-slate-300 border border-transparent"
-                  }`}
+                    }`}
                 >
                   <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#22c55e] shadow-[0_0_6px_#22c55e]" />
                   <span>Low</span>
@@ -1849,11 +1808,10 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                   type="button"
                   onClick={() => handleFilterSelect("MODERATE")}
                   title="Filter: Moderate severity points only (Yellow)"
-                  className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[9.5px] sm:text-[10.5px] transition-all cursor-pointer ${
-                    activeSeverityFilter === "MODERATE"
+                  className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[9.5px] sm:text-[10.5px] transition-all cursor-pointer ${activeSeverityFilter === "MODERATE"
                       ? "bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.3)] font-semibold"
                       : "hover:bg-slate-800/80 text-slate-300 border border-transparent"
-                  }`}
+                    }`}
                 >
                   <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#eab308] shadow-[0_0_6px_#eab308]" />
                   <span>Moderate</span>
@@ -1863,11 +1821,10 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                   type="button"
                   onClick={() => handleFilterSelect("HIGH")}
                   title="Filter: High severity points only (Orange)"
-                  className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[9.5px] sm:text-[10.5px] transition-all cursor-pointer ${
-                    activeSeverityFilter === "HIGH"
+                  className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[9.5px] sm:text-[10.5px] transition-all cursor-pointer ${activeSeverityFilter === "HIGH"
                       ? "bg-orange-500/25 text-orange-300 border border-orange-500/50 shadow-[0_0_10px_rgba(249,115,22,0.3)] font-semibold"
                       : "hover:bg-slate-800/80 text-slate-300 border border-transparent"
-                  }`}
+                    }`}
                 >
                   <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#f97316] shadow-[0_0_6px_#f97316]" />
                   <span>High</span>
@@ -1877,11 +1834,10 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                   type="button"
                   onClick={() => handleFilterSelect("CRITICAL")}
                   title="Filter: Critical points only (Red)"
-                  className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[9.5px] sm:text-[10.5px] transition-all cursor-pointer ${
-                    activeSeverityFilter === "CRITICAL"
+                  className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[9.5px] sm:text-[10.5px] transition-all cursor-pointer ${activeSeverityFilter === "CRITICAL"
                       ? "bg-rose-500/25 text-rose-300 border border-rose-500/50 shadow-[0_0_10px_rgba(244,63,94,0.3)] font-semibold"
                       : "hover:bg-slate-800/80 text-slate-300 border border-transparent"
-                  }`}
+                    }`}
                 >
                   <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#ef4444] shadow-[0_0_6px_#ef4444]" />
                   <span>Critical</span>
@@ -1898,7 +1854,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                   Conduit
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-sky-500" />
+                  <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-xs bg-sky-500" />
                   Pump
                 </span>
                 <span className="flex items-center gap-1">
@@ -2046,11 +2002,10 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                       audioEngine.playUiChirp(850);
                       setSimulateState("BEFORE");
                     }}
-                    className={`py-1.5 rounded-lg text-xs font-bold font-mono cursor-pointer transition-all ${
-                      simulateState === "BEFORE"
+                    className={`py-1.5 rounded-lg text-xs font-bold font-mono cursor-pointer transition-all ${simulateState === "BEFORE"
                         ? "bg-rose-500/30 text-rose-300 border border-rose-500/40 shadow-xs"
                         : "text-slate-400 hover:text-white"
-                    }`}
+                      }`}
                   >
                     BEFORE (Baseline)
                   </button>
@@ -2060,11 +2015,10 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                       audioEngine.playUiChirp(1250);
                       setSimulateState("AFTER");
                     }}
-                    className={`py-1.5 rounded-lg text-xs font-bold font-mono cursor-pointer transition-all ${
-                      simulateState === "AFTER" || !simulateState
+                    className={`py-1.5 rounded-lg text-xs font-bold font-mono cursor-pointer transition-all ${simulateState === "AFTER" || !simulateState
                         ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 shadow-xs"
                         : "text-slate-400 hover:text-white"
-                    }`}
+                      }`}
                   >
                     AFTER (Mitigated)
                   </button>
