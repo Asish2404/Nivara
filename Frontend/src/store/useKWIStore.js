@@ -258,8 +258,8 @@ export const mapBackendNotification = (n) => {
     // Admin operational telemetry across 4 active categories: urgent, pumps, reports, resolved
     category = n.category && n.category !== "system" ? n.category : (
       n.type === "urgent" ? "urgent" :
-      n.type === "pumps" ? "pumps" :
-      (n.type === "resolved" || n.type === "incident_resolved") ? "resolved" : "reports"
+        n.type === "pumps" ? "pumps" :
+          (n.type === "resolved" || n.type === "incident_resolved") ? "resolved" : "reports"
     );
     severity = n.severity || (category === "urgent" ? "critical" : category === "resolved" ? "resolved" : "high");
     metrics = n.metrics || null;
@@ -526,6 +526,8 @@ export const useKWIStore = create((set, get) => ({
             reason: wo.reason || '',
             latitude: wo.latitude || 0,
             longitude: wo.longitude || 0,
+            lat: wo.latitude || 0,
+            lng: wo.longitude || 0,
             assigned_ulb_id: wo.assigned_ulb_id || '',
             assigned_ulb_name: wo.assigned_ulb_name || '',
             admin_name: wo.admin_name || '',
@@ -1125,7 +1127,7 @@ export const useKWIStore = create((set, get) => ({
       try {
         const raw = localStorage.getItem("kwi_device_location");
         if (raw) return JSON.parse(raw);
-      } catch {}
+      } catch { }
     }
     return null;
   })(),
@@ -1182,7 +1184,7 @@ export const useKWIStore = create((set, get) => ({
               const wardMatch = fullAddr.match(/ward\s*(\d+)/i);
               if (wardMatch) ward = `Ward ${wardMatch[1]}`;
             }
-          } catch {}
+          } catch { }
 
           if (!locality) {
             // Intelligent Kolkata metro zone resolver based on coordinates
@@ -1219,7 +1221,7 @@ export const useKWIStore = create((set, get) => ({
             try {
               localStorage.setItem("kwi_device_location", JSON.stringify(locData));
               localStorage.setItem("kwi_location_perm", "granted");
-            } catch {}
+            } catch { }
           }
 
           set({
@@ -1229,14 +1231,14 @@ export const useKWIStore = create((set, get) => ({
           });
 
           // Automatically refresh notifications with this device location
-          get().fetchNotifications(locData).catch(() => {});
+          get().fetchNotifications(locData).catch(() => { });
 
           // Synchronize profile location if citizen user is logged in
           const { currentUser } = get();
           if (currentUser && !currentUser.location) {
             const token = localStorage.getItem("kwi_token");
             if (token) {
-              api.patch("/auth/me", { location: fullLocation }, token).catch(() => {});
+              api.patch("/auth/me", { location: fullLocation }, token).catch(() => { });
             }
           }
 
@@ -1303,7 +1305,7 @@ export const useKWIStore = create((set, get) => ({
           const idKey = n.id || n.notification_id;
           const locKey = String(n.location || n.relatedLocation || "").toLowerCase().trim();
           const titleKey = String(n.title || "").toLowerCase().trim();
-          
+
           // Form a robust event key for deduplication across all roles
           let eventKey = "";
           if (n.reportId) {
@@ -1482,7 +1484,7 @@ export const useKWIStore = create((set, get) => ({
     if (matchingReports.length > 0) {
       const alreadyHasStatusNotif = (s.notifications || []).some(
         (n) => n.type === (statusNormalized === "in progress" ? "incident_in_progress" : "incident_resolved") &&
-               isLocationMatch(n.relatedLocation || n.location, loc)
+          isLocationMatch(n.relatedLocation || n.location, loc)
       );
       if (alreadyHasStatusNotif) return;
 
