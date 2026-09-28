@@ -50,8 +50,8 @@ export function LiveCityPage() {
   } = store;
 
   useEffect(() => {
-    fetchAllReports?.().catch(() => {});
-    fetchIncidentQueue?.().catch(() => {});
+    fetchAllReports?.().catch(() => { });
+    fetchIncidentQueue?.().catch(() => { });
   }, [fetchAllReports, fetchIncidentQueue]);
 
   const [traceWaterFlow, setTraceWaterFlow] = useState(false);
@@ -78,20 +78,56 @@ export function LiveCityPage() {
 
   return (
     <div className="relative min-h-screen bg-[#fafaf8] dark:bg-[#0A1E3B] text-slate-900 dark:text-[#F2FBFD] font-sans flex flex-col selection:bg-cyan-100 selection:text-cyan-900 overflow-x-hidden">
-      {/* 0. Subtle Organic Ambient Warmth & Waterlines */}
+      {/* 0. Kolkata Skyline & Hooghly River Panoramic Background Backdrop */}
+      <div className="absolute top-0 inset-x-0 h-[720px] sm:h-[820px] lg:h-[880px] overflow-hidden pointer-events-none z-0">
+        {/* Light Theme: Scenic Daylight Skyline */}
+        <img
+          src="/images/kolkata_live_map_bg.jpg"
+          alt="Kolkata Skyline with Howrah Bridge and Victoria Memorial across Hooghly River"
+          className="w-full h-full object-cover object-[center_28%] sm:object-[center_24%] filter contrast-[1.04] brightness-[1.0] dark:hidden transition-all duration-500"
+        />
+
+        {/* Dark Theme: Atmospheric Night Skyline */}
+        <img
+          src="/images/kolkata_live_map_bg_dark.jpg"
+          alt="Kolkata Skyline Midnight Cybernetic Panorama"
+          className="w-full h-full object-cover object-[center_28%] sm:object-[center_24%] filter contrast-[1.08] brightness-[0.92] hidden dark:block transition-all duration-500"
+          onError={(e) => {
+            e.currentTarget.src = "/images/kolkata_live_map_bg.jpg";
+          }}
+        />
+
+        {/* Light Mode: Subtle Atmospheric Layer (keeps photo vibrant & clearly visible) */}
+        <div className="absolute inset-0 bg-white/10 dark:hidden" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-[#fafaf8] dark:hidden" />
+
+        {/* Dark Mode: Subtle Dark Tint */}
+        <div className="absolute inset-0 bg-[#0A1E3B]/35 hidden dark:block" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A1E3B]/20 via-transparent to-[#0A1E3B] hidden dark:block" />
+
+        {/* Soft bottom feather to transition seamlessly into the content below */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-48 pointer-events-none dark:hidden"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(250, 250, 248, 0) 0%, rgba(250, 250, 248, 0.45) 40%, rgba(250, 250, 248, 0.9) 75%, #fafaf8 100%)",
+          }}
+        />
+        <div
+          className="absolute inset-x-0 bottom-0 h-48 pointer-events-none hidden dark:block"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(10, 30, 59, 0) 0%, rgba(10, 30, 59, 0.45) 40%, rgba(10, 30, 59, 0.9) 75%, #0A1E3B 100%)",
+          }}
+        />
+      </div>
+
+      {/* 0b. Subtle Organic Ambient Warmth */}
       <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1440px] h-[520px] pointer-events-none -z-10"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1440px] h-[520px] pointer-events-none z-0"
         style={{
           background:
             "radial-gradient(ellipse 65% 50% at 50% -10%, rgba(6, 182, 212, 0.08) 0%, rgba(59, 130, 246, 0.03) 50%, transparent 85%)",
-        }}
-      />
-      <div
-        className="absolute top-0 inset-x-0 h-[400px] pointer-events-none -z-10 opacity-[0.03]"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, #0f172a 1px, transparent 1px), linear-gradient(to bottom, #0f172a 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
         }}
       />
 
@@ -106,7 +142,7 @@ export function LiveCityPage() {
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: DURATION.standard, ease: TRANSITION_EASE }}
-        className="flex-1 max-w-[1360px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-8 flex flex-col gap-6 sm:gap-8"
+        className="relative z-10 flex-1 max-w-[1360px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-8 flex flex-col gap-6 sm:gap-8"
       >
         {/* ========================================================================= */}
         {/* SECTION 1: COMPACT LIVE MAP HEADER                                        */}
@@ -604,13 +640,6 @@ export function LiveCityPage() {
           </AnimatePresence>
         </div>
 
-        {/* ========================================================================= */}
-        {/* ATMOSPHERIC WATER CONNECTOR TRANSITION (Map Data -> Incident Intel)       */}
-        {/* ========================================================================= */}
-        <div className="relative w-full -mt-2 -mb-2 pointer-events-none flex flex-col items-center">
-          <div className="w-full h-8 bg-gradient-to-b from-transparent via-cyan-500/[0.04] dark:via-cyan-400/[0.05] to-transparent" />
-          <div className="w-80 sm:w-[480px] h-6 rounded-full bg-cyan-500/[0.06] dark:bg-cyan-400/[0.08] blur-xl -mt-5" />
-        </div>
 
         {/* ========================================================================= */}
         {/* SECTION 5: LIVE INCIDENT INTELLIGENCE (Compact Real-time Incident Feed)    */}
