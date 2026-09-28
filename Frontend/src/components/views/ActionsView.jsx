@@ -979,14 +979,14 @@ export function ActionsView() {
       <div className="absolute -top-28 sm:-top-32 lg:-top-36 inset-x-0 bottom-0 left-1/2 -translate-x-1/2 w-screen z-0 overflow-hidden pointer-events-none">
         {/* Light Theme Respond Wave Artwork */}
         <img
-          src="/textures/Respond_bg.png"
+          src="/textures/Respond_Light_Bg.jpeg"
           alt="Respond Background Light"
           className="w-full h-full object-cover object-[center_36%] sm:object-[center_32%] brightness-[0.90] dark:hidden transition-all duration-300"
         />
 
         {/* Dark Theme Respond Atmospheric Wave Artwork */}
         <img
-          src="/textures/Respond_bg_dark.png"
+          src="/textures/Respond_Dark_Bg.jpeg"
           alt="Respond Background Dark"
           className="w-full h-full object-cover object-[center_36%] sm:object-[center_32%] hidden dark:block transition-all duration-300"
         />
@@ -1217,7 +1217,7 @@ export function ActionsView() {
                 {/* 4 Intelligence Metric Tiles */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3">
                   {/* Metric 1: Severity Level */}
-                  <div className="p-3.5 rounded-xl bg-white/55 dark:bg-[#22121e] border border-slate-900/80 dark:border-[#3e1b2b] backdrop-blur-md flex items-center gap-2.5">
+                  <div className="p-3.5 rounded-xl bg-white/55 dark:bg-[#22121e] backdrop-blur-md flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-lg bg-white dark:bg-[#331422] border border-[#f43f5e] flex items-center justify-center text-[#f43f5e] shrink-0">
                       <AlertTriangle className="w-4 h-4" />
                     </div>
@@ -1232,7 +1232,7 @@ export function ActionsView() {
                   </div>
 
                   {/* Metric 2: Runoff Risk Score */}
-                  <div className="p-3.5 rounded-xl bg-white/55 dark:bg-[#0d1c2f] border border-slate-900/80 dark:border-[#182f4e] backdrop-blur-md flex items-center gap-2.5">
+                  <div className="p-3.5 rounded-xl bg-white/55 dark:bg-[#0d1c2f] backdrop-blur-md flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-lg bg-white dark:bg-[#10233a] border border-[#38bdf8] flex items-center justify-center text-[#38bdf8] shrink-0">
                       <Activity className="w-4 h-4" />
                     </div>
@@ -1247,7 +1247,7 @@ export function ActionsView() {
                   </div>
 
                   {/* Metric 3: Projected Relief */}
-                  <div className="p-3.5 rounded-xl bg-white/55 dark:bg-[#0d2226] border border-slate-900/80 dark:border-[#15383d] backdrop-blur-md flex items-center gap-2.5">
+                  <div className="p-3.5 rounded-xl bg-white/55 dark:bg-[#0d2226] backdrop-blur-md flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-lg bg-white dark:bg-[#0d2b2d] border border-[#2dd4bf] flex items-center justify-center text-[#2dd4bf] shrink-0">
                       <Droplets className="w-4 h-4" />
                     </div>
@@ -1262,7 +1262,7 @@ export function ActionsView() {
                   </div>
 
                   {/* Metric 4: Assigned Sluice */}
-                  <div className="p-3.5 rounded-xl bg-white/55 dark:bg-[#0d1f2e] border border-slate-900/80 dark:border-[#16334a] backdrop-blur-md flex items-center gap-2.5">
+                  <div className="p-3.5 rounded-xl bg-white/55 dark:bg-[#0d1f2e] backdrop-blur-md flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-lg bg-white dark:bg-[#102b3e] border border-[#38bdf8] flex items-center justify-center text-[#38bdf8] shrink-0">
                       <Cpu className="w-4 h-4" />
                     </div>
@@ -1278,7 +1278,7 @@ export function ActionsView() {
                 </div>
 
                 {/* Suggested Response / Drainage Unit Details */}
-                <div className="mt-2 rounded-xl bg-white/55 dark:bg-[#0e192a] border border-slate-900/80 dark:border-[#1a2b42] backdrop-blur-md p-4 sm:p-5 space-y-4">
+                <div className="mt-2 rounded-xl bg-white/55 dark:bg-[#0e192a] backdrop-blur-md p-4 sm:p-5 space-y-4">
                   <div className="flex items-center justify-between pb-3 border-b border-[#18283e]">
                     <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
                       <Truck className="w-4 h-4 text-[#38bdf8]" />
@@ -1295,7 +1295,7 @@ export function ActionsView() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                     {/* Field In-Charge */}
                     <div className="flex items-start gap-2.5">
-                      <div className="w-7 h-7 rounded-md bg-white border border-slate-900 dark:bg-[#152438] dark:border-[#22354f] flex items-center justify-center text-slate-400 shrink-0 mt-0.5">
+                      <div className="w-7 h-7 rounded-md bg-white flex items-center justify-center text-slate-400 shrink-0 mt-0.5">
                         <span className="text-xs">👤</span>
                       </div>
                       <div>
@@ -1313,7 +1313,7 @@ export function ActionsView() {
 
                     {/* Estimated Arrival */}
                     <div className="flex items-start gap-2.5">
-                      <div className="w-7 h-7 rounded-md bg-white border border-[#38bdf8] dark:bg-[#152438] dark:border-[#22354f] flex items-center justify-center text-[#38bdf8] shrink-0 mt-0.5">
+                      <div className="w-7 h-7 rounded-md bg-white flex items-center justify-center text-[#38bdf8] shrink-0 mt-0.5">
                         <Clock className="w-3.5 h-3.5 text-[#38bdf8]" />
                       </div>
                       <div>
@@ -1392,7 +1392,7 @@ export function ActionsView() {
                   <button
                     type="button"
                     onClick={handleViewIncidentOnMap}
-                    className={`py-3.5 px-6 rounded-xl bg-[#007dfc] hover:bg-[#006fe0] text-white border border-slate-900 dark:bg-[#162338] dark:hover:bg-[#1c2c47] dark:text-slate-200 dark:border-[#22354f] font-semibold text-sm transition-all active:scale-[0.99] cursor-pointer shadow-xs flex items-center justify-center gap-2 shrink-0 ${!isSupervisor && currentStage < 3 ? "w-full" : "w-full sm:w-auto"}`}
+                    className={`py-3.5 px-6 rounded-xl bg-[#007dfc] hover:bg-[#006fe0] text-white dark:hover:bg-[#1c2c47] dark:text-slate-200 dark:border-[#22354f] font-semibold text-sm transition-all active:scale-[0.99] cursor-pointer shadow-xs flex items-center justify-center gap-2 shrink-0 ${!isSupervisor && currentStage < 3 ? "w-full" : "w-full sm:w-auto"}`}
                   >
                     <Layers className="w-4 h-4 text-black dark:text-slate-400" />
                     <span>Inspect on GIS Map</span>

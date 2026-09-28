@@ -586,7 +586,7 @@ export function SimulateView() {
       <div className="absolute -top-28 sm:-top-32 lg:-top-36 inset-x-0 bottom-0 z-0 overflow-hidden pointer-events-none">
         {/* Light Theme Golden Sunset Tram Photography */}
         <img
-          src="/images/sky3.png"
+          src="/images/Simulate_Light_Bg.jpeg"
           alt="Kolkata Heritage Building at Golden Sunset with Yellow Taxis and Vintage Tram"
           className="w-full h-full object-cover object-[center_36%] sm:object-[center_32%] filter contrast-[1.04] brightness-[0.70] saturate-[1.02] dark:hidden transition-all duration-300"
           onError={(e) => {
@@ -596,16 +596,21 @@ export function SimulateView() {
 
         {/* Dark Theme Night Tram & Illuminated Heritage Photography */}
         <img
-          src="/images/Simulate_Page_Dark_bg1.png"
+          src="/images/Simulate_Dark_Bg.png"
           alt="Kolkata Heritage Golden Sunset Dark"
           className="w-full h-full object-cover object-[center_36%] sm:object-[center_32%] filter contrast-[1.06] brightness-[1.0] saturate-[1.06] hidden dark:block transition-all duration-300"
           onError={(e) => {
-            e.currentTarget.src = "/images/Simulate_Page_Dark_bg.png";
+            e.currentTarget.src = "/images/Simulate_Dark_Bg.png";
           }}
         />
 
         {/* LIGHT ATMOSPHERIC LAYER */}
-        <div className="absolute inset-0 bg-white/40 dark:hidden" />
+        <div className="absolute inset-0 dark:hidden"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(191,219,254,0.20) 0%, rgba(219,234,254,0.16) 50%, rgba(224,242,254,0.28) 100%)",
+          }}
+        />
 
         {/* Subtle dark atmospheric layer — restricted strictly to dark mode */}
         <div className="absolute inset-0 bg-[#06152B]/45 hidden dark:block" />
@@ -643,10 +648,10 @@ export function SimulateView() {
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl md:text-[35px] font-extrabold tracking-tight text-[#082038] dark:text-[#F2FBFD] mb-2 leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-[35px] font-extrabold tracking-tight text-white dark:text-[#F2FBFD] mb-2 leading-tight">
               Simulate Drainage Interventions
             </h1>
-            <p className="text-xs sm:text-[15px] text-[#082038] dark:text-[#B2D2D9] max-w-2xl leading-relaxed font-medium">
+            <p className="text-xs sm:text-[18px] text-white dark:text-[#B2D2D9] max-w-2xl leading-relaxed font-medium">
               Test pumping station boosts, inlet desilting crews, and mobile
               submersible units to predict flood reduction before dispatching
               field teams.
@@ -1302,8 +1307,8 @@ export function SimulateView() {
                     className="flex flex-col items-center gap-2"
                   >
                     {/* Simulated Depth Circular Indicator */}
-                    <div className="relative w-22 h-22 flex items-center justify-center">
-                      <svg className="w-22 h-22 -rotate-90" viewBox="0 0 100 100">
+                    <div className="relative w-28 h-28 flex items-center justify-center">
+                      <svg className="w-28 h-28 -rotate-90" viewBox="0 0 100 100">
                         <circle
                           cx="50"
                           cy="50"
@@ -1326,7 +1331,7 @@ export function SimulateView() {
                         />
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-[34px] font-semibold tracking-tight text-emerald-600 dark:text-emerald-400 leading-none tabular-nums">
+                        <span className="text-[32px] font-semibold tracking-tight text-emerald-600 dark:text-emerald-400 leading-none tabular-nums">
                           {simulationResult.simulatedDepthCm}
                         </span>
                         <span className="text-[11px] font-medium text-emerald-500 dark:text-emerald-400 mt-0.5">
@@ -1477,17 +1482,17 @@ export function SimulateView() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-6 relative overflow-hidden rounded-2xl bg-white/95 backdrop-blur-md border border-emerald-200 shadow-[0_4px_24px_rgba(16,185,129,0.12)] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="mt-6 relative overflow-hidden rounded-2xl bg-[#131d31]/95 backdrop-blur-md border border-emerald-200 shadow-[0_4px_24px_rgba(16,185,129,0.12)] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0 shadow-xs">
                   <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div>
-                  <div className="text-[14px] font-semibold text-slate-900">
+                  <div className="text-[14px] font-semibold text-white">
                     Intervention Verified · Ready for Immediate KMC Dispatch
                   </div>
-                  <div className="text-[12px] text-slate-500 mt-0.5 font-normal">
+                  <div className="text-[12px] text-slate mt-0.5 font-normal">
                     {simulationResult.dispatchSummary}
                   </div>
                   {supervisorError && (
