@@ -942,12 +942,22 @@ export const useKWIStore = create((set, get) => ({
   selectedDistrict: null,
   setSelectedDistrict: (districtId) => set({ selectedDistrict: districtId }),
 
+  // Dynamic chatbot active route & corridor state
+  chatbotActiveRoute: null,
+  setChatbotActiveRoute: (route) => set({ chatbotActiveRoute: route }),
+
+  // Dynamic chatbot active area state
+  chatbotActiveArea: null,
+  setChatbotActiveArea: (area) => set({ chatbotActiveArea: area }),
+
   clearSelections: () =>
     set({
       selectedIncident: null,
       selectedRiskZone: null,
       selectedPumpStation: null,
       selectedDistrict: null,
+      chatbotActiveRoute: null,
+      chatbotActiveArea: null,
     }),
 
   // UI state for drawers & menus
@@ -1714,41 +1724,109 @@ export const useKWIStore = create((set, get) => ({
       timestamp: "01:00 PM",
     },
   ],
-  sendCopilotMessage: (text) => {
-    if (!text.trim()) return;
-    const userMsg = {
-      sender: "user",
-      text,
-      timestamp: formatTime12Hour(new Date()),
-    };
+  addChatMessage: (msg) => {
+    set((state) => ({
+      chatMessages: [
+        ...state.chatMessages,
+        {
+          timestamp: formatTime12Hour(new Date()),
+          ...msg,
+        },
+      ],
+    }));
+  },
+  sendCopilotMessage: async (text, options = {}) => {
+    if (!text || !text.trim()) return;
+    const cleanText = text.trim();
 
-    let reply;
-    const lower = text.toLowerCase();
+    if (!options?.skipUserBubble) {
+      const userMsg = {
+        sender: "user",
+        text: options?.displayText || cleanText,
+        timestamp: formatTime12Hour(new Date()),
+      };
 
-    if (lower.includes('sector v') || lower.includes('sa-754') || lower.includes('ps-07')) {
-      reply = "Salt Lake Sector V Incident #SA-754: 30cm water depth logged. PS-07 booster station operating discharging into Bagjola Canal."
-    } else if (lower.includes('critical') || lower.includes('incident') || lower.includes('waterlog')) {
-      reply = "Active waterlogging incidents from municipal reports include Salt Lake Sector V (#SA-754, 30cm), College More (#CO-493, 30cm), and Maniktala (#MA-979, 15cm)."
-    } else if (lower.includes('tide') || lower.includes('hooghly') || lower.includes('river') || lower.includes('sluice')) {
-      reply = "Hooghly River tidal gauge at Princep Ghat reports 3.42m (RISING). Lock gates at Circular Canal and Palmer Bridge are currently throttled to prevent river backflow into city storm drains."
-    } else if (lower.includes('pump') || lower.includes('palmer') || lower.includes('ballygunge')) {
-      reply = "78 of 84 major KMC pumping units are active. PS-07 and PS-04 are at 100% capacity. Palmer Bridge is running 4/5 pumps discharging 140 cusecs."
-    } else if (lower.includes('forecast') || lower.includes('rain')) {
-      reply = "Monsoon squall band over Alipore & Central Kolkata is depositing 74 mm / 3 hr. Intensity is HEAVY, with high runoff entering Sector V Main Trunk and Circular Canal."
+      set((state) => ({
+        chatMessages: [...state.chatMessages, userMsg],
+        copilotQuery: "",
+      }));
     } else {
-      reply = `Telemetry check for "${text}": All sensor networks in Boroughs I through XVI are transmitting valid hydraulic pressure and depth data.`;
+      set({ copilotQuery: "" });
     }
 
-    const botMsg = {
-      sender: "bot",
-      text: reply,
-      timestamp: formatTime12Hour(new Date()),
-    };
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
+      const res = await api.post("/chatbot/query", { message: cleanText }, token);
 
-    set((state) => ({
-      chatMessages: [...state.chatMessages, userMsg, botMsg],
-      copilotQuery: "",
-    }));
+      const botMsg = {
+        sender: "bot",
+        text: res.message,
+        intent: res.intent,
+        locality: res.locality,
+        data: res.data,
+        action: res.action,
+        timestamp: formatTime12Hour(new Date()),
+      };
+
+      set((state) => ({
+        chatMessages: [...state.chatMessages, botMsg],
+      }));
+
+      // Execute structured actions if returned
+      if (res.action) {
+        if (res.action.type === "HIGHLIGHT_ROUTE" && res.action.payload) {
+          set({ chatbotActiveRoute: res.action.payload, chatbotActiveArea: null });
+        } else if (res.action.type === "HIGHLIGHT_AREA" && res.action.payload) {
+          const p = res.action.payload;
+          set({
+            chatbotActiveArea: p,
+            chatbotActiveRoute: null,
+            selectedIncident: {
+              id: p.canonical_name || p.locality,
+              locality: p.locality,
+              location: p.locality,
+              latitude: p.latitude,
+              longitude: p.longitude,
+              risk_level: p.risk_level || "MONITORING",
+              waterlogging_probability: p.probability,
+              severity_score: p.severity,
+              forecast_rain_24h_mm: p.forecast_rain_24h_mm,
+              active_reports: p.active_reports,
+              resolved_reports: p.resolved_reports,
+              total_reports: p.total_reports,
+            },
+          });
+        } else if (res.action.type === "HIGHLIGHT_LOCATIONS" && res.action.payload) {
+          const p = res.action.payload;
+          set({
+            chatbotActiveArea: p,
+            chatbotActiveRoute: null,
+            selectedIncident: {
+              id: p.canonical_name || p.locality,
+              locality: p.locality,
+              location: p.locality,
+              latitude: p.latitude,
+              longitude: p.longitude,
+              risk_level: "MONITORING",
+              total_reports: p.total_reports,
+              active_reports: p.active_reports,
+              resolved_reports: p.resolved_reports,
+              max_depth_cm: p.max_depth_cm,
+            },
+          });
+        }
+      }
+    } catch (err) {
+      console.warn("Ask Kolkata API query notice:", err);
+      const fallbackMsg = {
+        sender: "bot",
+        text: `I had trouble connecting to the Kolkata Water Intelligence engine (${err.message || "backend offline"}).`,
+        timestamp: formatTime12Hour(new Date()),
+      };
+      set((state) => ({
+        chatMessages: [...state.chatMessages, fallbackMsg],
+      }));
+    }
   },
 
   // Dispatched hotspots list (popped from simulation)

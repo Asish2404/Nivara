@@ -105,6 +105,8 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
+  const routeMarkersRef = useRef([]);
+  const areaMarkerRef = useRef(null);
   const incidentMarkerMapRef = useRef({});
   const wrapperRef = useRef(null);
 
@@ -137,7 +139,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
     risk: true,
     pumps: true,
     spread: true,
-    landmarks: true,
+    landmarks: false,
   });
 
   const activeLayers = useMemo(() => {
@@ -149,7 +151,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       risk: layerVisibility.risk && store.activeLayers.risk !== false,
       pumps: layerVisibility.pumps && store.activeLayers.pumps !== false,
       spread: layerVisibility.spread && store.activeLayers.forecast !== false,
-      landmarks: layerVisibility.landmarks,
+      landmarks: false,
     };
   }, [
     overrideLayers,
@@ -653,7 +655,27 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
             : [];
 
         let allIncidents = [];
-        if (!isAdmin) {
+        if (store.chatbotActiveRoute && store.chatbotActiveRoute.affected_locations?.length > 0) {
+          // Strictly display ONLY the affected locations along the requested route.
+          // Directly preserve and cross-reference database prediction fields so priority_score matches normal viewing.
+          const predByLoc = new Map(
+            rawPredList.map((p) => [((p && p.locality) || "").toLowerCase().trim(), p])
+          );
+          allIncidents = store.chatbotActiveRoute.affected_locations
+            .filter(Boolean)
+            .map((loc) => {
+              const locKey = ((loc && (loc.locality || loc.name)) || "").toLowerCase().trim();
+              const matched = predByLoc.get(locKey);
+              const prio = loc.priority_score !== undefined && loc.priority_score !== null
+                ? loc.priority_score
+                : (matched?.priority_score ?? 0);
+              return {
+                ...(matched || {}),
+                ...loc,
+                priority_score: prio,
+              };
+            });
+        } else if (!isAdmin) {
           // Non-admin (Citizen or Supervisor) sees the standard combined view
           if (activeLiveIncidents.length > 0) {
             const liveLocs = new Set(activeLiveIncidents.map((i) => (i.location || "").toLowerCase().trim()));
@@ -752,12 +774,16 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
             ? "rgba(239, 68, 68, 0.75)"
             : (isMedium ? "rgba(245, 158, 11, 0.7)" : "rgba(16, 185, 129, 0.6)");
 
+          const prioVal = inc.priority_score !== undefined && inc.priority_score !== null
+            ? Number(inc.priority_score)
+            : (inc.severity_score !== undefined ? Number(inc.severity_score) : 0);
+
           const tagText = isPred
-            ? `Sev ${(inc.severity_score * 100).toFixed(0)}% · Prio ${(inc.priority_score * 100).toFixed(0)}%`
+            ? `Sev ${(inc.severity_score * 100).toFixed(0)}% · Prio ${(prioVal * 100).toFixed(0)}%`
             : (inc.waterDepth || "Active Hotspot");
 
           const titleText = isPred
-            ? `${inc.locality}: Severity ${(inc.severity_score * 100).toFixed(0)}%, Priority ${(inc.priority_score * 100).toFixed(0)}% [${inc.risk_level}]`
+            ? `${inc.locality}: Severity ${(inc.severity_score * 100).toFixed(0)}%, Priority ${(prioVal * 100).toFixed(0)}% [${inc.risk_level}]`
             : `${inc.name}: ${inc.waterDepth}`;
 
           const el = document.createElement("div");
@@ -780,15 +806,18 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
             audioEngine.playUiChirp(1200);
 
             const selectedData = isPred ? {
-              id: inc.id,
+              id: inc.id || inc.locality,
               name: inc.locality,
               location: `${inc.locality}${inc.ward ? ` (Ward ${inc.ward})` : ""}`,
               subdivision: inc.ulb_name || inc.district || "KMC METROPOLITAN",
               severity: inc.risk_level,
+              riskScore: `${Math.round(prioVal * 100)} / 100`,
               waterDepth: `Sev: ${(inc.severity_score * 100).toFixed(0)}%`,
               rainfall: `${inc.forecast_rain_24h_mm || 0} mm / 24h`,
-              verifiedReports: `Priority Score: ${(inc.priority_score * 100).toFixed(0)}%`,
+              verifiedReports: `Priority Score: ${(prioVal * 100).toFixed(0)}%`,
               probability: `${(inc.waterlogging_probability * 100).toFixed(0)}%`,
+              priority_score: prioVal,
+              severity_score: inc.severity_score,
               status: inc.status || "ACTIVE",
               timestamp: "Waterlogging Prediction Intelligence",
               latitude: inc.latitude,
@@ -855,42 +884,7 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
         });
       }
 
-      // 3. KEY REAL KOLKATA LANDMARKS (Minimal clean geographic anchors)
-      if (activeLayers.landmarks) {
-        const currentZoom = map.getZoom ? map.getZoom() : 12;
-        const isMobileScreen = typeof window !== "undefined" && window.innerWidth <= 640;
-
-        REAL_KOLKATA_LANDMARKS.forEach((lm) => {
-          // On mobile or zoom < 13.0, keep major hubs to avoid label piling
-          if (isMobileScreen && currentZoom < 13.0) {
-            const majorHubs = ["howrah_bridge", "esplanade", "salt_lake", "behala", "victoria_memorial"];
-            if (!majorHubs.includes(lm.id)) return;
-          }
-
-          const el = document.createElement("div");
-          el.className =
-            "pointer-events-auto px-2 py-0.5 rounded-md bg-slate-950/75 backdrop-blur-xs border border-white/20 text-[10px] font-semibold text-slate-200 tracking-tight shadow-xs hover:border-cyan-400 hover:text-white transition-all cursor-pointer font-sans select-none";
-          el.setAttribute("data-cursor", "map");
-          el.textContent = lm.name;
-
-          el.addEventListener("click", (e) => {
-            e.stopPropagation();
-            audioEngine.playUiChirp(1050);
-            map.flyTo({
-              center: lm.coordinates,
-              zoom: 13.8,
-              pitch: is3DMode ? 40 : 0,
-              duration: 1200,
-            });
-          });
-
-          const marker = new maplibregl.Marker({ element: el })
-            .setLngLat(lm.coordinates)
-            .addTo(map);
-
-          markersRef.current.push(marker);
-        });
-      }
+      // 3. KEY REAL KOLKATA LANDMARKS: Fixed labels removed to keep map clean and uncluttered without obstructing overview
 
       // 4. TEMPORARY CALIBRATION CONTROL POINTS FOR WARD 63 / VICTORIA OVERLAY
       // Only render at high zoom (>= 15.2) to prevent obstructing citywide overview
@@ -948,11 +942,368 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       showReported,
       showPredicted,
       isAdmin,
+      store.chatbotActiveRoute,
     ]
   );
 
   // -------------------------------------------------------------
+  // Helper: Synchronize Chatbot Corridor Route & Source/Destination Pins
+  // -------------------------------------------------------------
+  const syncChatbotRoute = useCallback(
+    (map) => {
+      if (!map) return;
+
+      // Clean up previous route markers
+      routeMarkersRef.current.forEach((m) => m.remove());
+      routeMarkersRef.current = [];
+
+      const route = store.chatbotActiveRoute;
+      if (!route || !route.route_coordinates || route.route_coordinates.length === 0) {
+        try {
+          if (map.isStyleLoaded() && map.getSource("chatbot-route-source")) {
+            map.getSource("chatbot-route-source").setData({
+              type: "FeatureCollection",
+              features: [],
+            });
+          }
+        } catch (e) {}
+        return;
+      }
+
+      // 1. Create Source (A) and Destination (B) Markers (DOM markers attach reliably to map)
+      const createRoutePin = (type, name, coordinates) => {
+        if (!coordinates || isNaN(coordinates[0]) || isNaN(coordinates[1])) return;
+        const isStart = type === "start";
+        const pinColor = isStart ? "#10b981" : "#ef4444";
+        const rippleColor = isStart ? "rgba(16, 185, 129, 0.45)" : "rgba(239, 68, 68, 0.45)";
+        const badgeLetter = isStart ? "A" : "B";
+        const tagText = isStart ? "SOURCE" : "DESTINATION";
+
+        const el = document.createElement("div");
+        el.className = "kwi-route-pin group cursor-pointer flex flex-col items-center select-none";
+        el.style.filter = "drop-shadow(0 8px 18px rgba(0,0,0,0.45))";
+        el.style.transform = "translate3d(0,0,0)";
+        el.style.zIndex = isStart ? "40" : "41";
+        el.setAttribute("title", `${tagText}: ${name}`);
+
+        el.innerHTML = `
+          <!-- Location Label Tag Pill (Revealed on Hover) -->
+          <div class="kwi-route-pill pointer-events-none" style="opacity: 0; transform: translateY(4px); transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1); background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(6px); color: #ffffff; padding: 3px 9px; border-radius: 9999px; font-size: 10.5px; font-weight: 700; font-family: ui-sans-serif, system-ui, sans-serif; white-space: nowrap; margin-bottom: 4px; border: 1.5px solid ${pinColor}; box-shadow: 0 4px 14px rgba(0,0,0,0.35); display: flex; align-items: center; gap: 5px;">
+            <span style="display: inline-block; width: 6.5px; height: 6.5px; border-radius: 50%; background: ${pinColor}; box-shadow: 0 0 8px ${pinColor};"></span>
+            <span style="letter-spacing: 0.03em;">${tagText} · ${name}</span>
+          </div>
+
+          <!-- Teardrop Location Pointer -->
+          <div style="position: relative; width: 34px; height: 44px; display: flex; align-items: center; justify-content: center;">
+            <!-- Pulsing Ground Ripple -->
+            <span style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 22px; height: 8px; border-radius: 50%; background: ${rippleColor}; animation: ping 2s cubic-bezier(0,0,0.2,1) infinite;"></span>
+
+            <!-- Teardrop Pin Shape (Tip at bottom center 17, 44) -->
+            <svg width="34" height="44" viewBox="0 0 34 44" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block;">
+              <path d="M17 0C7.61116 0 0 7.61116 0 17C0 27.5 14.5 42.5 16.1 43.8C16.6 44.2 17.4 44.2 17.9 43.8C19.5 42.5 34 27.5 34 17C34 7.61116 26.3888 0 17 0Z" fill="${pinColor}" />
+              <circle cx="17" cy="16" r="12" fill="#ffffff" />
+              <circle cx="17" cy="16" r="9.5" fill="${pinColor}" />
+            </svg>
+
+            <!-- Center Badge Letter (A for Source, B for Destination) -->
+            <span style="position: absolute; top: 9px; color: #ffffff; font-size: 11.5px; font-weight: 900; font-family: ui-monospace, monospace; line-height: 1; pointer-events: none;">
+              ${badgeLetter}
+            </span>
+          </div>
+        `;
+
+        const pill = el.querySelector(".kwi-route-pill");
+        el.addEventListener("mouseenter", () => {
+          if (pill) {
+            pill.style.opacity = "1";
+            pill.style.transform = "translateY(0)";
+          }
+          el.style.zIndex = "50";
+        });
+        el.addEventListener("mouseleave", () => {
+          if (pill) {
+            pill.style.opacity = "0";
+            pill.style.transform = "translateY(4px)";
+          }
+          el.style.zIndex = isStart ? "40" : "41";
+        });
+
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          audioEngine.playUiChirp(isStart ? 1150 : 1350);
+          map.flyTo({
+            center: coordinates,
+            zoom: 15,
+            pitch: 42,
+            duration: 1000,
+          });
+        });
+
+        const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
+          .setLngLat(coordinates)
+          .addTo(map);
+
+        routeMarkersRef.current.push(marker);
+      };
+
+      const startCoords = [
+        Number(route.route_coordinates[0][0]),
+        Number(route.route_coordinates[0][1]),
+      ];
+      const endCoords = [
+        Number(route.route_coordinates[route.route_coordinates.length - 1][0]),
+        Number(route.route_coordinates[route.route_coordinates.length - 1][1]),
+      ];
+
+      createRoutePin("start", route.origin?.name || "Origin", startCoords);
+      createRoutePin("destination", route.destination?.name || "Destination", endCoords);
+
+      // 2. Add or update Route Line Layer (requires style loaded)
+      try {
+        if (map.isStyleLoaded()) {
+          const geojson = {
+            type: "Feature",
+            geometry: {
+              type: "LineString",
+              coordinates: route.route_coordinates,
+            },
+            properties: {},
+          };
+
+          if (!map.getSource("chatbot-route-source")) {
+            map.addSource("chatbot-route-source", { type: "geojson", data: geojson });
+            map.addLayer({
+              id: "chatbot-route-line-bg",
+              type: "line",
+              source: "chatbot-route-source",
+              paint: {
+                "line-color": "#ffffff",
+                "line-width": 7,
+                "line-opacity": 0.9,
+              },
+            });
+            map.addLayer({
+              id: "chatbot-route-line",
+              type: "line",
+              source: "chatbot-route-source",
+              paint: {
+                "line-color": "#2563eb",
+                "line-width": 4.5,
+                "line-opacity": 0.95,
+              },
+            });
+          } else {
+            map.getSource("chatbot-route-source").setData(geojson);
+          }
+        }
+      } catch (err) {
+        console.warn("Route line render notice:", err);
+      }
+
+      // 3. Fit bounds to route
+      try {
+        const lons = route.route_coordinates.map((c) => c[0]);
+        const lats = route.route_coordinates.map((c) => c[1]);
+        const minLon = Math.min(...lons);
+        const maxLon = Math.max(...lons);
+        const minLat = Math.min(...lats);
+        const maxLat = Math.max(...lats);
+
+        map.fitBounds(
+          [
+            [minLon, minLat],
+            [maxLon, maxLat],
+          ],
+          { padding: 90, duration: 1300, maxZoom: 15 }
+        );
+      } catch (err) {
+        console.warn("fitBounds notice:", err);
+      }
+    },
+    [store.chatbotActiveRoute]
+  );
+
+  // -------------------------------------------------------------
+  // Helper: Synchronize Chatbot Area Qualitative Location Pointer
+  // -------------------------------------------------------------
+  const syncChatbotArea = useCallback(
+    (map) => {
+      if (!map) return;
+
+      if (areaMarkerRef.current) {
+        areaMarkerRef.current.remove();
+        areaMarkerRef.current = null;
+      }
+
+      const area = store.chatbotActiveArea;
+      if (!area) return;
+
+      const lat = Number(
+        area.latitude ??
+        area.lat ??
+        (Array.isArray(area.coordinates) ? area.coordinates[1] : NaN)
+      );
+      const lon = Number(
+        area.longitude ??
+        area.lng ??
+        area.lon ??
+        (Array.isArray(area.coordinates) ? area.coordinates[0] : NaN)
+      );
+
+      if (isNaN(lat) || isNaN(lon)) return;
+
+      let riskRaw = String(area.risk_level || area.risk || area.severity || "").toUpperCase().trim();
+      if (!riskRaw) {
+        if (area.max_depth_cm >= 40 || area.active_reports >= 5) riskRaw = "CRITICAL";
+        else if (area.max_depth_cm >= 25 || area.active_reports >= 3) riskRaw = "HARD";
+        else if (area.max_depth_cm >= 10 || area.active_reports >= 1) riskRaw = "MEDIUM";
+        else riskRaw = "LOW";
+      }
+
+      let fillPct = 10;
+      let riskLabel = "LOW";
+      let riskColor1 = "#10b981"; // Emerald Green for LOW (Safe / Low risk)
+      let riskColor2 = "#059669";
+      let rippleColor = "rgba(16, 185, 129, 0.6)";
+
+      if (riskRaw.includes("CRIT")) {
+        fillPct = 100;
+        riskLabel = "CRITICAL";
+        riskColor1 = "#ef4444";
+        riskColor2 = "#dc2626";
+        rippleColor = "rgba(239, 68, 68, 0.65)";
+      } else if (riskRaw.includes("HARD") || riskRaw.includes("HIGH")) {
+        fillPct = 80;
+        riskLabel = "HARD";
+        riskColor1 = "#ea580c";
+        riskColor2 = "#c2410c";
+        rippleColor = "rgba(234, 88, 12, 0.6)";
+      } else if (riskRaw.includes("MED") || riskRaw.includes("MOD")) {
+        fillPct = 50;
+        riskLabel = "MEDIUM";
+        riskColor1 = "#f59e0b";
+        riskColor2 = "#d97706";
+        rippleColor = "rgba(245, 158, 11, 0.6)";
+      } else {
+        fillPct = 10;
+        riskLabel = "LOW";
+        riskColor1 = "#10b981";
+        riskColor2 = "#059669";
+        rippleColor = "rgba(16, 185, 129, 0.6)";
+      }
+
+      const localityName = area.locality || area.display_name || area.name || "Selected Location";
+      const gradId = `kwi-water-fill-${Math.random().toString(36).substring(2, 9)}`;
+
+      // Build the Linear Gradient stops for the qualitative blue water fill + meaningful risk body
+      let gradientStops = "";
+      if (fillPct === 100) {
+        gradientStops = `
+          <stop offset="0%" stop-color="#0284c7" />
+          <stop offset="50%" stop-color="#0ea5e9" />
+          <stop offset="100%" stop-color="#00E5FF" />
+        `;
+      } else {
+        const fillStop = fillPct;
+        gradientStops = `
+          <stop offset="0%" stop-color="#0284c7" />
+          <stop offset="${(fillStop - 0.4).toFixed(1)}%" stop-color="#38bdf8" />
+          <stop offset="${fillStop}%" stop-color="#ffffff" />
+          <stop offset="${(fillStop + 0.4).toFixed(1)}%" stop-color="${riskColor1}" />
+          <stop offset="100%" stop-color="${riskColor2}" />
+        `;
+      }
+
+      const el = document.createElement("div");
+      el.className = "kwi-area-pointer group cursor-pointer flex flex-col items-center select-none";
+      el.style.filter = "drop-shadow(0 8px 20px rgba(0,0,0,0.65))";
+      el.style.transform = "translate3d(0,0,0)";
+      el.style.zIndex = "48";
+      el.setAttribute("title", localityName);
+
+      el.innerHTML = `
+        <!-- Location Label Tag Pill (Revealed ONLY on Mouse Hover) -->
+        <div class="kwi-area-hover-pill pointer-events-none" style="opacity: 0; transform: translateY(4px); transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1); background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(6px); color: #ffffff; padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; font-family: ui-sans-serif, system-ui, sans-serif; white-space: nowrap; margin-bottom: 4px; border: 1.5px solid ${riskColor1}; box-shadow: 0 4px 14px rgba(0,0,0,0.35); display: flex; align-items: center; gap: 5px;">
+          <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${riskColor1}; box-shadow: 0 0 6px ${riskColor1};"></span>
+          <span style="letter-spacing: 0.02em;">${localityName}</span>
+        </div>
+
+        <!-- Qualitative Water-Level Teardrop Location Pointer -->
+        <div style="position: relative; width: 38px; height: 48px; display: flex; align-items: center; justify-content: center;">
+          <!-- Pulsing Ground Ripple at Pin Tip -->
+          <span style="position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); width: 24px; height: 8px; border-radius: 50%; background: ${rippleColor}; animation: ping 2s cubic-bezier(0,0,0.2,1) infinite;"></span>
+
+          <!-- Teardrop Pin Shape (Tip at bottom center 19, 48) -->
+          <svg width="38" height="48" viewBox="0 0 38 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; overflow: visible;">
+            <defs>
+              <linearGradient id="${gradId}" x1="0" y1="100%" x2="0" y2="0%">
+                ${gradientStops}
+              </linearGradient>
+            </defs>
+
+            <!-- Outer boundary casing stroke with gradient water fill -->
+            <path d="M19 2C9.5 2 2 9.5 2 19C2 30 16 46 18.2 48.2C18.6 48.6 19.4 48.6 19.8 48.2C22 46 36 30 36 19C36 9.5 28.5 2 19 2Z" fill="url(#${gradId})" stroke="#ffffff" stroke-width="2.5" />
+
+            <!-- Inner Gauge Droplet Emblem in Pin Head -->
+            <circle cx="19" cy="18" r="7.5" fill="rgba(255, 255, 255, 0.2)" stroke="#ffffff" stroke-width="1.2" />
+            <path d="M19 13.5 C19 13.5 16.5 16.5 16.5 18 C16.5 19.4 17.6 20.5 19 20.5 C20.4 20.5 21.5 19.4 21.5 18 C21.5 16.5 19 13.5 19 13.5 Z" fill="#ffffff" opacity="0.95" />
+          </svg>
+        </div>
+      `;
+
+      const hoverPill = el.querySelector(".kwi-area-hover-pill");
+      el.addEventListener("mouseenter", () => {
+        if (hoverPill) {
+          hoverPill.style.opacity = "1";
+          hoverPill.style.transform = "translateY(0)";
+        }
+        el.style.zIndex = "50";
+      });
+      el.addEventListener("mouseleave", () => {
+        if (hoverPill) {
+          hoverPill.style.opacity = "0";
+          hoverPill.style.transform = "translateY(4px)";
+        }
+        el.style.zIndex = "48";
+      });
+
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        audioEngine.playUiChirp(1250);
+        map.flyTo({
+          center: [lon, lat],
+          zoom: 15.5,
+          pitch: is3DMode ? 45 : 0,
+          duration: 900,
+        });
+      });
+
+      const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
+        .setLngLat([lon, lat])
+        .addTo(map);
+
+      areaMarkerRef.current = marker;
+
+      // Smoothly fly camera to center directly on this location
+      try {
+        map.flyTo({
+          center: [lon, lat],
+          zoom: area.zoom || 14.8,
+          pitch: is3DMode ? 42 : 0,
+          duration: 1300,
+          essential: true,
+        });
+        audioEngine.playUiChirp(1200);
+      } catch (err) {
+        console.warn("flyTo notice:", err);
+      }
+    },
+    [store.chatbotActiveArea, is3DMode]
+  );
+
+  // -------------------------------------------------------------
   // Map Initialization
+  // -------------------------------------------------------------
   // -------------------------------------------------------------
   useEffect(() => {
     const container = mapContainerRef.current;
@@ -981,6 +1332,8 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
     map.on("load", () => {
       syncMapOverlays(map);
       syncMarkers(map);
+      syncChatbotRoute(map);
+      syncChatbotArea(map);
       setMapLoaded(true);
     });
 
@@ -998,6 +1351,12 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       clearTimeout(fallbackTimer);
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
+      routeMarkersRef.current.forEach((m) => m.remove());
+      routeMarkersRef.current = [];
+      if (areaMarkerRef.current) {
+        areaMarkerRef.current.remove();
+        areaMarkerRef.current = null;
+      }
       if (typeof window !== "undefined") {
         window.__kolkataMapInstance = null;
       }
@@ -1016,6 +1375,10 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
   syncMapOverlaysRef.current = syncMapOverlays;
   const syncMarkersRef = useRef(syncMarkers);
   syncMarkersRef.current = syncMarkers;
+  const syncChatbotRouteRef = useRef(syncChatbotRoute);
+  syncChatbotRouteRef.current = syncChatbotRoute;
+  const syncChatbotAreaRef = useRef(syncChatbotArea);
+  syncChatbotAreaRef.current = syncChatbotArea;
 
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -1034,6 +1397,8 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
     const handleStyleLoad = () => {
       syncMapOverlaysRef.current(map);
       syncMarkersRef.current(map);
+      syncChatbotRouteRef.current(map);
+      syncChatbotAreaRef.current(map);
     };
 
     map.once("style.load", handleStyleLoad);
@@ -1305,6 +1670,20 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
       lastResetTrigger.current = store.resetCameraTrigger;
     }
   }, [store.resetCameraTrigger]);
+
+  // Ask Kolkata Dynamic Corridor Route Synchronization
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    syncChatbotRoute(map);
+  }, [syncChatbotRoute]);
+
+  // Ask Kolkata Dynamic Chatbot Location Pointer Synchronization
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    syncChatbotArea(map);
+  }, [syncChatbotArea]);
 
   // -------------------------------------------------------------
   // WebGL Control Handlers
@@ -1699,19 +2078,6 @@ export const KolkataGisMap = React.memo(function KolkataGisMap({
                   type="checkbox"
                   checked={layerVisibility.spread}
                   onChange={() => toggleLocalLayer("spread")}
-                  className="accent-cyan-500 cursor-pointer"
-                />
-              </label>
-
-              <label className="flex items-center justify-between cursor-pointer hover:text-white py-0.5">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-slate-400" />
-                  Landmarks
-                </span>
-                <input
-                  type="checkbox"
-                  checked={layerVisibility.landmarks}
-                  onChange={() => toggleLocalLayer("landmarks")}
                   className="accent-cyan-500 cursor-pointer"
                 />
               </label>
