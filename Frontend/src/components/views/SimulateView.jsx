@@ -588,7 +588,7 @@ export function SimulateView() {
         <img
           src="/images/sky3.png"
           alt="Kolkata Heritage Building at Golden Sunset with Yellow Taxis and Vintage Tram"
-          className="w-full h-full object-cover object-[center_36%] sm:object-[center_32%] filter contrast-[1.04] brightness-[1.01] saturate-[1.02] dark:hidden transition-all duration-300"
+          className="w-full h-full object-cover object-[center_36%] sm:object-[center_32%] filter contrast-[1.04] brightness-[0.70] saturate-[1.02] dark:hidden transition-all duration-300"
           onError={(e) => {
             e.currentTarget.src = "/images/kolkata_heritage_street_extreme_wide.jpg";
           }}
@@ -605,7 +605,7 @@ export function SimulateView() {
         />
 
         {/* LIGHT ATMOSPHERIC LAYER */}
-        <div className="absolute inset-0 bg-white/10 dark:hidden" />
+        <div className="absolute inset-0 bg-white/40 dark:hidden" />
 
         {/* Subtle dark atmospheric layer — restricted strictly to dark mode */}
         <div className="absolute inset-0 bg-[#06152B]/45 hidden dark:block" />
@@ -643,10 +643,10 @@ export function SimulateView() {
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl md:text-[35px] font-extrabold tracking-tight text-white dark:text-[#F2FBFD] mb-2 leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-[35px] font-extrabold tracking-tight text-[#082038] dark:text-[#F2FBFD] mb-2 leading-tight">
               Simulate Drainage Interventions
             </h1>
-            <p className="text-xs sm:text-[13.5px] text-white/90 dark:text-[#B2D2D9] max-w-2xl leading-relaxed font-normal">
+            <p className="text-xs sm:text-[15px] text-[#082038] dark:text-[#B2D2D9] max-w-2xl leading-relaxed font-medium">
               Test pumping station boosts, inlet desilting crews, and mobile
               submersible units to predict flood reduction before dispatching
               field teams.

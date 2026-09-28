@@ -126,7 +126,7 @@ export default function Footer() {
       <div
         className="absolute inset-0 -z-20 bg-cover bg-bottom md:bg-[center_42%] bg-no-repeat contrast-[1.05] brightness-[0.82] saturate-[1.15] opacity-100 dark:opacity-0 transition-opacity duration-700 ease-in-out"
         style={{
-          backgroundImage: "url('/textures/Footer_bg5.png')",
+          backgroundImage: "url('/textures/Footer_bg6.png')",
         }}
         aria-hidden="true"
       />
@@ -149,7 +149,7 @@ export default function Footer() {
               180deg,
               rgba(2, 6, 9, 0.02) 0%,
               rgba(2, 8, 12, 0.18) 25%,
-              rgba(1, 6, 10, 0.50) 65%,
+              rgba(1, 6, 10, 0.46) 65%,
               rgba(1, 5, 8, 0.72) 100%
             ),
             linear-gradient(

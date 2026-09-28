@@ -532,7 +532,7 @@ export function AdminDashboardView() {
           setBackendAnalytics(res);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [chartTimeframe, allReports, historicalPlaces, token]);
 
   const isReportInHistoricalPlaces = (report) => {
@@ -646,8 +646,8 @@ export function AdminDashboardView() {
       chartTimeframe === "Last 3 Months"
         ? ["Jul 2026", "Aug 2026", "Sep 2026"]
         : chartTimeframe === "Year 2026"
-        ? ["Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"]
-        : ["Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"];
+          ? ["Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"]
+          : ["Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"];
 
     const monthlySubmitted = {};
     const monthlyResolved = {};
@@ -1053,100 +1053,151 @@ export function AdminDashboardView() {
 
 
   return (
-    <div className="w-full min-h-screen bg-[#f3f7fb] dark:bg-[#070c14] text-slate-900 dark:text-[#F0F9FA] transition-colors duration-300 pb-16 font-sans relative">
+    <div className="w-full min-h-screen bg-[#f3f7fb] dark:bg-[#070c14] text-slate-900 dark:text-[#F0F9FA] transition-colors duration-300 pb-16 font-sans relative overflow-x-clip">
 
       {/* ========================================================================= */}
-      {/* HERITAGE HEADER BANNER (PREMIUM ATMOSPHERIC BLEND)                        */}
+      {/* ONE CONTINUOUS PAGE-LEVEL BACKGROUND (MATCHING SIMULATE PAGE ARCHITECTURE) */}
       {/* ========================================================================= */}
-      <div className="relative w-full overflow-hidden bg-[#e8f1f8] dark:bg-[#070c14]">
-        <div className="absolute inset-0 z-0 overflow-hidden">
-          {/* Light Theme Image */}
-          <img
-            src="/images/kolkata_heritage_street_extreme_wide.jpg"
-            alt="Kolkata Heritage Metropolitan Architecture and Esplanade Crossing"
-            className="w-full h-full object-cover object-[center_35%] sm:object-[center_32%] filter contrast-[1.03] brightness-[1.01] dark:hidden"
-            onError={(e) => {
-              e.currentTarget.src = "/images/kolkata_heritage_wide_ultra.jpg";
-            }}
-          />
+      <div className="absolute -top-28 sm:-top-32 lg:-top-36 inset-x-0 bottom-0 z-0 overflow-hidden pointer-events-none select-none">
 
-          {/* Dark Theme Image (Ultra Dark Heritage Panorama) */}
-          <img
-            src="/images/kolkata_heritage_wide_ultra_dark.png"
-            alt="Kolkata Heritage Metropolitan Architecture Ultra Dark"
-            className="w-full h-full object-cover object-[center_35%] sm:object-[center_32%] filter contrast-[1.05] brightness-[1.0] hidden dark:block"
-            onError={(e) => {
-              e.currentTarget.src = "/images/kolkata_heritage_street_extreme_wide.jpg";
-            }}
-          />
+        {/* ── Base Theme Layer ─────────────────────────────────────────────────── */}
+        <div className="absolute inset-0 bg-[#f3f7fb] dark:hidden" />
+        <div className="absolute inset-0 hidden dark:block bg-[#070c14]" />
 
-          <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#e8f1f8] via-[#e8f1f8]/60 to-transparent dark:from-[#070c14] dark:via-[#070c14]/70 pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#e8f1f8] via-[#e8f1f8]/85 via-28% md:via-38% to-transparent to-72% dark:from-[#070c14] dark:via-[#070c14]/88 dark:via-28% md:dark:via-38% dark:to-transparent pointer-events-none" />
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#f3f7fb] via-[#f3f7fb]/80 to-transparent dark:from-[#070c14] dark:via-[#070c14]/80 pointer-events-none" />
-        </div>
+        {/* ── Light Theme Heritage Visual Layer (Upper Region) ────────────────── */}
+        <img
+          src="/images/kolkata_heritage_street_extreme_wide.jpg"
+          alt="Kolkata Heritage Metropolitan Architecture and Esplanade Crossing"
+          className="w-full absolute inset-0 w-full h-full object-cover object-[center_35%] sm:object-[center_30%] filter contrast-[1.03] brightness-[1.01] dark:hidden transition-all duration-300"
+          onError={(e) => {
+            e.currentTarget.src = "/images/kolkata_heritage_wide_ultra.jpg";
+          }}
+        />
 
-        <div className="relative z-10 max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 pt-9 pb-16 sm:pt-11 sm:pb-20 flex flex-col md:flex-row md:items-center justify-between gap-6 min-h-[230px]">
+        {/* ── Dark Theme Heritage Visual Layer (Upper Region) ─────────────────── */}
+        <img
+          src="/images/kolkata_heritage_wide_ultra_dark.png"
+          alt="Kolkata Heritage Metropolitan Architecture Ultra Dark"
+          className="absolute inset-0 w-full h-full object-cover object-center filter contrast-[1.05] brightness-[1.12] hidden dark:block transition-all duration-300"
+          onError={(e) => {
+            e.currentTarget.src = "/images/kolkata_heritage_street_extreme_wide.jpg";
+          }}
+        />
 
-          <motion.div
-            initial={{ opacity: 0, x: -15 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4 }}
-            className="relative space-y-2 max-w-xl"
-          >
-            <div className="absolute -left-10 -top-8 w-80 h-44 bg-gradient-to-br from-blue-500/20 via-cyan-400/15 to-transparent dark:from-[#00E5FF]/20 dark:via-[#38BDF8]/10 rounded-full blur-3xl pointer-events-none -z-10" />
+        {/* ── Light Mode Atmospheric Overlays ─────────────────────────────────── */}
+        {/* Soft atmospheric white wash */}
+        <div className="absolute inset-0 bg-white/20 dark:hidden" />
 
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-[#00E5FF]/15 border border-blue-400/40 dark:border-[#00E5FF]/50 text-[11px] sm:text-xs font-bold tracking-[0.2em] text-blue-700 dark:text-[#00E5FF] uppercase shadow-[0_0_15px_rgba(59,130,246,0.3)] dark:shadow-[0_0_20px_rgba(0,229,255,0.4)] backdrop-blur-xs">
-              <span className="w-2 h-2 rounded-full bg-blue-500 dark:bg-[#00E5FF] animate-pulse shadow-[0_0_10px_rgba(59,130,246,1)]" />
-              ADMIN DASHBOARD
-            </div>
 
-            <h1 className="text-2xl sm:text-4xl lg:text-[42px] font-extrabold text-[#082038] dark:text-[#F2FBFD] tracking-tight leading-tight">
-              City Response Center
-            </h1>
+        {/* Continuous atmospheric ambient luminous depth behind cards
+        <div
+          className="absolute inset-x-0 top-[380px] bottom-[280px] pointer-events-none dark:hidden"
+          style={{
+            background:
+              "radial-gradient(ellipse 95% 70% at 50% 30%, rgba(224, 242, 254, 0.28) 0%, rgba(240, 249, 255, 0.14) 45%, rgba(243, 247, 251, 0) 85%)",
+          }}
+        /> */}
 
-            <p className="text-sm sm:text-base text-[#385675] dark:text-[#B2D2D9] font-medium">
-              Monitor reports, prioritize risk areas, and track resolution.
-            </p>
-          </motion.div>
+        {/* Light Footer Blend — Long, soft atmospheric transition into Footer */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-[380px] sm:h-[480px] pointer-events-none dark:hidden"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(243, 247, 251, 0) 0%, rgba(243, 247, 251, 0.05) 25%, rgba(255, 255, 255, 0.22) 50%, rgba(255, 255, 255, 0.55) 72%, rgba(255, 255, 255, 0.88) 88%, #ffffff 100%)",
+          }}
+        />
 
-          {/* Weather Widget */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1, y: [0, -4, 0] }}
-            transition={{
-              opacity: { duration: 0.35 },
-              scale: { duration: 0.35 },
-              y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
-            }}
-            className="self-start md:self-center flex items-center gap-3.5 bg-white/95 dark:bg-[#10313E]/95 backdrop-blur-xl border border-white/90 dark:border-[rgba(94,183,201,0.2)] px-4.5 py-3 rounded-2xl shadow-[0_12px_30px_-6px_rgba(15,23,42,0.12)] dark:shadow-[0_14px_34px_-6px_rgba(0,0,0,0.6),0_0_25px_rgba(0,229,255,0.22)] hover:shadow-lg transition-shadow duration-300 cursor-default select-none"
-          >
-            <div className="text-blue-600 dark:text-[#00E5FF] filter drop-shadow-[0_0_10px_rgba(0,229,255,0.6)]">
-              <CloudSun className="w-6 h-6 stroke-[1.75]" />
-            </div>
+        {/* ── Dark Mode Atmospheric Overlays ──────────────────────────────────── */}
+        {/* Subtle dark atmospheric layer */}
+        <div className="absolute inset-0 bg-[#070c14]/50 hidden dark:block" />
 
-            <div className="flex items-center gap-3.5 border-l border-slate-200/80 dark:border-[rgba(94,183,201,0.2)] pl-3.5">
-              <div>
-                <div className="text-base font-bold text-slate-800 dark:text-[#F2FBFD] font-mono leading-none">
-                  28°C
-                </div>
-                <div className="text-[10px] text-slate-500 dark:text-[#B2D2D9] font-medium mt-0.5">
-                  Kolkata
-                </div>
+        {/* Smooth Dark blend into fixed footer's #0A1E3B top edge */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-[340px] sm:h-[440px] pointer-events-none hidden dark:block"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(7, 12, 20, 0) 0%, rgba(7, 12, 20, 0.12) 25%, rgba(8, 20, 38, 0.4) 50%, rgba(10, 30, 59, 0.72) 75%, rgba(10, 30, 59, 0.94) 90%, #0A1E3B 100%)",
+          }}
+        />
+
+      </div>
+
+      {/* Light Theme Subpixel Seam Bridge across AdminDashboard / Footer boundary */}
+      <div
+        className="absolute inset-x-0 -bottom-1 h-2 pointer-events-none bg-white dark:hidden z-10"
+        aria-hidden="true"
+      />
+
+      {/* Dark Theme Subpixel Seam Bridge across AdminDashboard / Footer boundary */}
+      <div
+        className="absolute inset-x-0 -bottom-1 h-2 pointer-events-none bg-[#0A1E3B] hidden dark:block z-10"
+        aria-hidden="true"
+      />
+
+      {/* ========================================================================= */}
+      {/* ADMIN DASHBOARD HEADER CONTENT (FLOATS SEAMLESSLY OVER GLOBAL BACKGROUND) */}
+      {/* ========================================================================= */}
+      <div className="relative z-10 max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 pt-9 pb-12 sm:pt-11 sm:pb-16 flex flex-col md:flex-row md:items-center justify-between gap-6 min-h-[230px]">
+
+        <motion.div
+          initial={{ opacity: 0, x: -15 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4 }}
+          className="relative space-y-2 max-w-xl"
+        >
+          <div className="absolute -left-10 -top-8 w-80 h-44 bg-gradient-to-br from-blue-500/20 via-cyan-400/15 to-transparent dark:from-[#00E5FF]/20 dark:via-[#38BDF8]/10 rounded-full blur-3xl pointer-events-none -z-10" />
+
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-[#00E5FF]/15 border border-blue-400/40 dark:border-[#00E5FF]/50 text-[11px] sm:text-xs font-bold tracking-[0.2em] text-blue-700 dark:text-[#00E5FF] uppercase shadow-[0_0_15px_rgba(59,130,246,0.3)] dark:shadow-[0_0_20px_rgba(0,229,255,0.4)] backdrop-blur-xs">
+            <span className="w-2 h-2 rounded-full bg-blue-500 dark:bg-[#00E5FF] animate-pulse shadow-[0_0_10px_rgba(59,130,246,1)]" />
+            ADMIN DASHBOARD
+          </div>
+
+          <h1 className="text-2xl sm:text-4xl lg:text-[42px] font-extrabold text-[#082038] dark:text-[#F2FBFD] tracking-tight leading-tight">
+            City Response Center
+          </h1>
+
+          <p className="text-sm sm:text-base text-[#385675] dark:text-[#B2D2D9] font-medium">
+            Monitor reports, prioritize risk areas, and track resolution.
+          </p>
+        </motion.div>
+
+        {/* Weather Widget */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1, y: [0, -4, 0] }}
+          transition={{
+            opacity: { duration: 0.35 },
+            scale: { duration: 0.35 },
+            y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+          }}
+          className="self-start md:self-center flex items-center gap-3.5 bg-white/95 dark:bg-[#10313E]/95 backdrop-blur-xl border border-white/90 dark:border-[rgba(94,183,201,0.2)] px-4.5 py-3 rounded-2xl shadow-[0_12px_30px_-6px_rgba(15,23,42,0.12)] dark:shadow-[0_14px_34px_-6px_rgba(0,0,0,0.6),0_0_25px_rgba(0,229,255,0.22)] hover:shadow-lg transition-shadow duration-300 cursor-default select-none"
+        >
+          <div className="text-blue-600 dark:text-[#00E5FF] filter drop-shadow-[0_0_10px_rgba(0,229,255,0.6)]">
+            <CloudSun className="w-6 h-6 stroke-[1.75]" />
+          </div>
+
+          <div className="flex items-center gap-3.5 border-l border-slate-200/80 dark:border-[rgba(94,183,201,0.2)] pl-3.5">
+            <div>
+              <div className="text-base font-bold text-slate-800 dark:text-[#F2FBFD] font-mono leading-none">
+                28°C
               </div>
-
-              <div className="w-px h-7 bg-slate-200 dark:bg-[#163F4E]" />
-
-              <div className="text-right space-y-0.5">
-                <div className="text-[11px] font-semibold text-slate-700 dark:text-[#F2FBFD]">
-                  {currentTime.date}
-                </div>
-                <div className="text-[11px] text-slate-500 dark:text-[#B2D2D9] font-mono font-medium">
-                  {currentTime.time}
-                </div>
+              <div className="text-[10px] text-slate-500 dark:text-[#B2D2D9] font-medium mt-0.5">
+                Kolkata
               </div>
             </div>
-          </motion.div>
-        </div>
+
+            <div className="w-px h-7 bg-slate-200 dark:bg-[#163F4E]" />
+
+            <div className="text-right space-y-0.5">
+              <div className="text-[11px] font-semibold text-slate-700 dark:text-[#F2FBFD]">
+                {currentTime.date}
+              </div>
+              <div className="text-[11px] text-slate-500 dark:text-[#B2D2D9] font-mono font-medium">
+                {currentTime.time}
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
       {/* ========================================================================= */}
@@ -1468,9 +1519,9 @@ export function AdminDashboardView() {
 
                       <div className="flex items-center gap-1 shrink-0">
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${activeHotspot.level === "Critical" ? "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400" :
-                            activeHotspot.level === "High" ? "bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-400" :
-                              activeHotspot.level === "Medium" ? "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400" :
-                                "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
+                          activeHotspot.level === "High" ? "bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-400" :
+                            activeHotspot.level === "Medium" ? "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400" :
+                              "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
                           }`}>
                           {activeHotspot.level}
                         </span>
