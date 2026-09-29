@@ -15,6 +15,7 @@ import {
   Check,
 } from "lucide-react";
 import { audioEngine } from "../../utils/audioEngine";
+import { api } from "../../utils/api";
 
 export function SupervisorVerificationGate({
   workOrder,
@@ -190,20 +191,7 @@ export function SupervisorVerificationGate({
 
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
-      const res = await fetch(`http://localhost:8000/api/v1/work-orders/${encodeURIComponent(workId)}/verify`, {
-        method: "POST",
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.detail || `Verification API failed with status ${res.status}`);
-      }
-
-      const data = await res.json();
+      const data = await api.postForm(`/work-orders/${encodeURIComponent(workId)}/verify`, formData, token);
       setVerificationResult(data);
 
       if (data.verification_result === "accepted") {
@@ -230,24 +218,14 @@ export function SupervisorVerificationGate({
 
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
-      const res = await fetch(`http://localhost:8000/api/v1/work-orders/${encodeURIComponent(workId)}/resolve-verified`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
+      const updatedWo = await api.post(
+        `/work-orders/${encodeURIComponent(workId)}/resolve-verified`,
+        {
           image_url: previewUrl || "",
           reason: "Waterlogging cleared & verified via Supervisor Verification Gate",
-        }),
-      });
-
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.detail || "Failed to update work order to Resolved.");
-      }
-
-      const updatedWo = await res.json();
+        },
+        token
+      );
       audioEngine.playUiChirp(1500);
       if (onResolved) {
         onResolved(updatedWo);
@@ -268,24 +246,14 @@ export function SupervisorVerificationGate({
 
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("kwi_token") : null;
-      const res = await fetch(`http://localhost:8000/api/v1/work-orders/${encodeURIComponent(workId)}/resolve-warning`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
+      const updatedWo = await api.post(
+        `/work-orders/${encodeURIComponent(workId)}/resolve-warning`,
+        {
           reason: warningReason.trim(),
           image_url: previewUrl || "",
-        }),
-      });
-
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.detail || "Failed to submit warning reason.");
-      }
-
-      const updatedWo = await res.json();
+        },
+        token
+      );
       audioEngine.playUiChirp(1150);
       if (onIncomplete) {
         onIncomplete(updatedWo);
@@ -561,7 +529,7 @@ export function SupervisorVerificationGate({
               {showLocationSimulator && (
                 <div className="mt-3 space-y-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 text-xs">
                   <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Target Site: <strong className="text-slate-800 dark:text-slate-200">{workOrder.location || "Salt Lake, Sector V"}</strong> ({workOrder.latitude}, {workOrder.longitude})
+                    Target Site: <strong className="text-slate-800 dark:text-slate-200">{workOrder?.location || workOrder?.hotspot_name || "Salt Lake, Sector V"}</strong> ({workOrder?.latitude ?? "N/A"}, {workOrder?.longitude ?? "N/A"})
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>

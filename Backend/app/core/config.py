@@ -17,12 +17,26 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite+aiosqlite:///./kwi_municipal.db"
 
     # Frontend Origins permitted for CORS
-    BACKEND_CORS_ORIGINS: List[str] = [
+    BACKEND_CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
         "http://localhost:8000",
     ]
+
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str):
+            if v.startswith("["):
+                try:
+                    return json.loads(v)
+                except Exception:
+                    pass
+            return [i.strip() for i in v.split(",") if i.strip()]
+        elif isinstance(v, list):
+            return v
+        return []
 
     # Telemetry stream interval (seconds)
     TELEMETRY_BROADCAST_INTERVAL: float = 2.0
