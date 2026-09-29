@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Camera,
   Upload,
@@ -12,10 +12,7 @@ import {
   ArrowLeft,
   RefreshCw,
   ShieldCheck,
-  Compass,
   Check,
-  ChevronRight,
-  Eye,
 } from "lucide-react";
 import { audioEngine } from "../../utils/audioEngine";
 
@@ -50,6 +47,17 @@ export function SupervisorVerificationGate({
 
   const [isLiveCapture, setIsLiveCapture] = useState(false);
 
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraActive(false);
+  }, []);
+
   // Request browser GPS position on mount (only for live camera on-site capture)
   useEffect(() => {
     if (typeof navigator !== "undefined" && navigator.geolocation) {
@@ -69,18 +77,7 @@ export function SupervisorVerificationGate({
     return () => {
       stopCamera();
     };
-  }, []);
-
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    setIsCameraActive(false);
-  };
+  }, [stopCamera]);
 
   const startCamera = async () => {
     setVerificationResult(null);
@@ -147,6 +144,7 @@ export function SupervisorVerificationGate({
 
   const handleImageSelected = (file, isLive = false) => {
     setSelectedFile(file);
+    setIsLiveCapture(isLive);
     setVerificationResult(null);
     setErrorMsg(null);
     setWarningReason("");
@@ -308,96 +306,147 @@ export function SupervisorVerificationGate({
   const woDepthCm = workOrder.water_depth ? `${workOrder.water_depth} cm` : "45 cm";
 
   return (
-    <div className="relative w-full max-w-5xl mx-auto font-sans pb-10 pt-2 animate-in fade-in duration-300">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
-        <div>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="text-[13px] font-bold text-sky-600 hover:text-sky-700 dark:text-sky-400 flex items-center gap-1.5 cursor-pointer mb-2 group"
-          >
-            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-            <span>Back to Work Orders</span>
-          </button>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              Supervisor Verification Gate
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold tracking-wide uppercase bg-sky-100 text-sky-700 dark:bg-sky-950/70 dark:text-sky-300 border border-sky-300 dark:border-sky-800">
-              KWI Automated Audit
-            </span>
-          </div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Work order resolution requires strict GPS, capture-timestamp, surface quality, and AI water-depth validation.
-          </p>
-        </div>
+    <div className="relative w-full min-h-screen bg-transparent font-sans text-slate-900 dark:text-[#F0F9FA] transition-colors duration-300 pb-20 space-y-5 -mb-4">
+      {/* ========================================================================= */}
+      {/* THEME-AWARE RESPOND BACKGROUND & FOOTER BLEND (Matching ActionsView/Respond) */}
+      {/* ========================================================================= */}
+      <div className="absolute -top-28 sm:-top-32 lg:-top-36 inset-x-0 -bottom-6 left-1/2 -translate-x-1/2 w-screen z-0 overflow-hidden pointer-events-none">
+        {/* Light Theme Respond Artwork */}
+        <img
+          src="/textures/respond_supervisor_page.jpeg"
+          onError={(e) => {
+            e.currentTarget.src = "/images/supervisor_verification_bg.jpg";
+          }}
+          alt="Supervisor Verification Background Light"
+          className="w-full h-full object-cover object-[center_36%] sm:object-[center_32%] brightness-[0.90] dark:hidden transition-all duration-300"
+        />
 
-        {/* Work Order Ticket Badge */}
-        <div className="bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 shrink-0">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Target Incident</div>
-          <div className="text-base font-extrabold text-slate-800 dark:text-slate-100 font-mono">{woId}</div>
-        </div>
+        {/* Dark Theme Respond Atmospheric Artwork */}
+        <img
+          src="/textures/respond_supervisor_page.jpeg"
+          onError={(e) => {
+            e.currentTarget.src = "/images/supervisor_verification_bg.jpg";
+          }}
+          alt="Supervisor Verification Background Dark"
+          className="w-full h-full object-cover object-[center_36%] sm:object-[center_32%] hidden dark:block transition-all duration-300"
+        />
+
+        {/* LIGHT ATMOSPHERIC LAYER */}
+        <div className="absolute inset-0 bg-black/15 dark:hidden" />
+
+        {/* Subtle dark atmospheric layer — restricted strictly to dark mode */}
+        <div className="absolute inset-0 bg-[#06152B]/30 hidden dark:block" />
+
+        {/* LIGHT FOOTER BLEND — Long, soft atmospheric transition into Footer (380-480px) */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-[380px] sm:h-[480px] pointer-events-none dark:hidden"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.02) 30%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.20) 68%, rgba(255, 255, 255, 0.42) 82%, rgba(255, 255, 255, 0.68) 92%, #ffffff 100%)",
+          }}
+        />
+
+        {/* DARK FOOTER BLEND — Long, progressive blend into dark footer (280-350px) */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-[280px] sm:h-[350px] pointer-events-none hidden dark:block"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(10, 30, 59, 0) 0%, rgba(10, 30, 59, 0.04) 25%, rgba(10, 30, 59, 0.12) 45%, rgba(10, 30, 59, 0.30) 65%, rgba(10, 30, 59, 0.60) 82%, rgba(10, 30, 59, 0.88) 94%, #0A1E3B 100%)",
+          }}
+        />
       </div>
 
-      {/* Target Work Order Context Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 my-5">
-        <div className="p-3.5 rounded-xl bg-white dark:bg-[#071324] border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-            <MapPin className="w-3.5 h-3.5 text-rose-500" />
-            <span>Target Location</span>
-          </div>
-          <div className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate mt-1" title={woLocation}>
-            {woLocation}
-          </div>
-        </div>
-
-        <div className="p-3.5 rounded-xl bg-white dark:bg-[#071324] border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-            <Clock className="w-3.5 h-3.5 text-amber-500" />
-            <span>Created At</span>
-          </div>
-          <div className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate mt-1">
-            {woTime}
-          </div>
-        </div>
-
-        <div className="p-3.5 rounded-xl bg-white dark:bg-[#071324] border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-            <Droplets className="w-3.5 h-3.5 text-sky-500" />
-            <span>Recorded Level</span>
-          </div>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-sm font-extrabold text-sky-600 dark:text-sky-400 font-mono">
-              {woRecordedLevel}
-            </span>
-            <span className="text-xs text-slate-400">({woDepthCm})</span>
-          </div>
-        </div>
-
-        <div className="p-3.5 rounded-xl bg-white dark:bg-[#071324] border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-            <span>GPS Radius Limit</span>
-          </div>
-          <div className="text-sm font-bold text-slate-800 dark:text-slate-100 mt-1">
-            &le; 1000 Meters Tolerance
-          </div>
-        </div>
-      </div>
-
-      {/* Main 2-Column Workspace */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Image Capture & Upload (5 Cols) */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="bg-white dark:bg-[#071324] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Camera className="w-4 h-4 text-sky-500" />
-              <span>Verification Photograph</span>
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Take a live photo on-site or upload with embedded EXIF/GPS Map Camera stamp.
+      {/* Main Foreground Interactive Content */}
+      <div className="relative z-10 w-full max-w-5xl mx-auto font-sans pb-6 pt-2">
+        {/* Top Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800/80">
+          <div>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="text-[13px] font-bold text-sky-600 hover:text-sky-700 dark:text-sky-400 flex items-center gap-1.5 cursor-pointer mb-2 group transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+              <span>Back to Work Orders</span>
+            </button>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight drop-shadow-2xs">
+                Supervisor Verification Gate
+              </h1>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold tracking-wide uppercase bg-sky-100/90 text-sky-700 dark:bg-sky-950/80 dark:text-sky-300 border border-sky-300/80 dark:border-sky-800 shadow-2xs">
+                KWI Automated Audit
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium mt-1">
+              Work order resolution requires strict GPS, capture-timestamp, surface quality, and AI water-depth validation.
             </p>
+          </div>
+
+          {/* Work Order Ticket Badge */}
+          <div className="bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 rounded-xl px-4 py-3 shrink-0 shadow-xs">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Target Incident</div>
+            <div className="text-base font-extrabold text-slate-800 dark:text-slate-100 font-mono">{woId}</div>
+          </div>
+        </div>
+
+        {/* Target Work Order Context Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 my-5">
+          <div className="p-3.5 rounded-xl bg-white/90 dark:bg-[#071324]/85 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-xs hover:shadow-md transition-all">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <MapPin className="w-3.5 h-3.5 text-rose-500" />
+              <span>Target Location</span>
+            </div>
+            <div className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate mt-1" title={woLocation}>
+              {woLocation}
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-white/90 dark:bg-[#071324]/85 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-xs hover:shadow-md transition-all">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <Clock className="w-3.5 h-3.5 text-amber-500" />
+              <span>Created At</span>
+            </div>
+            <div className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate mt-1">
+              {woTime}
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-white/90 dark:bg-[#071324]/85 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-xs hover:shadow-md transition-all">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <Droplets className="w-3.5 h-3.5 text-sky-500" />
+              <span>Recorded Level</span>
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-sm font-extrabold text-sky-600 dark:text-sky-400 font-mono">
+                {woRecordedLevel}
+              </span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">({woDepthCm})</span>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-white/90 dark:bg-[#071324]/85 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-xs hover:shadow-md transition-all">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+              <span>GPS Radius Limit</span>
+            </div>
+            <div className="text-sm font-bold text-slate-800 dark:text-slate-100 mt-1">
+              &le; 1000 Meters Tolerance
+            </div>
+          </div>
+        </div>
+
+        {/* Main 2-Column Workspace */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left Column: Image Capture & Upload (5 Cols) */}
+          <div className="lg:col-span-5 space-y-4">
+            <div className="bg-white/92 dark:bg-[#071324]/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-sm">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Camera className="w-4 h-4 text-sky-500" />
+                <span>Verification Photograph</span>
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Take a live photo on-site or upload with embedded EXIF/GPS Map Camera stamp.
+              </p>
 
             {/* Hidden File Input */}
             <input
@@ -577,7 +626,7 @@ export function SupervisorVerificationGate({
 
         {/* Right Column: 5-Stage Verification Pipeline Results (7 Cols) */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="bg-white dark:bg-[#071324] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs">
+          <div className="bg-white/92 dark:bg-[#071324]/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-sm">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center justify-between">
               <span>Verification Pipeline</span>
               {isVerifying && (
@@ -942,6 +991,7 @@ export function SupervisorVerificationGate({
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
